@@ -9,6 +9,8 @@
 
 > Visualizador de áudio em tempo real para Windows, capturando o áudio do sistema via WASAPI loopback sem necessidade de cabo virtual ou software externo.
 
+<img width="1282" height="752" alt="image" src="https://github.com/user-attachments/assets/37ee7207-5227-4f38-b56c-2c842a56ab37" />
+
 ---
 
 ## Visão Geral
