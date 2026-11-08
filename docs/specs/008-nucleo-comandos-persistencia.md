@@ -1,6 +1,6 @@
 # 008 — Núcleo de comandos e persistência
 
-**Fase:** 2 · **Status:** Em verificação (código pronto; critérios aguardando o teste no Windows) · **Issue:** [#21](https://github.com/atempel/sonic-obsidian/issues/21) · **Bloqueia:** 009, 010, 011, 012
+**Fase:** 2 · **Status:** Concluído (6/6 critérios verificados pelo usuário no Windows, build `da2c4ce`) · **Issue:** [#21](https://github.com/atempel/sonic-obsidian/issues/21) · **Bloqueia:** 009, 010, 011, 012
 
 ## Problema
 As specs 002–005 funcionam, mas cada tecla mexe direto em módulos soltos (`presets.ts`, `rotation.ts`, `main.ts`), e nada sobrevive a fechar o app: ganho, rotação, intervalo e blend voltam ao padrão, e não existem favoritos, ocultos, recentes nem coleções. A interface v3 precisa de um estado único que vários clientes (teclado, faixa, Biblioteca, Configurações e, depois, o MCP) leiam e alterem pelo mesmo caminho.
