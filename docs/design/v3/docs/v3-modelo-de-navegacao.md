@@ -43,3 +43,12 @@ A janela não tem moldura nem barra de título (spec 004). Para fechar e minimiz
 - **Tela cheia:** os mesmos controles, na mesma zona.
 - **Arrastar a janela:** pelo visual (spec 004); a zona dos controles não arrasta.
 - **Rack:** mantém o próprio título com fechar; Modo performance tem "Sair (Esc)" e também ganha os controles da janela na mesma zona.
+
+## Painel de atalhos (08/11/2026)
+Um mapa rápido de todos os atalhos, sem sair do que se está fazendo.
+- **Abrir:** tecla `?` (Shift+/) em qualquer lugar fora de campos de texto; também pela dica "`?` Atalhos" na faixa de controle (à direita da busca) e por uma linha no cartão de primeira execução ("Aperte `?` para ver todos os atalhos"). **Fechar:** `?`, `Esc` ou clique fora. Não conflita com `/` (busca rápida).
+- **Forma:** painel centralizado sobre o visual (que continua rodando), superfície `overlay`, `line-2`, `r-3`, `shadow-pop`, largura até 760px, altura até 80vh com rolagem interna; abre e fecha **sem animação** (ação frequente, como a busca rápida). Foco vai para o campo de filtro; `Tab` percorre; é um diálogo (`role="dialog"`, `aria-modal="true"`).
+- **Conteúdo:** campo "Filtrar atalhos" que filtra por ação ou tecla; grupos em duas colunas — **Reprodução** (Espaço, ←/→, F, R, B), **Navegação** (/, Ctrl+K, L, M, P, E, ",", Ctrl+,), **Texto e controles** (H, T), **Vídeo** (V, G, [ ], Shift+←/→, Ctrl+S), **Janela** (F11, Ctrl+W, Esc, ?), **IA** (Ctrl+Shift+P). Cada linha: ação à esquerda, teclas em `kbd` à direita (uma tecla por `kbd`). Rodapé: link "Personalizar em Configurações › Atalhos" (abre Configurações na seção Atalhos).
+- **Contexto primeiro:** o grupo do lugar atual vem no topo com o rótulo "Agora" — com a Biblioteca aberta, um grupo **Biblioteca** (↑/↓, Enter, F, `/` foca a busca, Esc); no modo Rack, **Rack** (M volta ao Palco, Espaço, ←/→, F, R).
+- **Modo performance:** o mesmo `?` abre a versão do modo: um teclado desenhado com as fileiras `1`–`0` e `Q`–`P` mostrando o clipe de cada pad, `A S D F` (efeitos de segurar), `Z X C` (crossfader), `B` (tap), `N` (sincronizar), Espaço (corte), `V` (fade), `Tab` (deck), PgUp/PgDn (banco), `Esc` (sair).
+- **Busca rápida com comandos:** `Ctrl+K` / `/` passa a encontrar também comandos, num grupo "Comandos" abaixo dos presets: cada comando mostra o atalho em `kbd` à direita e Enter executa (ex.: "Modo limpo" `T`, "Abrir biblioteca" `L`, "Modo Rack" `M`, "Mostrar atalhos" `?`, "Configurações" `Ctrl+,`, "Tela cheia" `F11`, "Favoritar preset atual" `F`, "Rotação automática" `R`). Quem busca a ação aprende a tecla.

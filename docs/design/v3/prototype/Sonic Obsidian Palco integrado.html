@@ -506,6 +506,33 @@
   /* M23 · aguardando o beat */
   .ibtn.wait { border-style: dashed; border-color: var(--violet-line); background: var(--violet-soft); color: var(--text-1); }
 
+  /* ═══════════ Painel de atalhos (?) e comandos da busca: sem animação ═══════════ */
+  .scrim.k { z-index: 44; }
+  body.kbd-open .scrim.k { opacity: 1; pointer-events: auto; }
+  .kpanel { position: fixed; z-index: 45; left: 50%; top: 8vh; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); max-height: 80vh; display: flex; flex-direction: column;
+    background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .k-head { display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 20px; border-bottom: 1px solid var(--line-1); }
+  .k-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .k-head input { flex: 1; min-width: 0; height: 34px; padding: 0 10px; background: var(--bg-01); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); }
+  .k-head input::placeholder { color: var(--text-3); }
+  .k-head input:focus-visible { outline-offset: 0; border-color: var(--violet); }
+  .k-body { overflow-y: auto; padding: 16px 20px 8px; columns: 2; column-gap: 40px; }
+  .k-g { break-inside: avoid; margin: 0 0 18px; }
+  .k-g h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--text-2); }
+  .k-g.now h3 { color: var(--violet); }
+  .k-note { margin: -2px 0 6px; font-size: 12px; color: var(--text-3); }
+  .k-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
+  .k-keys { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+  .k-or { font-size: 12px; color: var(--text-3); margin: 0 2px; }
+  .k-empty { margin: 0; padding: 24px 0; color: var(--text-2); column-span: all; }
+  .k-foot { padding: 10px 20px; border-top: 1px solid var(--line-1); font-size: 13px; }
+  .k-foot a { color: var(--text-2); text-underline-offset: 3px; }
+  .k-foot a:hover { color: var(--text-1); }
+  @media (max-width: 899px) { .k-body { columns: 1; } }
+  .p-grp { padding: 10px 8px 4px; font-size: 12px; color: var(--text-3); }
+  .prow.cmd .cmd-ico { display: grid; place-items: center; color: var(--text-2); }
+  .prow.cmd .k-keys { grid-column: 4; }
+
   /* ── Movimento reduzido (catálogo, seção 3): sem deslocamento nem escala; estado continua; medidor e beat continuam ── */
   @media (prefers-reduced-motion: reduce) {
     .strip-wrap { transition: opacity 120ms linear !important; }
@@ -583,6 +610,7 @@
       <div class="level" id="levelBox"><span class="meter" id="meter" aria-hidden="true"></span></div>
       <button class="ibtn" id="rackBtn" aria-label="Modo compacto" title="Modo compacto (M)"><i data-lucide="picture-in-picture-2" class="ico"></i></button>
       <button class="ibtn" id="searchBtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>
+      <button class="ibtn" id="kbdBtn" aria-label="Atalhos" title="Atalhos (?)" aria-haspopup="dialog"><i data-lucide="keyboard" class="ico"></i></button>
       <button class="ibtn" id="sheetBtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,)" aria-expanded="false" aria-controls="sheet"><i data-lucide="sliders-horizontal" class="ico"></i></button>
       <button class="ibtn" id="fsBtn" aria-label="Tela cheia" title="Tela cheia (F11)"><i data-lucide="maximize" class="ico"></i></button>
     </div>
@@ -816,6 +844,16 @@
   </div>
 </div>
 
+<div class="scrim k" id="kScrim"></div>
+<div class="kpanel" id="kPanel" role="dialog" aria-modal="true" aria-label="Atalhos de teclado" hidden>
+  <div class="k-head">
+    <h2>Atalhos</h2>
+    <input id="kQ" type="text" placeholder="Filtrar atalhos" aria-label="Filtrar atalhos" autocomplete="off" spellcheck="false">
+    <button type="button" class="ibtn" id="kClose" aria-label="Fechar atalhos" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button>
+  </div>
+  <div class="k-body" id="kBody"></div>
+  <div class="k-foot"><a href="Sonic Obsidian Configurações.html#atalhos">Personalizar em Configurações › Atalhos</a></div>
+</div>
 <input type="file" id="fileIn" accept="audio/*,.mp3,.wav,.flac,.ogg,.m4a" hidden>
 <div class="menu src-menu" id="srcMenu" role="menu" aria-label="Fonte de áudio" hidden>
   <button type="button" role="menuitemradio" aria-checked="true" data-src="system"><i data-lucide="monitor-speaker" class="ico"></i><span class="grow">Áudio do sistema</span></button>
@@ -1318,7 +1356,7 @@
   function wake() {
     document.body.classList.remove('idle'); clearTimeout(idleT);
     if (mode !== 'stage') return;
-    idleT = setTimeout(() => { if (!pinned && !pOpen && !sOpen && !lOpen && !pop && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
+    idleT = setTimeout(() => { if (!pinned && !pOpen && !kOpen && !sOpen && !lOpen && !pop && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
   }
   const edge = $('edge');
   addEventListener('mousemove', e => {
@@ -1380,12 +1418,24 @@
     list = list.filter(p => !hidden.has(p.id));
     if (q) list = list.filter(p => p.full.toLowerCase().includes(q.toLowerCase()));
     rows = list.slice(0, 50);
+    if (tab === 'all') cmdList().forEach(c => rows.push({ cmd: c }));
     if (!rows.length) {
       L.innerHTML = `<div class="p-empty"><i data-lucide="search-x" class="ico"></i><strong>Nenhum preset com “${hl(q)}”.</strong>Tente o nome de um autor, como Geiss ou Flexi.</div>`;
       icons(); return;
     }
     act = Math.min(act, rows.length - 1);
+    let cmdHead = false;
     rows.forEach((p, i) => {
+      if (p.cmd) {
+        if (!cmdHead) { cmdHead = true; const h = document.createElement('div'); h.className = 'p-grp'; h.textContent = 'Comandos'; L.appendChild(h); }
+        const cr = document.createElement('div'); cr.className = 'prow cmd' + (i === act ? ' active' : '');
+        cr.setAttribute('role', 'option'); cr.setAttribute('aria-selected', i === act);
+        const cb = document.createElement('button'); cb.className = 'r-btn'; cb.tabIndex = -1;
+        cb.innerHTML = '<span class="cmd-ico"><i data-lucide="' + p.cmd.icon + '" class="ico"></i></span><span class="r-title">' + hl(p.cmd.label) + '</span>';
+        cb.onclick = () => runCmd(p.cmd);
+        const ks = document.createElement('span'); ks.className = 'k-keys'; ks.innerHTML = p.cmd.keys.map(k => '<kbd>' + esc(k) + '</kbd>').join('');
+        cr.append(cb, document.createElement('span'), ks); L.appendChild(cr); return;
+      }
       const r = document.createElement('div');
       r.className = 'prow' + (i === act ? ' active' : '') + (p === cur ? ' playing' : '');
       r.setAttribute('role', 'option'); r.setAttribute('aria-selected', i === act);
@@ -1406,7 +1456,7 @@
     const ar = L.querySelector('.prow.active'); if (ar) ar.scrollIntoView({ block: 'nearest' });
   }
   function openPalette() {
-    if (pOpen) return; pOpen = true; lastFocus = document.activeElement;
+    if (pOpen) return; if (kOpen) closeShortcuts(); pOpen = true; lastFocus = document.activeElement;
     closeMenu(); edge.classList.remove('on');
     document.body.classList.add('palette-open'); q = ''; $('pInput').value = ''; act = 0;
     renderTabs(); renderList(); setTimeout(() => $('pInput').focus(), 30); wake();
@@ -1417,10 +1467,71 @@
   $('pInput').onkeydown = e => {
     if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(rows.length - 1, act + 1); renderList(); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); act = Math.max(0, act - 1); renderList(); }
-    else if (e.key === 'Enter') { e.preventDefault(); const r = rows[act]; if (!r) return; if (r.col) playColl(r.col); else play(r); closePalette(); }
+    else if (e.key === 'Enter') { e.preventDefault(); const r = rows[act]; if (!r) return; if (r.cmd) { runCmd(r.cmd); return; } if (r.col) playColl(r.col); else play(r); closePalette(); }
     else if (e.key === 'Tab') { e.preventDefault(); const i = tabs.findIndex(t => t.id === tab); tab = tabs[(i + (e.shiftKey ? 3 : 1)) % 4].id; act = 0; renderTabs(); renderList(); }
-    else if (e.key.toLowerCase() === 'f' && e.ctrlKey) { e.preventDefault(); const r = rows[act]; if (r && !r.col) toggleFav(r); }
+    else if (e.key.toLowerCase() === 'f' && e.ctrlKey) { e.preventDefault(); const r = rows[act]; if (r && !r.col && !r.cmd) toggleFav(r); }
   };
+
+  // ═══════════ Painel de atalhos (?) e comandos da busca ═══════════
+  const kPanel = $('kPanel'), kQ = $('kQ'); let kOpen = false, kLast = null;
+  const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const KEYS = [
+    { name: 'Reprodução', rows: [['Preset aleatório', [['Espaço']]], ['Preset anterior', [['←']]], ['Próximo preset', [['→']]], ['Favoritar', [['F']]], ['Rotação automática', [['R']]]] },
+    { name: 'Navegação', rows: [['Buscar presets', [['/'], ['Ctrl', 'K']]], ['Biblioteca', [['L']]], ['Modo Rack / Palco', [['M']]], ['Editar uma cópia no Estúdio', [['E']]], ['Ajustes rápidos', [[',']]], ['Configurações', [['Ctrl', ',']]]] },
+    { name: 'Texto e controles', rows: [['Esconder controles', [['H']]], ['Modo limpo', [['T']]]] },
+    { name: 'Vídeo', note: 'No Palco com vídeo', rows: [['Camada de vídeo', [['V']]], ['Opacidade do vídeo', [['[', ']']]], ['Modo de mistura', [['G']]], ['Clipe anterior / próximo', [['Shift', '←'], ['Shift', '→']]], ['Salvar cena', [['Ctrl', 'S']]], ['Modo performance', [['P']]]] },
+    { name: 'Janela', rows: [['Tela cheia', [['F11']]], ['Fechar o app', [['Ctrl', 'W']]], ['Fechar painel ou gaveta', [['Esc']]], ['Mostrar atalhos', [['?']]]] },
+    { name: 'IA', rows: [['Pausar controle por IA', [['Ctrl', 'Shift', 'P']]]] },
+  ];
+  function ctxGroup() {
+    if (lOpen) return { name: 'Agora · Biblioteca', now: true, rows: [['Mover entre as linhas', [['↑'], ['↓']]], ['Tocar o preset', [['Enter']]], ['Limpar a busca ou fechar', [['Esc']]]] };
+    if (mode === 'rack') return { name: 'Agora · Rack', now: true, rows: [['Voltar ao Palco', [['M']]], ['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Favoritar', [['F']]], ['Rotação automática', [['R']]]] };
+    return { name: 'Agora · Palco', now: true, rows: [['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Favoritar', [['F']]], ['Esconder controles', [['H']]], ['Biblioteca', [['L']]]] };
+  }
+  function renderK() {
+    const f = norm(kQ.value.trim()); let html = '';
+    [ctxGroup()].concat(KEYS).forEach(g => {
+      const rs = g.rows.filter(r => !f || norm(r[0] + ' ' + r[1].map(a => a.join(' ')).join(' ')).indexOf(f) > -1);
+      if (!rs.length) return;
+      html += '<section class="k-g' + (g.now ? ' now' : '') + '"><h3>' + esc(g.name) + '</h3>' + (g.note ? '<p class="k-note">' + esc(g.note) + '</p>' : '') +
+        rs.map(r => '<div class="k-row"><span>' + esc(r[0]) + '</span><span class="k-keys">' +
+          r[1].map(a => a.map(k => '<kbd>' + esc(k) + '</kbd>').join('')).join('<span class="k-or">ou</span>') + '</span></div>').join('') + '</section>';
+    });
+    $('kBody').innerHTML = html || '<p class="k-empty">Nenhum atalho com “' + esc(kQ.value.trim()) + '”.</p>';
+  }
+  function openShortcuts() {
+    if (kOpen) return; kOpen = true; kLast = document.activeElement;
+    if (pOpen) closePalette(); closeMenu(); closePop(false);
+    document.body.classList.add('kbd-open'); kPanel.hidden = false; kQ.value = ''; renderK(); kQ.focus(); wake();
+  }
+  function closeShortcuts() {
+    if (!kOpen) return; kOpen = false; document.body.classList.remove('kbd-open'); kPanel.hidden = true;
+    if (kLast && document.contains(kLast) && kLast.focus) kLast.focus(); wake();
+  }
+  $('kbdBtn').onclick = openShortcuts; $('kClose').onclick = closeShortcuts; $('kScrim').onclick = closeShortcuts;
+  kQ.addEventListener('input', renderK);
+  kPanel.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const fs = Array.from(kPanel.querySelectorAll('input, button, a[href]')).filter(x => !x.disabled && x.offsetParent !== null);
+    if (!fs.length) return; const i = fs.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); fs[fs.length - 1].focus(); } else if (!e.shiftKey && i === fs.length - 1) { e.preventDefault(); fs[0].focus(); }
+  });
+  const CMDS = [
+    { label: 'Modo limpo', keys: ['T'], icon: 'eye-off', run: () => setClean(!cleanMode, true) },
+    { label: 'Abrir biblioteca', keys: ['L'], icon: 'library', stage: true, run: () => setLib(!lOpen) },
+    { label: 'Modo Rack', keys: ['M'], icon: 'picture-in-picture-2', run: () => setMode(mode === 'rack' ? 'stage' : 'rack') },
+    { label: 'Mostrar atalhos', keys: ['?'], icon: 'keyboard', run: () => openShortcuts() },
+    { label: 'Ajustes rápidos', keys: [','], icon: 'sliders-horizontal', stage: true, run: () => setSheet(!sOpen) },
+    { label: 'Configurações', keys: ['Ctrl', ','], icon: 'settings', run: () => { location.href = SETTINGS_URL; } },
+    { label: 'Tela cheia', keys: ['F11'], icon: 'maximize', run: () => toggleFs() },
+    { label: 'Favoritar preset atual', keys: ['F'], icon: 'star', run: () => toggleFav() },
+    { label: 'Rotação automática', keys: ['R'], icon: 'repeat', run: () => setRot(!rotOn) },
+  ];
+  function cmdList() {
+    const f = norm(q);
+    return CMDS.filter(c => (mode === 'stage' || !c.stage) && (!f || norm(c.label + ' ' + c.keys.join(' ')).indexOf(f) > -1));
+  }
+  function runCmd(c) { closePalette(); c.run(); }
 
   // ═══════════ Biblioteca (gaveta) ═══════════
   const libEl = $('lib'), libList = $('libList'), libQ = $('libQ'), libToastEl = $('libToast'), menuEl = $('libMenu');
@@ -1996,6 +2107,7 @@
 
   // ═══════════ Teclado ═══════════
   function handleEsc(e) {
+    if (kOpen) { closeShortcuts(); return; }
     if (!$('scDialog').hidden) { closeScDialog(); return; }
     if (pop) { closePop(true); return; }
     if (pOpen) { closePalette(); return; }
@@ -2039,7 +2151,8 @@
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'F11') { e.preventDefault(); toggleFs(); return; }
-    if (pOpen) return;
+    if (e.key === '?' && !typing) { e.preventDefault(); kOpen ? closeShortcuts() : openShortcuts(); return; }
+    if (pOpen || kOpen) return;
     if (lOpen && libEl.contains(ae) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
       const down = e.key === 'ArrowDown';
       if (ae === libQ) { if (down) { const f = libList.querySelector('[data-col="main"]'); if (f) { e.preventDefault(); f.focus(); } } return; }

@@ -44,6 +44,13 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
       return
     }
     panel.current?.querySelector<HTMLElement>('[role=tab][aria-selected=true]')?.focus()
+    // M12: degrau nas primeiras linhas, só na abertura.
+    const el = panel.current
+    if (!el) return
+    el.querySelectorAll<HTMLElement>('.rows > li, .collist > li, .corder > li').forEach((li, i) => li.style.setProperty('--i', String(Math.min(i, 8))))
+    el.classList.add('enter')
+    const t = window.setTimeout(() => el.classList.remove('enter'), 600)
+    return () => window.clearTimeout(t)
   }, [open])
 
   const close = (): void => void core.run('ui.close', {}, 'ui')

@@ -8,14 +8,16 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Palco: faixa de controle e assinatura** — [spec 009](docs/specs/009-palco-faixa-assinatura.md) · issue [#22](https://github.com/atempel/sonic-obsidian/issues/22)
 - [x] **Texto sobre o visual, Modo limpo `T` e controles da janela** (design f126; comportamento aqui, controles visuais na 011) — [spec 014](docs/specs/014-texto-sobre-visual-janela.md) · issue [#34](https://github.com/atempel/sonic-obsidian/issues/34)
 - [x] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
-- [ ] **Ajustes rápidos e Configurações** (PR 1 Ajustes rápidos validado, #39; PR 2 Configurações em teste) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
+- [x] **Ajustes rápidos e Configurações** (PRs #39 e #44) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
 - [x] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
 - [x] **Expressividade em `+`/`−`** (Caráter `X`, Memória `Shift+X`; ganho só nos Ajustes) — [spec 015](docs/specs/015-expressividade.md) · issue [#36](https://github.com/atempel/sonic-obsidian/issues/36) · spike no PR #35
 - [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
-- [ ] **Microinterações da faixa** (M01–M03, M05–M08, M12, M22; logo depois da 011) — [queue/2026-11-08-microinteracoes.md](queue/2026-11-08-microinteracoes.md)
+- [ ] **Microinterações da faixa e da gaveta** (M01–M03, M05–M08, M12, M22) — [spec 018](docs/specs/018-microinteracoes-faixa.md) · issue [#45](https://github.com/atempel/sonic-obsidian/issues/45)
+- [ ] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — planejar: [queue/2026-11-08-painel-atalhos.md](queue/2026-11-08-painel-atalhos.md)
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
+- [ ] **Passagem de performance, segurança e otimização** (pedido do usuário, no fim desta frente). Inclui: a abertura do app ficou mais lenta há algumas builds (não é a edição do `.exe`; o renderer abre igual nos builds do PR 1 e do #44, ~0,5 s no headless, então medir o main e o carregamento no Windows, com tempos no log).
 - [ ] Decidir sobre `electron@45.2.3` e `vite@8.3.6`, que tinham menos de 14 dias na checagem retroativa de dependências — [docs/dependencias.md](docs/dependencias.md)
 - [ ] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder` (só dev; o fix sugerido é downgrade de major)
 - [ ] Confirmar numa sessão longa (horas) que a memória da GPU fica estável depois da correção do vazamento de shaders — pedir o `sonic-obsidian.log` (`Ctrl+Shift+L`); ver DECISIONS 2026-11-08 "Queda do driver de vídeo"
