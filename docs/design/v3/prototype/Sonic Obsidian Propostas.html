@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Quadro das propostas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<style>
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--bg-00); }
+  main { max-width: 1440px; margin: 0 auto; padding: 48px 32px 80px; }
+  header.top { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: end; padding-bottom: 32px; border-bottom: 1px solid var(--line-1); }
+  h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.04; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+  h1 .mark { display: inline-block; width: 0.62em; height: 0.62em; margin-right: 0.18em; vertical-align: 0.02em; }
+  .lede { margin: 16px 0 0; max-width: 60ch; color: var(--text-2); font-size: 16px; text-wrap: pretty; }
+  .principles { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--text-2); }
+  .principles li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+  .principles li::before { content: ""; width: 6px; height: 6px; margin: 8px 0 0 4px; border-radius: 50%; background: var(--violet); }
+  .principles strong { color: var(--text-1); font-weight: 500; }
+
+  .model { margin-top: 48px; }
+  .model h2 { margin: 0 0 12px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  .map { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 2.2fr); gap: 16px; margin-top: 24px; align-items: stretch; }
+  .spokes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line-2); border: 1px solid var(--line-2); border-radius: var(--r-3); overflow: hidden; }
+  .node { display: flex; flex-direction: column; gap: 6px; padding: 18px 20px; background: var(--bg-01); color: var(--text-2); text-decoration: none; font-size: 13px; transition: background var(--t-fast); }
+  .node:hover { background: var(--bg-02); }
+  .node strong { color: var(--text-1); font-size: 16px; font-weight: 600; }
+  .n-key { display: flex; gap: 4px; align-items: center; color: var(--text-3); font-size: 12px; min-height: 22px; }
+  .node.home { border: 1px solid var(--violet-line); border-radius: var(--r-3); background: var(--violet-soft); justify-content: flex-end; padding: 24px; }
+  .node.home strong { font-size: 28px; letter-spacing: -0.02em; }
+  .node.home .n-key { color: var(--violet); }
+  @media (max-width: 1100px) { .map { grid-template-columns: minmax(0, 1fr); } .spokes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .spokes { grid-template-columns: minmax(0, 1fr); } }
+  .props { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 24px; }
+  .prop { display: flex; flex-direction: column; min-width: 0; }
+  .frame { position: relative; aspect-ratio: 16 / 10; border-radius: var(--r-3); overflow: hidden; border: 1px solid var(--line-2); background: var(--bg-01); }
+  .frame iframe { position: absolute; left: 0; top: 0; width: 250%; height: 250%; border: 0; transform: scale(0.4); transform-origin: 0 0; pointer-events: none; }
+  .frame .fallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--text-3); font-size: 13px; }
+  .letter { font-family: var(--font-num); font-size: 13px; color: var(--violet); margin-top: 20px; }
+  .prop h2 { margin: 4px 0 8px; font-size: 24px; font-weight: 600; letter-spacing: -0.015em; }
+  .prop .pitch { margin: 0 0 16px; color: var(--text-2); text-wrap: pretty; }
+  .prop h3 { margin: 16px 0 6px; font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .prop ul { margin: 0; padding-left: 18px; color: var(--text-2); font-size: 14px; }
+  .prop li { margin: 3px 0; }
+  .prop li::marker { color: var(--line-3); }
+  .open { margin-top: 20px; align-self: flex-start; text-decoration: none; }
+
+  .compare { margin-top: 56px; }
+  .compare h2, .rec h2 { margin: 0 0 16px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  thead th { background: var(--bg-01); font-weight: 600; color: var(--text-1); }
+  tbody th { font-weight: 500; color: var(--text-1); width: 20%; }
+  td { color: var(--text-2); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  .lv { display: inline-flex; gap: 3px; vertical-align: -1px; margin-right: 8px; }
+  .lv i { width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); }
+  .lv i.on { background: var(--text-2); }
+
+  .rec { margin-top: 56px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; padding-top: 32px; border-top: 1px solid var(--line-1); }
+  .rec p { margin: 0 0 12px; color: var(--text-2); max-width: 62ch; text-wrap: pretty; }
+  .rec p strong { color: var(--text-1); font-weight: 500; }
+  .next { margin: 0; padding-left: 20px; color: var(--text-2); }
+  .next li { margin: 6px 0; }
+  .next li::marker { font-family: var(--font-num); color: var(--violet); }
+
+  @media (max-width: 1100px) { .props { grid-template-columns: minmax(0, 1fr); } header.top, .rec { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+  @media (max-width: 600px) { main { padding: 32px 16px 56px; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div>
+      <h1><svg class="mark" viewBox="0 0 24 24" fill="none" stroke="#C244FF" stroke-width="1.6" aria-hidden="true"><path d="M12 2 21 9l-4 13H7L3 9z"/><path d="M3 9h18M12 2 9 9l3 13 3-13z"/></svg>Sonic Obsidian: três caminhos para a interface</h1>
+      <p class="lede">O motor agora é o Butterchurn: centenas de presets, cada um com autor, e captura do áudio do sistema inteiro. As três propostas partem dos mesmos princípios e mudam onde a interface vive e para que tipo de sessão ela serve.</p>
+    </div>
+    <ul class="principles">
+      <li><span><strong>O visual é o produto.</strong> A interface cede espaço e some quando não é usada.</span></li>
+      <li><span><strong>Acentos são luz, não tinta.</strong> Violeta para seleção, ciano para valores vivos, rosa só para beat.</span></li>
+      <li><span><strong>Só o visual reage ao áudio o tempo todo.</strong> A interface reage a eventos: beat e troca de preset.</span></li>
+      <li><span><strong>Crédito sempre visível.</strong> Na troca, o título e o autor entram como num crédito de disco, com uma linha que dura o blend.</span></li>
+    </ul>
+  </header>
+
+  <section class="model" aria-labelledby="modelTitle">
+    <h2 id="modelTitle">Modelo combinado</h2>
+    <p class="lede" style="margin-top:0">O Palco é a casa. A Biblioteca e o Rack deixam de ser alternativas e viram lugares do mesmo app, chamados por uma tecla. O setup nunca bloqueia: o app abre tocando.</p>
+    <p class="lede" style="margin-top:8px">Do butterchurnviz vieram: blend separado para troca automática e manual, limite de quadros, tamanho do canvas e malha de distorção, microfone e arquivo como fontes alternativas, e importar presets <span class="num">.milk</span> arrastando para a janela.</p>
+    <div class="map">
+      <a class="node home" href="Sonic Obsidian Palco integrado.html">
+        <span class="n-key">Abre aqui</span>
+        <strong>Palco</strong>
+        <span>Só o visual. A faixa de controle aparece com o mouse.</span>
+      </a>
+      <div class="spokes">
+        <a class="node" href="Sonic Obsidian Palco integrado.html"><span class="n-key"><kbd>L</kbd> ou borda esquerda</span><strong>Biblioteca</strong><span>Gaveta oculta para curadoria: coleções, favoritos, ocultos.</span></a>
+        <a class="node" href="Sonic Obsidian Palco integrado.html"><span class="n-key"><kbd>/</kbd> <kbd>Ctrl</kbd><kbd>K</kbd></span><strong>Busca rápida</strong><span>Tocar algo já, pelo nome ou autor.</span></a>
+        <a class="node" href="Sonic Obsidian Palco integrado.html"><span class="n-key"><kbd>M</kbd></span><strong>Modo Rack</strong><span>Mini-player sempre por cima; visual na outra tela ou no próprio rack.</span></a>
+        <a class="node" href="Sonic Obsidian Palco integrado.html"><span class="n-key"><kbd>,</kbd></span><strong>Ajustes rápidos</strong><span>Ganho, rotação e blend, sem sair da música.</span></a>
+        <a class="node" href="Sonic Obsidian Configurações.html"><span class="n-key"><kbd>Ctrl</kbd><kbd>,</kbd></span><strong>Configurações</strong><span>Captura, visual, desempenho, biblioteca, telas, atalhos.</span></a>
+        <a class="node" href="Sonic Obsidian Setup.html"><span class="n-key">Quando algo pede</span><strong>Setup e diagnóstico</strong><span>Boas-vindas não-modal, sem som, captura falhou, WebGL 2, duas telas.</span></a>
+        <a class="node" href="Sonic Obsidian Estúdio.html"><span class="n-key"><kbd>E</kbd> ou Biblioteca › Novo preset</span><strong>Estúdio de presets</strong><span>Criar e remixar .milk com prévia ao vivo, erros por linha e versões.</span></a>
+        <a class="node" href="Sonic Obsidian Palco integrado.html"><span class="n-key">Botão de fonte na faixa</span><strong>Fontes de áudio</strong><span>Sistema, microfone, arquivo ou link do SoundCloud, com transporte da faixa.</span></a>
+        <a class="node" href="Sonic Obsidian Configurações.html"><span class="n-key">Configurações › Integrações</span><strong>IA via MCP</strong><span>Servidor local: a sua ferramenta de IA cria presets e controla o app ao vivo.</span></a>
+      </div>
+    </div>
+    <h2 style="margin-top:48px">As três direções de origem</h2>
+  </section>
+
+  <section class="props" aria-label="Propostas">
+    <article class="prop">
+      <div class="frame"><span class="fallback">Prévia de A · Palco</span><iframe src="Sonic Obsidian A Palco.html" title="Prévia da proposta A" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="letter">A</div>
+      <h2>Palco</h2>
+      <p class="pitch">Nada na tela até você mexer o mouse. Uma faixa de controle aparece embaixo; presets se acham por busca rápida e os ajustes ficam num painel lateral.</p>
+      <h3>Serve melhor</h3>
+      <ul><li>Ouvir música com o visual em primeiro plano</li><li>Quem navega por teclado (<kbd>/</kbd>, <kbd>Espaço</kbd>, <kbd>←</kbd><kbd>→</kbd>)</li></ul>
+      <h3>Custo</h3>
+      <ul><li>Curadoria fica rasa: coleções só aparecem na busca</li><li>Descoberta depende de saber o que buscar</li></ul>
+      <a class="btn open" href="Sonic Obsidian A Palco.html">Abrir proposta A</a>
+    </article>
+    <article class="prop">
+      <div class="frame"><span class="fallback">Prévia de B · Biblioteca</span><iframe src="Sonic Obsidian B Biblioteca.html" title="Prévia da proposta B" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="letter">B</div>
+      <h2>Biblioteca</h2>
+      <p class="pitch">Uma barra lateral recolhível, como num player de mídia: favoritos, recentes, coleções com intervalo próprio e “não mostrar mais”. O visual ocupa o resto.</p>
+      <h3>Serve melhor</h3>
+      <ul><li>Montar a sessão antes de uma noite com convidados</li><li>Explorar a biblioteca vendo miniaturas</li></ul>
+      <h3>Custo</h3>
+      <ul><li>Tira largura do visual enquanto aberta</li><li>Miniaturas exigem capturar cada preset ao tocar</li></ul>
+      <a class="btn open" href="Sonic Obsidian B Biblioteca.html">Abrir proposta B</a>
+    </article>
+    <article class="prop">
+      <div class="frame"><span class="fallback">Prévia de C · Rack</span><iframe src="Sonic Obsidian C Rack.html" title="Prévia da proposta C" loading="lazy" tabindex="-1"></iframe></div>
+      <div class="letter">C</div>
+      <h2>Rack</h2>
+      <p class="pitch">Um mini-player preciso, sempre por cima, numa tela; o visual em tela cheia na outra. Homenagem ao Winamp pela densidade, sem skin nem nostalgia literal.</p>
+      <h3>Serve melhor</h3>
+      <ul><li>Jogar ou trabalhar com o visual num segundo monitor</li><li>Dar ao produto uma identidade própria</li></ul>
+      <h3>Custo</h3>
+      <ul><li>Depende de multi-monitor e janela sempre por cima (Fase 3)</li><li>Com um monitor só, perde o sentido</li></ul>
+      <a class="btn open" href="Sonic Obsidian C Rack.html">Abrir proposta C</a>
+    </article>
+  </section>
+
+  <section class="compare">
+    <h2>Comparação</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">Critério</th><th scope="col">A · Palco</th><th scope="col">B · Biblioteca</th><th scope="col">C · Rack</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Espaço livre para o visual</th>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Tela inteira; a faixa some sozinha</td>
+            <td><span class="lv"><i class="on"></i><i></i><i></i></span>Perde 340 px com a barra aberta</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Outra tela inteira</td></tr>
+          <tr><th scope="row">Achar um preset</th>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Busca com <kbd>/</kbd> por título e autor</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Busca, abas e miniaturas</td>
+            <td><span class="lv"><i class="on"></i><i></i><i></i></span>Fila da coleção; sem busca</td></tr>
+          <tr><th scope="row">Curadoria (coleções, ocultar)</th>
+            <td><span class="lv"><i class="on"></i><i></i><i></i></span>Coleções dentro da busca</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Coleções editáveis e ocultos</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i></i></span>Escolhe a coleção; não edita</td></tr>
+          <tr><th scope="row">Identidade de marca</th>
+            <td><span class="lv"><i class="on"></i><i></i><i></i></span>Discreta; vive na assinatura</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i></i></span>Familiar de player de mídia</td>
+            <td><span class="lv"><i class="on"></i><i class="on"></i><i class="on"></i></span>Objeto próprio e reconhecível</td></tr>
+          <tr><th scope="row">Onde cai no roadmap</th>
+            <td>Fase 1–2: tudo P0</td>
+            <td>Fase 2 e coleções da Fase 3</td>
+            <td>Fase 3: multi-monitor e sempre por cima</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="rec">
+    <div>
+      <h2>Decisão de 8 de novembro</h2>
+      <p><strong>O Palco é a tela padrão.</strong> A Biblioteca vira uma gaveta oculta chamada pela tecla <kbd>L</kbd> ou pela borda esquerda, e o Rack vira um modo de visualização chamado pela tecla <kbd>M</kbd>.</p>
+      <p><strong>Configurações e setup completam o mapa.</strong> Os ajustes rápidos ficam no Palco; o resto vai para uma tela de Configurações. O setup aparece só como cartões e diagnósticos, nunca antes do visual.</p>
+    </div>
+    <div>
+      <h2>Próximos passos</h2>
+      <ol class="next">
+        <li>Registrar o modelo combinado no DECISIONS.md e no PRD (Fase 2)</li>
+        <li>Fechar a tipografia: manter Space Grotesk ou testar uma alternativa com mais caráter</li>
+        <li>Quebrar a Fase 2 em specs: faixa + busca rápida, Biblioteca, Configurações, Rack (Fase 3)</li>
+        <li>Validar a assinatura no app real, com o blend do Butterchurn</li>
+      </ol>
+    </div>
+  </section>
+</main>
+</body>
+</html>

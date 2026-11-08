@@ -26,6 +26,13 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - **Executar:** skill `executar-task` → branch, implementação, verificação no app rodando, PR com `Closes #N`.
 - **Encerrar:** skill `encerrar-sessao` → SESSIONS.md, TASKS.md, DECISIONS.md e o estado no Notion.
 
+## Design (protótipo)
+- O desenho da interface vive num artefato do Claude Design; `docs/design/v3/` é o espelho dele no repo, com a versão em `docs/design/v3/SYNC.md`. Ler `docs/design/v3/README.md` antes de qualquer trabalho de interface.
+- Skill `sincronizar-design`: modo "checar" no início de toda tarefa de interface; modo "sincronizar" quando o design mudou.
+- Specs e PRs de interface citam a página e a versão do protótipo usadas.
+- O espelho é somente leitura. Afastar-se do desenho → entrada em `docs/design/v3/DIVERGENCIAS.md` (a sessão de design lê e responde).
+- Fato técnico (APIs, limites, versões) segue o repo (`docs/architecture.md`), não o protótipo.
+
 ## Limites — não fazer sem perguntar
 - Commitar direto em `main`.
 - Trocar de motor visual, de shell (Electron) ou adicionar framework grande de UI além do decidido — registrar em DECISIONS.md primeiro.
@@ -42,5 +49,6 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 
 ## Ver também
 - [docs/PRD.md](docs/PRD.md) — roadmap e escopo (arquivo âncora)
-- `docs/design/` — design system, moodboard, protótipo
+- `docs/design/v3/` — protótipo v3 espelhado do Claude Design (referência de interface)
+- `docs/design/` — exploração v1/v2, moodboard
 - `docs/research/` — pesquisa técnica (MilkDrop, FFT, efeitos)

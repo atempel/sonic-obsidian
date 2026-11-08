@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Vídeo · Propostas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<script src="so-v3-clips.js"></script>
+<style>
+  html, body { height: auto; min-height: 100%; }
+  body { background: var(--bg-00); }
+  main { max-width: 1440px; margin: 0 auto; padding: 48px 32px 80px; }
+  header.top { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 48px; align-items: end; padding-bottom: 32px; border-bottom: 1px solid var(--line-1); }
+  h1 { margin: 0; font-size: clamp(32px, 4vw, 52px); line-height: 1.04; font-weight: 600; letter-spacing: -0.03em; text-wrap: balance; }
+  .lede { margin: 16px 0 0; max-width: 60ch; color: var(--text-2); font-size: 16px; text-wrap: pretty; }
+  .principles { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--text-2); }
+  .principles li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+  .principles li::before { content: ""; width: 6px; height: 6px; margin: 8px 0 0 4px; border-radius: 50%; background: var(--violet); }
+  .principles strong { color: var(--text-1); font-weight: 500; }
+
+  h2.sec { margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  .sec-lede { margin: 0 0 24px; color: var(--text-2); max-width: 70ch; text-wrap: pretty; }
+  .models { margin-top: 48px; }
+  .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+  .model { display: flex; flex-direction: column; min-width: 0; }
+  .frame { position: relative; aspect-ratio: 16 / 10; border-radius: 6px; overflow: hidden; border: 1px solid var(--line-2); background: var(--bg-01); }
+  .frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .chip { position: absolute; top: 8px; z-index: 1; max-width: calc(100% - 16px); padding: 3px 8px; border-radius: var(--r-2); background: var(--bg-01); border: 1px solid var(--line-3); color: var(--text-1); font-size: 12px; line-height: 1.3; }
+  .chip.l { left: 8px; }
+  .chip.r { right: 8px; }
+  .chip.warn { color: var(--warn); border-color: var(--warn); }
+  .ctl { display: flex; align-items: center; min-height: 96px; padding: 10px 0; }
+  .ctl > * { min-width: 0; }
+  .seg { display: flex; flex-wrap: wrap; gap: 2px; width: 100%; padding: 2px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .seg button { flex: 1 1 auto; min-height: 30px; padding: 4px 8px; border: 0; border-radius: var(--r-2); background: transparent; color: var(--text-2); font-size: 12px; line-height: 1.2; font-weight: 500; text-align: center; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+  .seg button:hover { background: var(--bg-03); color: var(--text-1); }
+  .seg button:active { background: var(--bg-04); }
+  .seg button[aria-checked="true"] { background: var(--violet-soft); color: var(--violet); }
+  .xf { display: grid; grid-template-columns: 76px minmax(0, 1fr) 76px; gap: 12px; align-items: start; width: 100%; }
+  .deck { display: flex; flex-direction: column; gap: 4px; align-items: center; color: var(--text-2); font-size: 12px; }
+  .deck .mini { width: 100%; aspect-ratio: 16 / 10; border-radius: var(--r-2); border: 1px solid var(--line-2); background: var(--bg-01); display: block; }
+  .deck strong { color: var(--text-1); font-weight: 600; }
+  .xf input[type=range] { margin-top: 12px; }
+  .note { font-size: 12px; color: var(--text-2); }
+  .model h3 { margin: 4px 0 12px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  .model h4 { margin: 14px 0 4px; font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .model ul { margin: 0; padding-left: 18px; color: var(--text-2); }
+  .model li { margin: 3px 0; }
+  .model li::marker { color: var(--line-3); }
+  .model p { margin: 0; color: var(--text-2); text-wrap: pretty; }
+  .lv { display: inline-flex; gap: 3px; vertical-align: -1px; margin-left: 8px; }
+  .lv i { width: 10px; height: 10px; border-radius: 2px; background: var(--line-2); }
+  .lv i.on { background: var(--text-2); }
+  .lvl { color: var(--text-1); font-weight: 500; }
+
+  .compare { margin-top: 64px; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 900px; }
+  th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line-1); vertical-align: top; }
+  thead th { background: var(--bg-01); font-weight: 600; color: var(--text-1); }
+  tbody th { font-weight: 500; color: var(--text-1); width: 16%; }
+  td { color: var(--text-2); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+  td .lv { margin: 0 8px 0 0; }
+
+  .rec { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--line-1); }
+  .rec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 48px; }
+  .rec p { margin: 0; color: var(--text-2); max-width: 62ch; text-wrap: pretty; }
+  .rec p strong { color: var(--text-1); font-weight: 500; }
+  .react { margin-top: 56px; }
+  .react-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 48px; }
+  .react h3 { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+  .react .sub { margin: 0 0 12px; color: var(--text-2); font-size: 13px; }
+  .react ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; color: var(--text-2); border-top: 1px solid var(--line-1); }
+  .react li { padding: 10px 0; border-bottom: 1px solid var(--line-1); text-wrap: pretty; }
+  .react li strong { color: var(--text-1); font-weight: 500; }
+  .react kbd { margin-right: 2px; }
+  .react .foot { margin: 16px 0 0; color: var(--text-2); max-width: 70ch; }
+  .links { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line-1); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .links h2 { flex-basis: 100%; margin: 0 0 4px; font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+  .links .btn { text-decoration: none; }
+  .hidden-viz { position: fixed; left: 0; top: 0; width: 640px; height: 400px; overflow: hidden; visibility: hidden; pointer-events: none; z-index: -1; }
+  .hidden-viz canvas { width: 640px; height: 400px; display: block; }
+
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    header.top, .rec-grid, .react-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .rec-grid { gap: 12px; }
+  }
+  @media (max-width: 600px) {
+    main { padding: 32px 16px 56px; }
+    .grid { grid-template-columns: minmax(0, 1fr); }
+    .ctl { min-height: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="hidden-viz" aria-hidden="true"><canvas id="viz"></canvas></div>
+<main>
+  <header class="top">
+    <div>
+      <h1>Vídeo no Sonic Obsidian: como misturar clipes e MilkDrop</h1>
+      <p class="lede">Quatro jeitos de pôr vídeo sob, sobre ou dentro do visual do Butterchurn. As prévias abaixo usam um compositor de verdade, com clipes fictícios, para você sentir cada mistura antes de decidir.</p>
+    </div>
+    <ul class="principles">
+      <li><span><strong>Só arquivos do usuário.</strong> O app não baixa nem distribui clipes; a biblioteca guarda referências no seu disco.</span></li>
+      <li><span><strong>O visual continua reagindo à fonte de áudio.</strong> O vídeo entra como camada; o MilkDrop segue ouvindo o sistema.</span></li>
+      <li><span><strong>Um único compositor serve Palco, performance e cenas.</strong> Muda a interface, não o motor de mistura.</span></li>
+    </ul>
+  </header>
+
+  <section class="models" aria-labelledby="modelosTitle">
+    <h2 class="sec" id="modelosTitle">Modelos de mistura</h2>
+    <p class="sec-lede">Cada prévia é ao vivo. Troque o modo ou mova o fader e veja o resultado na hora.</p>
+    <div class="grid">
+
+      <article class="model" aria-labelledby="m1">
+        <div class="frame"><canvas id="out1" role="img" aria-label="Prévia: visual do MilkDrop com um clipe por cima no modo de mesclagem escolhido"></canvas></div>
+        <div class="ctl">
+          <div class="seg" role="radiogroup" aria-label="Modo de mesclagem da camada" data-seg="blend1">
+            <button type="button" role="radio" aria-checked="true" data-v="screen">Tela</button>
+            <button type="button" role="radio" aria-checked="false" data-v="add">Adição</button>
+            <button type="button" role="radio" aria-checked="false" data-v="difference">Diferença</button>
+            <button type="button" role="radio" aria-checked="false" data-v="multiply">Multiplicação</button>
+          </div>
+        </div>
+        <h3 id="m1">Camadas compostas</h3>
+        <p>O MilkDrop e até 2 clipes empilhados, cada camada com ordem, opacidade e modo de mesclagem.</p>
+        <h4>Para quem</h4>
+        <ul><li>Quem ouve música e quer um clipe sob o MilkDrop</li><li>Quem monta cenas no Palco</li></ul>
+        <h4>Custo técnico</h4>
+        <p><span class="lvl">Baixo</span><span class="lv" aria-hidden="true"><i class="on"></i><i></i><i></i></span></p>
+        <h4>Papel no produto</h4>
+        <p>Base do Palco com vídeo.</p>
+        <h4>Limite</h4>
+        <p>A mistura vale para a camada inteira: sem recorte por forma nem transição entre dois visuais.</p>
+      </article>
+
+      <article class="model" aria-labelledby="m2">
+        <div class="frame"><canvas id="out2" role="img" aria-label="Prévia: recorte por luminosidade entre o clipe e o visual do MilkDrop"></canvas></div>
+        <div class="ctl">
+          <div class="seg" role="radiogroup" aria-label="Tipo de recorte" data-seg="blend2">
+            <button type="button" role="radio" aria-checked="true" data-v="luma-key">Chave de luminosidade</button>
+            <button type="button" role="radio" aria-checked="false" data-v="luma-mask">Luminosidade como máscara</button>
+          </div>
+        </div>
+        <h3 id="m2">Recorte por chave</h3>
+        <p>Remove o escuro do vídeo, ou usa o vídeo para decidir onde o MilkDrop aparece.</p>
+        <h4>Para quem</h4>
+        <ul><li>Quem quer o MilkDrop só nas silhuetas do clipe</li><li>Quem usa clipes com fundo escuro</li></ul>
+        <h4>Custo técnico</h4>
+        <p><span class="lvl">Médio</span><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span></p>
+        <h4>Papel no produto</h4>
+        <p>Não é modelo à parte: entra como modos de mesclagem do mesmo compositor.</p>
+        <h4>Limite</h4>
+        <p>Pede shader próprio; a chave de cor ainda exige ajustar cor e tolerância.</p>
+      </article>
+
+      <article class="model" aria-labelledby="m3">
+        <div class="frame"><canvas id="out3" role="img" aria-label="Prévia: saída do crossfader misturando o deck A, só o visual, com o deck B, um clipe"></canvas></div>
+        <div class="ctl">
+          <div class="xf">
+            <div class="deck"><canvas id="deckA" class="mini" role="img" aria-label="Deck A: só o visual"></canvas><span><strong>A</strong> visual</span></div>
+            <input type="range" id="fader" aria-label="Crossfader" min="0" max="100" step="1" value="50" style="--fill:50%">
+            <div class="deck"><canvas id="deckB" class="mini" role="img" aria-label="Deck B: clipe 01"></canvas><span><strong>B</strong> clipe</span></div>
+          </div>
+        </div>
+        <h3 id="m3">Crossfader A/B</h3>
+        <p>Dois decks e um fader. Cada deck é uma pilha de camadas; a saída mistura os dois.</p>
+        <h4>Para quem</h4>
+        <ul><li>VJ ao vivo, de preferência com duas telas</li><li>Quem prepara o próximo visual enquanto o atual toca</li></ul>
+        <h4>Custo técnico</h4>
+        <p><span class="lvl">Médio</span><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span></p>
+        <h4>Papel no produto</h4>
+        <p>Base do Modo performance.</p>
+        <h4>Limite</h4>
+        <p>Cada deck custa um quadro a mais por frame; o fader mistura, não edita.</p>
+      </article>
+
+      <article class="model" aria-labelledby="m4">
+        <div class="frame">
+          <span class="chip l">Simulação</span>
+          <span class="chip r warn">Exploração · custo alto</span>
+          <canvas id="out4" role="img" aria-label="Simulação: um clipe de malha sendo distorcido pelo feedback de zoom e rotação, como um preset faria"></canvas>
+        </div>
+        <div class="ctl"><p class="note">O vídeo entra no feedback do preset e sofre warp e rastro. Aqui é só uma simulação em Canvas 2D.</p></div>
+        <h3 id="m4">Vídeo como textura do preset</h3>
+        <p>O vídeo vira um sampler dentro dos shaders do preset, junto com o warp e o rastro do MilkDrop.</p>
+        <h4>Para quem</h4>
+        <ul><li>Autores de presets que querem o vídeo dentro do warp</li><li>Quem aceita manter um fork do motor</li></ul>
+        <h4>Custo técnico</h4>
+        <p><span class="lvl">Alto</span><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span></p>
+        <h4>Papel no produto</h4>
+        <p>Exploração: spike depois da Fase 3.</p>
+        <h4>Limite</h4>
+        <p>O Butterchurn só aceita imagens estáticas; os presets teriam de ser escritos para usar o sampler novo.</p>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="compare" aria-labelledby="compTitle">
+    <h2 class="sec" id="compTitle">Comparação</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th scope="col">Critério</th><th scope="col">Camadas compostas</th><th scope="col">Recorte por chave</th><th scope="col">Crossfader A/B</th><th scope="col">Vídeo como textura</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Custo de GPU</th>
+            <td><span class="lv" aria-hidden="true"><i class="on"></i><i></i><i></i></span>Baixo: um passe por camada</td>
+            <td><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>Médio: shader de chave</td>
+            <td><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>Médio: dois decks</td>
+            <td><span class="lv" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span>Alto: textura dentro do preset</td></tr>
+          <tr><th scope="row">Precisa mexer no motor</th>
+            <td>Não</td><td>Não</td><td>Não</td><td>Sim: fork do Butterchurn</td></tr>
+          <tr><th scope="row">Bom para ambiente</th>
+            <td>Sim: clipe de fundo sob o visual</td><td>Sim: o MilkDrop só nas silhuetas</td><td>Pouco: pede alguém no fader</td><td>Incerto: depende de presets novos</td></tr>
+          <tr><th scope="row">Bom para ao vivo</th>
+            <td>Razoável: liga e desliga, opacidade</td><td>Razoável: troca o modo na hora</td><td>Sim: é o modelo feito para isso</td><td>Pouco: o efeito é do preset, não de quem toca</td></tr>
+          <tr><th scope="row">Efeitos possíveis</th>
+            <td>Normal, Tela, Adição, Multiplicação, Diferença, Sobrepor</td><td>Chave de luminosidade, chave de cor, luminosidade como máscara</td><td>Corte, fade, curvas do fader, ré, stutter, strobe, congelar</td><td>Vídeo com warp, rastro e feedback do MilkDrop</td></tr>
+          <tr><th scope="row">Onde aparece no app</th>
+            <td>Palco com vídeo</td><td>Modos de mesclagem do Palco com vídeo</td><td>Modo performance (<kbd>P</kbd>)</td><td>Em nenhuma tela ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="rec" aria-labelledby="recTitle">
+    <h2 class="sec" id="recTitle">Recomendação</h2>
+    <div class="rec-grid">
+      <p><strong>Um único compositor por camadas, na GPU.</strong> Ele lê o canvas do Butterchurn e cada vídeo como textura e entrega um quadro só, que também serve a saída para outra tela e o <span class="num">capture_frame</span>. O Butterchurn segue intocado.</p>
+      <p><strong>Palco com vídeo = camadas + chaves como modos.</strong> Até 2 camadas de vídeo e a camada MilkDrop; chave de luminosidade, chave de cor e luminosidade como máscara são modos de mesclagem do mesmo compositor.</p>
+      <p><strong>Modo performance = crossfader sobre o mesmo compositor.</strong> Cada deck é uma pilha de camadas (preset, clipe ou cena); o fader mistura Preview e Program.</p>
+      <p><strong>Vídeo como textura do preset = spike futuro.</strong> Pede patch no motor e presets escritos para ele. Candidato a spike depois da Fase 3.</p>
+    </div>
+  </section>
+
+  <section class="react" aria-labelledby="reactTitle">
+    <h2 class="sec" id="reactTitle">Reação ao áudio</h2>
+    <div class="react-grid">
+      <div>
+        <h3>Automático</h3>
+        <p class="sub">Configurado por camada e salvo na cena; painel “Reação ao áudio”.</p>
+        <ul>
+          <li><strong>Cortar no beat:</strong> troca para o próximo clipe da coleção a cada 1, 2, 4, 8 ou 16 beats.</li>
+          <li><strong>Velocidade pela energia:</strong> <span class="num">0,25×–2×</span>, fonte bass / mid / treb / nível, com suavização.</li>
+          <li><strong>Ida e volta no beat:</strong> inverte a direção a cada N beats.</li>
+          <li><strong>Opacidade pelo nível:</strong> mínimo e máximo; a camada “respira” com a música.</li>
+          <li><strong>Flash nos graves:</strong> limiar de bass; flash curto (<span class="num">80 ms</span>) na camada.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Ao vivo</h3>
+        <p class="sub">Disparado por você, segurando a tecla; no Modo performance.</p>
+        <ul>
+          <li><kbd>A</kbd> ré, <kbd>S</kbd> stutter (repete 1/4 de beat enquanto segura), <kbd>D</kbd> strobe (no tempo), <kbd>F</kbd> congelar quadro.</li>
+          <li>Tap tempo <kbd>B</kbd>; o BPM detectado é a base e o tap corrige.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="foot">O BPM vem da detecção (Fase 3). Sem detecção, o tap tempo é a fonte; sem os dois, as reações “no beat” ficam desabilitadas com a nota “Precisa de BPM: toque B no ritmo”.</p>
+  </section>
+
+  <section class="links" aria-labelledby="linksTitle">
+    <h2 id="linksTitle">Protótipos</h2>
+    <a class="btn" href="Sonic Obsidian Palco com vídeo.html"><i data-lucide="layers" class="ico"></i>Palco com vídeo</a>
+    <a class="btn" href="Sonic Obsidian Modo performance.html"><i data-lucide="sliders-vertical" class="ico"></i>Modo performance</a>
+    <a class="btn" href="Sonic Obsidian Biblioteca clipes e cenas.html"><i data-lucide="clapperboard" class="ico"></i>Biblioteca: clipes e cenas</a>
+  </section>
+</main>
+
+<script>
+(function () {
+  if (window.lucide) lucide.createIcons();
+  const clipById = id => SO_CLIPS.clips.find(c => c.id === id);
+
+  // Visual compartilhado (canvas oculto, mas com layout) que alimenta todos os compositores.
+  const viz = SOViz.create(document.getElementById('viz'));
+  const preset = (SO_DATA.presets[3] || SO_DATA.presets[0]);
+  viz.setPreset(preset, 0);
+  const vizEl = document.getElementById('viz');
+  const audio = () => ({ level: viz.level(), bass: viz.level(), beat: 0 });
+  const make = (id) => { const c = SOClips.createCompositor(document.getElementById(id), { scale: 0.5 }); c.setAudio(audio); return c; };
+
+  // Segmentado acessível (radiogroup com tabindex móvel e setas).
+  function seg(el, onChange) {
+    const btns = Array.from(el.querySelectorAll('[role=radio]'));
+    function pick(b, focus) {
+      btns.forEach(x => { const on = x === b; x.setAttribute('aria-checked', on); x.tabIndex = on ? 0 : -1; });
+      if (focus) b.focus();
+      onChange(b.dataset.v);
+    }
+    btns.forEach((b, i) => {
+      b.tabIndex = b.getAttribute('aria-checked') === 'true' ? 0 : -1;
+      b.addEventListener('click', () => pick(b, false));
+      b.addEventListener('keydown', e => {
+        const k = e.key; let n = null;
+        if (k === 'ArrowRight' || k === 'ArrowDown') n = btns[(i + 1) % btns.length];
+        else if (k === 'ArrowLeft' || k === 'ArrowUp') n = btns[(i - 1 + btns.length) % btns.length];
+        if (n) { e.preventDefault(); pick(n, true); }
+      });
+    });
+  }
+
+  // 1. Camadas: visual + clipe 04 com modo escolhido, 70%.
+  const c1 = make('out1');
+  const L1 = { type: 'clip', clip: clipById('c04'), blend: 'screen', opacity: 0.7, speed: 1, enabled: true };
+  c1.setStack([{ type: 'canvas', el: vizEl, opacity: 1 }, L1]);
+  seg(document.querySelector('[data-seg=blend1]'), v => { L1.blend = v; });
+
+  // 2. Recorte: chave de luminosidade (c05) ou luminosidade como máscara (c02).
+  const c2 = make('out2');
+  const L2 = { type: 'clip', clip: clipById('c05'), blend: 'luma-key', opacity: 1, speed: 1, enabled: true };
+  c2.setStack([{ type: 'canvas', el: vizEl, opacity: 1 }, L2]);
+  seg(document.querySelector('[data-seg=blend2]'), v => { L2.blend = v; L2.clip = clipById(v === 'luma-key' ? 'c05' : 'c02'); });
+
+  // 3. Crossfader: deck A (visual), deck B (clipe 01), saída que mistura os dois.
+  const cA = make('deckA'), cB = make('deckB'), cO = make('out3');
+  cA.setStack([{ type: 'canvas', el: vizEl, opacity: 1 }]);
+  cB.setStack([{ type: 'clip', clip: clipById('c01'), blend: 'normal', opacity: 1, speed: 1, enabled: true }]);
+  const LA = { type: 'canvas', el: document.getElementById('deckA'), blend: 'normal', opacity: 0.5 };
+  const LB = { type: 'canvas', el: document.getElementById('deckB'), blend: 'add', opacity: 0.5 };
+  cO.setStack([LA, LB]);
+  const fader = document.getElementById('fader');
+  function setFade(p) { LA.opacity = 1 - p; LB.opacity = p; fader.style.setProperty('--fill', (p * 100) + '%'); }
+  setFade(0.5);
+  let sweep = null;
+  const stopSweep = () => { if (sweep) { clearInterval(sweep); sweep = null; } };
+  fader.addEventListener('input', () => { stopSweep(); setFade(fader.value / 100); });
+  fader.addEventListener('pointerdown', stopSweep);
+  fader.addEventListener('keydown', stopSweep);
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const t0 = performance.now();
+    sweep = setInterval(() => {
+      const p = 0.5 + 0.5 * Math.sin((performance.now() - t0) / 1800 - Math.PI / 2 + 1.2);
+      fader.value = Math.round(p * 100); setFade(p);
+    }, 50);
+  }
+
+  // 4. Textura do preset: simulação (clipe 08 dentro de um loop de feedback com zoom e rotação).
+  const cv = document.getElementById('out4'); cv.width = 320; cv.height = 200;
+  const x4 = cv.getContext('2d'), buf = document.createElement('canvas'); buf.width = 320; buf.height = 200;
+  const bx = buf.getContext('2d'), tmp = document.createElement('canvas'); tmp.width = 320; tmp.height = 200;
+  const tx = tmp.getContext('2d'), clip8 = clipById('c08'), W = 320, H = 200;
+  x4.fillStyle = '#080809'; x4.fillRect(0, 0, W, H);
+  const t0 = performance.now();
+  function tex(now) {
+    const t = (now - t0) / 1000;
+    bx.drawImage(cv, 0, 0);
+    x4.globalCompositeOperation = 'source-over'; x4.globalAlpha = 1;
+    x4.fillStyle = 'rgba(8,8,9,0.24)'; x4.fillRect(0, 0, W, H);
+    x4.save(); x4.translate(W / 2, H / 2);
+    x4.rotate(0.004 + 0.006 * Math.sin(t * 0.8)); x4.scale(1.014 + 0.006 * Math.sin(t * 1.7), 1.014 + 0.006 * Math.sin(t * 1.7));
+    x4.globalAlpha = 0.93; x4.drawImage(buf, -W / 2, -H / 2); x4.restore();
+    tx.clearRect(0, 0, W, H); SOClips.drawClip(tx, W, H, clip8, t);
+    x4.globalCompositeOperation = 'lighter'; x4.globalAlpha = 0.05; x4.drawImage(tmp, 0, 0);
+    x4.globalAlpha = 1; x4.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(tex);
+  }
+  requestAnimationFrame(tex);
+})();
+</script>
+</body>
+</html>

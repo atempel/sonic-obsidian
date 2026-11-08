@@ -89,3 +89,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** a rotação não tem timer próprio. O loop de render pergunta `rotation.due(now)` a cada quadro, e qualquer troca reinicia a contagem. Assim troca e render ficam no mesmo relógio, e com a janela minimizada o render e a rotação param juntos.
 - **Atalhos v3 implementados:** `Espaço` aleatório, `←`/`→`, `R` liga e desliga a rotação, `[`/`]` mudam o intervalo (10/15/30/60/120 s). Os colchetes são lidos por `e.key` (caractere), não por `e.code` (posição física), porque no ABNT2 eles ficam em outras teclas. As letras usam `e.code`.
 - **Blend em `src/renderer/src/config.ts`:** manual 0 s, automático 2,7 s, como constantes para os ajustes rápidos da Fase 2. As teclas `1`/`2`/`3` e o `R` aleatório da spec 002 saíram.
+
+## 2026-11-08 — Design e código sincronizados por espelho versionado
+- **Decisão:** o artefato do Claude Design é a fonte do desenho da interface; `docs/design/v3/` é um espelho somente leitura com a versão registrada em `SYNC.md`. A skill `sincronizar-design` checa a versão no início de toda tarefa de interface e sincroniza por PR. Afastamentos do desenho vão para `docs/design/v3/DIVERGENCIAS.md`, que a sessão de design lê ao voltar a refinar.
+- **Por quê:** o código estava sendo planejado a partir de briefs copiados, sem as páginas e sem saber qual versão do protótipo valia; mudanças no design não chegavam ao repo.
+- **Precedência:** fato técnico segue o repo (`docs/architecture.md`); comportamento e aparência seguem o protótipo na versão sincronizada.
+- **Descartado:** apontar só o link do artefato (versão muda sem aviso e nem toda superfície lê artefatos); copiar páginas sem versão (vira cópia órfã).
+

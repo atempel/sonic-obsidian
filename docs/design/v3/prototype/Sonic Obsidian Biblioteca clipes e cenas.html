@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Biblioteca: clipes e cenas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<script src="so-v3-clips.js"></script>
+<style>
+  html, body { overflow: hidden; }
+  :root { --warn-soft: rgba(255,181,71,0.12); --warn-line: rgba(255,181,71,0.4); }
+  [hidden] { display: none !important; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .proto { left: auto; right: 12px; top: auto; bottom: 10px; }
+  select.sel { width: 100%; height: 34px; padding: 0 8px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); color-scheme: dark; }
+  select.sel:hover { border-color: #4A4A64; }
+  select.sel:disabled { opacity: .45; }
+  .txt { width: 100%; height: 34px; padding: 0 10px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1); transition: border-color var(--t-fast); }
+  .txt:hover { border-color: var(--line-3); }
+  .txt:focus-visible { outline-offset: 0; border-color: var(--violet); }
+  .txt::placeholder { color: var(--text-3); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn:has(input:focus-visible) { outline: 2px solid var(--violet); outline-offset: 2px; }
+  .note { margin: 0; font-size: 12px; color: var(--text-3); }
+  .nm { font-size: 13px; color: var(--text-2); }
+
+  /* ── Cena ── */
+  #palco { position: fixed; inset: 0; }
+  .vizc { position: absolute; inset: 0; width: 100%; height: 100%; visibility: hidden; }
+  .outc { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .layers { position: fixed; z-index: 3; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: var(--r-2); background: var(--bg-01); border: 1px solid var(--line-2); font-size: 12px; color: var(--text-1); }
+  .chip .ico { width: 14px; height: 14px; color: var(--text-2); }
+  .chip.beat .ico { color: var(--beat); }
+
+  /* Assinatura: cartão de crédito */
+  .credit { position: fixed; z-index: 2; left: 0; right: 0; bottom: 0; padding: 56px 24px 22px 24px; pointer-events: none;
+    background: linear-gradient(to top, rgba(8,8,9,0.88) 20%, rgba(8,8,9,0)); opacity: 0; transition: opacity 600ms var(--ease-out); }
+  .credit.show { opacity: 1; transition-duration: 180ms; }
+  .credit h1 { margin: 0; max-width: 24ch; font-size: clamp(24px, 3vw, 40px); line-height: 1.08; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit p { margin: 8px 0 0; font-size: 15px; color: var(--text-2); }
+  .credit .sweep { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; }
+  .credit .sweep i { display: block; height: 100%; width: 0; background: var(--violet); }
+  body.lib-open .credit { padding-left: 400px; }
+  body.det-open .credit { padding-left: 820px; }
+  @media (max-width: 1150px) { body.det-open .credit { display: none; } }
+
+  /* ── Gaveta ── */
+  .lib-scrim { position: fixed; z-index: 5; top: 0; bottom: 0; left: 360px; right: 0; background: rgba(8,8,9,0.35); opacity: 0; pointer-events: none; border: 0; padding: 0; transition: opacity 180ms var(--ease-out); }
+  body.lib-open .lib-scrim { opacity: 1; pointer-events: auto; }
+  body.det-open .lib-scrim { left: 780px; }
+  .lib { position: fixed; z-index: 30; left: 0; top: 0; bottom: 0; width: min(360px, 100vw); display: flex; flex-direction: column;
+    background: var(--bg-01); border-right: 1px solid var(--line-2); box-shadow: var(--shadow-pop);
+    transform: translateX(-100%); visibility: hidden; transition: transform 180ms var(--ease-out), visibility 0s linear 180ms; }
+  body.lib-open .lib { transform: none; visibility: visible; transition: transform 250ms var(--ease-out), visibility 0s; }
+  .edge { position: fixed; z-index: 6; left: 0; top: 50%; width: 28px; height: 96px; margin-top: -48px; padding: 0; display: grid; place-items: center;
+    background: var(--bg-01); border: 1px solid var(--line-2); border-left: 0; border-radius: 0 var(--r-3) var(--r-3) 0; color: var(--text-2); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+  .edge:hover { background: var(--bg-03); color: var(--text-1); }
+  body.lib-open .edge { display: none; }
+  .lib-head { height: 56px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+  .brand svg { width: 16px; height: 16px; stroke: var(--violet); fill: none; stroke-width: 1.25; stroke-linejoin: round; stroke-linecap: round; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0 12px 12px; padding: 2px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .seg button { height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; background: transparent; border: 0; border-radius: var(--r-2); color: var(--text-2); font-weight: 500; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+  .seg button:hover { color: var(--text-1); background: var(--bg-03); }
+  .seg button[aria-selected="true"] { background: var(--violet-soft); color: var(--text-1); }
+  .seg button[aria-selected="true"] .ico { color: var(--violet); }
+  .seg .num { font-size: 12px; color: var(--text-3); }
+  .lib .search { position: relative; margin: 0 12px 10px; }
+  .lib .search input { width: 100%; height: 36px; padding: 0 12px 0 36px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1); transition: border-color var(--t-fast); }
+  .lib .search input::placeholder { color: var(--text-3); }
+  .lib .search input:hover { border-color: var(--line-3); }
+  .lib .search input:focus-visible { outline-offset: 0; border-color: var(--violet); }
+  .lib .search .si { position: absolute; left: 11px; top: 9px; color: var(--text-3); pointer-events: none; }
+  .panelbody { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 8px; align-items: center; }
+  .chips .gl { font-size: 12px; color: var(--text-3); width: 100%; margin-bottom: -2px; }
+  .chips button { height: 28px; padding: 0 12px; border-radius: 14px; border: 1px solid var(--line-3); background: transparent; color: var(--text-2); font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background var(--t-fast), color var(--t-fast); }
+  .chips button:hover { background: var(--bg-03); color: var(--text-1); }
+  .chips button[aria-pressed="true"] { background: var(--violet-soft); border-color: var(--violet-line); color: var(--text-1); }
+  .chips button .ico { width: 14px; height: 14px; }
+  .chips button[aria-pressed="true"] .ico-star { fill: var(--violet); stroke: var(--violet); }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .row { display: flex; align-items: center; min-height: 56px; border-radius: var(--r-2); padding-right: 2px; transition: background var(--t-fast); }
+  .row:hover { background: var(--bg-03); }
+  .row.sel { background: var(--violet-soft); }
+  .row-main { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: 12px; padding: 3px 4px 3px 8px; background: transparent; border: 0; border-radius: var(--r-2); text-align: left; cursor: pointer; }
+  .row-main:focus-visible { outline-offset: -2px; }
+  .row .thumb { width: 56px; height: 36px; border-radius: var(--r-1); flex: none; display: block; }
+  .row .meta { min-width: 0; display: flex; flex-direction: column; gap: 1px; flex: 1; }
+  .row .tt { font-weight: 500; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .a { font-size: 12px; color: var(--text-2); display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .row .a .au { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .row .a .rest { flex: none; white-space: nowrap; }
+  .row .ibtn { width: 32px; height: 32px; }
+  .imp-tag { flex: none; font-size: 12px; line-height: 16px; padding: 0 5px; color: var(--violet); border: 1px solid var(--violet-line); border-radius: 3px; }
+  .star[aria-pressed="true"] svg { fill: var(--violet); stroke: var(--violet); }
+  .foot { flex: none; padding: 8px 16px; border-top: 1px solid var(--line-1); font-size: 12px; color: var(--text-2); }
+
+  /* Grade de clipes */
+  .grid { list-style: none; margin: 0; padding: 0 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ccard { position: relative; border-radius: var(--r-3); background: var(--bg-02); border: 1px solid var(--line-2); transition: background var(--t-fast), border-color var(--t-fast); }
+  .ccard:hover { background: var(--bg-03); border-color: var(--line-3); }
+  .ccard.sel { background: var(--violet-soft); border-color: var(--violet-line); }
+  .cc-main { display: block; width: 100%; padding: 6px 6px 8px; background: transparent; border: 0; border-radius: var(--r-3); text-align: left; cursor: pointer; }
+  .cc-main:focus-visible { outline-offset: 1px; }
+  .cc-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: var(--r-2); overflow: hidden; background: var(--bg-00); }
+  .cc-thumb canvas { width: 100%; height: 100%; display: block; }
+  .ccard.bad .cc-thumb canvas { opacity: .35; }
+  .cc-dur { position: absolute; right: 4px; bottom: 4px; padding: 1px 5px; border-radius: var(--r-1); background: var(--bg-01); color: var(--text-1); font-size: 12px; }
+  .cc-bad { position: absolute; left: 4px; top: 4px; display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: var(--r-1); background: var(--bg-01); border: 1px solid var(--warn-line); color: var(--warn); font-size: 12px; }
+  .cc-bad .ico { width: 12px; height: 12px; }
+  .cc-name { display: block; margin-top: 6px; padding-right: 30px; font-weight: 500; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cc-tags { display: block; font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ccard .star { position: absolute; right: 2px; bottom: 2px; width: 32px; height: 32px; }
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 40px 24px 24px; }
+  .empty .ico { width: 28px; height: 28px; color: var(--text-3); margin-bottom: 6px; }
+  .empty .h { font-weight: 500; color: var(--text-1); }
+  .empty .s { color: var(--text-2); font-size: 13px; max-width: 270px; }
+  .empty .btn { margin-top: 12px; }
+  .impbar { flex: none; padding: 10px 12px 12px; border-top: 1px solid var(--line-1); display: flex; flex-direction: column; gap: 6px; }
+  .impbar .btn { justify-content: center; }
+  .scenebar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px 8px 12px; color: var(--text-2); font-size: 13px; }
+  .toast { position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 3; padding: 9px 12px; font-size: 13px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  .toast.on { opacity: 1; transform: none; }
+  .dz { position: fixed; z-index: 90; inset: 12px; background: rgba(8,8,9,0.78); border: 2px dashed var(--violet-line); border-radius: var(--r-3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; pointer-events: none; }
+  .dz .ico { width: 32px; height: 32px; color: var(--violet); margin-bottom: 8px; }
+  .dz strong { font-size: 18px; font-weight: 600; }
+  .dz span { color: var(--text-2); }
+
+  /* ── Detalhe (420px ao lado da gaveta) ── */
+  .det { position: fixed; z-index: 29; left: 360px; top: 0; bottom: 0; width: 420px; display: flex; flex-direction: column;
+    background: var(--bg-01); border-right: 1px solid var(--line-2); box-shadow: var(--shadow-pop);
+    transform: translateX(-24px); opacity: 0; visibility: hidden; transition: transform 180ms var(--ease-out), opacity 180ms var(--ease-out), visibility 0s linear 180ms; }
+  body.det-open .det { transform: none; opacity: 1; visibility: visible; transition: transform 250ms var(--ease-out), opacity 250ms var(--ease-out), visibility 0s; }
+  .det-head { height: 56px; flex: none; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--line-1); }
+  .det-head h2 { margin: 0; flex: 1; min-width: 0; font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .det-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+  .det-foot { flex: none; padding: 12px 16px; border-top: 1px solid var(--line-2); display: flex; flex-wrap: wrap; gap: 8px; background: var(--bg-01); }
+  .det-foot .btn { flex: 1 1 auto; justify-content: center; }
+  .det-foot .btn-ghost { flex: 0 0 auto; }
+  .grp h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+  .grp .h-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+  .grp .h-row h3 { margin: 0; }
+  .pv { position: relative; aspect-ratio: 16 / 9; border-radius: var(--r-3); overflow: hidden; background: var(--bg-00); border: 1px solid var(--line-2); }
+  .pv canvas.main { width: 100%; height: 100%; display: block; }
+  .pv-bad { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; background: var(--bg-02); }
+  .pv-bad .ico { width: 28px; height: 28px; color: var(--warn); }
+  .pv-bad p { margin: 0; max-width: 330px; color: var(--text-1); }
+  .tport { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .tport .tm { font-size: 13px; color: var(--cyan); }
+  .tport .sp { flex: 1; }
+  .tport select.sel { width: auto; min-width: 140px; }
+  .ruler { position: relative; height: 44px; margin-top: 8px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .ruler .ticks { position: absolute; inset: 0; pointer-events: none; }
+  .ruler .tick { position: absolute; bottom: 0; width: 1px; height: 8px; background: var(--line-3); }
+  .ruler .band { position: absolute; top: 0; bottom: 0; background: var(--violet-soft); border-left: 1px solid var(--violet-line); border-right: 1px solid var(--violet-line); pointer-events: none; }
+  .ruler .head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--cyan); pointer-events: none; }
+  .ruler input[type=range] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; margin: 0; pointer-events: none; background: transparent; }
+  .ruler input[type=range]::-webkit-slider-runnable-track { background: transparent; height: 100%; }
+  .ruler input[type=range]::-moz-range-track { background: transparent; height: 100%; }
+  .ruler input[type=range]::-moz-range-progress { background: transparent; }
+  .ruler input[type=range]::-webkit-slider-thumb { pointer-events: auto; width: 10px; height: 40px; margin-top: 1px; border-radius: 3px; border: 0; background: var(--violet); cursor: ew-resize; }
+  .ruler input[type=range]::-moz-range-thumb { pointer-events: auto; width: 8px; height: 38px; border-radius: 3px; border: 0; background: var(--violet); cursor: ew-resize; }
+  .ruler input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--bg-00), 0 0 0 4px var(--text-1); }
+  .ruler input[type=range]:disabled { opacity: .35; }
+  .scrub { margin-top: 2px; }
+  .loopvals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin-top: 8px; }
+  .lv { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+  .lv label { color: var(--text-1); }
+  .lv .num { color: var(--cyan); font-size: 13px; }
+  .lv .btn { height: 28px; padding: 0 8px; font-size: 12px; margin-left: auto; }
+  .tagrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { display: inline-flex; align-items: center; gap: 2px; height: 28px; padding: 0 2px 0 10px; border-radius: var(--r-2); background: var(--bg-03); font-size: 13px; }
+  .tag .ibtn { width: 24px; height: 24px; }
+  .tag .ico { width: 14px; height: 14px; }
+  .tagadd { margin-top: 8px; }
+  .sugg { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; font-size: 12px; color: var(--text-3); }
+  .sugg button { height: 26px; padding: 0 10px; border-radius: 13px; border: 1px dashed var(--line-3); background: transparent; color: var(--text-2); font-size: 12px; cursor: pointer; }
+  .sugg button:hover { background: var(--bg-03); color: var(--text-1); }
+  fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+  legend { padding: 0; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+  .checks { display: flex; flex-direction: column; gap: 2px; }
+  .check { display: flex; align-items: center; gap: 10px; min-height: 32px; cursor: pointer; }
+  .check input { width: 16px; height: 16px; accent-color: var(--violet); margin: 0; }
+  .swrow { display: flex; flex-direction: column; gap: 4px; }
+  .swrow .note { padding-left: 44px; }
+  dl.meta2 { display: grid; grid-template-columns: 96px 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
+  dl.meta2 dt { color: var(--text-2); }
+  dl.meta2 dd { margin: 0; color: var(--text-1); word-break: break-all; }
+  .alert { display: flex; gap: 10px; padding: 10px 12px; border-radius: var(--r-3); background: var(--warn-soft); border: 1px solid var(--warn-line); font-size: 13px; }
+  .alert .ico { color: var(--warn); margin-top: 1px; }
+
+  /* Camadas da cena */
+  .lstack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .layer { border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--bg-02); }
+  .layer.off { opacity: .6; }
+  .layer-h { display: flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; }
+  .layer-h .ico:first-child { color: var(--text-2); }
+  .layer-h .lt { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .layer-h .ibtn { width: 30px; height: 30px; }
+  .layer-b { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line-1); }
+  .f { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .f2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .f label, .f .lbl { font-size: 13px; color: var(--text-1); }
+  .f .lh { display: flex; justify-content: space-between; align-items: baseline; }
+  .f .lh .num { color: var(--cyan); font-size: 13px; }
+  .react { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+  .react .check { min-height: 28px; font-size: 13px; }
+  .pv-cap { margin: 8px 0 0; font-size: 13px; color: var(--text-2); }
+  .ctl-sw { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .used { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .used .ico { color: var(--text-3); }
+
+  /* ── Estúdio (mock) ── */
+  #estudio { position: fixed; inset: 0; background: var(--bg-00); display: grid; grid-template-rows: 52px minmax(0, 1fr) 40px; z-index: 40; }
+  .top { display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--bg-01); border-bottom: 1px solid var(--line-2); min-width: 0; }
+  .top .btn { height: 34px; flex: none; }
+  .ident { display: flex; flex-direction: column; justify-content: center; min-width: 0; flex: 1 1 auto; }
+  .name-in { width: min(100%, 360px); height: 26px; padding: 0 6px; margin-left: -6px; background: transparent; border: 1px solid transparent; border-radius: var(--r-2); font-weight: 600; font-size: 15px; color: var(--text-1); text-overflow: ellipsis; transition: background var(--t-fast), border-color var(--t-fast); }
+  .name-in:hover { background: var(--bg-02); border-color: var(--line-2); }
+  .name-in:focus { background: var(--bg-00); border-color: var(--violet-line); }
+  .credit2 { font-size: 12px; color: var(--text-2); line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .smain { display: grid; grid-template-columns: 58fr 42fr; min-height: 0; }
+  .col-prev { overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .stage { position: relative; aspect-ratio: 16 / 9; width: min(100%, calc((100dvh - 52px - 40px - 120px) * 16 / 9)); border: 1px solid var(--line-2); border-radius: 6px; overflow: hidden; background: var(--bg-00); }
+  .col-ed { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--bg-01); border-left: 1px solid var(--line-2); }
+  .tabs { display: flex; gap: 2px; padding: 0 8px; border-bottom: 1px solid var(--line-2); overflow-x: auto; flex: none; }
+  .tab { height: 42px; padding: 0 12px; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font-weight: 500; font-size: 13px; cursor: pointer; white-space: nowrap; transition: color var(--t-fast), background var(--t-fast); border-radius: var(--r-2) var(--r-2) 0 0; display: inline-flex; align-items: center; gap: 6px; }
+  .tab:hover { color: var(--text-1); background: var(--bg-02); }
+  .tab[aria-selected="true"] { color: var(--text-1); border-bottom-color: var(--violet); }
+  .tab .ico { width: 15px; height: 15px; }
+  .tab[aria-selected="true"] .ico { color: var(--violet); }
+  .tp { flex: 1; min-height: 0; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+  .hint-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-2); padding: 8px 10px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .hint-row .ico { color: var(--cyan); margin-top: 1px; }
+  .strow { display: flex; align-items: center; padding: 0 12px; background: var(--bg-01); border-top: 1px solid var(--line-2); font-size: 12px; color: var(--text-2); }
+  .sl { display: grid; grid-template-columns: 90px 1fr 48px; align-items: center; gap: 12px; }
+  .sl .v { color: var(--cyan); text-align: right; font-size: 13px; }
+  .lstack.dnd .layer { cursor: grab; }
+  .layer.over { border-color: var(--violet-line); background: var(--violet-soft); }
+  .layer.dragging { opacity: .4; }
+  .grip { color: var(--text-3); display: grid; place-items: center; width: 22px; }
+  .sumline { font-size: 12px; color: var(--text-2); }
+  .sl-row { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 6px; }
+  .sl-row .lt { flex: 1; min-width: 0; }
+  .sl-row .lt b { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 1100px) { .smain { grid-template-columns: 1fr; overflow: auto; } .col-ed { border-left: 0; border-top: 1px solid var(--line-2); min-height: 420px; } }
+  .toast { position: fixed; z-index: 100; left: 50%; right: auto; bottom: 24px; max-width: min(560px, 90vw); transform: translate(-50%, 6px); }
+  .toast.on { transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+<div class="proto" role="group" aria-label="Estado de demonstração">
+  <b>Protótipo</b>
+  <button type="button" data-st="drawer" aria-pressed="true">Gaveta</button>
+  <button type="button" data-st="clip" aria-pressed="false">Detalhe do clipe</button>
+  <button type="button" data-st="newscene" aria-pressed="false">Nova cena</button>
+  <button type="button" data-st="studio" aria-pressed="false">Cena no Estúdio</button>
+  <button type="button" data-st="empty" aria-pressed="false">Sem clipes</button>
+</div>
+
+<!-- ═════════ PALCO (visual composto + gaveta) ═════════ -->
+<div id="palco">
+  <canvas class="vizc" id="mainViz" aria-hidden="true"></canvas>
+  <canvas class="outc" id="mainOut" role="img" aria-label="Visual composto: preset com camadas de clipe"></canvas>
+
+  <div class="layers" id="layerChips" role="status" aria-live="polite"></div>
+
+  <div class="credit" id="credit" aria-live="polite">
+    <h1 id="creditTitle"></h1>
+    <p id="creditSub"></p>
+    <div class="sweep"><i id="sweep"></i></div>
+  </div>
+
+  <button type="button" class="edge" id="edge" aria-label="Abrir biblioteca" title="Abrir biblioteca (L)"><i data-lucide="library" class="ico"></i></button>
+  <button type="button" class="lib-scrim" id="libScrim" aria-label="Fechar painéis" tabindex="-1"></button>
+
+  <aside class="lib" id="lib" aria-label="Biblioteca">
+    <div class="lib-head">
+      <div class="brand">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14.5 8 8 14.5 1.5 8Z"/><path d="M1.5 8h13M5.5 8 8 1.5 10.5 8 8 14.5Z"/></svg>
+        Biblioteca
+      </div>
+      <button type="button" class="ibtn" id="libClose" aria-label="Fechar biblioteca" title="Fechar biblioteca (Esc ou L)"><i data-lucide="panel-left-close" class="ico"></i></button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Seções da biblioteca" id="seg"></div>
+    <div class="panelbody" id="libBody" role="tabpanel"></div>
+  </aside>
+
+  <section class="det" id="det" aria-label="Detalhe" inert></section>
+</div>
+
+<div class="dz" id="dz" hidden><i data-lucide="file-plus-2" class="ico"></i><strong>Solte para importar clipes</strong><span>MP4 e WebM tocam em qualquer máquina</span></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- ═════════ ESTÚDIO (mock) ═════════ -->
+<div id="estudio" hidden>
+  <header class="top">
+    <button type="button" class="btn btn-ghost" id="stBack" aria-label="Voltar ao Palco (Esc)" title="Voltar ao Palco (Esc)"><i data-lucide="arrow-left" class="ico"></i>Voltar ao Palco<kbd>Esc</kbd></button>
+    <div class="ident">
+      <label class="vh" for="stName">Nome da cena</label>
+      <input id="stName" class="name-in" type="text" spellcheck="false" autocomplete="off">
+      <div class="credit2" id="stCredit"></div>
+    </div>
+    <button type="button" class="btn btn-primary" id="stSave">Salvar na biblioteca</button>
+  </header>
+  <div class="smain">
+    <div class="col-prev">
+      <div class="stage"><canvas class="vizc" id="stViz" aria-hidden="true"></canvas><canvas class="outc" id="stOut" role="img" aria-label="Prévia da cena"></canvas></div>
+      <p class="note">A prévia usa o mesmo compositor do Palco: o que muda na pilha aparece aqui na hora.</p>
+    </div>
+    <div class="col-ed">
+      <div class="tabs" role="tablist" aria-label="Seções da cena" id="stTabs"></div>
+      <div class="tp" id="stPanel" role="tabpanel"></div>
+    </div>
+  </div>
+  <div class="strow"><span id="stStatus">Alterações aplicadas ao vivo</span></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+const D = SO_DATA, P = D.presets, CL = SO_CLIPS.clips, COLS = SO_CLIPS.collections, BL = SOClips.BLENDS;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const clipById = id => CL.find(c => c.id === id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const icons = () => { if (window.lucide) lucide.createIcons(); };
+const dur = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+function fmt(s) { s = Math.max(0, s); let m = Math.floor(s / 60), w = Math.floor(s - m * 60), d = Math.round((s - m * 60 - w) * 10); if (d === 10) { d = 0; w++; } if (w === 60) { w = 0; m++; } return m + ':' + String(w).padStart(2, '0') + ',' + d; }
+const stitle = p => p.title.split(/ [-\[(]/)[0].trim();
+const cshort = c => 'Clip ' + String(c.n).padStart(2, '0');
+const blendLabel = id => (BL.find(b => b.id === id) || BL[0]).label;
+const typing = t => t && t.matches && t.matches('input:not([type=checkbox]):not([type=range]):not([type=file]),textarea,select');
+const SUGG = ['abstrato', 'textura', 'formas', 'anime', 'cinema', 'ruído'];
+const TAGCHIPS = ['abstrato', 'textura', 'formas', 'ruído'];
+const WARN_HEVC = 'Este clipe usa HEVC, que o app não consegue decodificar. Converta para MP4 (H.264) ou WebM (VP9).';
+
+CL.forEach(c => { c.file = 'D:\\Vídeos\\clipes\\clip-' + String(c.n).padStart(2, '0') + (c.codec === 'HEVC' ? '.mov' : '.mp4'); });
+const c07 = clipById('c07'); c07.loopIn = 1.2; c07.loopOut = 11;
+
+let toastT = 0;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 3200); }
+
+/* ── Dados de cenas (itens de cima para baixo) ── */
+const scenes = [
+  { id: 's1', name: 'Cauldron + Clip 04', preset: 0, items: [{ k: 'clip', clip: 'c04', blend: 'screen', opacity: .8, reactions: { opacityByLevel: true } }, { k: 'viz', blend: 'normal', opacity: 1 }], rot: true, used: ['rotação', 'Coleção Festa'] },
+  { id: 's2', name: 'Star Ornament + Clip 05 (chave)', preset: 13, items: [{ k: 'clip', clip: 'c05', blend: 'luma-key', opacity: 1, reactions: { flashOnBass: true } }, { k: 'viz', blend: 'normal', opacity: 1 }], rot: true, used: ['rotação'] },
+  { id: 's3', name: 'Rewop + Clip 02 (máscara)', preset: 5, items: [{ k: 'clip', clip: 'c02', blend: 'luma-mask', opacity: 1, reactions: { speedByEnergy: true } }, { k: 'viz', blend: 'normal', opacity: 1 }], rot: false, used: [] },
+];
+const sceneById = id => scenes.find(s => s.id === id);
+
+const S = { tab: 'clips', open: true, detail: null, view: 'palco', empty: false, q: '', tags: new Set(), colls: new Set(), favOnly: false, pq: '', pFav: false, onlyScenes: false, mainPreset: 13, audioClip: null };
+let opener = null;
+
+/* ── Miniaturas ── */
+function drawThumb(cv, p) {
+  const c = cv.getContext('2d'), W = cv.width, H = cv.height, h = p.hue, cx = W / 2, cy = H / 2;
+  const g = c.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, 'hsl(' + h + ',60%,9%)'); g.addColorStop(1, 'hsl(' + ((h + 50) % 360) + ',70%,18%)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H); c.lineWidth = 2; c.lineCap = 'round';
+  if (p.style === 0) { for (let i = 0; i < 30; i++) { const a = i / 30 * Math.PI * 2, r1 = 10 + (0.45 + 0.55 * Math.sin(i * 1.7)) * 24; c.strokeStyle = 'hsl(' + (h + i * 3) + ',90%,62%)'; c.beginPath(); c.moveTo(cx + Math.cos(a) * 10, cy + Math.sin(a) * 10); c.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.stroke(); } }
+  else if (p.style === 1) { for (let r = 1; r <= 5; r++) { c.strokeStyle = 'hsl(' + (h + r * 18) + ',85%,' + (45 + r * 5) + '%)'; c.beginPath(); for (let s = 0; s <= 6; s++) { const a2 = s / 6 * Math.PI * 2 + r * 0.3, rad = r * 9, x = cx + Math.cos(a2) * rad * 1.5, y = cy + Math.sin(a2) * rad * 0.9; s ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); } }
+  else if (p.style === 2) { for (let L = 0; L < 3; L++) { c.strokeStyle = 'hsl(' + (h + L * 40) + ',95%,' + (58 + L * 4) + '%)'; c.beginPath(); for (let xx = 0; xx <= W; xx += 3) { const f = xx / W, yy = cy + (L - 1) * 12 + Math.sin(f * 9 + L * 1.4) * 12; xx ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke(); } }
+  else { for (let i = 0; i < 5; i++) { const bx = cx + Math.cos(i * 1.9 + h) * 34, by = cy + Math.sin(i * 2.3 + h) * 18, br = 20 + (i % 3) * 6; const rg = c.createRadialGradient(bx, by, 0, bx, by, br); rg.addColorStop(0, 'hsla(' + (h + i * 25) + ',100%,65%,0.85)'); rg.addColorStop(1, 'hsla(' + (h + i * 25) + ',100%,50%,0)'); c.fillStyle = rg; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill(); } }
+}
+function mkCanvas(w, h, cls) { const c = document.createElement('canvas'); c.width = w; c.height = h; if (cls) c.className = cls; c.setAttribute('aria-hidden', 'true'); return c; }
+function presetThumb(p) { const c = mkCanvas(112, 72, 'thumb'); drawThumb(c, p); return c; }
+function sceneThumb(sc) {
+  const c = mkCanvas(112, 72, 'thumb'), x = c.getContext('2d'); drawThumb(c, P[sc.preset]);
+  sc.items.filter(i => i.k === 'clip').reverse().forEach(i => {
+    const cl = clipById(i.clip); if (!cl) return;
+    const t = mkCanvas(112, 72); SOClips.drawClip(t.getContext('2d'), 112, 72, cl, cl.dur * 0.37);
+    x.globalAlpha = i.opacity; x.globalCompositeOperation = ({ 'luma-key': 'screen', 'luma-mask': 'multiply' }[i.blend]) || (BL.find(b => b.id === i.blend) || BL[0]).op;
+    x.drawImage(t, 0, 0);
+  });
+  x.globalAlpha = 1; x.globalCompositeOperation = 'source-over'; return c;
+}
+
+/* ── Camadas (objetos compatíveis com o compositor) ── */
+let uid = 0;
+function mkLayer(spec, vizEl) {
+  const L = { uid: ++uid, k: spec.k, blend: spec.blend || 'normal', opacity: spec.opacity == null ? 1 : spec.opacity, enabled: spec.enabled !== false, speed: 1 };
+  if (spec.k === 'viz') { L.type = 'canvas'; L.el = vizEl; }
+  else { L.type = 'clip'; L.reactions = Object.assign({}, spec.reactions); setClip(L, spec.clip); }
+  return L;
+}
+function setClip(L, id) { L.clipId = id; L.clip = clipById(id) || null; L._t = 0; }
+const specOf = L => L.k === 'viz' ? { k: 'viz', blend: L.blend, opacity: L.opacity, enabled: L.enabled } : { k: 'clip', clip: L.clipId, blend: L.blend, opacity: L.opacity, enabled: L.enabled, reactions: Object.assign({}, L.reactions) };
+const stackOf = items => items.slice().reverse();
+
+/* ── Cena principal (fundo) ── */
+const mainViz = SOViz.create($('mainViz'), { scale: .5 });
+const mainComp = SOClips.createCompositor($('mainOut'), { scale: .6 });
+mainComp.setAudio(() => ({ level: mainViz.level(), bass: mainViz.level(), beat: 0 }));
+mainViz.setPreset(P[S.mainPreset], 0);
+const vizLayer = { uid: ++uid, k: 'viz', type: 'canvas', el: $('mainViz'), blend: 'normal', opacity: 1, enabled: true };
+const mainLayers = [0, 1].map(() => ({ uid: ++uid, k: 'clip', type: 'clip', clip: null, clipId: null, blend: 'screen', opacity: .8, enabled: false, speed: 1, reactions: {}, _t: 0 }));
+function setMainLayer(i, clipId, blend, opacity, reactions) {
+  const L = mainLayers[i]; if (!clipId) { L.enabled = false; L.clip = null; L.clipId = null; return; }
+  setClip(L, clipId); L.enabled = true; L.blend = blend || 'screen'; L.opacity = opacity == null ? .8 : opacity; L.reactions = Object.assign({}, reactions);
+}
+function syncMain() { mainComp.setStack([vizLayer, mainLayers[0], mainLayers[1]]); renderChips(); }
+function resetMain() { S.mainPreset = 13; mainViz.setPreset(P[13], 0); setMainLayer(0, S.empty ? null : 'c04'); setMainLayer(1, null); syncMain(); }
+function renderChips() {
+  const el = $('layerChips'); let h = '';
+  mainLayers.forEach((L, i) => { if (L.enabled && L.clip) h += `<span class="chip beat"><i data-lucide="clapperboard" class="ico"></i>Camada ${i + 1}: ${cshort(L.clip)} · ${esc(blendLabel(L.blend))} · <span class="num">${Math.round(L.opacity * 100)}%</span></span>`; });
+  if (!h) h = `<span class="chip"><i data-lucide="film" class="ico"></i>${S.empty ? 'Sem clipes na biblioteca' : 'Sem camada de vídeo'}</span>`;
+  if (S.audioClip) h += `<span class="chip"><i data-lucide="audio-lines" class="ico"></i>Fonte de áudio: ${cshort(S.audioClip)}</span>`;
+  el.innerHTML = h; icons();
+}
+function playOnLayer(n, id) {
+  const c = clipById(id);
+  if (!c.supported) { toast(`Este clipe usa ${c.codec}, que o app não consegue decodificar. A camada ${n} mantém o clipe anterior.`); return; }
+  const prev = mainLayers[n - 1]; setMainLayer(n - 1, id, prev.enabled ? prev.blend : 'screen', prev.enabled ? prev.opacity : .8, prev.reactions);
+  syncMain(); toast(`${cshort(c)} tocando na camada ${n}`);
+}
+
+/* ── Assinatura: cartão de crédito + linha de 2 s ── */
+let creditT = 0, sweepAnim = null;
+function showCredit(title, sub) {
+  $('creditTitle').textContent = title; $('creditSub').textContent = sub;
+  const cr = $('credit'), sw = $('sweep'); cr.classList.add('show');
+  if (sweepAnim) sweepAnim.cancel();
+  if (reduce) sw.style.width = '100%'; else sweepAnim = sw.animate([{ width: '0%' }, { width: '100%' }], { duration: 2000, easing: 'linear', fill: 'forwards' });
+  clearTimeout(creditT); creditT = setTimeout(() => cr.classList.remove('show'), 4000);
+}
+function playPreset(id) {
+  const p = P[id]; S.mainPreset = id; mainViz.setPreset(p, 2000); showCredit(p.title, 'por ' + p.author); renderBody(false);
+}
+function playScene(sc) {
+  S.mainPreset = sc.preset; mainViz.setPreset(P[sc.preset], 2000);
+  const cl = sc.items.filter(i => i.k === 'clip').reverse();
+  [0, 1].forEach(i => cl[i] ? setMainLayer(i, cl[i].clip, cl[i].blend, cl[i].opacity, cl[i].reactions) : setMainLayer(i, null));
+  syncMain();
+  const names = cl.map(i => cshort(clipById(i.clip))).join(' + ');
+  showCredit('Cena · ' + sc.name, P[sc.preset].title + ', por ' + P[sc.preset].author + ' + ' + names);
+}
+
+/* ── Gaveta: abertura e abas ── */
+function setLib(open) {
+  S.open = open; document.body.classList.toggle('lib-open', open); $('lib').inert = !open;
+  if (!open && S.detail) closeDetail(true);
+  if (open) { const t = document.querySelector('#seg [aria-selected="true"]'); if (t && !opener) t.focus({ preventScroll: true }); }
+}
+const TABS = [{ id: 'presets', label: 'Presets', icon: 'list-music' }, { id: 'clips', label: 'Clipes', icon: 'film' }, { id: 'scenes', label: 'Cenas', icon: 'clapperboard' }];
+function renderSeg() {
+  const cnt = { presets: D.totalLibrary, clips: S.empty ? 0 : CL.length, scenes: scenes.length };
+  $('seg').innerHTML = TABS.map(t => `<button type="button" role="tab" id="seg-${t.id}" data-tab="${t.id}" aria-selected="${S.tab === t.id}" aria-controls="libBody" tabindex="${S.tab === t.id ? 0 : -1}">${t.label}${t.id === 'presets' ? '' : ` <span class="num">${cnt[t.id]}</span>`}</button>`).join('');
+  $('libBody').setAttribute('aria-labelledby', 'seg-' + S.tab);
+  $('seg').querySelectorAll('button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+}
+$('seg').addEventListener('keydown', e => {
+  const i = TABS.findIndex(t => t.id === S.tab); let n = -1;
+  if (e.key === 'ArrowRight') n = (i + 1) % 3; else if (e.key === 'ArrowLeft') n = (i + 2) % 3; else if (e.key === 'Home') n = 0; else if (e.key === 'End') n = 2;
+  if (n < 0) return; e.preventDefault(); setTab(TABS[n].id); $('seg-' + TABS[n].id).focus();
+});
+function setTab(t) { if (S.tab === t) return; S.tab = t; renderSeg(); renderBody(true); }
+function renderBody(full) {
+  stopThumbs();
+  if (S.tab === 'presets') renderPresets(); else if (S.tab === 'clips') renderClips(); else renderScenes();
+  icons(); markSel(); protoSync();
+}
+function markSel() {
+  const d = S.detail;
+  document.querySelectorAll('#libBody [data-cid]').forEach(el => el.classList.toggle('sel', !!d && d.kind === 'clip' && d.id === el.dataset.cid));
+  document.querySelectorAll('#libBody [data-sid]').forEach(el => el.classList.toggle('sel', !!d && d.kind === 'scene' && d.id === el.dataset.sid));
+}
+
+/* ── Aba Presets ── */
+function presetItems() {
+  const base = P.slice(0, 10).map(p => ({ t: 'p', p })); base.splice(2, 0, { t: 's', s: scenes[0] }); base.splice(7, 0, { t: 's', s: scenes[1] });
+  const q = S.pq.trim().toLowerCase();
+  return base.filter(it => {
+    if (S.onlyScenes && it.t !== 's') return false;
+    if (S.pFav && !(it.t === 'p' && it.p.fav)) return false;
+    if (!q) return true;
+    const txt = it.t === 'p' ? it.p.full : it.s.name + ' ' + P[it.s.preset].full;
+    return txt.toLowerCase().includes(q);
+  });
+}
+function renderPresets() {
+  $('libBody').innerHTML = `
+    <div class="search"><label class="vh" for="pQ">Buscar preset ou autor</label><i data-lucide="search" class="ico si"></i><input id="pQ" type="text" placeholder="Buscar preset ou autor" autocomplete="off" spellcheck="false" value="${esc(S.pq)}"></div>
+    <div class="chips" role="group" aria-label="Filtros"><button type="button" id="pFav" aria-pressed="${S.pFav}"><i data-lucide="star" class="ico ico-star"></i>Favoritos</button><button type="button" id="pScn" aria-pressed="${S.onlyScenes}"><i data-lucide="clapperboard" class="ico"></i>Cenas</button></div>
+    <div class="scroll"><ul class="rows" id="pList"></ul></div>
+    <div class="foot" id="pFoot"></div>`;
+  $('pQ').oninput = e => { S.pq = e.target.value; fillPresets(); };
+  $('pFav').onclick = () => { S.pFav = !S.pFav; $('pFav').setAttribute('aria-pressed', S.pFav); fillPresets(); };
+  $('pScn').onclick = () => { S.onlyScenes = !S.onlyScenes; $('pScn').setAttribute('aria-pressed', S.onlyScenes); fillPresets(); };
+  fillPresets();
+}
+function fillPresets() {
+  const ul = $('pList'), items = presetItems(); ul.innerHTML = '';
+  items.forEach(it => {
+    const li = document.createElement('li'), isS = it.t === 's';
+    const playing = isS ? false : S.mainPreset === it.p.id;
+    li.className = 'row' + (playing ? ' sel' : '');
+    li.innerHTML = `<button type="button" class="row-main"><span class="tslot"></span><span class="meta"><span class="tt">${esc(isS ? it.s.name : it.p.title)}</span><span class="a">${isS ? `<span class="imp-tag">Cena</span><span class="au">${esc(P[it.s.preset].title)}, por ${esc(P[it.s.preset].author)}</span>` : `<span class="au">por ${esc(it.p.author)}</span>`}</span></span></button>` +
+      (isS ? '' : `<button type="button" class="ibtn star" aria-pressed="${it.p.fav}" aria-label="Favoritar ${esc(it.p.title)}" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>`);
+    li.querySelector('.tslot').replaceWith(isS ? sceneThumb(it.s) : presetThumb(it.p));
+    li.querySelector('.row-main').onclick = () => isS ? playScene(it.s) : playPreset(it.p.id);
+    const st = li.querySelector('.star'); if (st) st.onclick = () => { it.p.fav = !it.p.fav; st.setAttribute('aria-pressed', it.p.fav); };
+    ul.appendChild(li);
+  });
+  if (!items.length) ul.innerHTML = `<li class="empty"><i data-lucide="search-x" class="ico"></i><div class="h">Nada encontrado</div><div class="s">Tente outro termo ou desligue os filtros.</div></li>`;
+  $('pFoot').textContent = `Mostrando ${items.length} de ${D.totalLibrary} · cenas entram na rotação como presets`;
+  icons();
+}
+
+/* ── Aba Clipes ── */
+let stops = [];
+function stopThumbs() { stops.forEach(f => f()); stops = []; }
+const importLabel = (cls) => `<label class="btn ${cls || ''}"><i data-lucide="folder-plus" class="ico ico-sm"></i>Importar clipes…<input type="file" class="vh fileIn" accept="video/mp4,video/webm,.mov" multiple></label>`;
+function renderClips() {
+  if (S.empty) {
+    $('libBody').innerHTML = `<div class="empty" style="padding-top:64px"><i data-lucide="film" class="ico"></i><div class="h">Nenhum clipe ainda</div><div class="s">Arraste vídeos MP4 ou WebM para a janela.</div>${importLabel('btn-primary')}<p class="note" style="margin-top:12px">Os clipes ficam no seu disco; a biblioteca guarda só referências e miniaturas.</p></div>`;
+    return;
+  }
+  const tagBtns = TAGCHIPS.map(t => `<button type="button" data-tag="${t}" aria-pressed="${S.tags.has(t)}">${t}</button>`).join('');
+  const colBtns = COLS.map(k => `<button type="button" data-col="${k.id}" aria-pressed="${S.colls.has(k.id)}">${k.name}</button>`).join('');
+  $('libBody').innerHTML = `
+    <div class="search"><label class="vh" for="cQ">Buscar clipe ou tag</label><i data-lucide="search" class="ico si"></i><input id="cQ" type="text" placeholder="Buscar clipe ou tag" autocomplete="off" spellcheck="false" value="${esc(S.q)}"></div>
+    <div class="chips" role="group" aria-label="Filtrar por tag"><span class="gl">Tags</span>${tagBtns}</div>
+    <div class="chips" role="group" aria-label="Filtrar por coleção"><span class="gl">Coleções</span>${colBtns}<button type="button" id="cFav" aria-pressed="${S.favOnly}"><i data-lucide="star" class="ico ico-star"></i>Favoritos</button></div>
+    <div class="scroll"><ul class="grid" id="cGrid"></ul></div>
+    <div class="impbar">${importLabel()}<p class="note">ou arraste vídeos para a janela</p></div>`;
+  $('cQ').oninput = e => { S.q = e.target.value; fillGrid(); };
+  $('libBody').querySelectorAll('[data-tag]').forEach(b => b.onclick = () => { const t = b.dataset.tag; S.tags.has(t) ? S.tags.delete(t) : S.tags.add(t); b.setAttribute('aria-pressed', S.tags.has(t)); fillGrid(); });
+  $('libBody').querySelectorAll('[data-col]').forEach(b => b.onclick = () => { const t = b.dataset.col; S.colls.has(t) ? S.colls.delete(t) : S.colls.add(t); b.setAttribute('aria-pressed', S.colls.has(t)); fillGrid(); });
+  $('cFav').onclick = () => { S.favOnly = !S.favOnly; $('cFav').setAttribute('aria-pressed', S.favOnly); fillGrid(); };
+  fillGrid();
+}
+function clipMatches(c) {
+  const q = S.q.trim().toLowerCase();
+  if (q && !(c.name.toLowerCase().includes(q) || c.tags.some(t => t.includes(q)))) return false;
+  for (const t of S.tags) if (!c.tags.includes(t)) return false;
+  if (S.colls.size && ![...S.colls].some(k => COLS.find(x => x.id === k).ids.includes(c.id))) return false;
+  if (S.favOnly && !c.fav) return false;
+  return true;
+}
+function fillGrid() {
+  stopThumbs(); const ul = $('cGrid'); if (!ul) return; ul.innerHTML = '';
+  const list = CL.filter(clipMatches);
+  list.forEach(c => {
+    const li = document.createElement('li'); li.className = 'ccard' + (c.supported ? '' : ' bad'); li.dataset.cid = c.id;
+    li.innerHTML = `<button type="button" class="cc-main" aria-label="Abrir ${esc(c.name)}${c.supported ? '' : ', ' + c.codec + ' não suportado'}">
+      <span class="cc-thumb"><canvas width="320" height="180"></canvas>${c.supported ? '' : `<span class="cc-bad"><i data-lucide="triangle-alert" class="ico"></i>${c.codec} não suportado</span>`}<span class="cc-dur num">${dur(c.dur)}</span></span>
+      <span class="cc-name">${cshort(c)}</span><span class="cc-tags">${esc(c.tags.join(' · '))}</span></button>
+      <button type="button" class="ibtn star" aria-pressed="${c.fav}" aria-label="Favoritar ${cshort(c)}" title="Favoritar"><i data-lucide="star" class="ico"></i></button>`;
+    const cv = li.querySelector('canvas'); SOClips.thumb(cv, c, false);
+    let stop = null;
+    const start = () => { if (reduce || !c.supported || stop) return; stop = SOClips.thumb(cv, c, true); };
+    const end = () => { if (stop) { stop(); stop = null; SOClips.thumb(cv, c, false); } };
+    li.addEventListener('pointerenter', start); li.addEventListener('pointerleave', end);
+    li.addEventListener('focusin', start); li.addEventListener('focusout', e => { if (!li.contains(e.relatedTarget)) end(); });
+    stops.push(() => { if (stop) { stop(); stop = null; } });
+    li.querySelector('.cc-main').onclick = e => { opener = e.currentTarget; openDetail({ kind: 'clip', id: c.id }); };
+    const st = li.querySelector('.star'); st.onclick = () => { c.fav = !c.fav; st.setAttribute('aria-pressed', c.fav); };
+    ul.appendChild(li);
+  });
+  if (!list.length) { ul.style.display = 'block'; ul.innerHTML = `<li class="empty"><i data-lucide="search-x" class="ico"></i><div class="h">Nenhum clipe com esses filtros</div><div class="s">Tire uma tag ou uma coleção para ver mais clipes.</div><button type="button" class="btn" id="cClear">Limpar filtros</button></li>`; $('cClear').onclick = () => { S.q = ''; S.tags.clear(); S.colls.clear(); S.favOnly = false; renderClips(); icons(); }; } else ul.style.display = '';
+  icons(); markSel();
+}
+
+/* ── Aba Cenas ── */
+function renderScenes() {
+  if (S.empty) {
+    $('libBody').innerHTML = `<div class="empty" style="padding-top:64px"><i data-lucide="clapperboard" class="ico"></i><div class="h">Cenas precisam de clipes</div><div class="s">Importe clipes na aba Clipes para montar a primeira cena.</div><button type="button" class="btn" disabled>Nova cena</button></div>`;
+    return;
+  }
+  $('libBody').innerHTML = `<div class="scenebar"><span>${scenes.length} cenas</span><button type="button" class="btn" id="newScene"><i data-lucide="plus" class="ico ico-sm"></i>Nova cena</button></div>
+    <p class="note" style="padding:0 16px 8px">Cria a cena a partir do preset e dos clipes que estão no ar.</p><div class="scroll"><ul class="rows" id="sList"></ul></div>`;
+  $('newScene').onclick = e => { opener = e.currentTarget; openDetail({ kind: 'scene', id: 'new' }); };
+  const ul = $('sList');
+  scenes.forEach(sc => {
+    const p = P[sc.preset], names = sc.items.filter(i => i.k === 'clip').map(i => cshort(clipById(i.clip))).join(' + ');
+    const li = document.createElement('li'); li.className = 'row'; li.dataset.sid = sc.id;
+    li.innerHTML = `<button type="button" class="row-main" aria-label="Abrir cena ${esc(sc.name)}"><span class="tslot"></span><span class="meta"><span class="tt">${esc(sc.name)}</span><span class="a"><span class="au">${esc(p.title)}</span><span class="rest">por ${esc(p.author)} + ${esc(names)}</span></span></span></button>
+      <button type="button" class="ibtn" aria-label="Tocar cena ${esc(sc.name)}" title="Tocar cena"><i data-lucide="play" class="ico"></i></button>`;
+    li.querySelector('.tslot').replaceWith(sceneThumb(sc));
+    li.querySelector('.row-main').onclick = e => { opener = e.currentTarget; openDetail({ kind: 'scene', id: sc.id }); };
+    li.querySelector('.ibtn').onclick = () => playScene(sc);
+    ul.appendChild(li);
+  });
+}
+
+/* ── Detalhe: abertura/fechamento ── */
+const det = $('det');
+let cleanup = null;
+function openDetail(d) {
+  if (cleanup) { cleanup(); cleanup = null; }
+  S.detail = d; document.body.classList.add('det-open'); det.inert = false;
+  if (d.kind === 'clip') renderClipDetail(d.id); else renderSceneDetail(d.id);
+  icons(); markSel(); protoSync();
+  const f = det.querySelector('[data-first]'); if (f) f.focus({ preventScroll: true });
+}
+function closeDetail(silent) {
+  if (cleanup) { cleanup(); cleanup = null; }
+  S.detail = null; document.body.classList.remove('det-open'); det.inert = true;
+  markSel(); protoSync();
+  if (!silent && opener && document.contains(opener)) opener.focus({ preventScroll: true });
+}
+function headHtml(title, extra) {
+  return `<div class="det-head"><h2>${title}</h2>${extra || ''}<button type="button" class="ibtn" id="dClose" aria-label="Fechar detalhe" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button></div>`;
+}
+
+/* ── Detalhe do clipe ── */
+function renderClipDetail(id) {
+  const c = clipById(id), bad = !c.supported, dd = c.dur;
+  let t = c.loopIn, playing = !reduce && !bad, mode = 'repeat', dir = 1, raf = 0, last = performance.now();
+  const pct = v => v / dd * 100, at = v => { const p = pct(v); return `calc(${p}% + ${(5 - p * 0.1).toFixed(2)}px)`; };
+  const ticks = Array.from({ length: Math.floor(dd) + 1 }, (_, i) => `<i class="tick" style="left:${at(i)}"></i>`).join('');
+  det.innerHTML = headHtml(esc(c.name), `<button type="button" class="ibtn star" id="dStar" aria-pressed="${c.fav}" aria-label="Favoritar" title="Favoritar"><i data-lucide="star" class="ico"></i></button>`) + `
+  <div class="det-body">
+    <div class="grp">
+      <div class="pv">${bad ? `<div class="pv-bad" role="alert"><i data-lucide="triangle-alert" class="ico"></i><p>${WARN_HEVC}</p></div>` : `<canvas class="main" id="dCv" width="640" height="360" role="img" aria-label="Prévia de ${esc(c.name)}"></canvas>`}</div>
+      ${bad ? '' : `<div class="tport">
+        <button type="button" class="ibtn" id="dPlay" aria-label="Pausar" title="Pausar"><i data-lucide="pause" class="ico"></i></button>
+        <span class="tm num" id="dTime">0:00,0</span><span class="nm num">/ ${dur(dd)}</span><span class="sp"></span>
+        <label class="nm" for="dLoop">Loop</label>
+        <select class="sel" id="dLoop"><option value="repeat">Repetir</option><option value="pingpong">Ida e volta</option><option value="once">Uma vez</option></select>
+      </div>
+      <div class="scrub"><label class="vh" for="dPos">Posição de reprodução</label><input type="range" id="dPos" min="0" max="${dd}" step="0.1" value="${t}"></div>
+      <div class="ruler" id="dRuler"><div class="ticks">${ticks}</div><div class="band" id="dBand"></div><div class="head" id="dHead"></div>
+        <input type="range" id="dIn" aria-label="Entrada do loop" min="0" max="${dd}" step="0.1" value="${c.loopIn}">
+        <input type="range" id="dOut" aria-label="Saída do loop" min="0" max="${dd}" step="0.1" value="${c.loopOut}"></div>
+      <div class="loopvals">
+        <div class="lv"><label for="dIn">Entrada do loop</label><output class="num" id="dInV" for="dIn"></output><button type="button" class="btn btn-ghost" id="dSetIn" title="Definir entrada no tempo atual (I)">Definir <kbd>I</kbd></button></div>
+        <div class="lv"><label for="dOut">Saída do loop</label><output class="num" id="dOutV" for="dOut"></output><button type="button" class="btn btn-ghost" id="dSetOut" title="Definir saída no tempo atual (O)">Definir <kbd>O</kbd></button></div>
+      </div>`}
+    </div>
+    <div class="grp"><h3>Tags</h3><div class="tagrow" id="dTags"></div>
+      <div class="tagadd"><label class="vh" for="dTagIn">Adicionar tag</label><input class="txt" id="dTagIn" type="text" placeholder="Adicionar tag" autocomplete="off" spellcheck="false"></div>
+      <div class="sugg" id="dSugg"></div></div>
+    <fieldset class="grp"><legend>Coleções</legend><div class="checks">${COLS.map(k => `<label class="check"><input type="checkbox" data-col="${k.id}" ${k.ids.includes(c.id) ? 'checked' : ''}>${k.name}</label>`).join('')}</div></fieldset>
+    <div class="swrow"><label class="switch"><input type="checkbox" id="dAudio" aria-describedby="dAudioH" ${S.audioClip && S.audioClip.id === c.id ? 'checked' : ''}><span class="track"></span>Usar o áudio do clipe como fonte</label><p class="note" id="dAudioH">O visual passa a reagir a este clipe enquanto ele toca</p></div>
+    <div class="grp"><h3>Arquivo</h3><dl class="meta2"><dt>Codec</dt><dd class="num">${c.codec}${bad ? ' · não suportado' : ''}</dd><dt>Resolução</dt><dd class="num">${c.res}</dd><dt>Duração</dt><dd class="num">${dur(dd)}</dd><dt>Arquivo</dt><dd class="num">${esc(c.file)}</dd></dl></div>
+  </div>
+  <div class="det-foot"><button type="button" class="btn btn-primary" id="dL1">Tocar na camada 1</button><button type="button" class="btn" id="dL2">Tocar na camada 2</button><button type="button" class="btn btn-ghost" id="dExp"><i data-lucide="folder-open" class="ico ico-sm"></i>Mostrar no Explorer</button></div>`;
+  const g = x => $(x);
+  g('dClose').onclick = () => closeDetail(); g('dClose').setAttribute('data-first', '');
+  g('dStar').onclick = () => { c.fav = !c.fav; g('dStar').setAttribute('aria-pressed', c.fav); if (S.tab === 'clips') fillGrid(); };
+  g('dL1').onclick = () => playOnLayer(1, c.id); g('dL2').onclick = () => playOnLayer(2, c.id);
+  g('dExp').onclick = () => toast('Abriria o Explorer em ' + c.file.replace(/\\[^\\]+$/, ''));
+  g('dAudio').onchange = e => { S.audioClip = e.target.checked ? c : null; renderChips(); toast(e.target.checked ? `Visual reagindo ao áudio de ${cshort(c)}` : 'Visual volta a reagir ao áudio do sistema'); };
+  det.querySelectorAll('[data-col]').forEach(cb => cb.onchange = () => { const k = COLS.find(x => x.id === cb.dataset.col); k.ids = cb.checked ? [...new Set([...k.ids, c.id])] : k.ids.filter(x => x !== c.id); if (S.colls.size && S.tab === 'clips') fillGrid(); });
+  /* tags */
+  const tagIn = g('dTagIn');
+  function renderTags() {
+    g('dTags').innerHTML = c.tags.length ? c.tags.map(tg => `<span class="tag">${esc(tg)}<button type="button" class="ibtn" data-rm="${esc(tg)}" aria-label="Remover tag ${esc(tg)}" title="Remover tag"><i data-lucide="x" class="ico"></i></button></span>`).join('') : '<span class="note">Sem tags</span>';
+    const q = tagIn.value.trim().toLowerCase(), sg = SUGG.filter(s => !c.tags.includes(s) && (!q || s.includes(q)));
+    g('dSugg').innerHTML = sg.length ? '<span>Sugestões</span>' + sg.map(s => `<button type="button" data-add="${s}">${s}</button>`).join('') : '';
+    g('dTags').querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { c.tags = c.tags.filter(x => x !== b.dataset.rm); renderTags(); tagIn.focus(); if (S.tab === 'clips') fillGrid(); });
+    g('dSugg').querySelectorAll('[data-add]').forEach(b => b.onclick = () => addTag(b.dataset.add));
+    icons();
+  }
+  function addTag(v) { v = v.trim().toLowerCase(); if (!v) return; if (!c.tags.includes(v)) c.tags.push(v); tagIn.value = ''; renderTags(); tagIn.focus(); if (S.tab === 'clips') fillGrid(); }
+  tagIn.oninput = renderTags;
+  tagIn.onkeydown = e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagIn.value); } else if (e.key === 'Backspace' && !tagIn.value && c.tags.length) { c.tags.pop(); renderTags(); } };
+  renderTags();
+  if (bad) { g('dL1').title = g('dL2').title = 'Converta o arquivo para tocar'; cleanup = () => {}; return; }
+  /* player */
+  const cv = g('dCv'), cx = cv.getContext('2d'), pos = g('dPos'), inn = g('dIn'), out = g('dOut');
+  const fill = el => el.style.setProperty('--fill', (el.value / dd * 100) + '%'); fill(pos);
+  function paintRuler() {
+    g('dBand').style.left = at(c.loopIn); g('dBand').style.width = `calc(${at(c.loopOut)} - ${at(c.loopIn)})`;
+    g('dInV').textContent = fmt(c.loopIn); g('dOutV').textContent = fmt(c.loopOut);
+    inn.value = c.loopIn; out.value = c.loopOut;
+  }
+  function draw() { SOClips.drawClip(cx, 640, 360, c, t); g('dTime').textContent = fmt(t); pos.value = t; fill(pos); g('dHead').style.left = at(t); }
+  function setPlaying(v) { playing = v; if (v && mode === 'once' && t >= c.loopOut - 0.01) t = c.loopIn; g('dPlay').setAttribute('aria-label', v ? 'Pausar' : 'Reproduzir'); g('dPlay').title = v ? 'Pausar' : 'Reproduzir'; g('dPlay').innerHTML = `<i data-lucide="${v ? 'pause' : 'play'}" class="ico"></i>`; icons(); }
+  function tick(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (playing) {
+      const lo = c.loopIn, hi = c.loopOut;
+      if (t < lo || t > hi + 0.01) t = lo;
+      if (mode === 'pingpong') { t += dt * dir; if (t >= hi) { t = hi; dir = -1; } else if (t <= lo) { t = lo; dir = 1; } }
+      else { t += dt; if (t >= hi) { if (mode === 'once') { t = hi; setPlaying(false); } else t = lo + (t - hi); } }
+    }
+    draw(); raf = requestAnimationFrame(tick);
+  }
+  function setIn(v) { c.loopIn = Math.max(0, Math.min(v, c.loopOut - 0.5)); paintRuler(); }
+  function setOut(v) { c.loopOut = Math.min(dd, Math.max(v, c.loopIn + 0.5)); paintRuler(); }
+  inn.oninput = () => setIn(+inn.value); out.oninput = () => setOut(+out.value);
+  g('dSetIn').onclick = () => { setIn(t); toast('Entrada do loop em ' + fmt(c.loopIn)); };
+  g('dSetOut').onclick = () => { setOut(t); toast('Saída do loop em ' + fmt(c.loopOut)); };
+  pos.oninput = () => { t = +pos.value; if (!playing) draw(); };
+  g('dPlay').onclick = () => setPlaying(!playing);
+  g('dLoop').onchange = e => { mode = e.target.value; dir = 1; if (mode === 'once' && !playing) { t = c.loopIn; } };
+  det._ioKey = k => { if (k === 'i') { setIn(t); toast('Entrada do loop em ' + fmt(c.loopIn)); } else { setOut(t); toast('Saída do loop em ' + fmt(c.loopOut)); } };
+  paintRuler(); draw(); setPlaying(playing);
+  raf = requestAnimationFrame(tick);
+  cleanup = () => { cancelAnimationFrame(raf); det._ioKey = null; };
+}
+
+/* ── Detalhe / criação de cena ── */
+let SD = null;
+function suggestName(preset, items) {
+  const top = items.find(i => i.k === 'clip' && i.clipId);
+  return stitle(P[preset]) + (top ? ' + ' + cshort(top.clip) : '');
+}
+function clipLayers(items) { return items.filter(i => i.k === 'clip'); }
+function layerLabel(items, L) {
+  if (L.k === 'viz') return 'MilkDrop';
+  const n = clipLayers(items).slice().reverse().indexOf(L) + 1; return 'Clipe ' + n;
+}
+function renderSceneDetail(id) {
+  const isNew = id === 'new', sc = isNew ? null : sceneById(id);
+  SD = { id: isNew ? null : id, nameTouched: !isNew, rot: isNew ? true : sc.rot, used: isNew ? [] : sc.used };
+  SD.preset = isNew ? S.mainPreset : sc.preset;
+  det.innerHTML = headHtml(isNew ? 'Nova cena' : esc(sc.name)) + `
+  <div class="det-body">
+    <div class="f"><label for="sName">Nome da cena</label><input class="txt" id="sName" type="text" autocomplete="off" spellcheck="false"></div>
+    <div class="grp"><div class="pv"><canvas class="vizc" id="sViz" aria-hidden="true"></canvas><canvas class="outc" id="sOut" role="img" aria-label="Prévia composta ao vivo"></canvas></div><p class="pv-cap" id="sCap"></p></div>
+    <div class="f"><label for="sPreset">Preset</label><select class="sel" id="sPreset">${P.map(p => `<option value="${p.id}">${esc(p.title)} — por ${esc(p.author)}</option>`).join('')}</select></div>
+    <div class="grp"><div class="h-row"><h3>Camadas</h3><span class="note">De cima para baixo</span></div><ul class="lstack" id="sStack"></ul>
+      <button type="button" class="btn" id="sAdd" style="margin-top:8px"><i data-lucide="plus" class="ico ico-sm"></i>Adicionar camada de clipe</button></div>
+    <div class="ctl-sw"><label class="switch"><input type="checkbox" id="sRot" ${SD.rot ? 'checked' : ''}><span class="track"></span>Incluir na rotação</label></div>
+    ${isNew ? '' : `<div class="used"><i data-lucide="repeat" class="ico ico-sm"></i><span id="sUsed"></span></div>`}
+  </div>
+  <div class="det-foot"><button type="button" class="btn btn-primary" id="sSave">Salvar cena</button><button type="button" class="btn" id="sStudio"><i data-lucide="square-pen" class="ico ico-sm"></i>Abrir no Estúdio</button></div>`;
+  $('dClose').onclick = () => closeDetail(); $('dClose').setAttribute('data-first', '');
+  SD.vizEl = $('sViz'); SD.viz = SOViz.create(SD.vizEl, { scale: .5 }); SD.viz.setPreset(P[SD.preset], 0);
+  SD.comp = SOClips.createCompositor($('sOut'), { scale: .6 });
+  SD.comp.setAudio(() => ({ level: SD.viz.level(), bass: SD.viz.level(), beat: 0 }));
+  let specs;
+  if (isNew) { specs = [mainLayers[1], mainLayers[0]].filter(L => L.enabled && L.clip).map(specOf); specs.push({ k: 'viz', blend: 'normal', opacity: 1 }); }
+  else specs = sc.items.map(i => Object.assign({}, i));
+  SD.items = specs.map(s => mkLayer(s, SD.vizEl));
+  SD.name = isNew ? suggestName(SD.preset, SD.items) : sc.name; $('sName').value = SD.name;
+  $('sPreset').value = SD.preset;
+  if (!isNew) $('sUsed').textContent = SD.used.length ? 'Usada em: ' + SD.used.join(', ') : 'Ainda não usada em rotação ou coleção';
+  $('sName').oninput = e => { SD.name = e.target.value; SD.nameTouched = true; };
+  $('sPreset').onchange = e => { SD.preset = +e.target.value; SD.viz.setPreset(P[SD.preset], 600); autoName(); applySD(); renderStack(); };
+  $('sRot').onchange = e => { SD.rot = e.target.checked; };
+  $('sAdd').onclick = () => {
+    const used = clipLayers(SD.items).map(l => l.clipId), c = CL.find(x => x.supported && !used.includes(x.id));
+    SD.items.unshift(mkLayer({ k: 'clip', clip: c.id, blend: 'screen', opacity: .8, reactions: {} }, SD.vizEl));
+    autoName(); applySD(); renderStack('sAdd');
+  };
+  $('sSave').onclick = () => {
+    const spec = { name: SD.name.trim() || suggestName(SD.preset, SD.items), preset: SD.preset, items: SD.items.map(specOf), rot: SD.rot };
+    if (SD.id) { Object.assign(sceneById(SD.id), spec, { used: SD.rot ? (sceneById(SD.id).used.includes('rotação') ? sceneById(SD.id).used : ['rotação', ...sceneById(SD.id).used]) : sceneById(SD.id).used.filter(x => x !== 'rotação') }); }
+    else { const n = { id: 's' + (scenes.length + 1), used: SD.rot ? ['rotação'] : [], ...spec }; scenes.push(n); SD.id = n.id; S.detail.id = n.id; }
+    det.querySelector('.det-head h2').textContent = spec.name;
+    toast(`Cena “${spec.name}” salva na biblioteca`); renderSeg(); if (S.tab === 'scenes') renderBody(); else if (S.tab === 'presets') renderBody();
+  };
+  $('sStudio').onclick = () => enterStudio(SD.id ? sceneById(SD.id) : { name: SD.name, preset: SD.preset, items: SD.items.map(specOf), rot: SD.rot, used: [] }, SD);
+  renderStack(); applySD();
+  cleanup = () => { SD.viz.destroy(); SD.comp.destroy(); SD = null; };
+}
+function autoName() { if (!SD.nameTouched) { SD.name = suggestName(SD.preset, SD.items); $('sName').value = SD.name; } }
+function applySD() {
+  SD.comp.setStack(stackOf(SD.items));
+  const p = P[SD.preset], names = clipLayers(SD.items).filter(l => l.clip).slice().reverse().map(l => cshort(l.clip)).join(' + ');
+  $('sCap').textContent = p.title + ', por ' + p.author + (names ? ' + ' + names : '');
+}
+const layerRow = (items, L, i, o) => {
+  const lab = layerLabel(items, L), id = 'L' + L.uid;
+  const blends = BL.map(b => `<option value="${b.id}" ${b.id === L.blend ? 'selected' : ''}>${b.label}</option>`).join('');
+  const clips = CL.filter(c => c.supported).map(c => `<option value="${c.id}" ${c.id === L.clipId ? 'selected' : ''}>${c.name}</option>`).join('');
+  const R = L.reactions || {};
+  return `<li class="layer" data-u="${L.uid}"><div class="layer-h"><i data-lucide="${L.k === 'viz' ? 'sparkles' : 'clapperboard'}" class="ico"></i><span class="lt">${lab}${L.k === 'viz' ? ' · ' + esc(stitle(P[o.preset])) : ''}</span>
+    <button type="button" class="ibtn" data-act="up" aria-label="Subir ${lab}" title="Subir" ${i === 0 ? 'disabled' : ''}><i data-lucide="arrow-up" class="ico"></i></button>
+    <button type="button" class="ibtn" data-act="down" aria-label="Descer ${lab}" title="Descer" ${i === items.length - 1 ? 'disabled' : ''}><i data-lucide="arrow-down" class="ico"></i></button>
+    ${L.k === 'clip' ? `<button type="button" class="ibtn" data-act="rm" aria-label="Remover ${lab}" title="Remover camada"><i data-lucide="trash-2" class="ico"></i></button>` : ''}</div>
+    <div class="layer-b">
+      ${L.k === 'clip' ? `<div class="f"><label for="${id}c">Clipe</label><select class="sel" id="${id}c" data-f="clip">${clips}</select></div>` : ''}
+      <div class="f2"><div class="f"><label for="${id}b">Mesclagem</label><select class="sel" id="${id}b" data-f="blend">${blends}</select></div>
+      <div class="f"><div class="lh"><label for="${id}o">Opacidade</label><span class="num" id="${id}ov">${Math.round(L.opacity * 100)}%</span></div><input type="range" id="${id}o" data-f="opacity" min="0" max="100" step="1" value="${Math.round(L.opacity * 100)}" style="--fill:${L.opacity * 100}%"></div></div>
+      ${L.k === 'clip' ? `<fieldset><legend class="vh">Reações ao áudio</legend><div class="f"><span class="lbl">Reações ao áudio</span><div class="react">
+        <label class="check"><input type="checkbox" data-r="opacityByLevel" ${R.opacityByLevel ? 'checked' : ''}>Opacidade pelo nível</label>
+        <label class="check"><input type="checkbox" data-r="speedByEnergy" ${R.speedByEnergy ? 'checked' : ''}>Velocidade pela energia</label>
+        <label class="check"><input type="checkbox" data-r="flashOnBass" ${R.flashOnBass ? 'checked' : ''}>Flash nos graves</label></div></div></fieldset>` : ''}
+    </div></li>`;
+};
+function bindLayer(li, items, L, redo, afterChange) {
+  li.querySelectorAll('[data-f]').forEach(el => el.addEventListener('input', () => {
+    const f = el.dataset.f;
+    if (f === 'clip') setClip(L, el.value); else if (f === 'blend') L.blend = el.value;
+    else { L.opacity = el.value / 100; el.style.setProperty('--fill', el.value + '%'); const ov = $('L' + L.uid + 'ov'); if (ov) ov.textContent = el.value + '%'; }
+    afterChange();
+  }));
+  li.querySelectorAll('[data-r]').forEach(el => el.onchange = () => { L.reactions[el.dataset.r] = el.checked; afterChange(); });
+  li.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
+    const i = items.indexOf(L), a = b.dataset.act;
+    if (a === 'rm') items.splice(i, 1); else { const j = a === 'up' ? i - 1 : i + 1; if (j < 0 || j >= items.length) return; [items[i], items[j]] = [items[j], items[i]]; }
+    redo(a === 'rm' ? 'sAdd' : null, L.uid, a);
+  });
+}
+function renderStack(focusId) {
+  const ul = $('sStack'); ul.innerHTML = SD.items.map((L, i) => layerRow(SD.items, L, i, SD)).join('');
+  ul.querySelectorAll('.layer').forEach(li => { const L = SD.items.find(x => x.uid === +li.dataset.u); bindLayer(li, SD.items, L, (fid, u, a) => { autoName(); applySD(); renderStack(fid || ((u) ? { u, a } : null)); }, () => { autoName(); applySD(); }); });
+  clipLayers(SD.items).length >= 2 ? ($('sAdd').disabled = true, $('sAdd').textContent = 'Máximo de 2 clipes') : ($('sAdd').disabled = false, $('sAdd').innerHTML = '<i data-lucide="plus" class="ico ico-sm"></i>Adicionar camada de clipe');
+  icons();
+  if (typeof focusId === 'string') { const e = $(focusId); if (e && !e.disabled) e.focus(); }
+  else if (focusId) { const li = ul.querySelector(`[data-u="${focusId.u}"]`); const b = li && (li.querySelector(`[data-act="${focusId.a}"]:not(:disabled)`) || li.querySelector('[data-act]:not(:disabled)')); if (b) b.focus(); }
+}
+
+/* ── Estúdio (mock) ── */
+let ST = null;
+const STTABS = [{ id: 'cena', label: 'Cena', icon: 'layers' }, { id: 'basico', label: 'Básico' }, { id: 'equacoes', label: 'Equações' }, { id: 'ondas', label: 'Ondas' }, { id: 'formas', label: 'Formas' }, { id: 'shaders', label: 'Shaders' }, { id: 'codigo', label: 'Código .milk' }];
+function enterStudio(sc, fromSD) {
+  if (!sc) sc = sceneById('s2');
+  if (S.view === 'studio') leaveStudio(true);
+  S.view = 'studio'; $('palco').hidden = true; $('estudio').hidden = false;
+  ST = { name: sc.name, preset: sc.preset, tab: 'cena', specs: sc.items.map(i => Object.assign({}, i)), id: sc.id || null, rot: sc.rot };
+  ST.vizEl = $('stViz'); ST.viz = SOViz.create(ST.vizEl, { scale: .5 }); ST.viz.setPreset(P[ST.preset], 0);
+  ST.comp = SOClips.createCompositor($('stOut'), { scale: .6 }); ST.comp.setAudio(() => ({ level: ST.viz.level(), bass: ST.viz.level(), beat: 0 }));
+  ST.items = ST.specs.map(s => mkLayer(s, ST.vizEl)); ST.comp.setStack(stackOf(ST.items));
+  $('stName').value = ST.name; stCredit(); renderStTabs(); renderStPanel(); icons(); protoSync();
+  $('stBack').focus({ preventScroll: true });
+}
+function stCredit() { const p = P[ST.preset], names = clipLayers(ST.items).filter(l => l.clip).slice().reverse().map(l => cshort(l.clip)).join(' + '); $('stCredit').textContent = 'Cena · ' + p.title + ', por ' + p.author + (names ? ' + ' + names : ''); }
+function leaveStudio(silent) {
+  if (!ST) return; ST.viz.destroy(); ST.comp.destroy(); ST = null;
+  $('estudio').hidden = true; $('palco').hidden = false; S.view = 'palco';
+  if (!silent) { renderChips(); protoSync(); }
+}
+$('stBack').onclick = () => leaveStudio();
+$('stName').oninput = e => { ST.name = e.target.value; };
+$('stSave').onclick = () => {
+  const spec = { name: ST.name, preset: ST.preset, items: ST.items.map(specOf), rot: ST.rot };
+  if (ST.id) Object.assign(sceneById(ST.id), spec); else { const n = { id: 's' + (scenes.length + 1), used: [], ...spec }; scenes.push(n); ST.id = n.id; }
+  $('stStatus').textContent = 'Salvo na biblioteca como cena'; toast('Cena salva na biblioteca');
+};
+function renderStTabs() {
+  $('stTabs').innerHTML = STTABS.map(t => `<button type="button" class="tab" role="tab" id="st-${t.id}" data-t="${t.id}" aria-selected="${ST.tab === t.id}" aria-controls="stPanel" tabindex="${ST.tab === t.id ? 0 : -1}">${t.icon ? `<i data-lucide="${t.icon}" class="ico"></i>` : ''}${t.label}</button>`).join('');
+  $('stPanel').setAttribute('aria-labelledby', 'st-' + ST.tab);
+  $('stTabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { ST.tab = b.dataset.t; renderStTabs(); renderStPanel(); icons(); });
+}
+$('stTabs').addEventListener('keydown', e => {
+  const i = STTABS.findIndex(t => t.id === ST.tab); let n = -1;
+  if (e.key === 'ArrowRight') n = (i + 1) % STTABS.length; else if (e.key === 'ArrowLeft') n = (i + STTABS.length - 1) % STTABS.length;
+  if (n < 0) return; e.preventDefault(); ST.tab = STTABS[n].id; renderStTabs(); renderStPanel(); icons(); $('st-' + ST.tab).focus();
+});
+const NOTE = `<div class="hint-row"><i data-lucide="info" class="ico ico-sm"></i><span>As outras abas editam o preset desta cena.</span></div>`;
+function renderStPanel() {
+  const p = P[ST.preset], el = $('stPanel');
+  if (ST.tab === 'cena') {
+    el.innerHTML = NOTE + `<div class="grp"><h3>Preset da cena</h3><p style="margin:0">${esc(p.title)}</p><p class="note" style="margin-top:2px">por ${esc(p.author)}</p></div>
+      <div class="grp"><div class="h-row"><h3>Pilha de camadas</h3><span class="note">Arraste para reordenar</span></div><ul class="lstack dnd" id="stStack"></ul></div>`;
+    fillStStack();
+  } else if (ST.tab === 'basico') {
+    el.innerHTML = NOTE + [['Zoom', '1,02'], ['Rotação', '0,00'], ['Decaimento', '0,94']].map(([n, v], i) => `<div class="sl"><label for="sb${i}">${n}</label><input type="range" id="sb${i}" min="0" max="100" value="${40 + i * 20}" style="--fill:${40 + i * 20}%"><span class="v num">${v}</span></div>`).join('') + `<p class="note">Igual ao Estúdio atual.</p>`;
+    el.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => r.style.setProperty('--fill', r.value + '%'));
+  } else {
+    const nm = STTABS.find(t => t.id === ST.tab).label;
+    el.innerHTML = NOTE + `<p class="note">${nm}: igual ao Estúdio atual, editando “${esc(p.title)}”, por ${esc(p.author)}.</p>`;
+  }
+  icons();
+}
+function fillStStack(focus) {
+  const ul = $('stStack'); ul.innerHTML = '';
+  ST.items.forEach((L, i) => {
+    const lab = layerLabel(ST.items, L), li = document.createElement('li'); li.className = 'layer' + (L.enabled ? '' : ' off'); li.draggable = true; li.dataset.i = i;
+    const sum = (L.k === 'clip' && L.clip ? cshort(L.clip) + ' · ' : stitle(P[ST.preset]) + ' · ') + blendLabel(L.blend) + ' · ' + Math.round(L.opacity * 100) + '%';
+    li.innerHTML = `<div class="sl-row"><span class="grip" aria-hidden="true"><i data-lucide="grip-vertical" class="ico"></i></span><i data-lucide="${L.k === 'viz' ? 'sparkles' : 'clapperboard'}" class="ico" style="color:var(--text-2)"></i><span class="lt"><b>${lab}</b><span class="sumline">${esc(sum)}</span></span>
+      <button type="button" class="ibtn" data-a="vis" aria-pressed="${L.enabled}" aria-label="Camada visível: ${lab}" title="Mostrar ou ocultar"><i data-lucide="${L.enabled ? 'eye' : 'eye-off'}" class="ico"></i></button>
+      <button type="button" class="ibtn" data-a="up" aria-label="Subir ${lab}" title="Subir" ${i === 0 ? 'disabled' : ''}><i data-lucide="arrow-up" class="ico"></i></button>
+      <button type="button" class="ibtn" data-a="down" aria-label="Descer ${lab}" title="Descer" ${i === ST.items.length - 1 ? 'disabled' : ''}><i data-lucide="arrow-down" class="ico"></i></button></div>`;
+    li.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+      const a = b.dataset.a;
+      if (a === 'vis') L.enabled = !L.enabled; else { const j = a === 'up' ? i - 1 : i + 1; [ST.items[i], ST.items[j]] = [ST.items[j], ST.items[i]]; }
+      ST.comp.setStack(stackOf(ST.items)); fillStStack({ u: L.uid, a });
+    });
+    li.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', String(i)); e.dataTransfer.effectAllowed = 'move'; li.classList.add('dragging'); });
+    li.addEventListener('dragend', () => { li.classList.remove('dragging'); ul.querySelectorAll('.over').forEach(x => x.classList.remove('over')); });
+    li.addEventListener('dragover', e => { e.preventDefault(); li.classList.add('over'); });
+    li.addEventListener('dragleave', () => li.classList.remove('over'));
+    li.addEventListener('drop', e => { e.preventDefault(); const from = +e.dataTransfer.getData('text/plain'); if (isNaN(from) || from === i) return; const [m] = ST.items.splice(from, 1); ST.items.splice(i, 0, m); ST.comp.setStack(stackOf(ST.items)); fillStStack(); });
+    li.dataset.u = L.uid; ul.appendChild(li);
+  });
+  icons(); stCredit();
+  if (focus) { const li = ul.querySelector(`[data-u="${focus.u}"]`); const b = li && (li.querySelector(`[data-a="${focus.a}"]:not(:disabled)`) || li.querySelector('[data-a]:not(:disabled)')); if (b) b.focus(); }
+}
+
+/* ── Protótipo, atalhos, importação ── */
+function protoSync() {
+  let st = 'drawer';
+  if (S.view === 'studio') st = 'studio'; else if (S.empty) st = 'empty'; else if (S.detail && S.detail.kind === 'clip') st = 'clip'; else if (S.detail) st = 'newscene';
+  document.querySelectorAll('.proto [data-st]').forEach(b => b.setAttribute('aria-pressed', b.dataset.st === st));
+}
+function setProto(st) {
+  opener = null;
+  if (S.view === 'studio') leaveStudio(true);
+  S.view = 'palco'; $('palco').hidden = false; $('estudio').hidden = true;
+  if (S.detail) closeDetail(true);
+  S.empty = st === 'empty'; resetMain(); setLib(true);
+  if (st === 'studio') { enterStudio(sceneById('s2')); return; }
+  S.tab = st === 'newscene' ? 'scenes' : 'clips'; renderSeg(); renderBody(true);
+  if (st === 'clip') openDetail({ kind: 'clip', id: 'c07' });
+  if (st === 'newscene') openDetail({ kind: 'scene', id: 'new' });
+  protoSync();
+}
+document.querySelectorAll('.proto [data-st]').forEach(b => b.onclick = () => setProto(b.dataset.st));
+
+function importFiles(n) {
+  if (!n) return; const was = S.empty;
+  if (was) { S.empty = false; resetMain(); }
+  toast(`${n} ${n > 1 ? 'clipes importados' : 'clipe importado'} (simulação: nada é copiado)`); renderSeg(); renderBody(true);
+}
+document.addEventListener('change', e => { if (e.target.classList && e.target.classList.contains('fileIn')) { importFiles(e.target.files.length); e.target.value = ''; } });
+let dragN = 0;
+addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('dz').hidden = false; } });
+addEventListener('dragleave', () => { dragN = Math.max(0, dragN - 1); if (!dragN) $('dz').hidden = true; });
+addEventListener('dragover', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+addEventListener('drop', e => { if (e.dataTransfer && e.dataTransfer.files.length) { e.preventDefault(); dragN = 0; $('dz').hidden = true; importFiles(e.dataTransfer.files.length); } });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (S.view === 'studio') { leaveStudio(); return; }
+    if (S.detail) { closeDetail(); return; }
+    if (S.open) { setLib(false); $('edge').focus({ preventScroll: true }); }
+    return;
+  }
+  if (e.ctrlKey || e.metaKey || e.altKey || typing(e.target)) return;
+  const k = e.key.toLowerCase();
+  if (S.view === 'studio') return;
+  if (k === 'l') { setLib(!S.open); }
+  else if ((k === 'i' || k === 'o') && S.detail && S.detail.kind === 'clip' && det._ioKey) { e.preventDefault(); det._ioKey(k); }
+});
+$('libClose').onclick = () => { setLib(false); $('edge').focus({ preventScroll: true }); };
+$('edge').onclick = () => { opener = null; setLib(true); };
+$('libScrim').onclick = () => { if (S.detail) closeDetail(); else setLib(false); };
+
+/* init */
+resetMain(); renderSeg(); renderBody(true); setLib(true); protoSync(); icons();
+})();
+</script>
+</body>
+</html>

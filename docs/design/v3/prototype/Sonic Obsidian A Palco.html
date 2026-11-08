@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — A · Palco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  body { overflow: hidden; }
+  .proto { left: auto; right: 12px; }
+  body.idle { cursor: none; }
+  #viz { position: fixed; inset: 0; width: 100%; height: 100%; display: block; transition: opacity var(--t-med) var(--ease-out); }
+  body.sheet-open #viz { opacity: 0.4; }
+
+  /* ── Assinatura: cartão de crédito do preset ── */
+  .credit { position: fixed; left: 0; top: 0; right: 0; padding: 40px 40px 96px; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(8,8,9,0.82), rgba(8,8,9,0)); opacity: 0; transition: opacity 600ms var(--ease-out); }
+  .credit.show { opacity: 1; transition-duration: 180ms; }
+  .credit h1 { margin: 0; max-width: 22ch; font-size: clamp(28px, 3.2vw, 48px); line-height: 1.08; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit p { margin: 10px 0 0; font-size: 15px; color: var(--text-2); }
+  .credit .sweep { margin-top: 16px; width: 240px; height: 2px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+  .credit .sweep i { display: block; height: 100%; width: 0; background: var(--violet); }
+
+  /* ── Faixa de controle ── */
+  .strip-wrap { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center;
+    transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  body.idle .strip-wrap { opacity: 0; transform: translateY(12px); pointer-events: none; }
+  .strip { position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+    padding: 10px 10px 10px 16px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 0; }
+  .now { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .now-text { min-width: 0; }
+  .now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ibtn.fav[aria-pressed="true"] svg { fill: var(--violet); }
+  .transport { display: flex; align-items: center; gap: 2px; }
+  .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 8px; }
+  .rot { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; }
+  .rot:hover { background: var(--bg-03); color: var(--text-1); }
+  .rot[aria-pressed="true"] { color: var(--text-1); }
+  .rot[aria-pressed="true"] .ico { color: var(--violet); }
+  .rot .num { font-size: 12px; color: var(--text-2); min-width: 3.2ch; }
+  .tail { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+  .level { display: flex; align-items: center; gap: 8px; margin-right: 8px; color: var(--text-2); font-size: 12px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 10px; border-radius: var(--r-2); font-size: 12px;
+    background: rgba(255,181,71,0.10); color: var(--warn); border: 1px solid rgba(255,181,71,0.35); white-space: nowrap; }
+  .chip .btn { height: 22px; padding: 0 8px; font-size: 12px; color: var(--text-1); }
+  .chip[hidden] { display: none; }
+
+  /* ── Painel central de estado (silêncio / erro) ── */
+  .state { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px));
+    padding: 20px 22px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .state[hidden] { display: none; }
+  .state h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .state p { margin: 0; color: var(--text-2); }
+  .state .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .state.error h2 .ico { color: var(--warn); }
+
+  /* ── Paleta de presets ── */
+  .scrim { position: fixed; inset: 0; background: rgba(8,8,9,0.6); opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out); }
+  body.palette-open .scrim.p { opacity: 1; pointer-events: auto; }
+  .palette { position: fixed; left: 50%; top: 14vh; width: min(640px, calc(100vw - 32px)); transform: translate(-50%, -8px); opacity: 0; pointer-events: none;
+    background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); display: flex; flex-direction: column; max-height: 70vh; }
+  body.palette-open .palette { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .p-search { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 52px; border-bottom: 1px solid var(--line-1); color: var(--text-2); }
+  .p-search input { flex: 1; height: 100%; background: transparent; border: 0; font-size: 16px; color: var(--text-1); }
+  .p-search input::placeholder { color: var(--text-3); }
+  .p-search input:focus-visible { outline: none; }
+  .p-tabs { display: flex; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--line-1); flex-wrap: wrap; }
+  .p-tabs button { height: 28px; padding: 0 10px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; font-size: 13px; }
+  .p-tabs button:hover { background: var(--bg-03); color: var(--text-1); }
+  .p-tabs button[aria-selected="true"] { background: var(--violet-soft); color: var(--text-1); border-color: var(--violet-line); }
+  .p-tabs .num { font-size: 11px; color: var(--text-3); margin-left: 4px; }
+  .p-list { overflow-y: auto; padding: 6px; flex: 1; }
+  .row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 6px 8px; border-radius: var(--r-2); }
+  .row.active { background: var(--bg-03); }
+  .row.playing .r-title { color: var(--violet); }
+  .row-main { display: contents; }
+  .r-btn { all: unset; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: center; grid-column: 1 / 3; cursor: pointer; min-width: 0; }
+  .r-btn:focus-visible { outline: 2px solid var(--violet); outline-offset: 4px; border-radius: var(--r-2); }
+  .thumb { width: 40px; height: 28px; border-radius: var(--r-1); display: block; }
+  .r-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+  .r-title mark { background: none; color: var(--violet); }
+  .r-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .r-hint { font-size: 12px; color: var(--text-3); display: none; }
+  .row.active .r-hint { display: inline; }
+  .row .ibtn { width: 30px; height: 30px; }
+  .p-empty { padding: 32px 20px; text-align: center; color: var(--text-2); }
+  .p-empty strong { display: block; color: var(--text-1); font-weight: 500; margin: 8px 0 4px; }
+  .p-foot { display: flex; gap: 16px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--line-1); font-size: 12px; color: var(--text-3); }
+  .p-foot span { display: inline-flex; gap: 6px; align-items: center; }
+  .coll { all: unset; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: var(--r-2); cursor: pointer; }
+  .coll:hover, .coll.active { background: var(--bg-03); }
+  .coll:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+  .coll small { color: var(--text-2); font-size: 12px; }
+
+  /* ── Painel de ajustes ── */
+  .sheet { position: fixed; top: 0; right: 0; bottom: 0; width: min(340px, 100vw); background: var(--bg-01); border-left: 1px solid var(--line-2);
+    box-shadow: var(--shadow-pop); transform: translateX(100%); transition: transform 180ms var(--ease-out); display: flex; flex-direction: column; }
+  body.sheet-open .sheet { transform: none; transition-duration: 250ms; }
+  .sheet header { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--line-1); }
+  .sheet header h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .sheet .body { overflow-y: auto; padding: 4px 20px 24px; }
+  .sheet section { padding: 18px 0 6px; border-bottom: 1px solid var(--line-1); }
+  .sheet section:last-child { border-bottom: 0; }
+  .sheet h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+  .field { margin-bottom: 16px; }
+  .field-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .field label, .field .lbl { color: var(--text-2); font-size: 13px; }
+  .field .val { font-size: 13px; color: var(--cyan); }
+  .field.disabled { opacity: 0.55; }
+  .note { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  .line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--text-2); font-size: 13px; }
+  select.sel { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-3); border-radius: var(--r-2); overflow: hidden; }
+  .seg label { position: relative; }
+  .seg input { position: absolute; opacity: 0; }
+  .seg span { display: block; padding: 5px 10px; font-size: 13px; color: var(--text-2); cursor: pointer; }
+  .seg input:checked + span { background: var(--violet-soft); color: var(--text-1); }
+  .seg input:focus-visible + span { outline: 2px solid var(--violet); outline-offset: -2px; }
+  .capture { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--text-2); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-top: 6px; flex: none; }
+  .capture b { display: block; color: var(--text-1); font-weight: 500; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 12px; font-size: 13px; color: var(--text-2); align-items: center; }
+  .keys div { display: flex; gap: 4px; }
+
+  @media (max-width: 900px) {
+    .strip { grid-template-columns: minmax(0, 1fr) auto; }
+    .tail { grid-column: 1 / -1; justify-content: space-between; }
+    .credit { padding: 24px 20px 72px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="viz" aria-label="Visual do preset atual" role="img"></canvas>
+
+<div class="credit" id="credit" aria-live="polite">
+  <h1 id="creditTitle"></h1>
+  <p id="creditAuthor"></p>
+  <div class="sweep"><i id="sweep"></i></div>
+</div>
+
+<div class="state" id="silence" hidden role="status">
+  <h2><i data-lucide="volume-x" class="ico"></i>Sem áudio</h2>
+  <p>Toque algo no computador e o visual reage. A captura continua ligada.</p>
+</div>
+<div class="state error" id="denied" hidden role="alert">
+  <h2><i data-lucide="triangle-alert" class="ico"></i>Não foi possível capturar o áudio</h2>
+  <p>O Windows recusou a captura da saída padrão. Feche apps que usam o áudio em modo exclusivo e tente de novo.</p>
+  <div class="actions">
+    <button class="btn btn-primary" id="retry"><i data-lucide="rotate-cw" class="ico ico-sm"></i>Tentar de novo</button>
+    <button class="btn btn-ghost">Abrir configurações de som</button>
+  </div>
+</div>
+
+<div class="strip-wrap" id="stripWrap">
+  <div class="strip" role="toolbar" aria-label="Controles do visual">
+    <i class="rot-line" id="rotLine"></i>
+    <div class="now">
+      <div class="now-text">
+        <div class="now-title" id="nowTitle"></div>
+        <div class="now-author" id="nowAuthor"></div>
+      </div>
+      <button class="ibtn fav" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+    </div>
+    <div class="transport">
+      <button class="ibtn" id="prevBtn" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+      <button class="ibtn" id="shufBtn" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+      <button class="ibtn" id="nextBtn" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button class="rot" id="rotBtn" aria-pressed="true" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num" id="rotTime">0:30</span></button>
+    </div>
+    <div class="tail">
+      <span class="chip" id="heavyChip" hidden><i data-lucide="gauge" class="ico ico-sm"></i><span class="num">38 fps</span> · preset pesado <button class="btn btn-ghost" id="skipHeavy">Pular e ocultar</button></span>
+      <div class="level" id="levelBox"><span class="meter" id="meter" aria-hidden="true"></span><span class="num">48 kHz</span></div>
+      <button class="ibtn" id="searchBtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>
+      <button class="ibtn" id="sheetBtn" aria-label="Ajustes" title="Ajustes (,)" aria-expanded="false"><i data-lucide="sliders-horizontal" class="ico"></i></button>
+      <button class="ibtn" id="fsBtn" aria-label="Tela cheia" title="Tela cheia (F11)"><i data-lucide="maximize" class="ico"></i></button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim p" id="pScrim"></div>
+<div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Buscar presets">
+  <div class="p-search">
+    <i data-lucide="search" class="ico"></i>
+    <input id="pInput" type="text" placeholder="Buscar preset ou autor" aria-label="Buscar preset ou autor" autocomplete="off">
+    <kbd>Esc</kbd>
+  </div>
+  <div class="p-tabs" role="tablist" id="pTabs"></div>
+  <div class="p-list" id="pList" role="listbox" aria-label="Presets"></div>
+  <div class="p-foot">
+    <span><kbd>↑</kbd><kbd>↓</kbd> navegar</span>
+    <span><kbd>Enter</kbd> tocar</span>
+    <span><kbd>Ctrl</kbd><kbd>F</kbd> favoritar</span>
+    <span><kbd>Tab</kbd> trocar aba</span>
+  </div>
+</div>
+
+<aside class="sheet" id="sheet" aria-label="Ajustes">
+  <header>
+    <h2>Ajustes</h2>
+    <button class="ibtn" id="sheetClose" aria-label="Fechar ajustes" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button>
+  </header>
+  <div class="body">
+    <section>
+      <h3>Sinal</h3>
+      <div class="field">
+        <div class="field-top"><label for="gain">Ganho</label><span class="val num" id="gainVal">+3 dB</span></div>
+        <input type="range" id="gain" min="-12" max="12" step="1" value="3">
+      </div>
+      <div class="field disabled">
+        <div class="field-top"><label for="beatSens">Sensibilidade do beat</label><span class="val num">—</span></div>
+        <input type="range" id="beatSens" min="0" max="100" value="60" disabled>
+        <div class="note">Fase 3 · chega com a detecção de BPM</div>
+      </div>
+    </section>
+    <section>
+      <h3>Rotação</h3>
+      <div class="line"><span>Rotação automática</span>
+        <label class="switch"><input type="checkbox" id="rotSwitch" checked aria-label="Rotação automática"><span class="track"></span></label></div>
+      <div class="line"><label for="interval">Trocar a cada</label>
+        <select class="sel" id="interval"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="90">90 s</option></select></div>
+      <div class="line"><span id="orderLbl">Ordem</span>
+        <div class="seg" role="radiogroup" aria-labelledby="orderLbl">
+          <label><input type="radio" name="order" checked><span>Aleatória</span></label>
+          <label><input type="radio" name="order"><span>Coleção</span></label>
+        </div></div>
+      <div class="field">
+        <div class="field-top"><label for="blend">Duração do blend</label><span class="val num" id="blendVal">2,0 s</span></div>
+        <input type="range" id="blend" min="0" max="5" step="0.5" value="2">
+      </div>
+    </section>
+    <section>
+      <h3>Desempenho</h3>
+      <div class="line"><span>Taxa atual</span><span class="num" style="color:var(--cyan)" id="fpsVal">144 fps</span></div>
+      <div class="line"><span>Pular presets abaixo de</span>
+        <select class="sel" aria-label="Limite de fps"><option>Desligado</option><option selected>45 fps</option><option>60 fps</option></select></div>
+      <div class="note">2 presets ocultos por desempenho · <button class="btn btn-ghost" style="height:22px;padding:0 6px;font-size:12px">Ver</button></div>
+    </section>
+    <section>
+      <h3>Captura</h3>
+      <div class="capture"><span class="dot" id="capDot"></span><div><b id="capTitle">Capturando a saída padrão do Windows</b><span id="capSub"></span></div></div>
+    </section>
+    <section>
+      <h3>Atalhos</h3>
+      <div class="keys">
+        <div><kbd>Espaço</kbd></div><span>Preset aleatório</span>
+        <div><kbd>←</kbd><kbd>→</kbd></div><span>Anterior / próximo</span>
+        <div><kbd>/</kbd></div><span>Buscar presets</span>
+        <div><kbd>F</kbd></div><span>Favoritar</span>
+        <div><kbd>R</kbd></div><span>Rotação automática</span>
+        <div><kbd>H</kbd></div><span>Esconder controles</span>
+        <div><kbd>F11</kbd></div><span>Tela cheia</span>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<div class="proto" role="group" aria-label="Estados do protótipo">
+  <b>Protótipo</b>
+  <button data-state="normal" aria-pressed="true">Normal</button>
+  <button data-state="silence" aria-pressed="false">Silêncio</button>
+  <button data-state="denied" aria-pressed="false">Captura negada</button>
+  <button data-state="heavy" aria-pressed="false">Preset pesado</button>
+  <button id="pinUi" aria-pressed="false">Fixar controles</button>
+</div>
+
+<script>
+(function () {
+  const D = window.SO_DATA, P = D.presets;
+  const $ = s => document.getElementById(s);
+  const viz = SOViz.create($('viz'));
+  const meterUpd = SOViz.meter($('meter'), 20);
+  let cur = P[0], hist = [0], hi = 0, blendMs = 2000, interval = 30, left = interval, rotOn = true;
+  let hidden = new Set(), pinned = false, state = 'normal';
+
+  // ── Troca de preset + assinatura ──
+  let creditTimer = 0;
+  function play(p, push) {
+    cur = p;
+    viz.setPreset(p, blendMs);
+    if (push !== false) { hist = hist.slice(0, hi + 1); hist.push(p.id); hi = hist.length - 1; }
+    D.recents = [p.id, ...D.recents.filter(x => x !== p.id)].slice(0, 8);
+    $('nowTitle').textContent = p.title; $('nowAuthor').textContent = 'por ' + p.author;
+    $('favBtn').setAttribute('aria-pressed', p.fav); $('favBtn').setAttribute('aria-label', p.fav ? 'Desfavoritar' : 'Favoritar');
+    $('creditTitle').textContent = p.title; $('creditAuthor').textContent = 'por ' + p.author;
+    const c = $('credit'), sw = $('sweep');
+    c.classList.add('show');
+    sw.style.transition = 'none'; sw.style.width = '0'; void sw.offsetWidth;
+    sw.style.transition = `width ${blendMs}ms linear`; sw.style.width = '100%';
+    clearTimeout(creditTimer); creditTimer = setTimeout(() => c.classList.remove('show'), Math.max(4000, blendMs + 1500));
+    left = interval;
+    $('heavyChip').hidden = !(state === 'heavy' && p.heavy);
+  }
+  const pool = () => P.filter(p => !hidden.has(p.id));
+  function random() { const a = pool().filter(p => p !== cur); play(a[Math.floor(Math.random() * a.length)]); }
+  function next() { if (hi < hist.length - 1) { hi++; play(P[hist[hi]], false); } else random(); }
+  function prev() { if (hi > 0) { hi--; play(P[hist[hi]], false); } }
+  function toggleFav() { cur.fav = !cur.fav;$('favBtn').setAttribute('aria-pressed', cur.fav); $('favBtn').setAttribute('aria-label', cur.fav ? 'Desfavoritar' : 'Favoritar'); if (pOpen) renderList(); }
+  function setRot(v) { rotOn = v; $('rotBtn').setAttribute('aria-pressed', v); $('rotSwitch').checked = v; }
+
+  $('prevBtn').onclick = prev; $('nextBtn').onclick = next; $('shufBtn').onclick = random;
+  $('favBtn').onclick = toggleFav; $('rotBtn').onclick = () => setRot(!rotOn);
+  $('rotSwitch').onchange = e => setRot(e.target.checked);
+  $('interval').onchange = e => { interval = +e.target.value; left = Math.min(left, interval); };
+  $('fsBtn').onclick = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.(); };
+
+  // Sliders
+  function fill(r) { r.style.setProperty('--fill', ((r.value - r.min) / (r.max - r.min) * 100) + '%'); }
+  document.querySelectorAll('input[type=range]').forEach(fill);
+  $('gain').oninput = e => { fill(e.target); const v = +e.target.value; $('gainVal').textContent = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' dB'; };
+  $('blend').oninput = e => { fill(e.target); blendMs = +e.target.value * 1000; $('blendVal').textContent = (+e.target.value).toFixed(1).replace('.', ',') + ' s'; };
+  $('capSub').textContent = `${D.capture.device} · ${D.capture.rate}`;
+
+  // ── Rotação ──
+  setInterval(() => {
+    if (!rotOn || state === 'silence' || state === 'denied') return;
+    left -= 1; if (left <= 0) random();
+  }, 1000);
+  function fmt(s) { return Math.floor(s / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0'); }
+
+  // ── Loop da UI (medidor, contagem) ──
+  function tick() {
+    if (state === 'silence' || state === 'denied') meterUpd(0, 0); else meterUpd(viz.level(), viz.peak());
+    $('rotTime').textContent = rotOn ? fmt(left) : 'off';
+    $('rotLine').style.width = rotOn ? ((1 - left / interval) * 100) + '%' : '0';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ── Auto-esconder ──
+  let idleT = 0;
+  function wake() {
+    document.body.classList.remove('idle'); clearTimeout(idleT);
+    idleT = setTimeout(() => { if (!pinned && !pOpen && !sOpen && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
+  }
+  addEventListener('mousemove', wake); addEventListener('pointerdown', wake); wake();
+
+  // ── Paleta ──
+  let pOpen = false, tab = 'all', q = '', act = 0, rows = [], lastFocus = null;
+  const tabs = [
+    { id: 'all', label: 'Todos', n: () => D.totalLibrary },
+    { id: 'fav', label: 'Favoritos', n: () => P.filter(p => p.fav).length },
+    { id: 'rec', label: 'Recentes', n: () => D.recents.length },
+    { id: 'col', label: 'Coleções', n: () => D.collections.length },
+  ];
+  function thumb(p) {
+    const c = document.createElement('canvas'); c.width = 80; c.height = 56; c.className = 'thumb';
+    const x = c.getContext('2d'); const g = x.createLinearGradient(0, 0, 80, 56);
+    g.addColorStop(0, `hsl(${p.hue},90%,18%)`); g.addColorStop(1, `hsl(${p.hue + 60},95%,45%)`);
+    x.fillStyle = g; x.fillRect(0, 0, 80, 56);
+    x.strokeStyle = `hsla(${p.hue + 30},100%,75%,0.8)`; x.lineWidth = 2; x.beginPath();
+    if (p.style === 0) x.arc(40, 28, 14, 0, 7); else if (p.style === 1) x.rect(24, 12, 32, 32);
+    else if (p.style === 2) { x.moveTo(0, 28); for (let i = 0; i <= 80; i += 4) x.lineTo(i, 28 + Math.sin(i / 8) * 10); }
+    else { x.arc(28, 24, 8, 0, 7); x.moveTo(62, 34); x.arc(54, 34, 8, 0, 7); }
+    x.stroke(); c.setAttribute('aria-hidden', 'true'); return c;
+  }
+  function hl(text) {
+    const esc = s => s.replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+    if (!q) return esc(text);
+    const i = text.toLowerCase().indexOf(q.toLowerCase());
+    return i < 0 ? esc(text) : esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+  }
+  function renderTabs() {
+    $('pTabs').innerHTML = tabs.map(t => `<button role="tab" data-tab="${t.id}" aria-selected="${t.id === tab}">${t.label}<span class="num">${t.n()}</span></button>`).join('');
+    $('pTabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.tab; act = 0; renderTabs(); renderList(); $('pInput').focus(); });
+  }
+  function renderList() {
+    const L = $('pList'); L.innerHTML = '';
+    if (tab === 'col' && !q) {
+      rows = D.collections.map(c => ({ col: c }));
+      rows.forEach((r, i) => {
+        const b = document.createElement('button'); b.className = 'coll' + (i === act ? ' active' : '');
+        b.innerHTML = `<span>${r.col.name}<br><small>${r.col.ids.length} presets · troca a cada ${r.col.interval} s</small></span><span class="btn btn-ghost" aria-hidden="true"><i data-lucide="play" class="ico ico-sm"></i>Tocar</span>`;
+        b.onclick = () => { interval = r.col.interval; $('interval').value = String(interval); play(P[r.col.ids[0]]); closePalette(); };
+        L.appendChild(b);
+      });
+      lucide.createIcons(); return;
+    }
+    let list = tab === 'fav' ? P.filter(p => p.fav) : tab === 'rec' ? D.recents.map(i => P[i]) : P;
+    list = list.filter(p => !hidden.has(p.id));
+    if (q) list = list.filter(p => p.full.toLowerCase().includes(q.toLowerCase()));
+    rows = list.slice(0, 50);
+    if (!rows.length) {
+      L.innerHTML = `<div class="p-empty"><i data-lucide="search-x" class="ico"></i><strong>Nenhum preset com “${hl(q)}”.</strong>Tente o nome de um autor, como Geiss ou Flexi.</div>`;
+      lucide.createIcons(); return;
+    }
+    act = Math.min(act, rows.length - 1);
+    rows.forEach((p, i) => {
+      const r = document.createElement('div');
+      r.className = 'row' + (i === act ? ' active' : '') + (p === cur ? ' playing' : '');
+      r.setAttribute('role', 'option'); r.setAttribute('aria-selected', i === act);
+      const b = document.createElement('button'); b.className = 'r-btn'; b.tabIndex = -1;
+      b.setAttribute('aria-label', `${p.title}, por ${p.author}`);
+      b.appendChild(thumb(p));
+      const tx = document.createElement('span'); tx.style.minWidth = '0';
+      tx.innerHTML = `<div class="r-title">${p === cur ? '<i data-lucide="audio-lines" class="ico ico-sm" style="vertical-align:-3px;margin-right:6px"></i>' : ''}${hl(p.title)}</div><div class="r-author">por ${hl(p.author)}</div>`;
+      b.appendChild(tx); b.onclick = () => { play(p); closePalette(); };
+      const hint = document.createElement('span'); hint.className = 'r-hint'; hint.innerHTML = '<kbd>Enter</kbd> tocar';
+      const fav = document.createElement('button'); fav.className = 'ibtn fav'; fav.tabIndex = -1;
+      fav.setAttribute('aria-pressed', p.fav); fav.setAttribute('aria-label', p.fav ? 'Desfavoritar' : 'Favoritar');
+      fav.innerHTML = '<i data-lucide="star" class="ico ico-sm"></i>';
+      fav.onclick = () => { p.fav = !p.fav; if (p === cur) $('favBtn').setAttribute('aria-pressed', p.fav); renderTabs(); renderList(); };
+      r.append(b, hint, fav); L.appendChild(r);
+    });
+    lucide.createIcons();
+    L.querySelector('.row.active')?.scrollIntoView({ block: 'nearest' });
+  }
+  function openPalette() {
+    if (pOpen) return; pOpen = true; lastFocus = document.activeElement;
+    document.body.classList.add('palette-open'); q = ''; $('pInput').value = ''; act = 0;
+    renderTabs(); renderList(); setTimeout(() => $('pInput').focus(), 30); wake();
+  }
+  function closePalette() { pOpen = false; document.body.classList.remove('palette-open'); (lastFocus || document.body).focus?.(); wake(); }
+  $('searchBtn').onclick = openPalette; $('pScrim').onclick = closePalette;
+  $('pInput').oninput = e => { q = e.target.value.trim(); act = 0; renderList(); };
+  $('pInput').onkeydown = e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); act = Math.min(rows.length - 1, act + 1); renderList(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); act = Math.max(0, act - 1); renderList(); }
+    else if (e.key === 'Enter') { e.preventDefault(); const r = rows[act]; if (!r) return; if (r.col) { play(P[r.col.ids[0]]); } else play(r); closePalette(); }
+    else if (e.key === 'Tab') { e.preventDefault(); const i = tabs.findIndex(t => t.id === tab); tab = tabs[(i + (e.shiftKey ? 3 : 1)) % 4].id; act = 0; renderTabs(); renderList(); }
+    else if (e.key.toLowerCase() === 'f' && e.ctrlKey) { e.preventDefault(); const r = rows[act]; if (r && !r.col) { r.fav = !r.fav; renderTabs(); renderList(); } }
+  };
+
+  // ── Ajustes ──
+  let sOpen = false;
+  function setSheet(v) { sOpen = v; document.body.classList.toggle('sheet-open', v); $('sheetBtn').setAttribute('aria-expanded', v); if (v) setTimeout(() => $('sheetClose').focus(), 60); else $('sheetBtn').focus(); wake(); }
+  $('sheetBtn').onclick = () => setSheet(!sOpen); $('sheetClose').onclick = () => setSheet(false);
+
+  // ── Estados do protótipo ──
+  function setState(s) {
+    state = s;
+    document.querySelectorAll('.proto [data-state]').forEach(b => b.setAttribute('aria-pressed', b.dataset.state === s));
+    viz.setSilent(s === 'silence' || s === 'denied');
+    $('silence').hidden = s !== 'silence'; $('denied').hidden = s !== 'denied';
+    const dot = $('capDot');
+    if (s === 'denied') { dot.style.background = 'var(--warn)'; $('capTitle').textContent = 'Captura recusada pelo Windows'; }
+    else if (s === 'silence') { dot.style.background = 'var(--text-3)'; $('capTitle').textContent = 'Capturando · nenhum som agora'; }
+    else { dot.style.background = 'var(--ok)'; $('capTitle').textContent = 'Capturando a saída padrão do Windows'; }
+    $('fpsVal').textContent = s === 'heavy' ? '38 fps' : '144 fps';
+    $('fpsVal').style.color = s === 'heavy' ? 'var(--warn)' : 'var(--cyan)';
+    if (s === 'heavy') play(P[16]); else $('heavyChip').hidden = true;
+    wake();
+  }
+  document.querySelectorAll('.proto [data-state]').forEach(b => b.onclick = () => setState(b.dataset.state));
+  $('pinUi').onclick = e => { pinned = !pinned; e.currentTarget.setAttribute('aria-pressed', pinned); wake(); };
+  $('retry').onclick = () => setState('normal');
+  $('skipHeavy').onclick = () => { hidden.add(cur.id); setState('normal'); random(); };
+
+  // ── Teclado ──
+  addEventListener('keydown', e => {
+    const typing = /INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName) && document.activeElement.type !== 'range' && document.activeElement.type !== 'checkbox' && document.activeElement.type !== 'radio';
+    if (e.key === 'Escape') { if (pOpen) closePalette(); else if (sOpen) setSheet(false); return; }
+    if ((e.key === 'k' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); openPalette(); return; }
+    if (typing || pOpen) return;
+    wake();
+    const k = e.key.toLowerCase();
+    if (e.key === '/') { e.preventDefault(); openPalette(); }
+    else if (e.key === ' ' && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); random(); }
+    else if (e.key === 'ArrowRight') next();
+    else if (e.key === 'ArrowLeft') prev();
+    else if (k === 'f') toggleFav();
+    else if (k === 'r') setRot(!rotOn);
+    else if (k === 'h') { pinned = false; $('pinUi').setAttribute('aria-pressed', false); document.body.classList.add('idle'); }
+    else if (e.key === ',') setSheet(!sOpen);
+  });
+
+  lucide.createIcons();
+  play(P[0]);
+})();
+</script>
+</body>
+</html>
