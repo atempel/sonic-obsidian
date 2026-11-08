@@ -14,6 +14,12 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — Controles da janela · arrasto
+Protótipo (`1794165177-f126`): `docs/v3-modelo-de-navegacao.md` › Controles da janela diz "Arrastar a janela: pelo visual (spec 004); a zona dos controles não arrasta".
+Código (planejado, spec 014): desde a 009 o arrasto é só pela faixa invisível de 40 px no topo (decisão do usuário: no Windows a região de arrasto engole o `mousemove`, e a faixa de controle e a zona do canto não detectariam o ponteiro). A faixa passa a terminar antes da zona dos controles (`right: 166px`).
+PR/spec: docs/specs/014-texto-sobre-visual-janela.md · #34
+Status: Aberta. Pedido ao design: trocar o texto para "pela faixa do topo, fora do canto dos controles".
+
 ### 2026-11-08 — Ajustes rápidos e atalhos · tipo de transição
 Protótipo (`1794165177-f126`): os Ajustes rápidos e Configurações › Visual têm só o tempo do blend ("Blend na troca automática", "Blend quando você troca", padrão manual 0 s); não há tipo de transição nem teclas para isso.
 Código (spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. `+`/`−`/`0` (ganho) ficam como atalhos permanentes (decisão do usuário). O tipo da troca automática não tem tecla: só Ajustes rápidos (011) e, até lá, o `settings.json`.
