@@ -1,0 +1,27 @@
+{
+  "name": "sonic-obsidian",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Visualizador de áudio para Windows: Electron + Butterchurn com captura do áudio do sistema por loopback.",
+  "author": "Alexandre Tempel",
+  "license": "UNLICENSED",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "dist:win": "electron-vite build && electron-builder --win --dir --publish never"
+  },
+  "dependencies": {
+    "butterchurn": "2.6.7",
+    "butterchurn-presets": "2.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "electron": "45.2.3",
+    "electron-builder": "26.18.0",
+    "electron-vite": "6.0.0",
+    "typescript": "6.0.3",
+    "vite": "8.3.6"
+  }
+}

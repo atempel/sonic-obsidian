@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 'unsafe-eval': o Butterchurn compila as equações dos presets com new Function. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'" />
+    <title>Sonic Obsidian</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+      canvas { display: block; width: 100vw; height: 100vh; }
+      #hud {
+        position: fixed; left: 8px; bottom: 8px; padding: 4px 8px;
+        font: 12px/1.4 ui-monospace, Consolas, monospace; color: #cfd3dc;
+        background: rgba(0, 0, 0, 0.55); border-radius: 4px; white-space: pre; pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    <div id="hud">Sonic Obsidian — iniciando…</div>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>

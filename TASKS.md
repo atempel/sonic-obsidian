@@ -3,7 +3,7 @@
 Índice: cada item aponta para sua spec (`docs/specs/`) e issue. O detalhe vive na spec, não aqui. Roadmap completo em [docs/PRD.md](docs/PRD.md). Referências pendentes em `queue/`; histórico em [SESSIONS.md](SESSIONS.md).
 
 ## Agora — Fase 0
-- [ ] **Spike Electron + Butterchurn + loopback** (inclui build Windows pelo CI) — [spec 001](docs/specs/001-spike-electron-butterchurn.md) · issue: criar
+- [x] **Spike Electron + Butterchurn + loopback** (inclui build Windows pelo CI) — [spec 001](docs/specs/001-spike-electron-butterchurn.md) · issue [#4](https://github.com/atempel/sonic-obsidian/issues/4)
 
 ## Próximo — Fase 1 (escrever specs com a skill `planejar-feature` depois do spike)
 - [ ] Biblioteca de presets + navegação por teclado + blend
