@@ -208,3 +208,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **`[` e `]` saem;** `ROTATION_STEPS_S` vira a lista dos Ajustes (15/30/45/90 s). Um intervalo salvo fora dela (10, 60, 120 s) aparece como opção a mais, para não ser trocado sem querer.
 - **Esc nos Ajustes** fecha o painel mesmo com o foco num slider ou seletor. Teclas globais com o foco no painel ficam desligadas, como na Biblioteca: as setas são do slider.
 - **O visual a 40%** com o painel aberto é aplicado no `<canvas>` (opacidade via CSS), sem tocar no render.
+
+## 2026-11-08 — Ícone do app na barra de tarefas
+- **Pedido do usuário:** o logo do app na barra de tarefas do Windows.
+- **Como:** `resources/icon.ico` gerado de `docs/brand/app-icon.svg` (9 tamanhos, 16–256 px), passado ao `BrowserWindow` (`icon`) e ao `win.icon` do electron-builder, mais `app.setAppUserModelId` com o `appId`, para o Windows agrupar a janela com o ícone certo.
+- **Limite:** com `signAndEditExecutable: false` (o build não mexe no `.exe`), o arquivo `Sonic Obsidian.exe` no Explorer e um atalho fixado podem continuar com o ícone do Electron. A janela aberta e a barra de tarefas usam o ícone novo. Ligar a edição do executável (rcedit, que exige o pacote `winCodeSign` no CI) fica para depois, se o usuário quiser.
+- **Descartado:** dependência nova para gerar o `.ico` (Chromium e ImageMagick já estão no ambiente).

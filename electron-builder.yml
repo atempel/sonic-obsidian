@@ -6,6 +6,7 @@ directories:
 files:
   - out/**
   - package.json
+  - resources/icon.ico
   - '!**/*.map'
 extraFiles:
   - from: THIRD_PARTY_NOTICES.md
@@ -13,4 +14,5 @@ extraFiles:
 asar: true
 win:
   target: dir
+  icon: resources/icon.ico
   signAndEditExecutable: false

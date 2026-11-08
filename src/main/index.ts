@@ -67,6 +67,8 @@ function createWindow(): void {
     height: 720,
     backgroundColor: '#000000',
     title: 'Sonic Obsidian',
+    // Ícone da janela e da barra de tarefas (marca "The Core", docs/brand/app-icon.svg).
+    icon: join(app.getAppPath(), 'resources/icon.ico'),
     autoHideMenuBar: true,
     // Sem moldura: o visual é a janela. Arrasto pela área de drag do renderer;
     // redimensionar pelas bordas continua nativo (resizable + thickFrame padrão).
@@ -117,6 +119,9 @@ app.on('child-process-gone', (_e, details) => {
   log('main', `processo ${details.type}${details.name ? ` (${details.name})` : ''} caiu: ${details.reason} (exit ${details.exitCode})`)
   logMetrics()
 })
+
+// Agrupa a janela na barra de tarefas do Windows sob o mesmo id do pacote (appId do electron-builder).
+if (process.platform === 'win32') app.setAppUserModelId('dev.atempel.sonic-obsidian')
 
 app.whenReady().then(() => {
   log('main', `abriu ${app.getVersion()} · Electron ${process.versions.electron} · log em ${logPath()}`)
