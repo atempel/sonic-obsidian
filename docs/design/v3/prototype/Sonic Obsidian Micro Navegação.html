@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Microinterações: navegação e estados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  :root { --ease-in: cubic-bezier(0.4, 0, 1, 1); }
+  html, body { height: auto; min-height: 100%; }
+  [hidden] { display: none !important; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+  /* ── Página ── */
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 32px 24px 80px; }
+  .top { display: flex; flex-direction: column; gap: 12px; padding-bottom: 28px; }
+  .top h1 { margin: 0; font-size: clamp(26px, 3vw, 36px); line-height: 1.12; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .top p { margin: 0; max-width: 62ch; color: var(--text-2); font-size: 16px; }
+  .top-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin-top: 8px; }
+  .count { font-size: 13px; color: var(--text-2); }
+  .sec { margin-top: 36px; }
+  .sec h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+  .sec > p { margin: -8px 0 16px; color: var(--text-2); max-width: 70ch; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (min-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* ── Espécime ── */
+  .card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 20px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .card-head { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
+  .card-head .num { font-size: 12px; color: var(--text-3); }
+  .card-head h3 { margin: 0; flex: 1 1 160px; min-width: 0; font-size: 15px; font-weight: 600; }
+  .verdict { display: inline-flex; border: 1px solid var(--line-3); border-radius: var(--r-2); overflow: hidden; }
+  .verdict label { position: relative; cursor: pointer; }
+  .verdict input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .verdict span { display: block; height: 28px; padding: 0 10px; line-height: 26px; font-size: 12px; color: var(--text-2); white-space: nowrap; transition: background var(--t-fast), color var(--t-fast); }
+  .verdict label + label span { border-left: 1px solid var(--line-3); }
+  .verdict label:hover span { background: var(--bg-03); color: var(--text-1); }
+  .verdict input:checked + span { background: var(--violet-soft); color: var(--text-1); }
+  .verdict input:focus-visible + span { outline: 2px solid var(--violet); outline-offset: -2px; }
+  .verdict.fixed label { cursor: default; }
+  .verdict.fixed label:hover span { background: transparent; color: var(--text-2); }
+  .verdict.fixed input:disabled { cursor: default; }
+  .verdict.fixed input:disabled + span { opacity: 0.5; }
+  .verdict.fixed input:checked:disabled + span { opacity: 1; background: var(--violet-soft); color: var(--text-1); }
+
+  .demo { position: relative; min-width: 0; background: var(--bg-00); border: 1px solid var(--line-1); border-radius: var(--r-2); overflow: hidden; }
+  .demo.pad { padding: 20px 16px; }
+  .demo.r169 { aspect-ratio: 16 / 9; }
+  .stage-bg { background: radial-gradient(120% 100% at 25% 15%, #2B1A45 0%, #140E20 48%, var(--bg-00) 100%); }
+  .trig { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-height: 34px; }
+  .trig .hint { font-size: 12px; color: var(--text-3); }
+  .spec { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-3); }
+  .ref { margin: 0; font-size: 12px; color: var(--text-3); }
+  .why { margin: 0; color: var(--text-2); font-size: 13px; }
+  .rm-note { display: none; margin: 0; font-size: 12px; color: var(--text-2); }
+  body.rm .rm-note { display: block; }
+  .btn.sm { height: 30px; padding: 0 12px; font-size: 13px; }
+  .btn:active { transform: scale(0.94); transition: transform 80ms linear; }
+  .lab { font-size: 12px; color: var(--text-3); }
+
+  /* ── M10 · Indicador que desliza ── */
+  .m10 { display: grid; gap: 22px; }
+  .m10-tabs { position: relative; display: flex; gap: 22px; border-bottom: 1px solid var(--line-1); }
+  .m10-tabs button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0; background: none; border: 0; border-radius: var(--r-1); color: var(--text-2); font-weight: 500; cursor: pointer; transition: color var(--t-fast); }
+  .m10-tabs button:hover { color: var(--text-1); }
+  .m10-tabs button[aria-selected="true"] { color: var(--text-1); }
+  .m10-tabs .num { font-size: 12px; color: var(--text-3); }
+  .m10-tabs .ind { position: absolute; left: 0; bottom: -1px; width: 1px; height: 2px; background: var(--violet); transform-origin: 0 50%; transition: transform var(--t-med) var(--ease-out); pointer-events: none; }
+  .m10-seg { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); width: min(360px, 100%); padding: 2px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .m10-seg .thumb { position: absolute; left: 2px; top: 2px; bottom: 2px; width: calc((100% - 4px) / 3); background: var(--bg-04); border-radius: var(--r-1); transition: transform var(--t-med) var(--ease-out); }
+  .m10-seg label { position: relative; z-index: 1; cursor: pointer; text-align: center; }
+  .m10-seg input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .m10-seg span { display: block; line-height: 30px; font-size: 13px; font-weight: 500; color: var(--text-2); transition: color var(--t-fast); }
+  .m10-seg label:hover span { color: var(--text-1); }
+  .m10-seg input:checked + span { color: var(--text-1); }
+  .m10-seg input:focus-visible + span { outline: 2px solid var(--violet); outline-offset: -2px; border-radius: var(--r-1); }
+  body.rm .m10-tabs .ind, body.rm .m10-seg .thumb { transition: none; }
+
+  /* ── M11 · Busca rápida (adotada: sem animação; descartada: animada) ── */
+  .m11 { height: 300px; }
+  .m11 + .lab, .lab.l11 { margin-top: 4px; }
+  .m11 .closed-hint { position: absolute; inset: 0; display: grid; place-content: center; gap: 4px; text-align: center; padding: 20px; }
+  .m11 .closed-hint b { font-weight: 500; }
+  .m11 .closed-hint span { color: var(--text-2); font-size: 13px; }
+  .m11.open .closed-hint { visibility: hidden; }
+  .m11 .scrim { position: absolute; inset: 0; background: rgba(8, 8, 9, 0.6); display: none; }
+  .m11.open .scrim { display: block; }
+  .pal { position: absolute; left: 50%; top: 16px; width: min(540px, calc(100% - 24px)); max-height: calc(100% - 28px); display: none; flex-direction: column;
+    background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); transform: translateX(-50%); transform-origin: 50% 0; }
+  .m11.open .pal { display: flex; }
+  .m11.anim .scrim { display: block; opacity: 0; pointer-events: none; transition: opacity 80ms var(--ease-out); }
+  .m11.anim.open .scrim { opacity: 1; transition: opacity 120ms var(--ease-out); }
+  .m11.anim .pal { display: flex; opacity: 0; visibility: hidden; transform: translateX(-50%) scale(0.97);
+    transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out), visibility 0s linear 80ms; }
+  .m11.anim.open .pal { opacity: 1; visibility: visible; transform: translateX(-50%) scale(1); transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out), visibility 0s; }
+  .pal .p-search { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 48px; flex: none; border-bottom: 1px solid var(--line-1); color: var(--text-2); }
+  .pal .p-search input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; font-size: 16px; color: var(--text-1); }
+  .pal .p-search input::placeholder { color: var(--text-3); }
+  .pal .p-search input:focus-visible { outline: none; }
+  .p-list { position: relative; padding: 6px; overflow-y: auto; min-height: 0; }
+  .p-list .sel { position: absolute; left: 6px; right: 6px; top: 6px; height: 44px; background: var(--bg-03); border-radius: var(--r-2); transform: translateY(calc(var(--idx, 0) * 44px)); pointer-events: none; }
+  .m11.anim .p-list .sel { transition: transform var(--t-fast) var(--ease-out); }
+  .p-list .sel.off { display: none; }
+  .p-rows { position: relative; display: grid; }
+  .prow { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; height: 44px; padding: 0 8px; border-radius: var(--r-2); cursor: pointer; }
+  .prow:focus-visible { outline: 2px solid var(--violet); outline-offset: -2px; }
+  .prow .thumb { width: 44px; height: 28px; border-radius: var(--r-1); display: block; }
+  .prow .meta { min-width: 0; display: flex; flex-direction: column; }
+  .prow .r-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; line-height: 1.25; }
+  .prow .r-title mark { background: none; color: var(--violet); }
+  .prow .r-author { font-size: 12px; color: var(--text-2); line-height: 1.25; }
+  .prow.playing .r-title { color: var(--violet); }
+  .prow .r-hint { font-size: 12px; color: var(--text-3); visibility: hidden; }
+  .prow.active .r-hint { visibility: visible; }
+  .p-empty { padding: 28px 20px; text-align: center; color: var(--text-2); }
+  .p-empty strong { display: block; color: var(--text-1); font-weight: 500; margin-bottom: 4px; }
+  .pal .p-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 9px 14px; border-top: 1px solid var(--line-1); font-size: 12px; color: var(--text-3); flex: none; }
+  .pal .p-foot span { display: inline-flex; align-items: center; gap: 6px; }
+  body.rm .m11.anim .pal, body.rm .m11.anim.open .pal { transform: translateX(-50%); }
+  body.rm .m11.anim .p-list .sel { transition: none; }
+  .tag-off { display: inline-block; margin-left: 8px; padding: 1px 8px; border: 1px solid var(--line-3); border-radius: var(--r-1); color: var(--text-2); font-size: 12px; }
+
+  /* ── M12 · Gaveta em degrau ── */
+  .m12 { height: 320px; }
+  .m12 .behind { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; padding: 20px; color: var(--text-2); font-size: 13px; }
+  .dr { position: absolute; left: 0; top: 0; bottom: 0; width: min(360px, 100%); display: flex; flex-direction: column; background: var(--bg-01); border-right: 1px solid var(--line-2); box-shadow: var(--shadow-pop);
+    transform: translateX(-100%); visibility: hidden; transition: transform 180ms var(--ease-out), visibility 0s linear 180ms; }
+  .m12.open .dr { transform: none; visibility: visible; transition: transform 250ms var(--ease-out), visibility 0s; }
+  .dr-head { display: flex; align-items: center; justify-content: space-between; height: 48px; flex: none; padding: 0 8px 0 16px; font-weight: 600; font-size: 15px; }
+  .dr-list { list-style: none; margin: 0; padding: 0 8px 8px; overflow-y: auto; min-height: 0; }
+  .drow { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; height: 44px; padding: 0 8px; border-radius: var(--r-2); cursor: pointer; transition: background var(--t-fast); }
+  .drow:hover { background: var(--bg-03); }
+  .drow:active { background: var(--bg-04); }
+  .drow:focus-visible { outline: 2px solid var(--violet); outline-offset: -2px; }
+  .drow .thumb { width: 40px; height: 26px; border-radius: var(--r-1); }
+  .drow .meta { min-width: 0; display: flex; flex-direction: column; }
+  .drow .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; line-height: 1.25; }
+  .drow .a { font-size: 12px; color: var(--text-2); line-height: 1.25; }
+  .m12.open .dr-list li:nth-child(-n+8) { animation: rowin 220ms var(--ease-out) backwards; animation-delay: calc(var(--i) * 15ms); }
+  @keyframes rowin { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+  body.rm .dr { transform: none; opacity: 0; transition: opacity 120ms linear, visibility 0s linear 120ms; }
+  body.rm .m12.open .dr { opacity: 1; transition: opacity 120ms linear, visibility 0s; }
+  body.rm .m12.open .dr-list li { animation: none; }
+
+  /* ── M13 · Toast ── */
+  .m13 { height: 220px; }
+  .m13 .behind { position: absolute; inset: 0; display: grid; place-content: center; padding: 20px; text-align: center; color: var(--text-2); font-size: 13px; }
+  .toast13 { position: absolute; left: 50%; bottom: 18px; margin-left: -150px; width: 300px; display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;
+    background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 120ms var(--ease-out), transform 0s linear 120ms; }
+  .toast13.on { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  .toast13 .ico { color: var(--violet); }
+  .toast13 .tx { display: grid; flex: 1; min-width: 0; }
+  .toast13 .tl { grid-area: 1 / 1; opacity: 0; transition: opacity 120ms var(--ease-out); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .toast13 .tl.cur { opacity: 1; }
+  body.rm .toast13, body.rm .toast13.on { transform: none; transition: opacity 120ms linear; }
+
+  /* ── M14 · Switch com peso ── */
+  .m14 { --st: 1.2857; --sh: 10px; display: grid; gap: 16px; max-width: 360px; }
+  body.rm .m14 { --st: 1; --sh: 14px; }
+  .m14 .row14 { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: var(--text-2); }
+  .m14 .row14 .name { color: var(--text-1); }
+  .m14 .switch .track { transition: background var(--t-fast), border-color var(--t-fast); }
+  .m14 .switch .track::after { transform-origin: 0 50%; }
+  .m14 .switch:active .track::after, .m14 .switch.press .track::after, .m14 .switch:has(input:active) .track::after { transform: scaleX(var(--st)); transition: transform 80ms linear, background var(--t-fast); }
+  .m14 .switch input:checked + .track::after { transform: translateX(14px); }
+  .m14 .switch:active input:checked + .track::after, .m14 .switch.press input:checked + .track::after, .m14 .switch:has(input:active) input:checked + .track::after { transform: translateX(var(--sh)) scaleX(var(--st)); }
+  body.rm .m14 .switch .track::after { transition: none !important; }
+  .m14 .switch:has(input:disabled) { opacity: 0.4; cursor: default; }
+  .m14 .row14.dis .name { color: var(--text-2); }
+
+  /* ── M15 · Slider com leitura ── */
+  .m15 { max-width: 420px; }
+  .m15 .fl { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 2px; font-size: 14px; color: var(--text-2); }
+  .m15 .fl output { font-size: 13px; color: var(--cyan); }
+  .m15-box { position: relative; padding-top: 34px; }
+  .bpos { position: absolute; top: 0; left: 0; width: 0; height: 0; transform: translateX(var(--bx, 0px)); pointer-events: none; }
+  .bubble { position: absolute; left: 0; top: 0; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translate(-50%, 4px); transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+  .bubble.on { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .m15 .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-3); margin-top: 2px; }
+  body.rm .bubble, body.rm .bubble.on { transform: translate(-50%, 0); }
+
+  /* ── M16 · Controles da janela ── */
+  .m16 { height: 200px; }
+  .m16 .hintchip { position: absolute; left: 12px; bottom: 12px; padding: 6px 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-2); font-size: 12px; color: var(--text-2); }
+  .corner { position: absolute; top: 0; right: 0; width: 200px; height: 84px; }
+  .wc { position: absolute; top: 12px; right: 12px; display: flex; gap: 2px; padding: 4px; background: rgba(15, 15, 20, 0.94); border: 1px solid var(--line-2); border-radius: var(--r-3);
+    opacity: 0; transform: translateX(4px); pointer-events: none; transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+  .corner:hover .wc, .corner:focus-within .wc, .wc.sim { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .wc .ibtn { width: 28px; height: 28px; }
+  .wc .ibtn .ico { width: 15px; height: 15px; }
+  .wc .ibtn:hover { background: var(--bg-04); color: var(--text-1); }
+  .wc .close .ico { transition: transform var(--t-fast) var(--ease-out); }
+  .wc .close:hover .ico, .wc .close.sim .ico { transform: rotate(90deg); }
+  body.rm .wc, body.rm .corner:hover .wc, body.rm .corner:focus-within .wc, body.rm .wc.sim { transform: none; transition: opacity var(--t-fast) linear; }
+  body.rm .wc .close:hover .ico, body.rm .wc .close.sim .ico { transform: none; }
+
+  /* ── M17 · Copiar → copiado ── */
+  .m17 { display: grid; gap: 10px; max-width: 520px; }
+  .cprow { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 14px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .cprow .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cp { position: relative; }
+  .cp .ic { position: absolute; inset: 0; display: grid; place-items: center; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .cp .ic.b { opacity: 0; transform: scale(0.6); color: var(--ok); }
+  .cp.done .ic.a { opacity: 0; transform: scale(0.6); }
+  .cp.done .ic.b { opacity: 1; transform: none; }
+  .cpmsg { min-height: 20px; font-size: 12px; color: var(--text-2); }
+  .cpmsg.err { color: var(--warn); }
+  body.rm .cp .ic, body.rm .cp.done .ic.a, body.rm .cp .ic.b, body.rm .cp.done .ic.b { transform: none; }
+
+  /* ── Marca / faixa de exemplo ── */
+  .brand-mark { width: 24px; height: 24px; flex: none; }
+  .brand-mark .shell { fill: none; stroke: var(--violet); stroke-width: 1.5; stroke-linejoin: round; }
+  .brand-mark .core { fill: var(--violet); stroke: none; fill-opacity: 1; transition: fill-opacity var(--t-fast) var(--ease-out); }
+  .mstrip { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 12px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .mstrip .meta { flex: 1; min-width: 0; }
+  .mstrip .t { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+  .mstrip .t span.tt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .mstrip .a { font-size: 12px; color: var(--text-2); }
+  .mstrip .ibtn { width: 32px; height: 32px; }
+  .mstrip .grp { display: flex; gap: 2px; }
+
+  /* ── M18 · Silêncio com carência ── */
+  .m18 .bar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--bg-01); border-bottom: 1px solid var(--line-1); }
+  .m18 .bar b { font-weight: 600; flex: 1; }
+  .m18.silent .core { transition-duration: 400ms; fill-opacity: 0; }
+  .m18 .view { position: relative; aspect-ratio: 16 / 9; background: var(--bg-00); }
+  .m18 canvas { display: block; width: 100%; height: 100%; }
+  .m18-panel { position: absolute; left: 50%; top: 50%; width: min(340px, calc(100% - 24px)); transform: translate(-50%, -50%); padding: 16px 18px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; visibility: hidden; transition: opacity 220ms var(--ease-out), visibility 0s linear 220ms; }
+  .m18-panel.show { opacity: 1; visibility: visible; transition: opacity 220ms var(--ease-out), visibility 0s; }
+  .m18-panel h4 { display: flex; align-items: center; gap: 10px; margin: 0 0 4px; font-size: 15px; font-weight: 600; }
+  .m18-panel h4 .ico { color: var(--text-2); }
+  .m18-panel p { margin: 0; color: var(--text-2); font-size: 13px; }
+  .m18-panel .btn { margin-top: 12px; height: 30px; font-size: 13px; }
+  .m18 .status { padding: 8px 12px; background: var(--bg-01); border-top: 1px solid var(--line-1); font-size: 12px; color: var(--text-2); min-height: 34px; }
+
+  /* ── M19 · Modo limpo ── */
+  .credit19 { position: absolute; left: 0; top: 0; right: 0; padding: 20px 20px 56px; pointer-events: none; background: linear-gradient(to bottom, rgba(8, 8, 9, 0.82), rgba(8, 8, 9, 0)); opacity: 0; transition: opacity 400ms var(--ease-out); }
+  .credit19.show { opacity: 1; transition-duration: 180ms; }
+  .credit19 h4 { margin: 0; max-width: 20ch; font-size: clamp(20px, 2.4vw, 30px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit19 p { margin: 8px 0 0; font-size: 14px; color: var(--text-2); }
+  .clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-2); opacity: 0; transform: translateX(-4px); transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+  .clean .clean-ico { opacity: 1; transform: none; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .clean-ico .ico { width: 15px; height: 15px; }
+  body.rm .clean-ico, body.rm .clean .clean-ico { transform: none; }
+
+  /* ── M20 · Palco → Rack ── */
+  .m20 { container-type: inline-size; position: relative; aspect-ratio: 16 / 9; min-height: 240px; background: var(--bg-00); }
+  .m20-viz { position: absolute; inset: 0; z-index: 2; overflow: hidden; border-radius: 0; transform-origin: 0 0; background: var(--bg-00); }
+  .m20-viz canvas { display: block; width: 100%; height: 100%; }
+  .m20-strip { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 12px; height: 52px; transform-origin: 0 0; padding: 0 8px 0 12px; display: flex; flex-direction: column; justify-content: center; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); z-index: 3; }
+  .m20-strip .in { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .m20-strip .meta { flex: 1; min-width: 0; }
+  .m20-strip .t { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .m20-strip .a { font-size: 12px; color: var(--text-2); }
+  .m20-strip .grp { display: flex; gap: 2px; }
+  .m20-strip .ibtn { width: 32px; height: 32px; }
+  .m20-strip .slot { display: none; }
+  .m20 .scr2 { position: absolute; left: calc(54cqw + 28px); top: 20px; font-size: 12px; color: var(--text-3); opacity: 0; transition: opacity 80ms var(--ease-out); }
+  .m20.rack .scr2 { opacity: 1; transition: opacity var(--t-med) var(--ease-out); }
+  .m20.rack .m20-viz { inset: auto; left: 20px; top: 20px; width: calc(54cqw - 16px); height: calc((54cqw - 16px) / 2); border-radius: var(--r-2); }
+  .m20.rack .m20-strip { right: auto; bottom: 12px; top: 12px; width: 54cqw; height: auto; justify-content: flex-start; padding: 8px; }
+  .m20.rack .m20-strip .in { flex-direction: column; align-items: stretch; gap: 10px; }
+  .m20.rack .m20-strip .slot { display: block; height: calc((54cqw - 16px) / 2); }
+  .m20.rack .m20-strip .grp { justify-content: flex-start; }
+
+  /* ── M21 · Soltar arquivos ── */
+  .m21 { display: grid; gap: 12px; }
+  .dz { position: relative; display: grid; place-items: center; align-content: center; gap: 6px; min-height: 160px; padding: 20px; text-align: center; background: var(--bg-01); border: 1px dashed var(--line-3); border-radius: var(--r-3); color: var(--text-2); transition: background var(--t-fast); }
+  .dz .ico { width: 24px; height: 24px; color: var(--text-2); }
+  .dz b { color: var(--text-1); font-weight: 500; }
+  .dz small { font-size: 12px; color: var(--text-3); }
+  .dz .march, .dz .solid { position: absolute; inset: -1px; border-radius: var(--r-3); pointer-events: none; opacity: 0; }
+  .dz .march { --d: var(--violet);
+    background:
+      linear-gradient(90deg, var(--d) 50%, transparent 50%) 0 0 / 12px 2px repeat-x,
+      linear-gradient(90deg, var(--d) 50%, transparent 50%) 0 100% / 12px 2px repeat-x,
+      linear-gradient(0deg, var(--d) 50%, transparent 50%) 0 0 / 2px 12px repeat-y,
+      linear-gradient(0deg, var(--d) 50%, transparent 50%) 100% 0 / 2px 12px repeat-y;
+    animation: march 600ms linear infinite; animation-play-state: paused; }
+  @keyframes march { to { background-position: 12px 0, -12px 100%, 0 -12px, 100% 12px; } }
+  .dz .solid { border: 2px solid var(--violet); transition: opacity 120ms var(--ease-out); }
+  .dz.drag { background: var(--violet-soft); }
+  .dz.drag .march { opacity: 1; animation-play-state: running; }
+  .dz.close .solid { opacity: 1; transition: none; }
+  body.rm .dz.drag .march { animation: none; }
+  .files { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+  .files li { display: flex; align-items: center; gap: 10px; padding: 6px 10px; background: var(--bg-02); border-radius: var(--r-2); font-size: 13px; }
+  .files li .nm { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .files li .kd { font-size: 12px; color: var(--cyan); }
+  .files li .sz { font-size: 12px; color: var(--text-3); }
+  .dzerr { margin: 0; font-size: 13px; color: var(--warn); }
+
+  /* ── M22 · Cursor some com a faixa ── */
+  .m22 { height: 220px; }
+  .m22 .mstrip { transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out), visibility 0s; }
+  .m22.idle, .m22.idle * { cursor: none; }
+  .m22.idle .mstrip { opacity: 0; transform: translateY(12px); visibility: hidden; pointer-events: none; transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out), visibility 0s linear 150ms; }
+  .m22:not(.idle) .mstrip { transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out), visibility 0s; }
+  .m22 .hintchip { position: absolute; left: 12px; top: 12px; padding: 6px 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-2); font-size: 12px; color: var(--text-2); }
+  body.rm .m22.idle .mstrip { transform: none; }
+  .m22state { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--text-2); }
+
+  /* ── M23 · Troca no beat ── */
+  .m23 { display: grid; gap: 14px; max-width: 460px; }
+  .m23-top { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; }
+  .m23 .cy { font-size: 13px; color: var(--cyan); }
+  .beats { display: flex; gap: 6px; }
+  .beats i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-3); transition: background 400ms var(--ease-out); }
+  .beats i.on { background: var(--beat); transition-duration: 0ms; }
+  .beats i.on:first-child { background: var(--beat); }
+  .m23-now .t { font-weight: 500; }
+  .m23-now .a { font-size: 12px; color: var(--text-2); }
+  .m23-act { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+  .m23 .btn.wait { border-style: dashed; border-color: var(--violet-line); background: var(--violet-soft); }
+  .m23st { font-size: 12px; color: var(--text-2); }
+  .m23-now.flash .t { animation: flash23 400ms var(--ease-out); }
+  @keyframes flash23 { from { color: var(--violet); } to { color: var(--text-1); } }
+
+  /* ── Rejeitados ── */
+  .rej { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 560px) { .rej { grid-template-columns: minmax(0, 1fr); } }
+  .rejp { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .rejbox { position: relative; display: grid; align-items: center; min-height: 120px; padding: 12px; background: var(--bg-00); border: 1px solid var(--line-1); border-radius: var(--r-2); overflow: hidden; }
+  .mini { display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .mini .meta { flex: 1; min-width: 0; }
+  .mini .t { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .a { font-size: 12px; color: var(--text-2); }
+  .mini .ico { color: var(--text-2); }
+  .pop { display: flex; align-items: center; gap: 8px; padding: 9px 12px; font-size: 13px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .pop .ico { color: var(--violet); }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 24px 16px 64px; }
+    .card { padding: 16px; }
+    .m11 { height: 400px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1>Microinterações: navegação e estados</h1>
+    <p>A casca não se mexe sozinha: a interface responde ao gesto e a eventos discretos do áudio.</p>
+    <div class="top-row">
+      <label class="switch" for="rmSwitch">
+        <input type="checkbox" id="rmSwitch">
+        <span class="track"></span>
+        <span>Simular movimento reduzido</span>
+      </label>
+      <p class="count num" id="count" aria-live="polite">0 de 14 classificados</p>
+    </div>
+  </header>
+
+  <!-- ═════════ Navegação e sobreposições ═════════ -->
+  <section class="sec" aria-labelledby="h-nav">
+    <h2 id="h-nav">Navegação e sobreposições</h2>
+    <div class="grid">
+
+      <article class="card" data-id="M10">
+        <div class="card-head"><span class="num">M10</span><h3>Indicador que desliza</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M10">
+            <label><input type="radio" name="v-M10" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M10" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M10" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m10">
+            <div class="m10-tabs" role="tablist" aria-label="Biblioteca (exemplo)" id="m10tabs">
+              <button type="button" role="tab" aria-selected="true">Todos <span class="num">386</span></button>
+              <button type="button" role="tab" aria-selected="false" tabindex="-1">Favoritos <span class="num">6</span></button>
+              <button type="button" role="tab" aria-selected="false" tabindex="-1">Coleções <span class="num">3</span></button>
+              <button type="button" role="tab" aria-selected="false" tabindex="-1">Recentes <span class="num">6</span></button>
+              <span class="ind" id="m10ind"></span>
+            </div>
+            <div class="m10-seg" role="radiogroup" aria-label="Modo de exibição (exemplo)" id="m10seg">
+              <span class="thumb" id="m10thumb"></span>
+              <label><input type="radio" name="m10seg" value="0" checked><span>Janela</span></label>
+              <label><input type="radio" name="m10seg" value="1"><span>Tela cheia</span></label>
+              <label><input type="radio" name="m10seg" value="2"><span>Rack</span></label>
+            </div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M10"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Clique nas abas ou use as setas.</span></div>
+        <p class="spec num">220 ms · ease-out · transform: translateX() scaleX()</p>
+        <p class="ref">Referência: Motion (layoutId), FLIP (Paul Lewis)</p>
+      </article>
+
+      <article class="card" data-id="M11">
+        <div class="card-head"><span class="num">M11</span><h3>Busca rápida</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M11">
+            <label><input type="radio" name="v-M11" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M11" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M11" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <span class="lab">Adotada: abre, fecha e move a seleção sem animação</span>
+        <div class="demo m11 stage-bg" data-m11="0"></div>
+        <span class="lab">Descartada: versão animada, para comparar<span class="tag-off">Descartada</span></span>
+        <div class="demo m11 stage-bg anim" data-m11="1"></div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M11"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Digite, use as setas, Enter ou Esc.</span></div>
+        <p class="spec num">0 ms · sem curva · abrir, fechar e mover seleção instantâneos · descartada: 120 ms · ease-out · opacity, scale(.97 → 1) · seleção 120 ms · saída 80 ms</p>
+        <p class="ref">Referência: Emil (Great animations), Rauno (Invisible details), Linear (command menu)</p>
+      </article>
+
+      <article class="card" data-id="M12">
+        <div class="card-head"><span class="num">M12</span><h3>Gaveta em degrau</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M12">
+            <label><input type="radio" name="v-M12" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M12" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M12" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m12 stage-bg" id="m12">
+          <div class="behind">Visual por trás da gaveta</div>
+          <aside class="dr" id="m12dr" aria-label="Biblioteca (exemplo)" inert>
+            <div class="dr-head">Biblioteca<button type="button" class="ibtn" id="m12x" aria-label="Fechar gaveta" title="Fechar gaveta (Esc)"><i data-lucide="panel-left-close" class="ico"></i></button></div>
+            <ul class="dr-list" id="m12list"></ul>
+          </aside>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" id="m12t" aria-expanded="false" aria-controls="m12dr">Abrir gaveta</button><button type="button" class="btn sm" data-repeat="M12"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+        <p class="spec num">250 ms entra · 180 ms sai · ease-out · transform: translateX() · linhas: 15 ms de degrau nas 8 primeiras</p>
+        <p class="ref">Referência: Material Design 3 (motion), Frontend Masters (stagger)</p>
+      </article>
+
+      <article class="card" data-id="M13">
+        <div class="card-head"><span class="num">M13</span><h3>Toast</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M13">
+            <label><input type="radio" name="v-M13" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M13" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M13" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m13 stage-bg" id="m13">
+          <div class="behind">Ação na interface dispara o aviso</div>
+          <div class="toast13" id="m13toast" role="status" aria-live="polite">
+            <i data-lucide="check" class="ico"></i>
+            <span class="tx"><span class="tl cur"></span><span class="tl"></span></span>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M13"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><button type="button" class="btn sm" id="m13more">Outro aviso</button><span class="hint">Vida de 4 s, pausada com o mouse em cima.</span></div>
+        <p class="spec num">220 ms · ease-out expo · translateY(8px) + opacity · sai 120 ms só opacity · texto: crossfade 120 ms · vida 4 s, pausa no hover · CSS transitions</p>
+        <p class="ref">Referência: Emil (Sonner)</p>
+      </article>
+
+      <article class="card" data-id="M14">
+        <div class="card-head"><span class="num">M14</span><h3>Switch com peso</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M14">
+            <label><input type="radio" name="v-M14" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M14" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M14" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m14" id="m14">
+            <div class="row14"><span class="name">Rotação automática</span>
+              <label class="switch"><input type="checkbox" id="m14a" aria-label="Rotação automática"><span class="track"></span></label></div>
+            <div class="row14"><span class="name">Modo limpo</span>
+              <label class="switch"><input type="checkbox" checked aria-label="Modo limpo"><span class="track"></span></label></div>
+            <div class="row14 dis"><span class="name">Captura exclusiva (indisponível)</span>
+              <label class="switch"><input type="checkbox" disabled aria-label="Captura exclusiva (indisponível)"><span class="track"></span></label></div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M14"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Segure o clique para sentir o estiramento.</span></div>
+        <p class="spec num">80 ms · linear · transform: scaleX(1,29) ao pressionar · 220 ms · ease-out expo · translateX(14px) ao soltar · trilho 120 ms</p>
+        <p class="ref">Referência: Emil (7 tips)</p>
+      </article>
+
+      <article class="card" data-id="M15">
+        <div class="card-head"><span class="num">M15</span><h3>Slider com leitura</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M15">
+            <label><input type="radio" name="v-M15" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M15" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M15" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m15">
+            <div class="fl"><label for="m15r">Ganho</label><output class="num" for="m15r" id="m15out">0,0 dB</output></div>
+            <div class="m15-box" id="m15box">
+              <div class="bpos" id="m15pos"><div class="bubble num" id="m15b" aria-hidden="true">0,0 dB</div></div>
+              <input type="range" id="m15r" min="-12" max="12" step="0.5" value="0" style="--fill:50%">
+            </div>
+            <div class="scale num"><span>-12 dB</span><span>+12 dB</span></div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M15"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Arraste o polegar ou use as setas.</span></div>
+        <p class="spec num">120 ms · ease-out · opacity, translateY(4px) · teclado: balão por 600 ms</p>
+        <p class="ref">Referência: OP-1 field (SOS review)</p>
+      </article>
+
+      <article class="card" data-id="M16">
+        <div class="card-head"><span class="num">M16</span><h3>Controles da janela</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M16">
+            <label><input type="radio" name="v-M16" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M16" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M16" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m16 stage-bg" id="m16">
+          <span class="hintchip">Passe o mouse no canto superior direito</span>
+          <div class="corner">
+            <div class="wc" id="m16wc" role="group" aria-label="Controles da janela">
+              <button type="button" class="ibtn" aria-label="Minimizar" title="Minimizar"><i data-lucide="minus" class="ico"></i></button>
+              <button type="button" class="ibtn" aria-label="Tela cheia" title="Tela cheia (F11)"><i data-lucide="square" class="ico"></i></button>
+              <button type="button" class="ibtn close" id="m16x" aria-label="Fechar" title="Fechar (Alt+F4)"><i data-lucide="x" class="ico"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M16"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+        <p class="spec num">120 ms · ease-out · opacity, translateX(4px) · x: rotate(90deg) 120 ms</p>
+        <p class="ref">Referência: OP-1 field (SOS review)</p>
+      </article>
+
+      <article class="card" data-id="M17">
+        <div class="card-head"><span class="num">M17</span><h3>Copiar → copiado</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M17">
+            <label><input type="radio" name="v-M17" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M17" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M17" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m17">
+            <div class="cprow">
+              <span class="nm" id="m17name">Geiss - Cauldron - painterly 2 (saturation remix)</span>
+              <button type="button" class="ibtn cp" id="m17b" aria-label="Copiar nome do preset" title="Copiar nome do preset">
+                <span class="ic a"><i data-lucide="copy" class="ico"></i></span>
+                <span class="ic b"><i data-lucide="check" class="ico"></i></span>
+              </button>
+            </div>
+            <div class="cpmsg" id="m17msg" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M17"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Copia de verdade para a área de transferência.</span></div>
+        <p class="spec num">120 ms · ease-out · opacity, transform: scale(.6 → 1) · volta após 1,5 s</p>
+        <p class="ref">Referência: Spotify Design (heart), Rauno (Invisible details)</p>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- ═════════ Estados e modos ═════════ -->
+  <section class="sec" aria-labelledby="h-est">
+    <h2 id="h-est">Estados e modos</h2>
+    <div class="grid">
+
+      <article class="card" data-id="M18">
+        <div class="card-head"><span class="num">M18</span><h3>Silêncio com carência</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M18">
+            <label><input type="radio" name="v-M18" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M18" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M18" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m18" id="m18">
+          <div class="bar">
+            <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path class="shell" d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/><path class="core" d="M12 6.5 17.5 12 12 17.5 6.5 12Z"/></svg>
+            <b>Sonic Obsidian</b>
+            <div class="meter" id="m18meter" aria-label="Nível de entrada" role="img"></div>
+          </div>
+          <div class="view">
+            <canvas id="m18c" aria-hidden="true"></canvas>
+            <div class="m18-panel" id="m18panel" role="status">
+              <h4><i data-lucide="volume-x" class="ico"></i>Sem áudio</h4>
+              <p>Nada está tocando na Saída padrão do Windows. Toque algo e o visual volta sozinho.</p>
+              <button type="button" class="btn">Escolher outra saída</button>
+            </div>
+          </div>
+          <div class="status num" id="m18status">Com áudio</div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" id="m18short">Silêncio curto (0,6 s)</button><button type="button" class="btn sm" id="m18long">Silêncio longo</button></div>
+        <p class="spec num">400 ms · ease-out · fill-opacity do núcleo · medidor: 30 ms por segmento · painel após 1,2 s, fade 220 ms</p>
+        <p class="ref">Referência: SOS (PPM vs VU), Broadcast Bridge, Apple HIG (Motion)</p>
+      </article>
+
+      <article class="card" data-id="M19">
+        <div class="card-head"><span class="num">M19</span><h3>Modo limpo</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M19">
+            <label><input type="radio" name="v-M19" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M19" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M19" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m19 stage-bg r169" id="m19">
+          <div class="credit19 show" id="m19credit"><h4 id="m19h">Cauldron - painterly 2 (saturation remix)</h4><p id="m19p">por Geiss</p></div>
+          <div class="mstrip">
+            <div class="meta">
+              <div class="t"><span class="tt" id="m19tt">Cauldron - painterly 2 (saturation remix)</span><span class="clean-ico" aria-hidden="true"><i data-lucide="eye-off" class="ico"></i></span></div>
+              <div class="a" id="m19a">por Geiss</div>
+            </div>
+            <div class="grp"><button type="button" class="ibtn" id="m19b" aria-pressed="false" aria-label="Modo limpo" title="Modo limpo (H)"><i data-lucide="eye" class="ico"></i></button></div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M19"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><button type="button" class="btn sm" id="m19next">Trocar preset</button><span class="hint">O cartão só volta na próxima troca.</span></div>
+        <p class="spec num">400 ms · ease-out · opacity do texto · ícone eye-off 120 ms</p>
+        <p class="ref">Referência: Geiss (MilkDrop authoring), Apple HIG (Motion)</p>
+      </article>
+
+      <article class="card" data-id="M20">
+        <div class="card-head"><span class="num">M20</span><h3>Palco → Rack</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M20">
+            <label><input type="radio" name="v-M20" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M20" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M20" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m20" id="m20">
+          <span class="scr2">Segunda tela</span>
+          <div class="m20-viz" id="m20viz"><canvas id="m20c" aria-hidden="true"></canvas></div>
+          <div class="m20-strip" id="m20strip">
+            <div class="in">
+              <div class="slot"></div>
+              <div class="meta"><div class="t">Cauldron - painterly 2 (saturation remix)</div><div class="a">por Geiss</div></div>
+              <div class="grp">
+                <button type="button" class="ibtn" aria-label="Preset anterior" title="Preset anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+                <button type="button" class="ibtn" aria-label="Próximo preset" title="Próximo preset (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+                <button type="button" class="ibtn" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" id="m20t">Ir para o Rack</button><button type="button" class="btn sm" data-repeat="M20"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+        <p class="spec num">300 ms · ease-out · transform: translate() scale() (FLIP) · volta pelo mesmo trajeto</p>
+        <p class="ref">Referência: Chrome (View Transitions), FLIP (Paul Lewis), Motion (layoutId)</p>
+      </article>
+
+      <article class="card" data-id="M21">
+        <div class="card-head"><span class="num">M21</span><h3>Soltar arquivos</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M21">
+            <label><input type="radio" name="v-M21" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M21" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M21" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m21">
+            <div class="dz" id="m21dz">
+              <span class="march"></span><span class="solid"></span>
+              <i data-lucide="upload" class="ico"></i>
+              <b>Solte presets (.json) ou clipes de vídeo aqui</b>
+              <small>Arraste arquivos reais do Explorador de Arquivos.</small>
+            </div>
+            <p class="dzerr" id="m21err" role="alert" hidden></p>
+            <ul class="files" id="m21files"></ul>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" id="m21sim">Simular arraste</button></div>
+        <p class="spec num">borda anda 600 ms · linear · background-position (só durante o gesto) · fecha em sólida 120 ms e some 120 ms</p>
+        <p class="ref">Referência: Rauno (Invisible details), Apple HIG (Motion)</p>
+      </article>
+
+      <article class="card" data-id="M22">
+        <div class="card-head"><span class="num">M22</span><h3>Cursor some com a faixa</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M22">
+            <label><input type="radio" name="v-M22" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M22" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M22" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo m22 stage-bg" id="m22">
+          <span class="hintchip">Tela cheia simulada: pare o mouse aqui por 2,5 s</span>
+          <div class="mstrip">
+            <div class="meta"><div class="t"><span class="tt">Cauldron - painterly 2 (saturation remix)</span></div><div class="a">por Geiss</div></div>
+            <div class="grp">
+              <button type="button" class="ibtn" aria-label="Preset anterior" title="Preset anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+              <button type="button" class="ibtn" aria-label="Próximo preset" title="Próximo preset (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+            </div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M22"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button>
+          <div class="m22state num" aria-live="off"><span id="m22c">Cursor: visível</span><span id="m22s">Faixa: visível</span><span id="m22t">Ocioso em 2,5 s</span></div></div>
+        <p class="spec num">2,5 s ocioso · faixa sai 150 ms ease-in, volta 220 ms ease-out · cursor: none, volta sem atraso</p>
+        <p class="ref">Referência: Emil (Great animations), Apple HIG (Motion)</p>
+      </article>
+
+
+      <article class="card" data-id="M23">
+        <div class="card-head"><span class="num">M23</span><h3>Troca no beat</h3>
+          <div class="verdict" role="radiogroup" aria-label="Veredito de M23">
+            <label><input type="radio" name="v-M23" value="nucleo"><span>Núcleo</span></label>
+            <label><input type="radio" name="v-M23" value="opcional"><span>Opcional</span></label>
+            <label><input type="radio" name="v-M23" value="fora"><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="demo pad">
+          <div class="m23">
+            <div class="m23-top">
+              <div class="beats" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+              <span class="num cy">124 BPM</span>
+              <label class="switch" for="m23sync"><input type="checkbox" id="m23sync" checked><span class="track"></span><span>Sincronizar ao beat</span></label>
+            </div>
+            <div class="m23-now"><div class="t" id="m23t">Cauldron - painterly 2 (saturation remix)</div><div class="a" id="m23a">por Geiss</div></div>
+            <div class="m23-act">
+              <button type="button" class="btn" id="m23btn"><i data-lucide="skip-forward" class="ico ico-sm"></i><span id="m23lab">Próximo</span></button>
+              <span class="m23st" id="m23st" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="M23"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">Aperte de novo enquanto espera para cancelar.</span></div>
+        <p class="spec num">beat a 124 BPM (484 ms) · liberação do indicador 400 ms · ease-out · borda tracejada enquanto aguarda</p>
+        <p class="ref">Referência: Resolume (Beat Snap)</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ═════════ Rejeitados ═════════ -->
+  <section class="sec" aria-labelledby="h-rej">
+    <h2 id="h-rej">Rejeitados</h2>
+    <p>Para comparar lado a lado e entender por que ficaram de fora. O veredito já está marcado.</p>
+    <div class="grid">
+
+      <article class="card" data-fixed="R1">
+        <div class="card-head"><span class="num">Rejeitado</span><h3>Interface pulsando com a música</h3>
+          <div class="verdict fixed" role="radiogroup" aria-label="Veredito: Fora">
+            <label><input type="radio" name="v-R1" value="nucleo" disabled><span>Núcleo</span></label>
+            <label><input type="radio" name="v-R1" value="opcional" disabled><span>Opcional</span></label>
+            <label><input type="radio" name="v-R1" value="fora" checked disabled><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="rej">
+          <div class="rejp"><span class="lab">Faixa respirando com o beat</span>
+            <div class="rejbox"><div class="mini" id="r1a"><i data-lucide="skip-back" class="ico"></i><div class="meta"><div class="t">Cauldron - painterly 2</div><div class="a">por Geiss</div></div><i data-lucide="skip-forward" class="ico"></i><i data-lucide="star" class="ico"></i></div></div></div>
+          <div class="rejp"><span class="lab">Faixa parada</span>
+            <div class="rejbox"><div class="mini"><i data-lucide="skip-back" class="ico"></i><div class="meta"><div class="t">Cauldron - painterly 2</div><div class="a">por Geiss</div></div><i data-lucide="skip-forward" class="ico"></i><i data-lucide="star" class="ico"></i></div></div></div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="R1"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="hint">120 batidas por minuto, 4 batidas.</span></div>
+        <p class="rm-note">Movimento reduzido ativo: a comparação fica parada.</p>
+        <p class="why">Por que fora: quebra "a casca não se mexe"; disputa atenção com o visual.</p>
+        <p class="spec num">400 ms · ease-out · transform: scale(1,03) a cada beat (rejeitado)</p>
+        <p class="ref">Referência: Emil (Great animations), OP-1 field (SOS review)</p>
+      </article>
+
+      <article class="card" data-fixed="R2">
+        <div class="card-head"><span class="num">Rejeitado</span><h3>Entrada com bounce</h3>
+          <div class="verdict fixed" role="radiogroup" aria-label="Veredito: Fora">
+            <label><input type="radio" name="v-R2" value="nucleo" disabled><span>Núcleo</span></label>
+            <label><input type="radio" name="v-R2" value="opcional" disabled><span>Opcional</span></label>
+            <label><input type="radio" name="v-R2" value="fora" checked disabled><span>Fora</span></label>
+          </div>
+        </div>
+        <div class="rej">
+          <div class="rejp"><span class="lab">Com bounce (mola com overshoot)</span>
+            <div class="rejbox"><div class="pop" id="r2a"><i data-lucide="check" class="ico"></i>Adicionado aos favoritos</div></div></div>
+          <div class="rejp"><span class="lab">Com ease-out expo</span>
+            <div class="rejbox"><div class="pop" id="r2b"><i data-lucide="check" class="ico"></i>Adicionado aos favoritos</div></div></div>
+        </div>
+        <div class="trig"><button type="button" class="btn sm" data-repeat="R2"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+        <p class="rm-note">Movimento reduzido ativo: a comparação fica parada.</p>
+        <p class="why">Por que fora: lê como brinquedo; contraria a precisão de hardware.</p>
+        <p class="spec num">420 ms · cubic-bezier(.34, 1.56, .64, 1) · transform: scale, translateY (rejeitado) · contra 220 ms · ease-out expo</p>
+        <p class="ref">Referência: Emil (7 tips), Comeau (linear())</p>
+      </article>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const EO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+  const EI = 'cubic-bezier(0.4, 0, 1, 1)';
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const isRM = () => document.body.classList.contains('rm') || mq.matches;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const fmt = (v, d) => v.toLocaleString('pt-BR', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d });
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  function icons() { try { if (window.lucide) lucide.createIcons(); } catch (e) {} }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  const P = (window.SO_DATA && SO_DATA.presets) || [];
+  const thumbBg = p => 'linear-gradient(135deg, hsl(' + p.hue + ' 70% 46%), hsl(' + ((p.hue + 50) % 360) + ' 60% 18%))';
+  const REPEAT = {};
+
+  /* ── Topo: movimento reduzido e vereditos ── */
+  const rmSw = $('#rmSwitch');
+  function applyRM() { document.body.classList.toggle('rm', rmSw.checked); }
+  if (mq.matches) rmSw.checked = true;
+  rmSw.addEventListener('change', applyRM); applyRM();
+
+  const cards = $$('.card[data-id]');
+  function updateCount() {
+    const n = cards.filter(c => $('.verdict input:checked', c)).length;
+    $('#count').textContent = n + ' de ' + cards.length + ' classificados';
+  }
+  cards.forEach(card => {
+    const id = card.dataset.id;
+    const saved = lsGet('so-micro-' + id);
+    if (saved) { const r = $('input[value="' + saved + '"]', card); if (r) r.checked = true; }
+    $$('.verdict input', card).forEach(r => r.addEventListener('change', () => { lsSet('so-micro-' + id, r.value); updateCount(); }));
+  });
+  updateCount();
+
+  $$('[data-repeat]').forEach(b => b.addEventListener('click', () => { const f = REPEAT[b.dataset.repeat]; if (f) f(); }));
+
+  /* ── M10 · Indicador que desliza ── */
+  (function () {
+    const tabs = $$('#m10tabs [role=tab]'), ind = $('#m10ind');
+    const seg = $$('#m10seg input'), thumb = $('#m10thumb');
+    let cur = 0;
+    function place(instant) {
+      const b = tabs[cur];
+      if (instant) ind.style.transition = 'none';
+      ind.style.transform = 'translateX(' + b.offsetLeft + 'px) scaleX(' + b.offsetWidth + ')';
+      if (instant) { void ind.offsetWidth; ind.style.transition = ''; }
+    }
+    function select(i, focus) {
+      cur = i;
+      tabs.forEach((t, k) => { t.setAttribute('aria-selected', k === i ? 'true' : 'false'); t.tabIndex = k === i ? 0 : -1; });
+      place(false);
+      if (focus) tabs[i].focus();
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(i));
+      t.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight') { e.preventDefault(); select((cur + 1) % tabs.length, true); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); select((cur + tabs.length - 1) % tabs.length, true); }
+      });
+    });
+    function segSel(i) { thumb.style.transform = 'translateX(' + (i * 100) + '%)'; }
+    seg.forEach((r, i) => r.addEventListener('change', () => segSel(i)));
+    place(true);
+    window.addEventListener('resize', () => place(true));
+    window.addEventListener('load', () => place(true));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => place(true));
+    REPEAT.M10 = () => {
+      select((cur + 1) % tabs.length);
+      const cs = seg.findIndex(r => r.checked), ns = (cs + 1) % seg.length;
+      seg[ns].checked = true; segSel(ns);
+    };
+  })();
+
+  /* ── M11 · Busca rápida ── */
+  (function () {
+    const insts = [];
+    function make(root, n) {
+      root.innerHTML =
+        '<div class="closed-hint"><b>Busca fechada</b><span class="now"></span></div><div class="scrim"></div>' +
+        '<div class="pal" role="dialog" aria-label="Busca rápida"><div class="p-search"><i data-lucide="search" class="ico"></i>' +
+        '<input type="text" role="combobox" aria-expanded="true" aria-controls="m11rows' + n + '" aria-label="Buscar presets e autores" placeholder="Buscar presets e autores" autocomplete="off" spellcheck="false"></div>' +
+        '<div class="p-list"><span class="sel"></span><div class="p-rows" id="m11rows' + n + '" role="listbox" aria-label="Resultados"></div></div>' +
+        '<div class="p-foot"><span><kbd>Setas</kbd> mover</span><span><kbd>Enter</kbd> tocar</span><span><kbd>Esc</kbd> fechar</span></div></div>';
+      const q = $('input', root), rows = $('.p-rows', root), sel = $('.sel', root);
+      const base = [0, 1, 3, 4, 10, 19];
+      let items = [], idx = 0, playing = 4;
+      function nowText() { const p = P[playing]; $('.now', root).textContent = p ? 'Tocando: ' + p.title + ' por ' + p.author : ''; }
+      function hl(text, term) {
+        if (!term) return esc(text);
+        const i = text.toLowerCase().indexOf(term);
+        if (i < 0) return esc(text);
+        return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + term.length)) + '</mark>' + esc(text.slice(i + term.length));
+      }
+      function setIdx(i, instant) {
+        idx = i;
+        if (instant) sel.style.transition = 'none';
+        sel.style.setProperty('--idx', i);
+        if (instant) { void sel.offsetWidth; sel.style.transition = ''; }
+        $$('.prow', rows).forEach((r, k) => { r.classList.toggle('active', k === i); r.setAttribute('aria-selected', k === i ? 'true' : 'false'); });
+        const a = $$('.prow', rows)[i];
+        if (a) q.setAttribute('aria-activedescendant', a.id); else q.removeAttribute('aria-activedescendant');
+      }
+      function render() {
+        const term = q.value.trim().toLowerCase();
+        items = term ? P.filter(p => p.full.toLowerCase().includes(term)).slice(0, 6) : base.map(i => P[i]).filter(Boolean);
+        if (!items.length) {
+          rows.innerHTML = '<div class="p-empty"><strong>Nenhum preset para "' + esc(q.value.trim()) + '"</strong>Tente o nome do autor ou parte do título.</div>';
+          sel.classList.add('off'); setIdx(0, true); return;
+        }
+        sel.classList.remove('off');
+        rows.innerHTML = items.map((p, k) =>
+          '<button type="button" class="prow' + (p.id === playing ? ' playing' : '') + '" role="option" id="m11o' + n + '_' + k + '" data-k="' + k + '">' +
+          '<span class="thumb" style="background:' + thumbBg(p) + '"></span>' +
+          '<span class="meta"><span class="r-title">' + hl(p.title, term) + '</span><span class="r-author">por ' + esc(p.author) + '</span></span>' +
+          '<span class="r-hint">Enter</span></button>').join('');
+        setIdx(Math.min(idx, items.length - 1), true);
+      }
+      function setOpen(on, focus) {
+        root.classList.toggle('open', on);
+        q.setAttribute('aria-expanded', on ? 'true' : 'false');
+        if (on) { q.value = ''; idx = 0; render(); if (focus) q.focus({ preventScroll: true }); }
+      }
+      function play(k) { const p = items[k]; if (!p) return; playing = p.id; nowText(); setOpen(false); }
+      q.addEventListener('input', () => { idx = 0; render(); });
+      q.addEventListener('keydown', e => {
+        if (!items.length && e.key !== 'Escape') return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); setIdx((idx + 1) % items.length); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setIdx((idx + items.length - 1) % items.length); }
+        else if (e.key === 'Enter') { e.preventDefault(); play(idx); }
+        else if (e.key === 'Escape') { e.preventDefault(); setOpen(false); }
+      });
+      rows.addEventListener('mousemove', e => { const r = e.target.closest('.prow'); if (r && +r.dataset.k !== idx) setIdx(+r.dataset.k); });
+      rows.addEventListener('click', e => { const r = e.target.closest('.prow'); if (r) play(+r.dataset.k); });
+      nowText(); setOpen(true, false);
+      return { reopen: async () => { setOpen(false); await wait(root.classList.contains('anim') ? 260 : 400); setOpen(true, true); } };
+    }
+    $$('[data-m11]').forEach((r, i) => insts.push(make(r, i)));
+    REPEAT.M11 = () => { insts.forEach(i => i.reopen()); };
+  })();
+
+  /* ── M12 · Gaveta em degrau ── */
+  (function () {
+    const root = $('#m12'), dr = $('#m12dr'), list = $('#m12list'), tg = $('#m12t');
+    list.innerHTML = P.slice(0, 11).map((p, i) =>
+      '<li style="--i:' + i + '"><button type="button" class="drow"><span class="thumb" style="background:' + thumbBg(p) + '"></span>' +
+      '<span class="meta"><span class="t">' + esc(p.title) + '</span><span class="a">por ' + esc(p.author) + '</span></span></button></li>').join('');
+    function setOpen(on) {
+      root.classList.toggle('open', on);
+      if (on) dr.removeAttribute('inert'); else dr.setAttribute('inert', '');
+      tg.setAttribute('aria-expanded', on ? 'true' : 'false');
+      tg.textContent = on ? 'Fechar gaveta' : 'Abrir gaveta';
+    }
+    tg.addEventListener('click', () => setOpen(!root.classList.contains('open')));
+    $('#m12x').addEventListener('click', () => { setOpen(false); tg.focus(); });
+    dr.addEventListener('keydown', e => { if (e.key === 'Escape') { setOpen(false); tg.focus(); } });
+    REPEAT.M12 = async () => { setOpen(false); await wait(260); setOpen(true); };
+  })();
+
+  /* ── M13 · Toast ── */
+  (function () {
+    const el = $('#m13toast'), layers = $$('.tl', el);
+    const msgs = ['Adicionado aos favoritos', 'Removido dos favoritos', 'Coleção "Noite tranquila" criada', 'Rotação automática ligada'];
+    let n = 0, cur = 0, vis = false, timer = 0, remain = 4000, t0 = 0, paused = false;
+    function show() {
+      const msg = msgs[n++ % msgs.length];
+      if (!vis) {
+        layers[cur].textContent = msg;
+        el.classList.add('on'); vis = true;
+      } else {
+        const nx = 1 - cur;
+        layers[nx].textContent = msg;
+        layers[nx].classList.add('cur'); layers[cur].classList.remove('cur'); cur = nx;
+      }
+      remain = 4000; arm();
+    }
+    function arm() { clearTimeout(timer); t0 = performance.now(); if (vis && !paused) timer = setTimeout(hide, remain); }
+    function pause() { if (!vis || paused) return; paused = true; clearTimeout(timer); remain = Math.max(300, remain - (performance.now() - t0)); }
+    function resume() { if (!paused) return; paused = false; arm(); }
+    function hide() { clearTimeout(timer); el.classList.remove('on'); vis = false; }
+    el.addEventListener('mouseenter', pause); el.addEventListener('mouseleave', resume);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); else resume(); });
+    $('#m13more').addEventListener('click', show);
+    REPEAT.M13 = async () => { hide(); n = 0; await wait(260); show(); };
+    show();
+  })();
+
+  /* ── M14 · Switch com peso ── */
+  REPEAT.M14 = async () => {
+    const inp = $('#m14a'), sw = inp.closest('.switch');
+    sw.classList.add('press'); await wait(180);
+    inp.checked = !inp.checked; sw.classList.remove('press');
+  };
+
+  /* ── M15 · Slider com leitura ── */
+  (function () {
+    const r = $('#m15r'), out = $('#m15out'), b = $('#m15b'), pos = $('#m15pos');
+    let kt = 0, dragging = false;
+    const sgn = v => (v > 0 ? '+' : '') + fmt(v, 1) + ' dB';
+    function upd() {
+      const v = parseFloat(r.value), pct = (v - r.min) / (r.max - r.min);
+      r.style.setProperty('--fill', (pct * 100) + '%');
+      out.textContent = sgn(v); b.textContent = sgn(v);
+      pos.style.setProperty('--bx', (7 + (r.offsetWidth - 14) * pct) + 'px');
+    }
+    r.addEventListener('input', upd);
+    r.addEventListener('pointerdown', () => { dragging = true; upd(); b.classList.add('on'); });
+    const up = () => { if (dragging) { dragging = false; b.classList.remove('on'); } };
+    window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    r.addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) return;
+      setTimeout(upd, 0); b.classList.add('on'); clearTimeout(kt);
+      kt = setTimeout(() => { if (!dragging) b.classList.remove('on'); }, 600);
+    });
+    r.addEventListener('blur', () => { if (!dragging) b.classList.remove('on'); });
+    window.addEventListener('resize', upd);
+    upd();
+    REPEAT.M15 = async () => {
+      r.value = 0; upd(); b.classList.add('on');
+      const t0 = performance.now(), D = 800;
+      await new Promise(res => {
+        (function step(t) {
+          const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
+          r.value = Math.round(e * 9) / 2; upd();
+          if (k < 1) requestAnimationFrame(step); else res();
+        })(t0);
+      });
+      await wait(300); b.classList.remove('on');
+    };
+  })();
+
+  /* ── M16 · Controles da janela ── */
+  REPEAT.M16 = async () => {
+    const wc = $('#m16wc'), x = $('#m16x');
+    wc.classList.add('sim'); await wait(800);
+    x.classList.add('sim'); await wait(800);
+    x.classList.remove('sim'); await wait(250);
+    wc.classList.remove('sim');
+  };
+
+  /* ── M17 · Copiar → copiado ── */
+  (function () {
+    const b = $('#m17b'), msg = $('#m17msg'), name = $('#m17name');
+    let t = 0;
+    async function copyText(s) {
+      try { await navigator.clipboard.writeText(s); return true; }
+      catch (e) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = s; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+          document.body.appendChild(ta); ta.select();
+          const ok = document.execCommand('copy'); ta.remove(); return ok;
+        } catch (e2) { return false; }
+      }
+    }
+    b.addEventListener('click', async () => {
+      const ok = await copyText(name.textContent);
+      clearTimeout(t);
+      if (ok) {
+        b.classList.add('done'); msg.classList.remove('err'); msg.textContent = 'Copiado';
+        t = setTimeout(() => { b.classList.remove('done'); msg.textContent = ''; }, 1500);
+      } else {
+        b.classList.remove('done'); msg.classList.add('err');
+        msg.textContent = 'Não foi possível copiar. Selecione o nome e use Ctrl+C.';
+        t = setTimeout(() => { msg.textContent = ''; msg.classList.remove('err'); }, 4000);
+      }
+    });
+    REPEAT.M17 = () => b.click();
+  })();
+
+  /* ── M18 · Silêncio com carência ── */
+  (function () {
+    const root = $('#m18'), canvas = $('#m18c'), panel = $('#m18panel'), status = $('#m18status');
+    const N = 20;
+    let viz = null, update = null;
+    try {
+      viz = SOViz.create(canvas, { scale: 0.4 });
+      viz.setPreset(P[0] || { hue: 270, style: 0 }, 0);
+      update = SOViz.meter($('#m18meter'), N);
+    } catch (e) {}
+    let silent = false, silStart = 0, held = 0, lastOn = 0, panelT = 0, autoT = 0, panelOn = false, lastTxt = '';
+    function setSilence(on) {
+      if (on === silent) return;
+      silent = on; root.classList.toggle('silent', on);
+      if (viz) viz.setSilent(on);
+      clearTimeout(panelT);
+      if (on) {
+        silStart = performance.now(); held = lastOn;
+        panelT = setTimeout(() => { panelOn = true; panel.classList.add('show'); }, 1200);
+      } else { panelOn = false; panel.classList.remove('show'); }
+    }
+    function frame(now) {
+      if (update && viz) {
+        if (!silent) {
+          const l = viz.level(), p = viz.peak();
+          lastOn = Math.round(Math.min(1, l) * N);
+          update(l, p);
+        } else {
+          const segs = Math.max(0, held - Math.floor((now - silStart) / 30));
+          update(segs / N, 0);
+        }
+      }
+      let txt = 'Com áudio';
+      if (silent) {
+        const s = (now - silStart) / 1000;
+        txt = 'Silêncio há ' + fmt(s, 1) + ' s · ' + (panelOn ? 'painel visível' : 'painel em 1,2 s');
+      }
+      if (txt !== lastTxt) { status.textContent = txt; lastTxt = txt; }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    $('#m18short').addEventListener('click', () => { clearTimeout(autoT); setSilence(true); autoT = setTimeout(() => setSilence(false), 600); });
+    $('#m18long').addEventListener('click', () => { clearTimeout(autoT); setSilence(true); autoT = setTimeout(() => setSilence(false), 3500); });
+  })();
+
+  /* ── M19 · Modo limpo ── */
+  (function () {
+    const root = $('#m19'), credit = $('#m19credit'), btn = $('#m19b');
+    let clean = false, k = 0;
+    function setClean(on) {
+      clean = on; root.classList.toggle('clean', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) credit.classList.remove('show');
+    }
+    function nextPreset() {
+      k = (k + 1) % 6;
+      const p = P[[0, 3, 4, 10, 12, 19][k]] || P[k]; if (!p) return;
+      $('#m19h').textContent = p.title; $('#m19p').textContent = 'por ' + p.author;
+      $('#m19tt').textContent = p.title; $('#m19a').textContent = 'por ' + p.author;
+      if (!clean) credit.classList.add('show');
+    }
+    btn.addEventListener('click', () => setClean(!clean));
+    $('#m19next').addEventListener('click', nextPreset);
+    REPEAT.M19 = async () => { setClean(false); credit.classList.add('show'); await wait(500); setClean(true); await wait(1500); setClean(false); await wait(700); nextPreset(); };
+  })();
+
+  /* ── M20 · Palco → Rack (FLIP) ── */
+  (function () {
+    const root = $('#m20'), viz = $('#m20viz'), strip = $('#m20strip'), inn = $('.in', strip), tg = $('#m20t');
+    let v = null, rack = false, busy = false;
+    try {
+      v = SOViz.create($('#m20c'), { scale: 0.4 });
+      v.setPreset(P[0] || { hue: 270, style: 0 }, 0);
+    } catch (e) {}
+    async function setRack(on) {
+      if (on === rack) return;
+      const f1 = viz.getBoundingClientRect(), f2 = strip.getBoundingClientRect();
+      root.classList.toggle('rack', on); rack = on;
+      tg.textContent = on ? 'Voltar ao Palco' : 'Ir para o Rack';
+      const l1 = viz.getBoundingClientRect(), l2 = strip.getBoundingClientRect();
+      if (isRM()) {
+        const o = { duration: 120, easing: 'linear' };
+        const as = [viz.animate([{ opacity: 0 }, { opacity: 1 }], o), strip.animate([{ opacity: 0 }, { opacity: 1 }], o)];
+        await Promise.all(as.map(a => a.finished.catch(() => {})));
+        return;
+      }
+      const inv = (f, l) => 'translate(' + (f.left - l.left) + 'px,' + (f.top - l.top) + 'px) scale(' + (f.width / l.width) + ',' + (f.height / l.height) + ')';
+      const o = { duration: 300, easing: EO };
+      const as = [
+        viz.animate([{ transform: inv(f1, l1) }, { transform: 'none' }], o),
+        strip.animate([{ transform: inv(f2, l2) }, { transform: 'none' }], o),
+        inn.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 1 }], { duration: 300, easing: 'linear' }),
+      ];
+      await Promise.all(as.map(a => a.finished.catch(() => {})));
+    }
+    tg.addEventListener('click', async () => { if (busy) return; busy = true; await setRack(!rack); busy = false; });
+    REPEAT.M20 = async () => {
+      if (busy) return; busy = true;
+      if (rack) { await setRack(false); await wait(500); }
+      await setRack(true); await wait(900); await setRack(false);
+      busy = false;
+    };
+  })();
+
+  /* ── M21 · Soltar arquivos ── */
+  (function () {
+    const dz = $('#m21dz'), list = $('#m21files'), err = $('#m21err');
+    let depth = 0, simT = 0, closeT = 0;
+    const hasFiles = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+    const kindOf = f => {
+      const n = (f.name || '').toLowerCase();
+      if (n.endsWith('.json')) return 'Preset';
+      if ((f.type || '').indexOf('video/') === 0 || /\.(mp4|webm|mov|mkv)$/.test(n)) return 'Clipe';
+      return null;
+    };
+    const size = b => b >= 1048576 ? fmt(b / 1048576, 1) + ' MB' : fmt(Math.max(1, b / 1024), 0) + ' KB';
+    function drop(files) {
+      dz.classList.remove('drag'); depth = 0;
+      dz.classList.add('close'); clearTimeout(closeT);
+      closeT = setTimeout(() => dz.classList.remove('close'), 120);
+      const bad = [];
+      files.forEach(f => {
+        const k = kindOf(f);
+        if (!k) { bad.push(f.name); return; }
+        const li = document.createElement('li');
+        li.innerHTML = '<span class="nm">' + esc(f.name) + '</span><span class="kd num">' + k + '</span><span class="sz num">' + size(f.size) + '</span>';
+        list.appendChild(li);
+      });
+      if (bad.length) { err.hidden = false; err.textContent = 'Formato não suportado: ' + bad.join(', ') + '. Use .json para presets ou vídeo (.mp4, .webm).'; }
+      else err.hidden = true;
+    }
+    dz.addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); depth++; dz.classList.add('drag'); });
+    dz.addEventListener('dragover', e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+    dz.addEventListener('dragleave', e => { if (!hasFiles(e)) return; depth = Math.max(0, depth - 1); if (!depth) dz.classList.remove('drag'); });
+    dz.addEventListener('drop', e => { e.preventDefault(); drop(Array.from(e.dataTransfer.files || [])); });
+    window.addEventListener('dragover', e => { if (hasFiles(e)) e.preventDefault(); });
+    window.addEventListener('drop', e => { if (hasFiles(e)) e.preventDefault(); });
+    $('#m21sim').addEventListener('click', () => {
+      clearTimeout(simT); dz.classList.remove('close'); dz.classList.add('drag');
+      simT = setTimeout(() => drop([{ name: 'Geiss - Cauldron (simulado).json', size: 18432, type: 'application/json' }]), 2200);
+    });
+  })();
+
+  /* ── M22 · Cursor some com a faixa ── */
+  (function () {
+    const root = $('#m22'), c = $('#m22c'), s = $('#m22s'), t = $('#m22t');
+    const IDLE = 2500;
+    let last = performance.now(), idle = false;
+    function wake() { last = performance.now(); if (idle) set(false); }
+    function set(on) {
+      idle = on; root.classList.toggle('idle', on);
+      c.textContent = 'Cursor: ' + (on ? 'oculto' : 'visível');
+      s.textContent = 'Faixa: ' + (on ? 'oculta' : 'visível');
+    }
+    ['pointermove', 'pointerdown', 'keydown', 'focusin'].forEach(ev => root.addEventListener(ev, wake));
+    setInterval(() => {
+      const left = IDLE - (performance.now() - last);
+      if (left <= 0 && !idle) set(true);
+      t.textContent = idle ? 'Ocioso. Mova o mouse.' : 'Ocioso em ' + fmt(Math.max(0, left) / 1000, 1) + ' s';
+    }, 100);
+    REPEAT.M22 = () => { last = performance.now(); if (idle) set(false); };
+  })();
+
+  /* ── M23 · Troca no beat ── */
+  (function () {
+    const BPM = 124, MS = 60000 / BPM;
+    const dots = $$('.beats i'), btn = $('#m23btn'), lab = $('#m23lab'), st = $('#m23st'), sync = $('#m23sync'), now = $('.m23-now');
+    const seq = [0, 3, 4, 10, 12, 19];
+    let k = 0, step = 0, waiting = false, t0 = performance.now();
+    function setPreset() {
+      k = (k + 1) % seq.length; const p = P[seq[k]]; if (!p) return;
+      $('#m23t').textContent = p.title; $('#m23a').textContent = 'por ' + p.author;
+      now.classList.remove('flash'); void now.offsetWidth; now.classList.add('flash');
+    }
+    function setWait(on) {
+      waiting = on; btn.classList.toggle('wait', on);
+      lab.textContent = on ? 'Aguardando beat' : 'Próximo';
+      st.textContent = on ? 'Troca no próximo beat. Aperte de novo para cancelar.' : '';
+    }
+    function tick() {
+      dots.forEach((d, i) => d.classList.toggle('on', i === step % 4));
+      setTimeout(() => dots[step % 4].classList.remove('on'), 90);
+      if (waiting) { setWait(false); setPreset(); st.textContent = 'Trocou no beat ' + ((step % 4) + 1) + '.'; }
+      step++;
+      const next = t0 + step * MS;
+      setTimeout(tick, Math.max(0, next - performance.now()));
+    }
+    setTimeout(tick, MS);
+    btn.addEventListener('click', () => {
+      if (!sync.checked) { setPreset(); st.textContent = 'Trocou na hora.'; return; }
+      setWait(!waiting);
+    });
+    sync.addEventListener('change', () => { if (!sync.checked && waiting) { setWait(false); setPreset(); } });
+    REPEAT.M23 = () => { sync.checked = true; if (!waiting) btn.click(); };
+  })();
+
+  /* ── Rejeitado (a): faixa respirando ── */
+  REPEAT.R1 = async () => {
+    if (isRM()) return;
+    const el = $('#r1a');
+    for (let i = 0; i < 4; i++) {
+      el.animate([
+        { transform: 'scale(1.03)', borderColor: 'rgba(194,68,255,0.45)' },
+        { transform: 'scale(1)', borderColor: '#2A2A3A' }
+      ], { duration: 400, easing: EO });
+      await wait(500);
+    }
+  };
+
+  /* ── Rejeitado (b): bounce vs ease-out expo ── */
+  REPEAT.R2 = () => {
+    if (isRM()) return;
+    const kf = [{ opacity: 0, transform: 'translateY(18px) scale(0.92)' }, { opacity: 1, transform: 'none' }];
+    $('#r2a').animate(kf, { duration: 420, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', fill: 'backwards' });
+    $('#r2b').animate(kf, { duration: 220, easing: EO, fill: 'backwards' });
+  };
+
+  icons();
+})();
+</script>
+</body>
+</html>
