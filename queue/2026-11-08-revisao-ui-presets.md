@@ -1,5 +1,5 @@
 # Revisão do design de UI para o modelo Butterchurn (presets)
-Status: Pending
+Status: Ingested (substituída pela interface v3 — ver DECISIONS 2026-11-08)
 Data: 2026-11-08
 Fonte: docs/design/ui-exploration.md, docs/design/moodboard.md, docs/design/prototype/so-app.jsx, so-screens.jsx, so-visualizer.jsx, so-window.jsx, docs/PRD.md (seção "Fase 2 — Interface" e "Fase 1 — Núcleo")
 Resumo: Inventário do que do design Python (6 modos fixos + seletor de dispositivo) sobrevive no modelo Butterchurn (centenas de presets, blend, rotação, favoritos/recentes/busca, overlay com auto-hide, sem seletor de dispositivo). Para revisão no Claude Design.
