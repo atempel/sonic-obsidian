@@ -33,7 +33,7 @@ Um app desktop para Windows que:
 | Fase | Objetivo | Saída |
 |---|---|---|
 | **0 — Spike** ✅ | Provar que loopback + Butterchurn funcionam no Electron | [spec 001](specs/001-spike-electron-butterchurn.md) |
-| **1 — Núcleo** | App usável sem UI elaborada, já sobre o núcleo de comandos | Presets por teclado, rotação, janela, ganho (specs 002–005) |
+| **1 — Núcleo** ✅ | App usável sem UI elaborada, já sobre o núcleo de comandos | Presets por teclado, rotação, janela, ganho (specs 002–005) |
 | **2 — Interface v3** | O Sonic Obsidian de verdade | Palco, Biblioteca, busca, ajustes rápidos, Configurações, setup, persistência |
 | **3 — Fontes e presets** | Ouvir outras coisas e criar visuais próprios | Microfone, arquivo, SoundCloud (se viável), importar `.milk`, Estúdio |
 | **4 — MCP** | Controle e criação pela IA do usuário | Servidor local, stdio + HTTP, escopos, ferramentas, registro de atividade |

@@ -2,16 +2,15 @@
 
 Índice: cada item aponta para sua spec (`docs/specs/`) e issue. O detalhe vive na spec, não aqui. Roadmap completo em [docs/PRD.md](docs/PRD.md). Referências pendentes em `queue/`; histórico em [SESSIONS.md](SESSIONS.md).
 
-## Agora — Fase 1
-- [x] **Presets: biblioteca e navegação** (inclui toast com nome e autor) — [spec 002](docs/specs/002-presets-biblioteca-navegacao.md) · issue [#6](https://github.com/atempel/sonic-obsidian/issues/6)
-- [x] **Rotação automática** (depende da 002) — [spec 003](docs/specs/003-rotacao-automatica.md) · issue [#7](https://github.com/atempel/sonic-obsidian/issues/7)
-- [x] **Janela: tela cheia, sem moldura e fps** — [spec 004](docs/specs/004-janela.md) · issue [#8](https://github.com/atempel/sonic-obsidian/issues/8)
-- [x] **Sinal de entrada: ganho e silêncio** — [spec 005](docs/specs/005-sinal-entrada.md) · issue [#9](https://github.com/atempel/sonic-obsidian/issues/9)
+## Agora — Fase 2 (escrever specs com `planejar-feature`, com `sincronizar-design` no modo "checar")
+- [ ] Planejar as specs da Fase 2 a partir do PRD, de [architecture.md](docs/architecture.md) e do protótipo v3 (`docs/design/v3/`, versão em SYNC.md)
 
 ## Manutenção
+- [ ] Tirar as teclas provisórias `[`/`]` (intervalo da rotação) e `+`/`−`/`0` (ganho) quando os Ajustes rápidos existirem — [DIVERGENCIAS](docs/design/v3/DIVERGENCIAS.md)
 - [ ] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
 ## Feito
+- [x] **Fase 1 — Núcleo** — specs 002–005, issues #6–#9, PRs [#12](https://github.com/atempel/sonic-obsidian/pull/12), [#13](https://github.com/atempel/sonic-obsidian/pull/13), [#15](https://github.com/atempel/sonic-obsidian/pull/15), [#17](https://github.com/atempel/sonic-obsidian/pull/17). Spec 004 critério 7 (economia de GPU com limite de fps) não atendido; ver DECISIONS.
 - [x] **Fase 0 — Spike Electron + Butterchurn + loopback** (build Windows pelo CI) — [spec 001](docs/specs/001-spike-electron-butterchurn.md) · issue [#4](https://github.com/atempel/sonic-obsidian/issues/4) · PR [#5](https://github.com/atempel/sonic-obsidian/pull/5). Critério 4 (fone Bluetooth/USB) não verificado.
 
 ## Em paralelo — Design (Claude Design, usuário)
@@ -20,7 +19,7 @@
 - [ ] Frente de vídeo/VJ: decidir se entra no PRD — [queue/2026-11-08-video-vj.md](queue/2026-11-08-video-vj.md)
 - [ ] Fechar a tipografia (manter Space Grotesk ou alternativa)
 
-## Próximo — Fase 2 (escrever specs com `planejar-feature` quando a Fase 1 fechar)
+## Próximo — Fase 2 (itens a virar specs)
 - [ ] Núcleo de comandos + persistência ([architecture.md §1, §7](docs/architecture.md))
 - [ ] Palco + faixa de controle + assinatura de troca
 - [ ] Busca rápida

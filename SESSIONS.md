@@ -4,6 +4,15 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08 — Claude Code (nuvem, claude.ai/code) — branches `feat/presets-navegacao`, `feat/rotacao-automatica`, `feat/janela`, `feat/sinal-entrada`
+**Fez:** Fase 1 inteira, cada spec validada pelo usuário no Windows com o build do CI:
+- 002 (395 presets, navegação, toast; corrigida a CSP que bloqueava texturas `data:` dos presets) — PR #12;
+- 003 (rotação automática, atalhos v3, blend manual 0 s/automático 2,7 s em `config.ts`) — PR #13;
+- 004 (janela sem moldura, `Ctrl+W`, cursor some em tela cheia, limite de fps opcional) — PR #15;
+- 005 (ganho −12…+12 dB, silêncio que desacelera/escurece em 3 s e avisa em 10 s) — PR #17.
+Também: spec 005 ajustada ao pedido do usuário (desacelerar e escurecer) no PR #10; PR #11 (planejamento v3) redirecionado para `main` e conflitos resolvidos; divergências com o protótipo registradas em `docs/design/v3/DIVERGENCIAS.md`.
+**Deixou em:** `main` com a Fase 1 completa; nenhum PR aberto desta sessão. Pendências: specs da Fase 2; issues dos spikes 006/007; teclas provisórias de rotação/ganho saem com os Ajustes rápidos; CI duplicado em branch com PR. Não verificado ou não atendido: fone Bluetooth/USB (001), 1440p, economia de GPU com o limite de fps (004, critério 7 não atendido).
+
 ### 2026-11-08 — Claude Code (nuvem) — branch `claude/jolly-shannon-i4sq2a`
 **Fez:** Revisou o PR #14 (`docs/design-sync`): o `main` não tinha andado, então não precisou de rebase; links relativos e arquivos citados em `docs/design/v3/README.md` conferidos; CI verde. Squash merge com o ok do usuário (`cbd7c81`). Testou `sincronizar-design` no modo "checar": a ferramenta de artefatos funciona nesta superfície e `project/compat.json` vem da versão `1794154301-3f85`, igual ao `SYNC.md`, então está sincronizado. TASKS: brief visual marcado como feito e a frente de vídeo/VJ apontando para a queue.
 **Deixou em:** `main` com o espelho v3. Nenhuma feature implementada. Fase 1 continua com as specs 004 e 005. A branch `docs/design-sync` não foi apagada.
