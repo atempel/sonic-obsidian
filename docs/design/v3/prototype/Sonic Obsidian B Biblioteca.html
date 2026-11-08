@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — B · Biblioteca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  .app { display: flex; height: 100vh; height: 100dvh; overflow: hidden; background: var(--bg-00); }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .proto { left: auto; right: 12px; }
+
+  /* Barra lateral */
+  .lib {
+    width: 340px; flex: none; display: flex; flex-direction: column; position: relative;
+    background: var(--bg-01); border-right: 1px solid var(--line-1);
+    transition: margin-left var(--t-med) var(--ease-out), visibility 0s;
+  }
+  .app.collapsed .lib { margin-left: -341px; visibility: hidden; transition: margin-left var(--t-med) var(--ease-out), visibility 0s linear var(--t-med); }
+  .lib-head { height: 56px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+  .brand svg { width: 16px; height: 16px; stroke: var(--violet); fill: none; stroke-width: 1.25; stroke-linejoin: round; stroke-linecap: round; }
+
+  .search { position: relative; margin: 0 12px 12px; }
+  .search input {
+    width: 100%; height: 36px; padding: 0 44px 0 36px;
+    background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1);
+    transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .search input::placeholder { color: var(--text-3); }
+  .search input:hover { border-color: var(--line-3); }
+  .search input:focus-visible { outline-offset: 0; border-color: var(--violet); }
+  .search .si { position: absolute; left: 11px; top: 9px; color: var(--text-3); pointer-events: none; }
+  .search kbd { position: absolute; right: 9px; top: 9px; pointer-events: none; }
+  .search .clear { position: absolute; right: 2px; top: 2px; width: 32px; height: 32px; }
+
+  .tabs { display: flex; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line-1); }
+  .tabs button {
+    position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0;
+    background: none; border: 0; color: var(--text-2); font-weight: 500; cursor: pointer; border-radius: var(--r-1);
+    transition: color var(--t-fast);
+  }
+  .tabs button:hover { color: var(--text-1); }
+  .tabs button[aria-selected="true"] { color: var(--text-1); }
+  .tabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--violet); }
+  .tabs .num { font-size: 12px; color: var(--text-3); }
+
+  .listwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
+  .rows, .collist, .corder { list-style: none; margin: 0; padding: 0; }
+
+  .row { display: flex; align-items: center; height: 56px; border-radius: var(--r-2); padding-right: 2px; transition: background var(--t-fast); }
+  .row:hover { background: var(--bg-03); }
+  .row.playing { background: var(--violet-soft); }
+  .row.playing:hover { background: rgba(194, 68, 255, 0.22); }
+  .row-main, .coll, .crow {
+    flex: 1; min-width: 0; height: 100%; display: flex; align-items: center; gap: 12px; padding: 0 4px 0 8px;
+    background: transparent; border: 0; border-radius: var(--r-2); text-align: left; cursor: pointer;
+  }
+  .row-main:focus-visible, .coll:focus-visible, .crow:focus-visible { outline-offset: -2px; }
+  .row-main:active { background: rgba(255, 255, 255, 0.04); }
+  .thumb { width: 56px; height: 36px; border-radius: var(--r-1); flex: none; display: block; }
+  .meta { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .t { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .tt { font-weight: 500; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .a { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .playing-ico { color: var(--violet); }
+  .row .ibtn { width: 32px; height: 32px; }
+  .star[aria-pressed="true"] svg { fill: var(--violet); stroke: var(--violet); }
+
+  .empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 48px 24px 24px; }
+  .empty .ico { width: 28px; height: 28px; color: var(--text-3); margin-bottom: 6px; }
+  .empty .h { font-weight: 500; color: var(--text-1); }
+  .empty .s { color: var(--text-2); font-size: 13px; max-width: 250px; }
+  .empty .btn { margin-top: 12px; }
+
+  .hiddenbar { flex: none; display: flex; align-items: center; gap: 4px; padding: 4px 12px 4px 16px; border-top: 1px solid var(--line-1); font-size: 12px; color: var(--text-2); }
+  .hiddenbar .btn { height: 28px; padding: 0 8px; font-size: 12px; }
+
+  .toast {
+    position: absolute; left: 12px; right: 12px; bottom: 10px; padding: 9px 12px; font-size: 13px;
+    background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translateY(6px); pointer-events: none;
+    transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out);
+  }
+  .toast.on { opacity: 1; transform: none; }
+
+  /* Coleções */
+  .coll { min-height: 56px; }
+  .collist li { height: 56px; border-radius: var(--r-2); transition: background var(--t-fast); }
+  .collist li:hover { background: var(--bg-03); }
+  .collist li.playing { background: var(--violet-soft); }
+  .collist .chev { color: var(--text-3); margin-right: 6px; }
+  .newcoll { margin: 8px 0 0 0; width: 100%; justify-content: flex-start; }
+  .chead { display: flex; align-items: center; gap: 4px; padding: 0 0 4px; }
+  .chead h2 { margin: 0; font-size: 15px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cactions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding: 8px 4px 14px; }
+  .ivl { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); }
+  .ivl select {
+    height: 34px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2);
+    color: var(--text-1); color-scheme: dark; cursor: pointer; font-family: var(--font-num); font-size: 13px;
+    transition: background var(--t-fast), border-color var(--t-fast);
+  }
+  .ivl select:hover { background: var(--bg-04); border-color: #4A4A64; }
+  .btn:disabled { opacity: 0.4; cursor: default; }
+  .btn-primary:disabled:hover { background: var(--violet); border-color: var(--violet); }
+  .corder li { display: flex; height: 52px; border-radius: var(--r-2); transition: background var(--t-fast); }
+  .corder li:hover { background: var(--bg-03); }
+  .corder li.playing { background: var(--violet-soft); }
+  .crow { gap: 8px; padding-left: 4px; }
+  .crow .grip { color: var(--text-3); }
+  .crow .ord { width: 20px; text-align: right; color: var(--text-3); font-size: 12px; flex: none; }
+
+  /* Tocando agora */
+  .now { flex: none; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 14px; background: var(--bg-02); border-top: 1px solid var(--line-1); }
+  .np-t { font-weight: 500; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .np-a { font-size: 12px; color: var(--text-2); }
+  .ctrl { display: flex; align-items: center; gap: 2px; margin: 0 -6px; }
+  .ctrl .sw { margin-left: auto; padding-left: 8px; }
+  .cd { min-width: 38px; text-align: right; font-size: 13px; color: var(--text-2); margin-left: 8px; margin-right: 6px; }
+  .cd.off { color: var(--text-3); }
+  .prog { height: 2px; background: var(--line-2); }
+  .prog i { display: block; height: 100%; width: 0; background: var(--text-3); transition: width 1s linear; }
+  .lvl { display: flex; align-items: center; justify-content: space-between; min-height: 14px; }
+  .lvl .num { font-size: 12px; color: var(--text-3); }
+  .nosig { display: flex; flex-direction: column; gap: 2px; }
+  .nosig .r { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-weight: 500; }
+  .nosig .s { font-size: 12px; color: var(--text-2); }
+
+  /* Visual */
+  .stage { position: relative; flex: 1; min-width: 0; background: var(--bg-00); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .reopen { display: none; position: absolute; left: 12px; top: 12px; padding: 4px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+  .app.collapsed .reopen { display: block; }
+
+  .credit {
+    position: absolute; left: 0; bottom: 0; width: min(640px, 100%); padding: 96px 32px 32px; pointer-events: none;
+    background: linear-gradient(to top, rgba(8, 8, 9, 0.85) 0%, rgba(8, 8, 9, 0.72) 55%, rgba(8, 8, 9, 0) 100%);
+    opacity: 0; transition: opacity 600ms var(--ease-out);
+  }
+  .credit.show { opacity: 1; transition-duration: 150ms; }
+  .credit.show.out { opacity: 0; transition-duration: 600ms; }
+  .credit .ct { margin: 0; font-size: clamp(26px, 3.2vw, 44px); line-height: 1.1; font-weight: 600; text-wrap: balance; max-width: 18em; }
+  .credit .ca { margin: 8px 0 0; font-size: 16px; color: var(--text-2); }
+  .credit .rail { margin-top: 16px; width: 100%; max-width: 360px; height: 2px; background: var(--line-2); overflow: hidden; }
+  .credit .rail i { display: block; height: 100%; background: var(--violet); transform: scaleX(0); transform-origin: left; }
+  .credit.show .rail i { animation: sweep 2s linear forwards; }
+  @keyframes sweep { to { transform: scaleX(1); } }
+
+  .sipanel {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: max-content; max-width: calc(100% - 48px);
+    display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 20px 28px;
+    background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3);
+  }
+  .sipanel .r { display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--text-1); }
+  .sipanel .s { font-size: 13px; color: var(--text-2); }
+  [hidden] { display: none !important; }
+
+  /* Menu */
+  .menu { position: fixed; z-index: 50; width: 232px; padding: 4px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .menu button {
+    display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; text-align: left;
+    background: transparent; border: 0; border-radius: var(--r-1); color: var(--text-1); cursor: pointer;
+    transition: background var(--t-fast);
+  }
+  .menu button:hover { background: var(--bg-03); }
+  .menu button:focus-visible { outline-offset: -2px; background: var(--bg-03); }
+  .menu .ico { color: var(--text-2); }
+  .menu .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .menu hr { border: 0; border-top: 1px solid var(--line-2); margin: 4px 0; }
+
+  @media (max-width: 899px) {
+    .app { flex-direction: column; }
+    .lib { order: 2; width: 100%; flex: 1; min-height: 0; border-right: 0; border-top: 1px solid var(--line-1); }
+    .app.collapsed .lib { display: none; margin-left: 0; }
+    .stage { order: 1; flex: none; height: 42vh; }
+    .app.collapsed .stage { flex: 1; height: auto; }
+    .proto { top: auto; bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="lib" id="lib" aria-label="Biblioteca de presets">
+    <div class="lib-head">
+      <div class="brand">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 14.5 8 8 14.5 1.5 8Z"/><path d="M1.5 8h13M5.5 8 8 1.5 10.5 8 8 14.5Z"/></svg>
+        Sonic Obsidian
+      </div>
+      <button class="ibtn" id="collapse" aria-label="Recolher biblioteca" title="Recolher biblioteca (L)" aria-expanded="true" aria-controls="lib"><i data-lucide="panel-left-close" class="ico"></i></button>
+    </div>
+
+    <div class="search">
+      <label class="vh" for="q">Buscar preset ou autor</label>
+      <i data-lucide="search" class="ico si"></i>
+      <input id="q" type="text" placeholder="Buscar preset ou autor" autocomplete="off" spellcheck="false">
+      <kbd id="qkbd">/</kbd>
+      <button class="ibtn clear" id="qclear" aria-label="Limpar busca" title="Limpar busca (Esc)" hidden><i data-lucide="x" class="ico"></i></button>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Seções da biblioteca" id="tabs">
+      <button role="tab" id="tab-all" data-tab="all" aria-selected="true" aria-controls="list">Todos <span class="num" id="totalnum"></span></button>
+      <button role="tab" id="tab-fav" data-tab="fav" aria-selected="false" tabindex="-1" aria-controls="list">Favoritos</button>
+      <button role="tab" id="tab-rec" data-tab="rec" aria-selected="false" tabindex="-1" aria-controls="list">Recentes</button>
+      <button role="tab" id="tab-coll" data-tab="coll" aria-selected="false" tabindex="-1" aria-controls="list">Coleções</button>
+    </div>
+
+    <div class="listwrap">
+      <div class="list" id="list" role="tabpanel" aria-labelledby="tab-all"></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+    <div class="hiddenbar" id="hiddenbar" hidden></div>
+
+    <div class="now" aria-label="Tocando agora">
+      <div>
+        <div class="np-t" id="npt"></div>
+        <div class="np-a" id="npa"></div>
+      </div>
+      <div class="ctrl">
+        <button class="ibtn" id="bprev" aria-label="Anterior" title="Anterior" disabled><i data-lucide="skip-back" class="ico"></i></button>
+        <button class="ibtn" id="bshuf" aria-label="Aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+        <button class="ibtn" id="bnext" aria-label="Próximo" title="Próximo"><i data-lucide="skip-forward" class="ico"></i></button>
+        <label class="switch sw"><input type="checkbox" id="rot" checked><span class="track"></span><span>Rotação</span></label>
+        <span class="num cd" id="cd" title="Próxima troca"></span>
+      </div>
+      <div class="prog" aria-hidden="true"><i id="prog"></i></div>
+      <div class="lvl" id="lvl">
+        <div class="meter" id="meter" role="img" aria-label="Nível do áudio"></div>
+        <span class="num" id="rate"></span>
+      </div>
+      <div class="nosig" id="nosig" hidden>
+        <div class="r"><i data-lucide="volume-x" class="ico"></i>Sem áudio</div>
+        <div class="s">Toque algo no computador e o visual reage.</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-hidden="true"></canvas>
+    <div class="reopen"><button class="ibtn" id="reopen" aria-label="Abrir biblioteca" title="Abrir biblioteca (L)" aria-expanded="false" aria-controls="lib"><i data-lucide="panel-left-open" class="ico"></i></button></div>
+    <div class="credit" id="credit" aria-hidden="true">
+      <h2 class="ct" id="ct"></h2>
+      <p class="ca" id="ca"></p>
+      <div class="rail"><i></i></div>
+    </div>
+    <div class="sipanel" id="sipanel" role="status" hidden>
+      <div class="r"><i data-lucide="volume-x" class="ico"></i>Sem áudio</div>
+      <div class="s">Toque algo no computador e o visual reage.</div>
+    </div>
+  </main>
+</div>
+
+<div class="menu" id="menu" role="menu" hidden></div>
+
+<div class="proto" role="group" aria-label="Estados do protótipo">
+  <b>Protótipo</b>
+  <button data-proto="normal" aria-pressed="true">Normal</button>
+  <button data-proto="empty" aria-pressed="false">Busca vazia</button>
+  <button data-proto="silent" aria-pressed="false">Silêncio</button>
+</div>
+
+<script>
+(function () {
+  var D = SO_DATA, P = D.presets;
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var icons = function () { if (window.lucide) lucide.createIcons(); };
+  var fmt = function (s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+  var app = $('#app'), list = $('#list'), qEl = $('#q'), toastEl = $('#toast'), menuEl = $('#menu');
+  var S = {
+    tab: 'all', coll: null, q: '', cur: -1,
+    favs: new Set(P.filter(function (p) { return p.fav; }).map(function (p) { return p.id; })),
+    recents: D.recents.slice(), recentView: null, hidden: new Set(),
+    colls: D.collections.map(function (c) { return { id: c.id, name: c.name, ids: c.ids.slice(), interval: c.interval }; }),
+    activeColl: null, rot: true, interval: 30, remain: 30, history: [], silent: false, collapsed: false, nColl: 0
+  };
+  var getColl = function (id) { return S.colls.filter(function (c) { return c.id === id; })[0]; };
+
+  var viz = SOViz.create($('#cv'));
+  var updMeter = SOViz.meter($('#meter'), 20);
+  (function loop() { updMeter(viz.level(), viz.peak()); requestAnimationFrame(loop); })();
+  $('#rate').textContent = D.capture.rate.replace(' kHz', '') + ' kHz';
+  $('#totalnum').textContent = D.totalLibrary;
+
+  /* ---------- Miniaturas ---------- */
+  function drawThumb(cv, p) {
+    var c = cv.getContext('2d'), W = cv.width, H = cv.height, h = p.hue, cx = W / 2, cy = H / 2, i;
+    var g = c.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, 'hsl(' + h + ',60%,9%)'); g.addColorStop(1, 'hsl(' + ((h + 50) % 360) + ',70%,18%)');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.lineWidth = 2; c.lineCap = 'round';
+    if (p.style === 0) {
+      for (i = 0; i < 30; i++) {
+        var a = i / 30 * Math.PI * 2, r0 = 10, r1 = 10 + (0.45 + 0.55 * Math.sin(i * 1.7)) * 24;
+        c.strokeStyle = 'hsl(' + (h + i * 3) + ',90%,62%)';
+        c.beginPath(); c.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); c.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); c.stroke();
+      }
+    } else if (p.style === 1) {
+      for (var r = 1; r <= 5; r++) {
+        c.strokeStyle = 'hsl(' + (h + r * 18) + ',85%,' + (45 + r * 5) + '%)'; c.beginPath();
+        for (var s = 0; s <= 6; s++) { var a2 = s / 6 * Math.PI * 2 + r * 0.3, rad = r * 9; var x = cx + Math.cos(a2) * rad * 1.5, y = cy + Math.sin(a2) * rad * 0.9; s ? c.lineTo(x, y) : c.moveTo(x, y); }
+        c.stroke();
+      }
+    } else if (p.style === 2) {
+      for (var L = 0; L < 3; L++) {
+        c.strokeStyle = 'hsl(' + (h + L * 40) + ',95%,' + (58 + L * 4) + '%)'; c.beginPath();
+        for (var xx = 0; xx <= W; xx += 3) { var f = xx / W, yy = cy + (L - 1) * 12 + Math.sin(f * 9 + L * 1.4) * 12; xx ? c.lineTo(xx, yy) : c.moveTo(xx, yy); }
+        c.stroke();
+      }
+    } else {
+      for (i = 0; i < 5; i++) {
+        var bx = cx + Math.cos(i * 1.9 + h) * 34, by = cy + Math.sin(i * 2.3 + h) * 18, br = 20 + (i % 3) * 6;
+        var rg = c.createRadialGradient(bx, by, 0, bx, by, br);
+        rg.addColorStop(0, 'hsla(' + (h + i * 25) + ',100%,65%,0.85)'); rg.addColorStop(1, 'hsla(' + (h + i * 25) + ',100%,50%,0)');
+        c.fillStyle = rg; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill();
+      }
+    }
+  }
+
+  /* ---------- Listas ---------- */
+  function visibleIds() {
+    var ids;
+    if (S.tab === 'fav') ids = P.filter(function (p) { return S.favs.has(p.id); }).map(function (p) { return p.id; });
+    else if (S.tab === 'rec') ids = (S.recentView || S.recents).slice();
+    else ids = P.map(function (p) { return p.id; });
+    ids = ids.filter(function (id) { return !S.hidden.has(id); });
+    var q = S.q.trim().toLowerCase();
+    if (q) ids = ids.filter(function (id) { return (P[id].title + ' ' + P[id].author).toLowerCase().indexOf(q) > -1; });
+    return ids;
+  }
+
+  function rowHTML(p) {
+    var playing = p.id === S.cur, fav = S.favs.has(p.id);
+    return '<li class="row' + (playing ? ' playing' : '') + '" data-id="' + p.id + '">' +
+      '<button class="row-main" data-act="play" data-col="main" data-key="m' + p.id + '"' + (playing ? ' aria-current="true"' : '') + '>' +
+      '<canvas class="thumb" width="112" height="72" aria-hidden="true"></canvas>' +
+      '<span class="meta"><span class="t">' + (playing ? '<i data-lucide="audio-lines" class="ico ico-sm playing-ico"></i>' : '') + '<span class="tt">' + esc(p.title) + '</span></span>' +
+      '<span class="a">por ' + esc(p.author) + '</span></span></button>' +
+      '<button class="ibtn star" data-act="fav" data-col="fav" data-key="f' + p.id + '" aria-pressed="' + fav + '" aria-label="Favoritar ' + esc(p.title) + '" title="' + (fav ? 'Desfavoritar' : 'Favoritar') + '"><i data-lucide="star" class="ico"></i></button>' +
+      '<button class="ibtn more" data-act="more" data-col="more" data-key="o' + p.id + '" aria-haspopup="menu" aria-label="Mais ações para ' + esc(p.title) + '" title="Mais ações"><i data-lucide="more-horizontal" class="ico"></i></button>' +
+      '</li>';
+  }
+
+  function emptyHTML(icon, h, s, btn) {
+    return '<div class="empty"><i data-lucide="' + icon + '" class="ico"></i><div class="h">' + h + '</div>' + (s ? '<div class="s">' + s + '</div>' : '') + (btn || '') + '</div>';
+  }
+
+  function renderList() {
+    var a = document.activeElement, key = a && list.contains(a) ? a.dataset.key : null;
+    if (S.tab === 'coll') { renderColls(); }
+    else {
+      var ids = visibleIds();
+      if (!ids.length) {
+        if (S.q.trim()) list.innerHTML = emptyHTML('search-x', 'Nenhum preset com “' + esc(S.q.trim()) + '”.', 'Tente o nome de um autor, como Geiss ou Flexi.', '<button class="btn btn-ghost" data-act="clearq" data-key="clearq">Limpar busca</button>');
+        else if (S.tab === 'fav') list.innerHTML = emptyHTML('star', 'Nenhum favorito ainda.', 'Toque na estrela de um preset para guardá-lo aqui.');
+        else if (S.tab === 'rec') list.innerHTML = emptyHTML('history', 'Nada tocado ainda.', 'Os presets que você tocar aparecem aqui.');
+        else list.innerHTML = emptyHTML('eye-off', 'Todos os presets estão ocultos.', '', '<button class="btn btn-ghost" data-act="unhide" data-key="unhide">Ver ocultos</button>');
+      } else {
+        list.innerHTML = '<ul class="rows">' + ids.map(function (id) { return rowHTML(P[id]); }).join('') + '</ul>';
+        list.querySelectorAll('.row').forEach(function (li) { drawThumb(li.querySelector('canvas'), P[+li.dataset.id]); });
+      }
+    }
+    var hb = $('#hiddenbar');
+    if (S.hidden.size && S.tab !== 'coll') {
+      hb.hidden = false;
+      hb.innerHTML = '<span><span class="num">' + S.hidden.size + '</span> ocultos ·</span><button class="btn btn-ghost" data-act="unhide" title="Restaurar todos os presets ocultos">Ver ocultos</button>';
+    } else hb.hidden = true;
+    icons();
+    if (key) { var n = list.querySelector('[data-key="' + key + '"]'); if (n) n.focus(); }
+  }
+
+  function renderColls() {
+    var c = S.coll && getColl(S.coll);
+    if (!c) {
+      S.coll = null;
+      list.innerHTML = '<ul class="collist">' + S.colls.map(function (k) {
+        var n = k.ids.length, on = S.activeColl === k.id;
+        return '<li class="' + (on ? 'playing' : '') + '"><button class="coll" data-act="opencoll" data-cid="' + k.id + '" data-col="main" data-key="c' + k.id + '">' +
+          '<span class="meta"><span class="t">' + (on ? '<i data-lucide="audio-lines" class="ico ico-sm playing-ico"></i>' : '') + '<span class="tt">' + esc(k.name) + '</span></span>' +
+          '<span class="a"><span class="num">' + n + '</span> ' + (n === 1 ? 'preset' : 'presets') + ' · troca a cada <span class="num">' + k.interval + '</span> s</span></span>' +
+          '<i data-lucide="chevron-right" class="ico chev" style="margin-left:auto"></i></button></li>';
+      }).join('') + '</ul><button class="btn btn-ghost newcoll" data-act="newcoll" data-key="newcoll"><i data-lucide="plus" class="ico"></i>Nova coleção</button>';
+      return;
+    }
+    var ids = c.ids.filter(function (id) { return !S.hidden.has(id); });
+    var opts = [15, 30, 45, 90];
+    if (opts.indexOf(c.interval) < 0) opts.push(c.interval);
+    list.innerHTML = '<div class="chead"><button class="ibtn" data-act="back" data-key="back" aria-label="Voltar às coleções" title="Voltar (Esc)"><i data-lucide="arrow-left" class="ico"></i></button><h2>' + esc(c.name) + '</h2></div>' +
+      '<div class="cactions"><button class="btn btn-primary" data-act="playcoll" data-key="playcoll"' + (ids.length ? '' : ' disabled') + '><i data-lucide="play" class="ico ico-sm"></i>Tocar coleção</button>' +
+      '<label class="ivl">A cada <select data-act="ivl" data-key="ivl">' + opts.map(function (o) { return '<option value="' + o + '"' + (o === c.interval ? ' selected' : '') + '>' + o + ' s</option>'; }).join('') + '</select></label></div>' +
+      (ids.length ? '<ol class="corder">' + ids.map(function (id, i) {
+        var p = P[id], pl = id === S.cur;
+        return '<li class="' + (pl ? 'playing' : '') + '" data-id="' + id + '"><button class="crow" data-act="playat" data-col="main" data-key="r' + id + '"' + (pl ? ' aria-current="true"' : '') + '>' +
+          '<i data-lucide="grip-vertical" class="ico ico-sm grip" aria-hidden="true"></i><span class="num ord">' + (i + 1) + '</span>' +
+          '<span class="meta"><span class="t">' + (pl ? '<i data-lucide="audio-lines" class="ico ico-sm playing-ico"></i>' : '') + '<span class="tt">' + esc(p.title) + '</span></span><span class="a">por ' + esc(p.author) + '</span></span></button></li>';
+      }).join('') + '</ol>' : emptyHTML('list-music', 'Esta coleção está vazia.', 'No menu de um preset, escolha Adicionar à coleção.'));
+  }
+
+  /* ---------- Abas ---------- */
+  function setTab(t, focus) {
+    S.tab = t; if (t !== 'coll') S.coll = null;
+    S.recentView = t === 'rec' ? S.recents.slice() : null;
+    closeMenu();
+    document.querySelectorAll('#tabs [role=tab]').forEach(function (b) {
+      var on = b.dataset.tab === t; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1;
+      if (on) { list.setAttribute('aria-labelledby', b.id); if (focus) b.focus(); }
+    });
+    renderList();
+  }
+  $('#tabs').addEventListener('click', function (e) { var b = e.target.closest('[role=tab]'); if (b) { S.coll = null; setTab(b.dataset.tab); } });
+  $('#tabs').addEventListener('keydown', function (e) {
+    var tabs = Array.from(document.querySelectorAll('#tabs [role=tab]')), i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    var n = e.key === 'ArrowRight' ? (i + 1) % tabs.length : e.key === 'ArrowLeft' ? (i + tabs.length - 1) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1;
+    if (n < 0) return; e.preventDefault(); e.stopPropagation(); setTab(tabs[n].dataset.tab, true);
+  });
+
+  /* ---------- Busca ---------- */
+  function syncSearchUI() { var has = !!qEl.value; $('#qclear').hidden = !has; $('#qkbd').hidden = has; }
+  function setQuery(v) { S.q = v; qEl.value = v; syncSearchUI(); if (S.tab === 'coll') setTab('all'); else renderList(); }
+  qEl.addEventListener('input', function () { S.q = qEl.value; syncSearchUI(); if (S.tab === 'coll') setTab('all'); else renderList(); });
+  $('#qclear').addEventListener('click', function () { setQuery(''); qEl.focus(); });
+
+  /* ---------- Toque ---------- */
+  var toastT;
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 2600); }
+
+  var sigT;
+  function signature(p) {
+    var cr = $('#credit');
+    cr.classList.remove('show', 'out');
+    $('#ct').textContent = p.title; $('#ca').textContent = 'por ' + p.author;
+    void cr.offsetWidth;
+    cr.classList.add('show');
+    clearTimeout(sigT); sigT = setTimeout(function () { cr.classList.add('out'); }, 4000);
+  }
+
+  function pool() {
+    var ids = S.activeColl ? getColl(S.activeColl).ids : P.map(function (p) { return p.id; });
+    return ids.filter(function (id) { return !S.hidden.has(id); });
+  }
+
+  function play(id, o) {
+    o = o || {};
+    var p = P[id]; if (!p) return;
+    if (S.cur >= 0 && S.cur !== id) { S.history.push(S.cur); if (S.history.length > 60) S.history.shift(); }
+    S.cur = id;
+    if (!o.keepColl && S.activeColl) { S.activeColl = null; S.interval = 30; }
+    S.recents = [id].concat(S.recents.filter(function (x) { return x !== id; })).slice(0, 12);
+    S.remain = S.interval;
+    viz.setPreset(p, 2000);
+    updateNow(); updateCount(true); renderList(); signature(p);
+    $('#bprev').disabled = !S.history.length;
+  }
+  function randomNext() {
+    var ids = pool().filter(function (id) { return id !== S.cur; });
+    if (ids.length) play(ids[Math.floor(Math.random() * ids.length)], { keepColl: !!S.activeColl });
+  }
+  function stepNext() {
+    var ids = pool(); if (!ids.length) return;
+    var i = ids.indexOf(S.cur);
+    if (i < 0) { var after = ids.filter(function (id) { return id > S.cur; }); play(after.length ? after[0] : ids[0], { keepColl: !!S.activeColl }); }
+    else play(ids[(i + 1) % ids.length], { keepColl: !!S.activeColl });
+  }
+  function rotate() { if (S.activeColl) stepNext(); else randomNext(); }
+  function prev() {
+    var id = S.history.pop();
+    if (id == null) return;
+    var keep = !!S.activeColl;
+    S.cur = -2; // evita empilhar o atual de novo
+    play(id, { keepColl: keep });
+    $('#bprev').disabled = !S.history.length;
+  }
+
+  function updateNow() { var p = P[S.cur]; $('#npt').textContent = p.title; $('#npt').title = p.full; $('#npa').textContent = 'por ' + p.author; }
+  function setProg(frac, reset) {
+    var el = $('#prog');
+    if (reset) el.style.transition = 'none';
+    el.style.width = Math.max(0, Math.min(1, frac)) * 100 + '%';
+    if (reset) { void el.offsetWidth; el.style.transition = ''; }
+  }
+  function updateCount(reset) {
+    var cd = $('#cd');
+    if (!S.rot) { cd.textContent = '–:––'; cd.classList.add('off'); setProg(0, true); return; }
+    cd.classList.remove('off'); cd.textContent = fmt(S.remain);
+    setProg((S.interval - S.remain) / S.interval, reset);
+  }
+  setInterval(function () {
+    if (!S.rot) return;
+    S.remain--;
+    if (S.remain <= 0) rotate(); else updateCount();
+  }, 1000);
+
+  $('#rot').addEventListener('change', function (e) { S.rot = e.target.checked; S.remain = S.interval; updateCount(true); });
+  $('#bnext').addEventListener('click', stepNext);
+  $('#bshuf').addEventListener('click', randomNext);
+  $('#bprev').addEventListener('click', prev);
+
+  function toggleFav(id) {
+    if (S.favs.has(id)) { S.favs.delete(id); toast('Removido dos favoritos.'); } else { S.favs.add(id); toast('Adicionado aos favoritos.'); }
+    renderList();
+  }
+
+  /* ---------- Cliques na lista ---------- */
+  list.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT') return;
+    var li = b.closest('[data-id]'), id = li ? +li.dataset.id : null;
+    switch (b.dataset.act) {
+      case 'play': play(id); break;
+      case 'fav': toggleFav(id); break;
+      case 'more': openMenu(id, b); break;
+      case 'clearq': setQuery(''); qEl.focus(); break;
+      case 'unhide': S.hidden.clear(); renderList(); toast('Presets restaurados.'); break;
+      case 'opencoll': S.coll = b.dataset.cid; renderList(); var pc = list.querySelector('[data-key="playcoll"]'); if (pc) pc.focus(); break;
+      case 'back': S.coll = null; renderList(); break;
+      case 'newcoll':
+        S.nColl++; var nid = 'n' + S.nColl; S.colls.push({ id: nid, name: 'Coleção ' + (S.colls.length + 1), ids: [], interval: 30 });
+        S.coll = nid; renderList(); var bk = list.querySelector('[data-key="back"]'); if (bk) bk.focus(); break;
+      case 'playcoll':
+        var c = getColl(S.coll), ids = c.ids.filter(function (x) { return !S.hidden.has(x); });
+        if (!ids.length) break;
+        S.activeColl = c.id; S.interval = c.interval; S.rot = true; $('#rot').checked = true;
+        play(ids[0], { keepColl: true }); toast('Tocando ' + c.name + '.'); break;
+      case 'playat': play(id, { keepColl: S.activeColl === S.coll }); break;
+    }
+  });
+  list.addEventListener('change', function (e) {
+    if (e.target.dataset.act !== 'ivl') return;
+    var c = getColl(S.coll); c.interval = +e.target.value;
+    if (S.activeColl === c.id) { S.interval = c.interval; S.remain = c.interval; updateCount(true); }
+    toast('Troca a cada ' + c.interval + ' s.');
+  });
+  list.addEventListener('scroll', closeMenu);
+
+  /* ---------- Menu ---------- */
+  var M = { open: false, id: null, mode: 'root', trigger: null };
+  function renderMenu() {
+    if (M.mode === 'root') {
+      menuEl.innerHTML = '<button role="menuitem" data-m="cols" aria-haspopup="menu"><i data-lucide="folder-plus" class="ico"></i><span class="grow">Adicionar à coleção</span><i data-lucide="chevron-right" class="ico"></i></button>' +
+        '<button role="menuitem" data-m="hide"><i data-lucide="eye-off" class="ico"></i><span class="grow">Não mostrar mais</span></button>';
+    } else {
+      menuEl.innerHTML = '<button role="menuitem" data-m="back"><i data-lucide="arrow-left" class="ico"></i><span class="grow">Voltar</span></button><hr>' +
+        S.colls.map(function (c) { return '<button role="menuitem" data-m="add" data-cid="' + c.id + '"><i data-lucide="list-music" class="ico"></i><span class="grow">' + esc(c.name) + '</span></button>'; }).join('');
+    }
+    icons(); placeMenu();
+  }
+  function placeMenu() {
+    var r = M.trigger.getBoundingClientRect(), mw = menuEl.offsetWidth, mh = menuEl.offsetHeight;
+    var left = Math.min(Math.max(8, r.right - mw), innerWidth - mw - 8), top = r.bottom + 4;
+    if (top + mh > innerHeight - 8) top = Math.max(8, r.top - mh - 4);
+    menuEl.style.left = left + 'px'; menuEl.style.top = top + 'px';
+  }
+  function openMenu(id, btn) {
+    M = { open: true, id: id, mode: 'root', trigger: btn };
+    menuEl.hidden = false; renderMenu(); menuEl.querySelector('button').focus();
+  }
+  function closeMenu(refocus) {
+    if (!M.open) return;
+    M.open = false; menuEl.hidden = true;
+    if (refocus && M.trigger && document.body.contains(M.trigger)) M.trigger.focus();
+  }
+  menuEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-m]'); if (!b) return;
+    var act = b.dataset.m, id = M.id;
+    if (act === 'cols') { M.mode = 'cols'; renderMenu(); menuEl.querySelectorAll('button')[0].focus(); }
+    else if (act === 'back') { M.mode = 'root'; renderMenu(); menuEl.querySelector('button').focus(); }
+    else if (act === 'add') {
+      var c = getColl(b.dataset.cid);
+      if (c.ids.indexOf(id) > -1) toast('Já está em ' + c.name + '.'); else { c.ids.push(id); toast('Adicionado a ' + c.name + '.'); }
+      closeMenu(true);
+    } else if (act === 'hide') {
+      var idx = Array.from(list.querySelectorAll('[data-col="main"]')).findIndex(function (n) { return n.closest('[data-id]') && +n.closest('[data-id]').dataset.id === id; });
+      closeMenu(); S.hidden.add(id); renderList(); toast('Preset oculto.');
+      var mains = list.querySelectorAll('[data-col="main"]');
+      if (mains.length) mains[Math.min(Math.max(idx, 0), mains.length - 1)].focus(); else qEl.focus();
+    }
+  });
+  menuEl.addEventListener('keydown', function (e) {
+    var items = Array.from(menuEl.querySelectorAll('button')), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i + items.length - 1) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); if (M.mode === 'cols') { M.mode = 'root'; renderMenu(); menuEl.querySelector('button').focus(); } else closeMenu(true); }
+    else if (e.key === 'Tab') closeMenu();
+    else return;
+    e.stopPropagation();
+  });
+  document.addEventListener('pointerdown', function (e) { if (M.open && !menuEl.contains(e.target) && !M.trigger.contains(e.target)) closeMenu(); });
+  window.addEventListener('resize', function () { if (M.open) placeMenu(); });
+
+  /* ---------- Barra recolhível ---------- */
+  function setCollapsed(v) {
+    S.collapsed = v; app.classList.toggle('collapsed', v);
+    $('#lib').inert = v;
+    $('#collapse').setAttribute('aria-expanded', !v); $('#reopen').setAttribute('aria-expanded', !v);
+    closeMenu();
+    (v ? $('#reopen') : $('#collapse')).focus();
+  }
+  $('#collapse').addEventListener('click', function () { setCollapsed(true); });
+  $('#reopen').addEventListener('click', function () { setCollapsed(false); });
+
+  /* ---------- Estados do protótipo ---------- */
+  function setSilent(v) {
+    S.silent = v; viz.setSilent(v);
+    $('#lvl').hidden = v; $('#nosig').hidden = !v; $('#sipanel').hidden = !v;
+  }
+  document.querySelectorAll('.proto [data-proto]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var s = b.dataset.proto;
+      document.querySelectorAll('.proto [data-proto]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+      S.coll = null;
+      if (s === 'silent') { setSilent(true); S.q = ''; qEl.value = ''; syncSearchUI(); setTab('all'); }
+      else { setSilent(false); if (S.collapsed) setCollapsed(false); S.tab = 'all'; setTab('all'); setQuery(s === 'empty' ? 'vaporwave' : ''); }
+    });
+  });
+
+  /* ---------- Teclado ---------- */
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var t = e.target, typing = t.matches && t.matches('input, textarea, select');
+    if (e.key === 'Escape') {
+      if (S.q || document.activeElement === qEl) {
+        if (S.q) setQuery(''); else qEl.blur();
+        e.preventDefault(); return;
+      }
+      if (S.tab === 'coll' && S.coll) { S.coll = null; renderList(); e.preventDefault(); }
+      return;
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      var down = e.key === 'ArrowDown';
+      if (t === qEl) { if (down) { var f = list.querySelector('[data-col="main"]'); if (f) { e.preventDefault(); f.focus(); } } return; }
+      if (t.tagName === 'SELECT' || !t.dataset || !t.dataset.col) return;
+      var col = Array.from(list.querySelectorAll('[data-col="' + t.dataset.col + '"]')), i = col.indexOf(t);
+      if (i < 0) return; e.preventDefault();
+      if (down) { if (i < col.length - 1) col[i + 1].focus(); }
+      else if (i > 0) col[i - 1].focus(); else qEl.focus();
+      return;
+    }
+    if (typing) return;
+    var k = e.key.toLowerCase();
+    if (e.key === '/') { e.preventDefault(); if (S.collapsed) setCollapsed(false); qEl.focus(); qEl.select(); }
+    else if (k === 'l') { setCollapsed(!S.collapsed); }
+    else if (k === 'f') { toggleFav(S.cur); }
+    else if (e.key === ' ') {
+      var isBtn = t.tagName === 'BUTTON' || t.getAttribute('role') === 'tab';
+      if (isBtn && !(t.dataset && t.dataset.col === 'main')) return; // botões ativam normalmente
+      e.preventDefault(); randomNext();
+    }
+  });
+  document.addEventListener('keyup', function (e) { if (e.key === ' ' && e.target.dataset && e.target.dataset.col === 'main') e.preventDefault(); });
+
+  /* ---------- Início ---------- */
+  syncSearchUI();
+  setSilent(false);
+  play(P[0].id);
+  setTab('all');
+  icons();
+})();
+</script>
+</body>
+</html>

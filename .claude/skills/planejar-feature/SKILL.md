@@ -9,6 +9,7 @@ Transforma uma ideia em trabalho executável. **Não escreve código.**
 
 ## Procedimento
 1. **Situar.** Ler `docs/PRD.md` (fase e prioridade), `TASKS.md` e as specs existentes em `docs/specs/`. Se a ideia já estiver coberta, atualizar a spec existente em vez de criar outra.
+   - **Feature de interface?** Rodar `sincronizar-design` no modo "checar" e ler a página do protótipo em `docs/design/v3/prototype/` e os docs em `docs/design/v3/docs/`. A spec cita página e versão (`SYNC.md`) em "Referências" e transforma os estados da barra "Protótipo" em critérios de aceite.
 2. **Esclarecer.** Se algo decisivo estiver ambíguo (escopo, comportamento esperado, prioridade), perguntar ao usuário — no máximo 3 perguntas, objetivas.
 3. **Escrever a spec** em `docs/specs/NNN-slug.md` (próximo número livre) com:
    - cabeçalho: Fase · Status · Issue

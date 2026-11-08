@@ -16,7 +16,7 @@ Fazer da janela parte do visual: sem moldura, arrastável, redimensionável e fe
 - Em tela cheia, o cursor some após ~3 s sem mexer o mouse e volta ao mexer.
 
 **P1**
-- Limite opcional de fps: "monitor" (padrão, como hoje) ou 60 fps, como valor em `src/renderer/src/config.ts` (sem tecla: `F` é favoritar nos atalhos v3; a opção ganha UI em Configurações › Renderização, "limite de quadros", na Fase 2). Para testar na Fase 1, o build pode sair com o limite ligado. O HUD mostra o modo ativo.
+- Limite opcional de fps: "monitor" (padrão, como hoje) ou 60 fps, como valor em `src/renderer/src/config.ts` (sem tecla: `F` é favoritar nos atalhos v3; a opção ganha UI em Configurações › Desempenho, "limite de fps" (protótipo v3, versão `1794154301-3f85`), na Fase 2). Para testar na Fase 1, o build pode sair com o limite ligado. O HUD mostra o modo ativo.
 - Registrar em DECISIONS.md a técnica escolhida para limitar.
 
 ## Fora de escopo

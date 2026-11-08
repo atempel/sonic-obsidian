@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Primeira execução e diagnóstico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  :root { --strip-h: 58px; --float-bottom: calc(16px + var(--strip-h) + 12px); }
+  body { overflow: hidden; }
+  .proto { left: auto; right: 12px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #viz { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  body.nogl #viz, body.nogl .strip-wrap, body.nogl .credit { display: none; }
+
+  /* ── Cartão de crédito do preset (assinatura) ── */
+  .credit { position: fixed; left: 0; top: 0; right: 0; padding: 40px 40px 96px; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(8,8,9,0.82), rgba(8,8,9,0)); opacity: 0; transition: opacity 600ms var(--ease-out); }
+  .credit.show { opacity: 1; transition-duration: 180ms; }
+  .credit h1 { margin: 0; max-width: 22ch; font-size: clamp(28px, 3.2vw, 48px); line-height: 1.08; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit p { margin: 10px 0 0; font-size: 15px; color: var(--text-2); }
+  .credit .sweep { margin-top: 16px; width: 240px; height: 2px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+  .credit .sweep i { display: block; height: 100%; width: 0; background: var(--violet); }
+
+  /* ── Faixa de controle (simplificada) ── */
+  .strip-wrap { position: fixed; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; }
+  .strip { position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+    padding: 10px 10px 10px 16px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .now { min-width: 0; }
+  .now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .transport { display: flex; align-items: center; gap: 2px; }
+
+  /* ── Superfície flutuante (cartões, avisos, painéis) ── */
+  .float { position: fixed; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translateY(8px); transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  .float[hidden] { display: none; }
+  .float.in { opacity: 1; transform: none; }
+  .float h2 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .float p { margin: 0; color: var(--text-2); }
+  .float .ico-lead { color: var(--text-2); }
+
+  /* Cartões não-modais (estados 1 e 5) */
+  .card { left: 16px; bottom: var(--float-bottom); width: 360px; max-width: calc(100vw - 32px); padding: 18px; }
+  .card .head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+  .card .head .ico { margin-top: 2px; }
+  .card .body-text { margin-bottom: 14px; }
+  .shortcuts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+  .shortcuts li { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+  .shortcuts kbd { justify-self: start; }
+  .opt { display: flex; padding: 12px 0; border-top: 1px solid var(--line-1); }
+  .opt .switch { width: 100%; justify-content: space-between; color: var(--text-1); font-size: 13px; }
+  .card .actions { display: flex; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line-1); }
+  .card .opt + .actions { border-top: 1px solid var(--line-1); }
+  .card .actions.plain { border-top: 0; padding-top: 4px; }
+  a.btn { text-decoration: none; }
+
+  /* Mini-diagrama das telas */
+  .screens { display: flex; align-items: flex-end; gap: 12px; margin: 4px 0 14px; }
+  .scr-cap { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+  .scr { position: relative; border-radius: var(--r-2); border: 1px solid var(--line-3); }
+  .scr.one { width: 128px; height: 76px; background: var(--bg-02); }
+  .scr.one .rack { position: absolute; right: 8px; bottom: 8px; width: 38px; height: 22px; border-radius: var(--r-1); background: var(--bg-04); border: 1px solid var(--line-3); }
+  .scr.two { width: 148px; height: 83px; background: linear-gradient(135deg, #1b0b2c 0%, #5a1f8c 55%, #a63bde 100%); border-color: var(--violet-line); }
+  .note-3 { margin-top: 12px; font-size: 12px; color: var(--text-3); }
+
+  /* Aviso de silêncio (estado 2) */
+  .notice { left: 50%; bottom: var(--float-bottom); width: min(600px, calc(100vw - 32px)); margin-left: calc(min(600px, 100vw - 32px) / -2);
+    display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; }
+  .notice .txt { flex: 1; min-width: 0; }
+  .notice .t { font-weight: 500; color: var(--text-1); }
+  .notice .d { font-size: 13px; color: var(--text-2); }
+  .notice .testing { display: flex; align-items: center; gap: 10px; color: var(--text-2); font-size: 12px; padding-right: 8px; white-space: nowrap; }
+  .notice .testing[hidden] { display: none; }
+  .notice .btn[hidden] { display: none; }
+
+  /* Painel de diagnóstico (estado 3) e erro de WebGL (estado 4) */
+  .panel { left: 50%; top: 50%; width: min(520px, calc(100vw - 32px)); margin-left: calc(min(520px, 100vw - 32px) / -2);
+    translate: 0 -50%; padding: 22px; max-height: calc(100vh - 32px); overflow-y: auto; }
+  .panel .head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .panel .head .ico { color: var(--warn); }
+  .checks { list-style: none; margin: 0; padding: 0; }
+  .checks li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line-1); }
+  .checks li:last-child { border-bottom: 1px solid var(--line-1); }
+  .checks .st { display: grid; place-items: start center; padding-top: 1px; }
+  .checks .st[data-s="ok"] { color: var(--ok); }
+  .checks .st[data-s="fail"] { color: var(--warn); }
+  .checks .st[data-s="busy"], .checks .st[data-s="pending"] { color: var(--text-2); }
+  .checks .st[data-s="busy"] svg, .checks .st[data-s="pending"] svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .checks .lbl { font-weight: 500; }
+  .checks .det { font-size: 13px; color: var(--text-2); }
+  .checks .help { margin-top: 4px; font-size: 13px; color: var(--text-1); }
+  .panel .actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .okline { display: inline-flex; align-items: center; gap: 8px; color: var(--ok); font-weight: 500; }
+  .okline[hidden] { display: none; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn:disabled:hover { background: var(--bg-03); border-color: var(--line-3); }
+  .btn-primary:disabled:hover { background: var(--violet); border-color: var(--violet); }
+
+  .gl .big { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-3); background: var(--bg-02); border: 1px solid var(--line-2); color: var(--text-2); margin-bottom: 14px; }
+  .gl .big .ico { width: 24px; height: 24px; }
+  .gl p + p { margin-top: 8px; }
+  details { margin-top: 16px; border-top: 1px solid var(--line-1); padding-top: 10px; }
+  summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; color: var(--text-2); font-size: 13px; padding: 4px 6px; margin-left: -6px; border-radius: var(--r-2); }
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { color: var(--text-1); background: var(--bg-03); }
+  summary .ico { width: 15px; height: 15px; transition: transform var(--t-fast) var(--ease-out); }
+  details[open] summary .ico { transform: rotate(90deg); }
+  dl.tech { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 10px 0 0; font-size: 13px; }
+  dl.tech dt { color: var(--text-2); }
+  dl.tech dd { margin: 0; color: var(--text-1); }
+  dl.tech dd.bad { color: var(--warn); }
+
+  @media (max-width: 900px) {
+    .strip { grid-template-columns: minmax(0, 1fr) auto; }
+    .strip .tail { display: none; }
+    .credit { padding: 24px 20px 72px; }
+    .notice { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+<canvas id="viz" aria-label="Visual do preset atual" role="img"></canvas>
+
+<div class="credit" id="credit" aria-live="polite">
+  <h1 id="creditTitle"></h1>
+  <p id="creditAuthor"></p>
+  <div class="sweep"><i id="sweep"></i></div>
+</div>
+
+<div class="strip-wrap">
+  <div class="strip" role="toolbar" aria-label="Controles do visual">
+    <div class="now">
+      <div class="now-title" id="nowTitle"></div>
+      <div class="now-author" id="nowAuthor"></div>
+    </div>
+    <div class="transport">
+      <button class="ibtn" id="prevBtn" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+      <button class="ibtn" id="shufBtn" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+      <button class="ibtn" id="nextBtn" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+    </div>
+    <div class="tail" aria-hidden="true"></div>
+  </div>
+</div>
+
+<!-- Estado 1: primeira abertura -->
+<section class="float card" id="cardWelcome" hidden aria-labelledby="wTitle">
+  <div class="head"><h2 id="wTitle">Já está ouvindo o seu computador</h2></div>
+  <p class="body-text">Toque música em qualquer app e o visual reage. Nada para configurar.</p>
+  <ul class="shortcuts">
+    <li><kbd>Espaço</kbd><span>Preset aleatório</span></li>
+    <li><kbd>/</kbd><span>Buscar</span></li>
+    <li><kbd>L</kbd><span>Biblioteca</span></li>
+    <li><kbd>M</kbd><span>Modo compacto</span></li>
+  </ul>
+  <div class="opt">
+    <label class="switch"><span>Iniciar com o Windows</span><input type="checkbox" id="autostart"><span class="track"></span></label>
+  </div>
+  <div class="actions">
+    <button class="btn btn-primary" id="welcomeOk">Entendi</button>
+    <a class="btn btn-ghost" href="Sonic Obsidian Configurações.html">Abrir configurações</a>
+  </div>
+</section>
+
+<!-- Estado 2: sem som -->
+<div class="float notice" id="notice" hidden role="status">
+  <i data-lucide="volume-x" class="ico ico-lead"></i>
+  <div class="txt">
+    <div class="t">Nenhum som chegando</div>
+    <div class="d">A captura está ligada. Toque algo ou confira se o som está saindo pela saída padrão do Windows.</div>
+  </div>
+  <button class="btn btn-ghost" id="testCap">Testar captura</button>
+  <div class="testing" id="testing" hidden><span class="meter" id="testMeter" aria-hidden="true"></span><span class="num" id="testTxt">sem sinal</span></div>
+</div>
+
+<!-- Estado 3: captura falhou -->
+<section class="float panel" id="diag" hidden role="alert" aria-labelledby="dTitle">
+  <div class="head"><i data-lucide="triangle-alert" class="ico"></i><h2 id="dTitle">Não foi possível capturar o áudio</h2></div>
+  <ul class="checks" id="checks"></ul>
+  <div class="actions">
+    <button class="btn btn-primary" id="retry"><i data-lucide="rotate-cw" class="ico ico-sm"></i><span>Tentar de novo</span></button>
+    <a class="btn btn-ghost" href="ms-settings:sound">Abrir configurações de som do Windows</a>
+    <button class="btn btn-ghost" id="copyDiag"><i data-lucide="copy" class="ico ico-sm"></i><span class="lbl">Copiar diagnóstico</span></button>
+    <span class="okline" id="okline" hidden role="status"><i data-lucide="check" class="ico"></i>Captura funcionando</span>
+  </div>
+</section>
+
+<!-- Estado 4: WebGL 2 indisponível -->
+<section class="float panel gl" id="glErr" hidden role="alert" aria-labelledby="gTitle">
+  <div class="big"><i data-lucide="monitor-x" class="ico"></i></div>
+  <h2 id="gTitle">Este computador não suporta WebGL 2</h2>
+  <p style="margin-top:8px">O motor visual (Butterchurn) precisa de WebGL 2 para desenhar os presets. Normalmente isso se resolve atualizando o driver de vídeo.</p>
+  <details>
+    <summary><i data-lucide="chevron-right" class="ico"></i>Detalhes técnicos</summary>
+    <dl class="tech">
+      <dt>GPU</dt><dd class="num">Intel(R) UHD Graphics 620</dd>
+      <dt>Driver</dt><dd class="num">27.20.100.8681</dd>
+      <dt>WebGL 2</dt><dd class="num bad">indisponível</dd>
+    </dl>
+  </details>
+  <div class="actions">
+    <a class="btn btn-primary" href="https://www.intel.com.br/content/www/br/pt/support/detect.html" target="_blank" rel="noopener noreferrer"><span>Como atualizar o driver</span><i data-lucide="external-link" class="ico ico-sm"></i></a>
+    <button class="btn btn-ghost" id="copyGl"><i data-lucide="copy" class="ico ico-sm"></i><span class="lbl">Copiar diagnóstico</span></button>
+  </div>
+</section>
+
+<!-- Estado 5: duas telas -->
+<section class="float card" id="cardScreens" hidden aria-labelledby="sTitle">
+  <div class="head"><i data-lucide="monitor" class="ico ico-lead"></i><h2 id="sTitle">Encontramos duas telas</h2></div>
+  <p class="body-text">Quer o visual em tela cheia na Tela 2 e controles compactos aqui?</p>
+  <div class="screens">
+    <div><div class="scr one"><div class="rack"></div></div><div class="scr-cap">Tela 1 · controles</div></div>
+    <div><div class="scr two"></div><div class="scr-cap">Tela 2 · visual</div></div>
+  </div>
+  <div class="actions plain">
+    <button class="btn btn-primary" id="screensYes">Usar modo compacto</button>
+    <button class="btn btn-ghost" id="screensNo">Agora não</button>
+  </div>
+  <div class="note-3">Você muda isso depois em Configurações › Telas.</div>
+</section>
+
+<div class="sr" id="live" aria-live="polite"></div>
+
+<div class="proto" role="group" aria-label="Estados do protótipo">
+  <b>Protótipo</b>
+  <button data-state="normal" aria-pressed="false">Normal</button>
+  <button data-state="first" aria-pressed="true">Primeira abertura</button>
+  <button data-state="silence" aria-pressed="false">Sem som por 10 s</button>
+  <button data-state="failed" aria-pressed="false">Captura falhou</button>
+  <button data-state="webgl" aria-pressed="false">WebGL 2 indisponível</button>
+  <button data-state="screens" aria-pressed="false">Duas telas</button>
+</div>
+
+<script>
+(function () {
+  var D = window.SO_DATA, P = D.presets;
+  var $ = function (s) { return document.getElementById(s); };
+  var viz = SOViz.create($('viz'));
+  var cur = P[0], blendMs = 2000, creditTimer = 0;
+  var state = 'first';
+  var timers = [];           // timeouts do estado atual
+  var hideTimers = new WeakMap();
+
+  function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function icons() { if (window.lucide) lucide.createIcons(); }
+
+  // ── Mostrar / esconder superfícies com transição ──
+  function show(el) {
+    clearTimeout(hideTimers.get(el));
+    el.hidden = false; void el.offsetWidth; el.classList.add('in');
+  }
+  function hide(el) {
+    el.classList.remove('in');
+    hideTimers.set(el, setTimeout(function () { el.hidden = true; }, 230));
+  }
+  function hideNow(el) { clearTimeout(hideTimers.get(el)); el.classList.remove('in'); el.hidden = true; }
+
+  // ── Troca de preset + assinatura ──
+  function play(p) {
+    cur = p;
+    viz.setPreset(p, blendMs);
+    $('nowTitle').textContent = p.title; $('nowAuthor').textContent = 'por ' + p.author;
+    $('creditTitle').textContent = p.title; $('creditAuthor').textContent = 'por ' + p.author;
+    var c = $('credit'), sw = $('sweep');
+    c.classList.add('show');
+    sw.style.transition = 'none'; sw.style.width = '0'; void sw.offsetWidth;
+    sw.style.transition = 'width ' + blendMs + 'ms linear'; sw.style.width = '100%';
+    clearTimeout(creditTimer); creditTimer = setTimeout(function () { c.classList.remove('show'); }, 4000);
+  }
+  function step(d) { play(P[(cur.id + d + P.length) % P.length]); }
+  function shuffle() { var n; do { n = P[Math.floor(Math.random() * P.length)]; } while (n.id === cur.id); play(n); }
+  $('prevBtn').addEventListener('click', function () { step(-1); });
+  $('nextBtn').addEventListener('click', function () { step(1); });
+  $('shufBtn').addEventListener('click', shuffle);
+
+  // ── Copiar para a área de transferência ──
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).catch(function () { return fallbackCopy(text); });
+    }
+    return fallbackCopy(text);
+  }
+  function fallbackCopy(text) {
+    return new Promise(function (res, rej) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta); ok ? res() : rej(new Error('copy'));
+    });
+  }
+  function wireCopy(btn, getText) {
+    var lbl = btn.querySelector('.lbl'), orig = lbl.textContent, t = 0;
+    btn.addEventListener('click', function () {
+      copyText(getText()).then(function () { return 'Copiado'; }, function () { return 'Não foi possível copiar'; }).then(function (msg) {
+        lbl.textContent = msg; $('live').textContent = msg;
+        clearTimeout(t); t = setTimeout(function () { lbl.textContent = orig; $('live').textContent = ''; }, 2000);
+      });
+    });
+  }
+
+  // ── Estado 3: lista de verificação ──
+  var dev = D.capture.device;
+  var items;
+  function initialItems() {
+    return [
+      { label: 'Saída padrão encontrada', det: dev, help: '', s: 'ok' },
+      { label: 'Permissão de captura do sistema', det: 'Recusada pelo Windows', help: 'Outro app pode estar usando a saída em modo exclusivo (ex.: players com WASAPI exclusivo).', s: 'fail' },
+      { label: 'Formato de áudio', det: '48 kHz, 24 bits', help: '', s: 'ok' },
+      { label: 'Teste de sinal', det: 'Aguardando a permissão', help: '', s: 'pending' }
+    ];
+  }
+  var ST = { ok: ['check', 'Ok'], fail: ['x', 'Falhou'], busy: ['loader', 'Verificando'], pending: ['loader', 'Pendente'] };
+  function renderChecks() {
+    $('checks').innerHTML = items.map(function (it) {
+      var ic = ST[it.s];
+      return '<li><span class="st" data-s="' + it.s + '"><i data-lucide="' + ic[0] + '" class="ico"></i><span class="sr">' + ic[1] + '</span></span>' +
+        '<div><div class="lbl">' + it.label + '</div><div class="det">' + it.det + '</div>' +
+        (it.help ? '<div class="help">' + it.help + '</div>' : '') + '</div></li>';
+    }).join('');
+    icons();
+  }
+  function diagText() {
+    var names = { ok: 'ok', fail: 'falhou', busy: 'verificando', pending: 'não executado' };
+    return ['Sonic Obsidian 0.3.0 — diagnóstico de captura',
+      'Data: ' + new Date().toISOString(),
+      'Fonte: ' + D.capture.source].concat(items.map(function (it) {
+        return it.label + ': ' + names[it.s] + ' (' + it.det + ')' + (it.help ? ' — ' + it.help : '');
+      })).join('\n');
+  }
+  function glText() {
+    return ['Sonic Obsidian 0.3.0 — diagnóstico de vídeo',
+      'Data: ' + new Date().toISOString(),
+      'GPU: Intel(R) UHD Graphics 620',
+      'Driver: 27.20.100.8681',
+      'WebGL 2: indisponível',
+      'Motor visual: Butterchurn (requer WebGL 2)'].join('\n');
+  }
+  wireCopy($('copyDiag'), diagText);
+  wireCopy($('copyGl'), glText);
+
+  $('retry').addEventListener('click', function () {
+    var btn = $('retry');
+    if (btn.disabled) return;
+    btn.disabled = true; $('okline').hidden = true;
+    items.forEach(function (it) { it.s = 'busy'; it.det = 'verificando…'; it.help = ''; });
+    renderChecks();
+    var done = [
+      ['Saída padrão encontrada', dev],
+      ['Permissão de captura do sistema', 'Concedida'],
+      ['Formato de áudio', '48 kHz, 24 bits'],
+      ['Teste de sinal', 'Sinal detectado']
+    ];
+    done.forEach(function (d, i) {
+      later(function () { items[i].s = 'ok'; items[i].det = d[1]; renderChecks(); }, 700 + i * 650);
+    });
+    later(function () {
+      $('okline').hidden = false; $('live').textContent = 'Captura funcionando';
+      icons();
+    }, 700 + done.length * 650);
+    later(function () { setState('normal'); $('live').textContent = ''; }, 700 + done.length * 650 + 1400);
+  });
+
+  // ── Estado 2: testar captura ──
+  var meterUpd = SOViz.meter($('testMeter'), 20), testRaf = 0;
+  function stopTest() {
+    cancelAnimationFrame(testRaf); testRaf = 0;
+    $('testing').hidden = true; $('testCap').hidden = false;
+  }
+  $('testCap').addEventListener('click', function () {
+    $('testCap').hidden = true; $('testing').hidden = false;
+    var t0 = performance.now();
+    (function loop(now) {
+      var l = viz.level(), pk = viz.peak();
+      meterUpd(l, pk);
+      $('testTxt').textContent = l > 0.03 ? 'sinal' : 'sem sinal';
+      if (now - t0 < 3000) testRaf = requestAnimationFrame(loop); else stopTest();
+    })(t0);
+  });
+
+  // ── Máquina de estados ──
+  var surfaces = ['cardWelcome', 'notice', 'diag', 'glErr', 'cardScreens'];
+  function setState(s) {
+    state = s;
+    clearTimers(); stopTest();
+    surfaces.forEach(function (id) { hideNow($(id)); });
+    document.body.classList.remove('nogl');
+    viz.setSilent(s === 'silence' || s === 'failed');
+    document.querySelectorAll('.proto [data-state]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.state === s));
+    });
+    if (s === 'first') later(function () { show($('cardWelcome')); }, 800);
+    else if (s === 'silence') show($('notice'));
+    else if (s === 'failed') {
+      items = initialItems(); renderChecks();
+      $('retry').disabled = false; $('okline').hidden = true;
+      show($('diag'));
+    }
+    else if (s === 'webgl') { document.body.classList.add('nogl'); show($('glErr')); }
+    else if (s === 'screens') later(function () { show($('cardScreens')); }, 800);
+    icons();
+  }
+  document.querySelectorAll('.proto [data-state]').forEach(function (b) {
+    b.addEventListener('click', function () { setState(b.dataset.state); });
+  });
+
+  // Fechar cartões
+  $('welcomeOk').addEventListener('click', function () { hide($('cardWelcome')); });
+  $('screensYes').addEventListener('click', function () { hide($('cardScreens')); });
+  $('screensNo').addEventListener('click', function () { hide($('cardScreens')); });
+
+  // ── Teclado ──
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      ['cardWelcome', 'cardScreens', 'notice'].forEach(function (id) { if (!$(id).hidden) hide($(id)); });
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    var onCtl = tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY';
+    if (e.key === ' ' && !onCtl) { e.preventDefault(); shuffle(); }
+    else if (e.key === 'ArrowRight') step(1);
+    else if (e.key === 'ArrowLeft') step(-1);
+  });
+
+  // ── Início: já tocando, cartão de boas-vindas depois de 800 ms ──
+  play(P[0]);
+  setState('first');
+})();
+</script>
+</body>
+</html>
