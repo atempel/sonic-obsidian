@@ -17,7 +17,7 @@ declare module 'butterchurn' {
     disconnectAudio(node: AudioNode): void
     loadPreset(preset: Preset, blendTime: number): void
     setRendererSize(width: number, height: number): void
-    render(): void
+    render(opts?: { elapsedTime?: number }): void
   }
 
   const butterchurn: {

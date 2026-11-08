@@ -17,6 +17,16 @@
       #drag { position: fixed; inset: 6px; -webkit-app-region: drag; }
       body.fullscreen #drag { display: none; }
       body.fullscreen.cursor-idle, body.fullscreen.cursor-idle * { cursor: none; }
+      #dim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; }
+      #notice {
+        position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        max-width: min(90vw, 420px); padding: 12px 16px; text-align: center;
+        font: 14px/1.45 ui-sans-serif, 'Segoe UI', sans-serif; color: #eef0f5;
+        background: rgba(0, 0, 0, 0.6); border-radius: 8px;
+        opacity: 0; transition: opacity 400ms ease; pointer-events: none;
+      }
+      #notice.visible { opacity: 1; }
+      #notice strong { display: block; font-size: 15px; margin-bottom: 4px; }
       #toast {
         position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
         max-width: min(90vw, 900px); padding: 6px 12px; text-align: center;
@@ -29,7 +39,9 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="dim"></div>
     <div id="drag"></div>
+    <div id="notice" role="status"><strong>Nenhum som chegando</strong>A captura está ligada. Toque algo ou confira se o som está saindo pela saída padrão do Windows.</div>
     <div id="toast"></div>
     <div id="hud">Sonic Obsidian — iniciando…</div>
     <script type="module" src="./src/main.ts"></script>

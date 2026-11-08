@@ -4,6 +4,7 @@ export interface HudState {
   presetCount: number
   rotation: string
   fpsMode: string
+  gainDb: number
   audio: string
   level: number
   error?: string
@@ -21,7 +22,7 @@ export class Hud {
     this.el.textContent =
       `${s.fps.toFixed(0)} fps (${s.fpsMode}) · áudio: ${s.audio} · nível ${bars}\n` +
       `${s.preset}\n` +
-      `${s.presetCount} presets · rotação ${s.rotation}\n` +
-      `→ próximo · ← anterior · Espaço aleatório · R rotação · [ ] intervalo · F11 tela cheia`
+      `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
+      `→ próximo · ← anterior · Espaço aleatório · R rotação · [ ] intervalo · + − 0 ganho · F11 tela cheia`
   }
 }

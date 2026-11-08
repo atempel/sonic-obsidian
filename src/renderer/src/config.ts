@@ -8,5 +8,10 @@ export const config = {
   /** Blend da troca automática (rotação). */
   blendAutoSeconds: 2.7,
   /** Limite de quadros: 'monitor' segue a taxa da tela; número = fps máximo. */
-  fpsLimit: 'monitor' as 'monitor' | number
+  fpsLimit: 'monitor' as 'monitor' | number,
+  /** Ganho de entrada (dB) aplicado antes do Butterchurn; não muda o que se ouve. */
+  gainDb: 0,
+  gainMinDb: -12,
+  gainMaxDb: 24,
+  gainStepDb: 1.5
 }
