@@ -43,10 +43,10 @@ Assinatura de código (SmartScreen avisa; a landing explica "Mais informações 
 5. `sha256sum` dos arquivos baixados bate com o `SHA256SUMS.txt`.
 6. Tag com versão diferente do `package.json` faz o workflow falhar com mensagem clara.
 
-## Perguntas em aberto
-- O nome do repo continua `sonic-obsidian` na abertura? (Os links da landing dependem dele.)
-- `appId` `dev.atempel.sonic-obsidian` fica como está? Mudar depois quebra atualização e atalhos.
-- Quem assina o copyright do MIT: nome pessoal ou "Sonic Obsidian contributors"?
+## Respostas do usuário (2026-11-08)
+- O repo continua **`atempel/sonic-obsidian`** na abertura (a landing usa esses links).
+- O `appId` continua **`dev.atempel.sonic-obsidian`** (não mudar: quebraria atualização e atalhos).
+- Copyright do MIT: **`Copyright (c) 2026 Alexandre Tempel`**.
 
 ## Referências
 - Landing (canvas, versão EN e PT-BR): https://claude.ai/artifact/77UgsmUowPneiFTfduxF2L — seção Download e FAQ.
