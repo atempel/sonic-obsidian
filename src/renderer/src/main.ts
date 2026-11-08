@@ -1,19 +1,15 @@
 import { captureSystemAudio } from './capture'
+import { config } from './config'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
+import { AutoRotation } from './rotation'
 import { Toast } from './toast'
 import { PresetVisualizer } from './visualizer'
-
-const BLEND_BY_KEY: Record<string, number> = {
-  Digit1: 0, Numpad1: 0,
-  Digit2: 2, Numpad2: 2,
-  Digit3: 5, Numpad3: 5
-}
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 const hud = new Hud(document.getElementById('hud') as HTMLElement)
 const toast = new Toast(document.getElementById('toast') as HTMLElement)
-const state: HudState = { fps: 0, preset: '—', presetCount: 0, blend: 2, audio: 'aguardando', level: 0 }
+const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', audio: 'aguardando', level: 0 }
 
 async function start(): Promise<void> {
   const { stream, audioTrack } = await captureSystemAudio()
@@ -44,8 +40,13 @@ async function start(): Promise<void> {
   viz.visualizer.connectAudio(gain)
 
   const library = new PresetLibrary()
+  const rotation = new AutoRotation(performance.now())
+  const updateRotation = (): void => {
+    state.rotation = rotation.paused ? 'pausada' : `${rotation.intervalSeconds} s`
+  }
   const show = (name: string, blend: number): void => {
     viz.load(library.get(name), blend)
+    rotation.restart(performance.now())
     state.preset = name
     toast.show(name)
     console.log(`[viz] preset: ${name} (blend ${blend} s)`)
@@ -57,16 +58,23 @@ async function start(): Promise<void> {
   window.addEventListener('keydown', (e) => {
     if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
     let handled = true
+    // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md).
     if (e.code === 'ArrowRight') {
-      show(library.next(), state.blend)
+      show(library.next(), config.blendManualSeconds)
     } else if (e.code === 'ArrowLeft') {
       const name = library.back()
-      if (name) show(name, state.blend)
-    } else if (e.code === 'Space' || e.code === 'KeyR') {
-      show(library.random(), state.blend)
-    } else if (e.code in BLEND_BY_KEY) {
-      state.blend = BLEND_BY_KEY[e.code]!
-      toast.show(`blend ${state.blend} s`, 1500)
+      if (name) show(name, config.blendManualSeconds)
+    } else if (e.code === 'Space') {
+      show(library.random(), config.blendManualSeconds)
+    } else if (e.code === 'KeyR') {
+      const paused = rotation.togglePause(performance.now())
+      updateRotation()
+      toast.show(paused ? 'rotação pausada' : `rotação a cada ${rotation.intervalSeconds} s`, 1500)
+    } else if (e.key === '[' || e.key === ']') {
+      // Pelo caractere (e.key), não pela posição: no ABNT2 os colchetes ficam em outras teclas.
+      const seconds = rotation.step(e.key === '[' ? -1 : 1, performance.now())
+      updateRotation()
+      toast.show(`rotação a cada ${seconds} s${rotation.paused ? ' (pausada)' : ''}`, 1500)
     } else {
       handled = false
     }
@@ -79,6 +87,7 @@ async function start(): Promise<void> {
   let frames = 0
   let windowStart = performance.now()
   const loop = (now: number): void => {
+    if (rotation.due(now)) show(library.random(), config.blendAutoSeconds)
     viz.render()
     frames++
     if (now - windowStart >= 1000) {
