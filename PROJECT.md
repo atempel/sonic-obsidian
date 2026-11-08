@@ -24,4 +24,4 @@ Terminar um app que eu abra todo dia: janela ou tela cheia, reagindo ao áudio d
 | Versão Python e o plano/PRD originais | `legacy/python/`, `docs/legacy/` |
 | Referências ainda não incorporadas | `queue/` |
 | Planejamento, reflexão, estado do projeto | Notion — [página do projeto](https://app.notion.com/p/334d16734c17814ea20cf9f6dcb8b2fd) e linha na Tabela Meus Projetos |
-| Protótipo de UI navegável | Claude Design — [artefato "Sonic Obsidian"](https://claude.ai/artifact/UYomSYJHhGRN9bqUPc21qF) |
+| Protótipo de UI navegável | Claude Design — [artefato "Sonic Obsidian"](https://claude.ai/artifact/UYomSYJHhGRN9bqUPc21qF); espelho versionado em [docs/design/v3/](docs/design/v3/README.md) |

@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Configurações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  body { overflow: hidden; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #viz { position: fixed; inset: 0; width: 100%; height: 100%; display: block; opacity: 0.25; }
+
+  /* ── Janela ── */
+  .win { position: fixed; z-index: 2; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(1040px, calc(100vw - 48px)); height: min(720px, calc(100vh - 48px));
+    display: flex; flex-direction: column; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .hd { flex: none; height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--line-1); }
+  .hd h1 { margin: 0; font-size: 16px; font-weight: 600; flex: 1; }
+  .saved { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 64px; font-size: 13px; color: var(--text-3); opacity: 0; transition: opacity var(--t-med) var(--ease-out); }
+  .saved.on { opacity: 1; }
+  .body { flex: 1; min-height: 0; display: flex; }
+
+  /* ── Navegação ── */
+  .side { flex: none; width: 220px; padding: 12px; border-right: 1px solid var(--line-1); display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+  .search { position: relative; }
+  .search .ico { position: absolute; left: 10px; top: 9px; color: var(--text-3); pointer-events: none; width: 16px; height: 16px; }
+  .search input { width: 100%; height: 34px; padding: 0 10px 0 34px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1); transition: border-color var(--t-fast); }
+  .search input::placeholder { color: var(--text-3); opacity: 1; }
+  .search input:hover { border-color: var(--line-3); }
+  .search input:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; border-radius: var(--r-2); }
+  .search input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+  .search kbd { position: absolute; right: 8px; top: 8px; pointer-events: none; }
+  .search:focus-within kbd, .search.has-val kbd { display: none; }
+  #navlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  #navlist li[hidden] { display: none; }
+  #navlist button { width: 100%; height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: var(--r-2); background: transparent; color: var(--text-2); text-align: left; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+  #navlist button:hover { background: var(--bg-03); color: var(--text-1); }
+  #navlist button:active { background: var(--bg-04); }
+  #navlist button[aria-current="page"] { background: var(--violet-soft); color: var(--text-1); }
+  #navlist button[aria-current="page"] .ico { color: var(--violet); }
+  .sel { height: 34px; padding: 0 32px 0 12px; background-color: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); cursor: pointer; -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A3A3BF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; max-width: 100%; text-overflow: ellipsis; transition: background-color var(--t-fast), border-color var(--t-fast); }
+  .sel:hover:not(:disabled) { background-color: var(--bg-04); border-color: #4A4A64; }
+  .sel option { background: var(--bg-02); color: var(--text-1); }
+  .sel:disabled { opacity: 0.45; cursor: default; }
+  #secsel { display: none; width: 100%; }
+
+  /* ── Conteúdo ── */
+  .content { flex: 1; min-width: 0; overflow-y: auto; padding: 28px 32px 56px; }
+  .content:focus-visible { outline: none; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  .panel[hidden] { display: none; }
+  .panel h2 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.25; }
+  .panel > .lead { margin: 4px 0 0; color: var(--text-2); }
+  .grp { margin-top: 28px; }
+  .grp h3 { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--text-2); }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 14px 12px; margin: 0 -12px; border-bottom: 1px solid var(--line-1); border-radius: var(--r-2); transition: background var(--t-med) var(--ease-out); }
+  .row.hit, tr.hit { background: var(--violet-soft); }
+  .row.stack { grid-template-columns: minmax(0, 1fr); }
+  .lbl { color: var(--text-1); font-size: 14px; }
+  .help { margin: 2px 0 0; color: var(--text-2); font-size: 13px; }
+  .ctl { display: flex; align-items: center; justify-content: flex-end; gap: 12px; min-width: 0; }
+  .row.stack .ctl { justify-content: flex-start; flex-wrap: wrap; }
+  .phase { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+  .val { color: var(--cyan); font-size: 13px; min-width: 6ch; text-align: right; }
+  .rng { display: flex; align-items: center; gap: 12px; width: 240px; }
+  .sel-w { max-width: 260px; }
+  .btn.sm { height: 28px; padding: 0 10px; font-size: 13px; }
+  .btn:disabled { opacity: 0.45; cursor: default; background: var(--bg-03); border-color: var(--line-3); }
+  .btn-ghost:disabled { background: transparent; border-color: transparent; }
+  .switch input:disabled + .track { opacity: 0.45; cursor: default; }
+  input[type=range]:disabled { opacity: 0.45; cursor: default; }
+  .count { color: var(--text-1); font-size: 13px; }
+  .count.warn { color: var(--warn); }
+  .note { margin: 10px 0 0; color: var(--text-2); font-size: 13px; display: flex; align-items: flex-start; gap: 8px; }
+  .note[hidden] { display: none; }
+  .note .ico { margin-top: 2px; width: 15px; height: 15px; color: var(--warn); }
+  .note.ok .ico { color: var(--ok); }
+  .lead-empty { margin: 14px 0 0; color: var(--text-2); }
+
+  /* segmentado */
+  .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-2); }
+  .seg label { position: relative; }
+  .seg input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .seg span { display: block; height: 28px; line-height: 28px; padding: 0 12px; border-radius: var(--r-1); color: var(--text-2); font-size: 13px; white-space: nowrap; transition: background var(--t-fast), color var(--t-fast); }
+  .seg label:hover span { background: var(--bg-03); color: var(--text-1); }
+  .seg input:checked + span { background: var(--violet-soft); color: var(--text-1); box-shadow: inset 0 0 0 1px var(--violet-line); }
+  .seg input:focus-visible + span { outline: 2px solid var(--violet); outline-offset: 1px; }
+  .seg input:disabled { cursor: default; }
+  .seg input:disabled + span { opacity: 0.45; }
+  .seg input:disabled ~ * { pointer-events: none; }
+  .seg label:has(input:disabled):hover span { background: transparent; color: var(--text-2); }
+
+  /* captura */
+  .cap { margin-top: 24px; padding: 16px; display: grid; gap: 16px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); transition: border-color var(--t-med); }
+  .cap.hit { border-color: var(--violet-line); }
+  .cap-top { display: flex; gap: 12px; align-items: flex-start; }
+  .dot { flex: none; width: 8px; height: 8px; margin-top: 7px; border-radius: 50%; background: var(--ok); }
+  .cap-top b { display: block; font-weight: 500; }
+  .cap-top span { color: var(--text-2); font-size: 13px; }
+  .cap-lvl { display: flex; align-items: center; gap: 14px; color: var(--text-2); font-size: 13px; }
+  .cap-test { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .testres { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); }
+  .testres.done { color: var(--ok); }
+
+  /* lista de ocultos */
+  .hlist { outline: none; }
+  .hrow .nm { color: var(--text-1); font-size: 14px; overflow-wrap: anywhere; }
+  .hrow .by { color: var(--text-2); font-size: 13px; }
+
+  /* telas */
+  .opts { display: grid; gap: 8px; width: 100%; }
+  .opt { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); cursor: pointer; transition: background var(--t-fast), border-color var(--t-fast); }
+  .opt:hover { background: var(--bg-03); }
+  .opt:has(input:checked) { background: var(--violet-soft); border-color: var(--violet-line); }
+  .opt input { -webkit-appearance: none; appearance: none; flex: none; width: 16px; height: 16px; margin: 0; border-radius: 50%; border: 2px solid var(--line-3); background: transparent; cursor: pointer; }
+  .opt input:checked { border-color: var(--violet); background: var(--violet); box-shadow: inset 0 0 0 3px var(--bg-02); }
+  .opt input:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+  .opt .m { color: var(--text-2); }
+  .diag { display: flex; align-items: flex-end; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; padding: 20px 16px; background: var(--bg-02); border: 1px solid var(--line-1); border-radius: var(--r-2); }
+  .scr { width: calc(var(--w) * 0.07px); height: calc(var(--h) * 0.07px); display: grid; place-items: center; background: var(--bg-00); border: 1px solid var(--line-3); border-radius: 2px; color: var(--text-3); font-size: 12px; transition: border-color var(--t-med), color var(--t-med), box-shadow var(--t-med); }
+  .scr.sel { border-color: var(--violet); box-shadow: inset 0 0 0 1px var(--violet); color: var(--text-1); }
+
+  .src-extra { width: 100%; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .src-extra[hidden] { display: none; }
+  .src-extra .help { margin: 0; }
+
+  .par { color: var(--text-3); font-size: 12px; }
+  .conn { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-1); }
+  .conn .dot { margin: 0; }
+  .inp { flex: 1; min-width: 0; height: 34px; padding: 0 10px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1); }
+  .inp:hover { border-color: var(--line-3); }
+  .inp::placeholder { color: var(--text-3); opacity: 1; }
+  .inp[aria-invalid="true"] { border-color: var(--warn); }
+  .scform { width: 100%; }
+  .scform .lbl { display: block; margin-bottom: 6px; }
+  .scrow { display: flex; gap: 8px; }
+  .sccard { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 14px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .sccard[hidden] { display: none; }
+  .sccard b { display: block; font-weight: 500; }
+  .sccard span { color: var(--text-2); font-size: 13px; }
+  .tabs { display: flex; gap: 2px; flex-wrap: wrap; margin-top: 12px; border-bottom: 1px solid var(--line-1); padding-bottom: 6px; }
+  .tabs button { height: 32px; padding: 0 12px; border: 0; border-radius: var(--r-2); background: transparent; color: var(--text-2); cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
+  .tabs button:hover { background: var(--bg-03); color: var(--text-1); }
+  .tabs button[aria-selected="true"] { background: var(--violet-soft); color: var(--text-1); }
+  pre { margin: 0; padding: 12px 14px; overflow: auto; background: var(--bg-00); border: 1px solid var(--line-2); border-radius: var(--r-2); font-family: var(--font-num); font-size: 12.5px; line-height: 1.6; color: var(--text-1); }
+  code { font-family: var(--font-num); font-size: 12.5px; color: var(--text-1); }
+  .tabact { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .okc { color: var(--ok); } .errc { color: var(--warn); }
+  .resc .ico { vertical-align: -2px; margin-right: 6px; }
+  .tools summary { cursor: pointer; padding: 12px 0; display: flex; align-items: center; gap: 10px; color: var(--text-1); list-style: none; border-radius: var(--r-2); }
+  .tools summary::-webkit-details-marker { display: none; }
+  .tools summary::before { content: ""; width: 7px; height: 7px; border-right: 2px solid var(--text-2); border-bottom: 2px solid var(--text-2); transform: rotate(-45deg); transition: transform var(--t-fast); margin: 0 4px 0 2px; }
+  .tools[open] summary::before { transform: rotate(45deg); }
+  .tools ul { list-style: none; margin: 0; padding: 0; }
+  .tools li { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 12px; padding: 8px 12px; margin: 0 -12px; border-bottom: 1px solid var(--line-1); border-radius: var(--r-2); }
+  .tools li.hit { background: var(--violet-soft); }
+  .tools li span { color: var(--text-2); font-size: 13px; }
+  @media (max-width: 639px) { .tools li { grid-template-columns: 1fr; gap: 2px; } }
+
+  /* atalhos */
+  .tbl { margin: 8px -12px 0; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-1); vertical-align: middle; }
+  thead th { font-size: 13px; font-weight: 500; color: var(--text-2); }
+  tbody th { font-weight: 400; color: var(--text-1); }
+  td.act { width: 48px; text-align: right; }
+  .or { color: var(--text-3); font-size: 12px; margin: 0 4px; }
+  .capt { color: var(--text-1); font-size: 13px; }
+  .keys-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; }
+  .keys-foot .note { margin: 0; flex: 1; }
+
+  /* sobre */
+  .lnk { color: var(--text-1); text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; display: inline-flex; align-items: center; gap: 6px; transition: text-decoration-color var(--t-fast); }
+  .lnk:hover { text-decoration-color: var(--violet); }
+  .lnk .ico { width: 14px; height: 14px; color: var(--text-2); }
+
+  /* ── Telas pequenas ── */
+  @media (max-width: 899px) {
+    .win { inset: 0; left: 0; top: 0; transform: none; width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
+    .body { flex-direction: column; }
+    .side { width: auto; border-right: 0; border-bottom: 1px solid var(--line-1); padding: 12px 16px; overflow: visible; gap: 8px; }
+    .side nav { display: none; }
+    #secsel { display: block; }
+    .search kbd { display: none; }
+    .content { padding: 20px 16px 48px; }
+    .scr { width: calc(var(--w) * 0.05px); height: calc(var(--h) * 0.05px); }
+  }
+  @media (max-width: 639px) {
+    .row { grid-template-columns: minmax(0, 1fr); }
+    .ctl { justify-content: flex-start; flex-wrap: wrap; }
+    .rng { width: 100%; }
+    .sel-w { max-width: 100%; }
+    .keys-foot { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<canvas id="viz" aria-hidden="true"></canvas>
+
+<div class="win" role="dialog" aria-modal="true" aria-labelledby="ttl">
+  <header class="hd">
+    <h1 id="ttl">Configurações</h1>
+    <span class="saved" id="saved" role="status"><i data-lucide="check" class="ico ico-sm"></i><span id="savedtxt"></span></span>
+    <a class="ibtn" id="closeLink" href="Sonic Obsidian Palco integrado.html" aria-label="Fechar (Esc)" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></a>
+  </header>
+  <div class="body">
+    <aside class="side">
+      <div class="search" id="searchBox">
+        <i data-lucide="search" class="ico"></i>
+        <label class="sr" for="q">Buscar configuração</label>
+        <input id="q" type="search" placeholder="Buscar" autocomplete="off" spellcheck="false">
+        <kbd>Ctrl+F</kbd>
+      </div>
+      <label class="sr" for="secsel">Seção</label>
+      <select id="secsel" class="sel"></select>
+      <nav aria-label="Seções das configurações"><ul id="navlist"></ul></nav>
+    </aside>
+    <main class="content" id="content" tabindex="-1">
+      <div class="wrap" id="wrap">
+        <div id="empty" hidden>
+          <h2>Nada encontrado</h2>
+          <p class="lead-empty" id="emptyMsg"></p>
+          <p style="margin-top:16px"><button class="btn" type="button" id="clearQ">Limpar busca</button></p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var norm = function (s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); };
+  var icons = function () { if (window.lucide) lucide.createIcons(); };
+  var D = window.SO_DATA;
+  var CLOSE_HREF = $('#closeLink').getAttribute('href');
+
+  /* ── Estado ── */
+  var S = {
+    abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
+    gain: 1, rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, blendAuto: 2.7, blendManual: 0, beat: false,
+    canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
+    rackTop: true, rackPos: 'br', tela: '2'
+  };
+  var FMT = {
+    gain: function (v) { return v.toFixed(1).replace('.', ',') + '×'; },
+    interval: function (v) { return v + ' s'; },
+    blendAuto: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
+    blendManual: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
+    minfps: function (v) { return v + ' fps'; }
+  };
+
+  /* ── Construtores de controle ── */
+  function row(o) {
+    var lab = o.group
+      ? '<span class="lbl" id="l-' + o.id + '">' + o.label + '</span>'
+      : '<label class="lbl" id="l-' + o.id + '" for="' + o.id + '">' + o.label + '</label>';
+    return '<div class="row' + (o.stack ? ' stack' : '') + '" data-search="' + esc(o.label + ' ' + (o.help || '') + ' ' + (o.kw || '')) + '">' +
+      '<div class="txt">' + lab + (o.help ? '<p class="help">' + o.help + '</p>' : '') + '</div>' +
+      '<div class="ctl">' + (o.phase ? '<span class="phase">Fase 3</span>' : '') + (o.ctl || '') + '</div></div>';
+  }
+  function sw(id, on, dis) {
+    return '<label class="switch"><input type="checkbox" id="' + id + '" data-k="' + id + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '><span class="track"></span></label>';
+  }
+  function seg(id, opts, cur, dis) {
+    return '<div class="seg" role="radiogroup" aria-labelledby="l-' + id + '">' + opts.map(function (o) {
+      return '<label><input type="radio" name="' + id + '" value="' + o[0] + '" data-k="' + id + '"' + (String(cur) === String(o[0]) ? ' checked' : '') + (dis ? ' disabled' : '') + '><span>' + o[1] + '</span></label>';
+    }).join('') + '</div>';
+  }
+  function sel(id, opts, cur, dis) {
+    return '<select class="sel sel-w" id="' + id + '" data-k="' + id + '"' + (dis ? ' disabled' : '') + '>' + opts.map(function (o) {
+      return '<option value="' + o[0] + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+    }).join('') + '</select>';
+  }
+  function rng(id, min, max, step, val) {
+    var fill = ((val - min) / (max - min)) * 100;
+    return '<div class="rng"><input type="range" id="' + id + '" data-k="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="--fill:' + fill + '%" aria-valuetext="' + FMT[id](val) + '"><span class="num val" id="v-' + id + '">' + FMT[id](val) + '</span></div>';
+  }
+  function grp(title, inner) { return '<section class="grp" aria-label="' + esc(title) + '"><h3>' + title + '</h3>' + inner + '</section>'; }
+
+  function par() { return Array.prototype.slice.call(arguments).map(function (x) { return '<span class="num par">' + x + '</span>'; }).join(' · '); }
+  var favOpts = D.presets.filter(function (p) { return p.fav; }).map(function (p) { return [p.id, p.title + ' · por ' + p.author]; });
+  var collOpts = D.collections.map(function (c) { return [c.id, c.name]; });
+
+  var TOOLS = [["get_status", "Preset atual, autor, fonte, rotação, fps e BPM."], ["get_audio_features", "bass, mid, treb, nível e BPM, instantâneo ou média de N segundos."], ["list_presets", "Busca com filtros: favoritos, recentes, importados, meus e coleção."], ["get_preset", "Código .milk e metadados de um preset."], ["play_preset", "Toca um preset específico."], ["next_preset", "Vai para o próximo preset."], ["previous_preset", "Volta ao preset anterior."], ["random_preset", "Toca um preset aleatório."], ["set_rotation", "Liga ou desliga a rotação; define intervalo e ordem."], ["set_signal", "Ajusta ganho, blend automático e blend manual."], ["set_audio_source", "Troca a fonte: sistema, microfone, arquivo ou SoundCloud."], ["validate_preset", "Compila um .milk e devolve erros por seção e linha."], ["create_preset", "Cria um preset a partir de .milk; com preview toca sem salvar."], ["update_preset", "Edita presets seus; os de terceiros viram remix."], ["capture_frame", "PNG do quadro atual, para a IA ver o resultado."], ["show_text", "Mostra um texto no visual."], ["manage_collection", "Cria, renomeia, adiciona e remove itens de coleções."]];
+  var MCP_TABS = [['desktop', 'Claude Desktop'], ['code', 'Claude Code'], ['cursor', 'Cursor'], ['outro', 'Outro']];
+  var ACTIVITY = [
+    { t: '14:33:05', cli: 'Claude Desktop', tool: 'play_preset', ok: true, res: 'Geiss - Spiral Artifact tocando' },
+    { t: '14:32:21', cli: 'Claude Desktop', tool: 'validate_preset', ok: false, res: 'per_frame, linha 6: variável “bas” não definida' },
+    { t: '14:32:15', cli: 'Claude Desktop', tool: 'create_preset', ok: true, res: '“Remix de Star Ornament” em pré-visualização' },
+    { t: '14:31:40', cli: 'Claude Desktop', tool: 'list_presets', ok: true, res: '6 favoritos encontrados' },
+    { t: '14:31:02', cli: 'Claude Desktop', tool: 'get_status', ok: true, res: 'Zylot - Star Ornament, rotação ligada' }
+  ];
+  var PERF = [{ id: 7, fps: 38 }, { id: 16, fps: 41 }];
+  var HIDDEN = [2, 9, 5];
+  var SCREENS = [
+    { id: '1', name: 'Tela 1', res: '1920×1080 · 60 Hz', w: 1920, h: 1080, note: ' (principal)' },
+    { id: '2', name: 'Tela 2', res: '2560×1440 · 144 Hz', w: 2560, h: 1440, note: '' }
+  ];
+  var DEFAULT_KEYS = [
+    { act: 'Preset aleatório', keys: ['Espaço'] },
+    { act: 'Preset anterior', keys: ['←'] },
+    { act: 'Próximo preset', keys: ['→'] },
+    { act: 'Favoritar', keys: ['F'] },
+    { act: 'Rotação automática', keys: ['R'] },
+    { act: 'Esconder controles', keys: ['H'] },
+    { act: 'Busca rápida', keys: ['/', 'Ctrl+K'] },
+    { act: 'Biblioteca', keys: ['L'] },
+    { act: 'Modo Rack', keys: ['M'] },
+    { act: 'Ajustes rápidos', keys: [','] },
+    { act: 'Configurações', keys: ['Ctrl+,'] },
+    { act: 'Tela cheia', keys: ['F11'] },
+    { act: 'Estúdio de presets', keys: ['E'] },
+    { act: 'Pausar controle por IA', keys: ['Ctrl+Shift+P'] },
+    { act: 'Fechar o que estiver aberto', keys: ['Esc'], locked: true }
+  ];
+  var KEYS = JSON.parse(JSON.stringify(DEFAULT_KEYS));
+  var cap = null;
+
+  /* ── Seções ── */
+  var SECTIONS = [
+    { id: 'geral', name: 'Geral', icon: 'settings-2', desc: 'Como o Sonic Obsidian abre.', html: function () {
+      return grp('Ao iniciar',
+        row({ id: 'abrirEm', group: 1, label: 'Abrir em', help: 'Tela mostrada quando o app inicia.', kw: 'Palco Rack', ctl: seg('abrirEm', [['palco', 'Palco'], ['rack', 'Rack']], S.abrirEm) }) +
+        row({ id: 'winstart', label: 'Iniciar com o Windows', help: 'O app já abre tocando, sem nenhum clique.', ctl: sw('winstart', S.winstart) }) +
+        row({ id: 'telacheia', label: 'Abrir em tela cheia', help: 'Mesmo efeito de F11 ao abrir.', ctl: sw('telacheia', S.telacheia) })) +
+        grp('Preset inicial',
+        row({ id: 'abrirPreset', label: 'Preset ao abrir', kw: 'Último usado Aleatório Um favorito', ctl: sel('abrirPreset', [['ultimo', 'Último usado'], ['aleatorio', 'Aleatório'], ['favorito', 'Um favorito']], S.abrirPreset) }) +
+        row({ id: 'fav', label: 'Favorito ao abrir', help: 'Usado quando o preset ao abrir é “Um favorito”.', ctl: sel('fav', favOpts, S.fav, S.abrirPreset !== 'favorito') }));
+    } },
+    { id: 'captura', name: 'Captura', icon: 'audio-lines', desc: 'De onde vem o som que o visual escuta.', html: function () {
+      var srcOpts = [['sistema', 'Áudio do sistema (recomendado)'], ['mic', 'Microfone'], ['arquivo', 'Arquivo de áudio'], ['soundcloud', 'SoundCloud']].map(function (o) {
+        return '<label class="opt"><input type="radio" name="fonte" value="' + o[0] + '" data-k="fonte"' + (S.fonte === o[0] ? ' checked' : '') + '><span>' + o[1] + '</span></label>';
+      }).join('');
+      return grp('Origem',
+        '<div class="row stack" data-search="fonte do áudio áudio do sistema microfone arquivo de áudio arraste Logitech C920 escolher arquivo soundcloud link url tocar mp3 wav flac ogg m4a"><div class="txt"><span class="lbl" id="l-fonte">Fonte do áudio</span><p class="help">O que o visual escuta. A troca vale na hora.</p></div>' +
+        '<div class="ctl"><div class="opts" role="radiogroup" aria-labelledby="l-fonte">' + srcOpts + '</div>' +
+        '<div class="src-extra" id="srcMic" hidden><label class="lbl" for="mic">Dispositivo do microfone</label>' + sel('mic', [['c920', 'Microfone (Logitech C920)']], S.mic) + '</div>' +
+        '<div class="src-extra" id="srcFile" hidden><button class="btn sm" type="button" id="audBtn">Escolher arquivo…</button><span class="help" id="audName">Ou arraste um arquivo de áudio para a janela</span><input type="file" id="audFile" accept=".mp3,.wav,.flac,.ogg,.m4a" class="sr" tabindex="-1" aria-hidden="true"></div>' +
+        '<div class="src-extra" id="srcSc" hidden><form id="scForm" class="scform" novalidate><label class="lbl" for="scUrl">Link da faixa ou playlist</label><div class="scrow"><input class="inp" id="scUrl" type="url" inputmode="url" placeholder="https://soundcloud.com/artista/faixa" autocomplete="off" aria-describedby="scErr"><button class="btn" type="submit">Tocar</button></div><p class="note" id="scErr" role="alert" hidden><i data-lucide="circle-alert" class="ico"></i><span>Cole o link de uma faixa ou playlist pública do soundcloud.com</span></p></form>' +
+        '<div class="sccard" id="scCard" hidden><div><b>Midnight Drive</b><span>Kavinsky Tribute Band · <span class="num">3:42</span></span></div><a class="lnk" id="scLink" href="https://soundcloud.com/" target="_blank" rel="noopener noreferrer">Ouvir no SoundCloud<i data-lucide="external-link" class="ico"></i></a></div></div></div></div>') +
+        '<div class="cap" data-search="status da captura dispositivo medidor nível testar captura ouvindo saída padrão do Windows">' +
+        '<div class="cap-top"><span class="dot" aria-hidden="true"></span><div><b id="capTitle">Ouvindo a saída padrão do Windows</b><span id="capSub">' + esc(D.capture.device) + ' · <span class="num">' + esc(D.capture.rate) + '</span></span></div></div>' +
+        '<div class="cap-lvl"><span>Nível de entrada</span><div class="meter" id="meter" role="img" aria-label="Nível de entrada ao vivo"></div></div>' +
+        '<div class="cap-test"><button class="btn" type="button" id="testBtn">Testar captura</button><span class="testres" id="testRes" role="status"></span><button class="btn btn-ghost sm" type="button" id="backSys" hidden>Voltar ao áudio do sistema</button></div></div>' +
+        grp('SoundCloud',
+          row({ id: 'scConn', group: 1, label: 'Conexão com a API', help: 'Credenciais de app (OAuth 2.1, client credentials).', kw: 'soundcloud api credenciais', ctl: '<span class="conn"><span class="dot" aria-hidden="true"></span>Credenciais do app configuradas</span>' }) +
+          '<p class="note" data-search="soundcloud limite diário 15 mil reproduções preview 30 s"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>A API limita cada app a <span class="num">15 mil</span> reproduções por dia. Faixas com acesso preview tocam só <span class="num">30 s</span>.</span></p>' +
+          row({ id: 'titulo', label: 'Mostrar título da faixa no visual', help: 'Usa ' + par('launchSongTitleAnim') + ' ao começar uma faixa de arquivo ou SoundCloud.', kw: 'título', ctl: sw('titulo', S.titulo) })) +
+        grp('Entrada',
+          row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) })) +
+        grp('Nível',
+          row({ id: 'gain', label: 'Ganho padrão', help: 'Aplicado ao abrir. Durante a música, use os Ajustes rápidos.', ctl: rng('gain', 0.5, 2, 0.1, S.gain) }));
+    } },
+    { id: 'visual', name: 'Visual', icon: 'sparkles', desc: 'Como os presets passam de um para o outro.', html: function () {
+      return grp('Rotação',
+        row({ id: 'rot', label: 'Rotação automática', help: 'Troca de preset sozinha enquanto toca.', kw: 'R', ctl: sw('rot', S.rot) }) +
+        row({ id: 'interval', label: 'Intervalo', help: 'Tempo até o próximo preset.', ctl: rng('interval', 5, 120, 5, S.interval) }) +
+        row({ id: 'ordem', group: 1, label: 'Ordem', kw: 'Aleatória Coleção', ctl: seg('ordem', [['aleatoria', 'Aleatória'], ['colecao', 'Coleção']], S.ordem) }) +
+        row({ id: 'colecao', label: 'Coleção', help: 'Usada quando a ordem é Coleção.', ctl: sel('colecao', collOpts, S.colecao, S.ordem !== 'colecao') })) +
+        grp('Transição',
+        row({ id: 'blendAuto', label: 'Blend na troca automática', help: 'Tempo da mistura quando a rotação troca o preset.', ctl: rng('blendAuto', 0, 10, 0.1, S.blendAuto) }) +
+        row({ id: 'blendManual', label: 'Blend quando você troca', help: 'Troca imediata responde melhor ao teclado.', ctl: rng('blendManual', 0, 10, 0.1, S.blendManual) }) +
+        row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', phase: 1, ctl: sw('beat', false, true) })) +
+        grp('Crédito do preset',
+        row({ id: 'credito', label: 'Mostrar crédito do preset', help: 'O crédito do autor é sempre exibido.', ctl: sw('credito', true, true) }));
+    } },
+    { id: 'renderizacao', name: 'Renderização', icon: 'cpu', desc: 'Qualidade e custo do Butterchurn na sua GPU.', html: function () {
+      return grp('Qualidade',
+        row({ id: 'mesh', label: 'Malha de distorção', help: 'Mais detalhe nas distorções do preset, mais custo de GPU. ' + par('meshWidth × meshHeight', 'setInternalMeshSize'), kw: 'mesh 32×24 48×36 64×48 96×72 128×96', ctl: sel('mesh', [['32', '32×24'], ['48', '48×36'], ['64', '64×48'], ['96', '96×72'], ['128', '128×96']], S.mesh) }) +
+        row({ id: 'pixelRatio', label: 'Escala de pixels', help: 'Automático segue a densidade da tela. ' + par('pixelRatio'), kw: 'devicePixelRatio', ctl: sel('pixelRatio', [['auto', 'Automático'], ['1', '1×'], ['1.5', '1,5×'], ['2', '2×']], S.pixelRatio) }) +
+        row({ id: 'texRatio', group: 1, label: 'Resolução das texturas', help: 'Menos pixels nas texturas internas, mais fps. ' + par('textureRatio'), ctl: seg('texRatio', [['0.5', '<span class="num">0,5</span>'], ['0.75', '<span class="num">0,75</span>'], ['1', '<span class="num">1</span>']], S.texRatio) }) +
+        row({ id: 'fxaa', label: 'Suavização (FXAA)', help: 'Suaviza as bordas da imagem final. ' + par('outputFXAA', 'setOutputAA'), kw: 'antialiasing', ctl: sw('fxaa', S.fxaa) })) +
+        grp('Quadros e tamanho',
+        row({ id: 'fpsmax', label: 'Limite de quadros', help: 'Teto de fps do visual.', kw: 'fps 30 45 60 144', ctl: sel('fpsmax', [['30', '30'], ['45', '45'], ['60', '60'], ['144', '144'], ['0', 'Sem limite']], S.fpsmax) }) +
+        row({ id: 'canvas', group: 1, label: 'Tamanho do canvas', help: 'Menos pixels, mais fps. Afeta só o visual.', kw: 'resolução Nativo 75% 50%', ctl: seg('canvas', [['nativo', 'Nativo'], ['75', '<span class="num">75%</span>'], ['50', '<span class="num">50%</span>']], S.canvas) })) +
+        grp('Texturas',
+        row({ id: 'extraImgs', label: 'Carregar pacote de imagens extras', help: 'Alguns presets usam essas imagens. ' + par('loadExtraImages'), ctl: sw('extraImgs', S.extraImgs) }));
+    } },
+    { id: 'desempenho', name: 'Desempenho', icon: 'gauge', desc: 'Proteção contra presets lentos e leitura de fps.', html: function () {
+      return grp('Proteção',
+        row({ id: 'pular', label: 'Pular presets lentos', help: 'Oculta presets que ficam abaixo do mínimo de fps.', ctl: sw('pular', S.pular) }) +
+        row({ id: 'minfps', label: 'Mínimo de fps', help: 'Abaixo disso, o preset é ocultado por desempenho.', ctl: rng('minfps', 15, 60, 5, S.minfps) })) +
+        grp('Ocultos por desempenho', '<div class="hlist" id="perfList" tabindex="-1"></div>') +
+        grp('Faixa de controle',
+        row({ id: 'mostrarfps', label: 'Mostrar fps na faixa', help: 'Exibe o valor ao vivo ao lado do nível de entrada.', ctl: sw('mostrarfps', S.mostrarfps) }));
+    } },
+    { id: 'biblioteca', name: 'Biblioteca', icon: 'library', desc: 'Pacotes de presets, presets ocultos e coleções.', html: function () {
+      return grp('Pacotes',
+        row({ id: 'pkgBase', group: 1, label: 'Base', help: 'butterchurn-presets', kw: 'pacote 386 presets', ctl: '<span class="num count">' + D.totalLibrary + ' presets</span>' }) +
+        row({ id: 'pkgExtra', group: 1, label: 'Extra', help: 'butterchurn-presets-extra', kw: 'pacote baixar 0 presets', ctl: '<span class="num count">0 presets</span><button class="btn sm" type="button" id="dlBtn">Baixar pacote extra</button>' }) +
+        '<p class="note" id="dlErr" role="alert" hidden><i data-lucide="circle-alert" class="ico"></i><span>Não foi possível baixar o pacote extra. Verifique a conexão e tente de novo.</span></p>' +
+        row({ id: 'milk', group: 1, label: 'Importar presets .milk', help: 'Ou arraste arquivos .milk para a janela. Eles são convertidos e ficam marcados como importados.', kw: 'milk arquivos', ctl: '<button class="btn sm" type="button" id="milkBtn">Escolher arquivos…</button>' }) +
+        '<p class="note" id="milkNote" role="status" hidden></p><input type="file" id="milkFile" accept=".milk" multiple class="sr" tabindex="-1" aria-hidden="true">') +
+        grp('Presets ocultos',
+        row({ id: 'hidden', group: 1, label: 'Presets ocultos', help: 'Escondidos por você com “Não mostrar mais”.', kw: 'restaurar gerenciar', ctl: '<span class="num count" id="hidCount"></span><button class="btn sm" type="button" id="hidBtn" aria-expanded="false" aria-controls="hidList">Gerenciar</button>' }) +
+        '<div class="hlist" id="hidList" tabindex="-1" hidden></div>') +
+        grp('Coleções',
+        row({ id: 'io', group: 1, label: 'Exportar e importar coleções', help: 'Arquivo .json com todas as suas coleções.', kw: 'json backup', ctl: '<button class="btn sm" type="button" id="expBtn"><i data-lucide="download" class="ico ico-sm"></i>Exportar coleções</button><button class="btn sm" type="button" id="impBtn"><i data-lucide="upload" class="ico ico-sm"></i>Importar coleções</button>' }) +
+        '<p class="note" id="ioNote" role="status" hidden></p><input type="file" id="impFile" accept=".json,application/json" class="sr" tabindex="-1" aria-hidden="true">');
+    } },
+    { id: 'telas', name: 'Telas', icon: 'monitor', desc: 'Onde o visual aparece e onde o Rack fica.', html: function () {
+      var radios = SCREENS.map(function (s) {
+        return '<label class="opt"><input type="radio" name="tela" value="' + s.id + '" data-k="tela"' + (S.tela === s.id ? ' checked' : '') + '><span>' + s.name + ' — <span class="num">' + s.res + '</span>' + s.note + '</span></label>';
+      }).join('');
+      var diag = SCREENS.map(function (s) {
+        return '<div class="scr' + (S.tela === s.id ? ' sel' : '') + '" data-scr="' + s.id + '" style="--w:' + s.w + ';--h:' + s.h + '"><span class="num">' + s.id + '</span></div>';
+      }).join('');
+      return grp('Visual',
+        '<div class="row stack" data-search="tela do visual telas detectadas monitor 1920×1080 2560×1440 principal"><div class="txt"><span class="lbl" id="l-tela">Tela do visual</span><p class="help">Com duas telas, o visual ocupa a tela escolhida no modo Rack.</p></div>' +
+        '<div class="ctl"><div class="opts" role="radiogroup" aria-labelledby="l-tela">' + radios + '</div><div class="diag" id="diag" aria-hidden="true">' + diag + '</div></div></div>') +
+        grp('Rack',
+        row({ id: 'rackTop', label: 'Rack sempre por cima', help: 'Mantém o mini-player acima das outras janelas.', ctl: sw('rackTop', S.rackTop) }) +
+        row({ id: 'rackPos', label: 'Posição do Rack', help: 'Canto da tela onde o Rack aparece.', ctl: sel('rackPos', [['tl', 'Canto superior esquerdo'], ['tr', 'Canto superior direito'], ['bl', 'Canto inferior esquerdo'], ['br', 'Canto inferior direito']], S.rackPos) }));
+    } },
+    { id: 'integracoes', name: 'Integrações', icon: 'plug', desc: 'Deixe uma ferramenta de IA controlar o app.', html: function () {
+      var tabs = MCP_TABS.map(function (t) { return '<button type="button" role="tab" id="tab-' + t[0] + '" data-tab="' + t[0] + '" aria-controls="mcpPanel" aria-selected="' + (S.mcpTab === t[0]) + '" tabindex="' + (S.mcpTab === t[0] ? 0 : -1) + '">' + t[1] + '</button>'; }).join('');
+      var scopes = [['scopeRead', 'Ler status e biblioteca', ''], ['scopePlay', 'Controlar reprodução', ''], ['scopeEdit', 'Criar e editar presets', ''], ['scopeSee', 'Ver o visual', 'Permite capturar um quadro do visual.'], ['scopeLib', 'Gerenciar biblioteca', 'Coleções e ocultar presets. Apagar sempre pede confirmação aqui.']].map(function (x) {
+        return row({ id: x[0], label: x[1], help: x[2], ctl: sw(x[0], S[x[0]]) });
+      }).join('');
+      var act = ACTIVITY.map(function (a) {
+        var res = a.ok ? '<i data-lucide="check" class="ico ico-sm okc"></i>Ok — ' : '<i data-lucide="circle-alert" class="ico ico-sm errc"></i>Erro — ';
+        return '<tr data-search="' + esc(a.cli + ' ' + a.tool + ' ' + a.res) + '"><td class="num">' + a.t + '</td><td>' + a.cli + '</td><th scope="row"><code>' + a.tool + '</code></th><td class="resc">' + res + esc(a.res) + '</td></tr>';
+      }).join('');
+      var tools = TOOLS.map(function (t) { return '<li data-search="' + esc(t[0] + ' ' + t[1]) + '"><code>' + t[0] + '</code><span>' + esc(t[1]) + '</span></li>'; }).join('');
+      return grp('Controle por IA',
+        row({ id: 'mcp', label: 'Permitir controle por IA (MCP)', help: 'O Sonic Obsidian não tem IA própria. Conecte a ferramenta de IA que você já usa.', kw: 'MCP servidor Claude Cursor inteligência artificial', ctl: sw('mcp', S.mcp) })) +
+      '<div id="mcpBody" hidden>' +
+        '<div class="cap" data-search="servidor ativo 127.0.0.1:7341 mcp status localhost"><div class="cap-top"><span class="dot" aria-hidden="true"></span><div><b>Servidor ativo · <span class="num">127.0.0.1:7341</span></b><span>Escuta só neste computador, nunca na rede.</span></div></div></div>' +
+        grp('Conectar', '<div class="tabs" role="tablist" aria-label="Ferramenta de IA" id="mcpTabs">' + tabs + '</div><div id="mcpPanel" role="tabpanel"></div><p class="note" id="mcpNote" role="status" hidden></p><span class="sr" id="copyLive" role="status"></span>') +
+        grp('Permissões', row({ id: 'pausa', label: 'Pausar controle por IA', help: 'Suspende as ferramentas que alteram estado. Atalho ' + '<kbd>Ctrl+Shift+P</kbd>.', kw: 'pausar', ctl: sw('pausa', S.pausa) }) + scopes) +
+        grp('Clientes conectados', '<div class="hlist" id="mcpClients" tabindex="-1"></div>') +
+        grp('Atividade recente', '<div class="tbl"><table><caption class="sr">Atividade recente de clientes de IA</caption><thead><tr><th scope="col">Hora</th><th scope="col">Cliente</th><th scope="col">Ferramenta</th><th scope="col">Resultado</th></tr></thead><tbody>' + act + '</tbody></table></div>') +
+        grp('Ferramentas', '<details class="tools"><summary>Ferramentas disponíveis <span class="num count">' + TOOLS.length + '</span></summary><ul>' + tools + '</ul></details>') +
+      '</div>';
+    } },
+    { id: 'atalhos', name: 'Atalhos', icon: 'keyboard', desc: 'Teclas globais do app.', html: function () {
+      return '<div class="tbl"><table><caption class="sr">Atalhos de teclado</caption><thead><tr><th scope="col">Ação</th><th scope="col">Tecla</th><th scope="col"><span class="sr">Alterar</span></th></tr></thead><tbody id="keysBody"></tbody></table></div>' +
+        '<div class="keys-foot"><p class="note" id="keysNote" role="status" hidden></p><button class="btn btn-ghost" type="button" id="keysReset"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Restaurar padrões</button></div>';
+    } },
+    { id: 'sobre', name: 'Sobre', icon: 'info', desc: 'Versão, créditos e links.', html: function () {
+      return grp('Aplicativo',
+        row({ id: 'ver', group: 1, label: 'Sonic Obsidian', help: 'Versão', kw: 'versão 0.3.0 Electron', ctl: '<span class="num count">0.3.0</span>' }) +
+        row({ id: 'plat', group: 1, label: 'Plataforma', help: 'Electron, para Windows.' }) +
+        row({ id: 'eng', group: 1, label: 'Motor do visual', help: 'Butterchurn, licença MIT.' })) +
+        grp('Créditos',
+        row({ id: 'c1', group: 1, label: 'MilkDrop', help: 'Ryan Geiss' }) +
+        row({ id: 'c2', group: 1, label: 'Butterchurn', help: 'Jordan Berg e contribuidores' }) +
+        row({ id: 'c3', group: 1, label: 'Presets', help: 'Artistas da comunidade MilkDrop, creditados no nome de cada preset.' }) +
+        '<div class="row" data-search="Butterchurn Visualizer butterchurnviz.com link"><div class="txt"><a class="lnk" href="https://butterchurnviz.com" target="_blank" rel="noopener noreferrer">Butterchurn Visualizer (butterchurnviz.com)<i data-lucide="external-link" class="ico"></i></a></div><div class="ctl"></div></div>') +
+        grp('Links',
+        '<div class="row" data-search="Repositório no GitHub atempel sonic-obsidian link"><div class="txt"><a class="lnk" href="https://github.com/atempel/sonic-obsidian" target="_blank" rel="noopener noreferrer">Repositório no GitHub<i data-lucide="external-link" class="ico"></i></a><p class="help">github.com/atempel/sonic-obsidian</p></div><div class="ctl"></div></div>' +
+        '<div class="row" data-search="Butterchurn link github jberg"><div class="txt"><a class="lnk" href="https://github.com/jberg/butterchurn" target="_blank" rel="noopener noreferrer">Butterchurn<i data-lucide="external-link" class="ico"></i></a><p class="help">github.com/jberg/butterchurn</p></div><div class="ctl"></div></div>');
+    } }
+  ];
+
+  /* ── Montagem ── */
+  var wrap = $('#wrap'), navlist = $('#navlist'), secsel = $('#secsel'), q = $('#q'), content = $('#content'), emptyEl = $('#empty');
+  SECTIONS.forEach(function (s) {
+    var p = document.createElement('section');
+    p.className = 'panel'; p.id = 'sec-' + s.id; p.hidden = true; p.setAttribute('aria-labelledby', 'h-' + s.id);
+    p.innerHTML = '<h2 id="h-' + s.id + '" tabindex="-1">' + s.name + '</h2><p class="lead">' + s.desc + '</p>' + s.html();
+    wrap.insertBefore(p, emptyEl);
+    s.panel = p; s.visible = true;
+    var li = document.createElement('li');
+    li.innerHTML = '<button type="button" data-sec="' + s.id + '"><i data-lucide="' + s.icon + '" class="ico"></i><span>' + s.name + '</span></button>';
+    navlist.appendChild(li); s.li = li; s.btn = li.firstChild;
+  });
+  var cur = null;
+  function byId(id) { return SECTIONS.filter(function (s) { return s.id === id; })[0]; }
+  function show(id, focusNav) {
+    var s = byId(id); if (!s) return;
+    cur = s;
+    SECTIONS.forEach(function (x) {
+      x.panel.hidden = x !== s;
+      if (x === s) x.btn.setAttribute('aria-current', 'page'); else x.btn.removeAttribute('aria-current');
+      x.btn.tabIndex = x === s ? 0 : -1;
+    });
+    secsel.value = s.id;
+    content.scrollTop = 0;
+    if (focusNav) s.btn.focus();
+    var h = $('.hit', s.panel); if (h) h.scrollIntoView({ block: 'nearest' });
+  }
+
+  /* ── Busca ── */
+  function filter() {
+    var term = norm(q.value.trim());
+    $('#searchBox').classList.toggle('has-val', !!q.value);
+    SECTIONS.forEach(function (s) {
+      var m = 0;
+      $$('[data-search]', s.panel).forEach(function (e) {
+        var hh = e.closest('[hidden]'); var hid = hh && hh !== s.panel && s.panel.contains(hh);
+        var hit = !!term && !hid && norm(e.dataset.search).indexOf(term) !== -1;
+        e.classList.toggle('hit', hit); if (hit) m++;
+      });
+      s.visible = !term || m > 0 || norm(s.name).indexOf(term) !== -1;
+      s.li.hidden = !s.visible;
+    });
+    var vis = SECTIONS.filter(function (s) { return s.visible; });
+    secsel.innerHTML = vis.map(function (s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    emptyEl.hidden = vis.length > 0;
+    if (!vis.length) {
+      SECTIONS.forEach(function (x) { x.panel.hidden = true; });
+      $('#emptyMsg').textContent = 'Nenhuma configuração corresponde a “' + q.value.trim() + '”. Tente outro termo, como “fps” ou “atalho”.';
+      return;
+    }
+    if (!cur || !cur.visible) show(vis[0].id); else { secsel.value = cur.id; cur.panel.hidden = false; var h = $('.hit', cur.panel); if (h && term) h.scrollIntoView({ block: 'nearest' }); }
+  }
+  q.addEventListener('input', filter);
+  $('#clearQ').addEventListener('click', function () { q.value = ''; filter(); q.focus(); });
+
+  /* ── Navegação ── */
+  navlist.addEventListener('click', function (e) { var b = e.target.closest('button[data-sec]'); if (b) show(b.dataset.sec); });
+  navlist.addEventListener('keydown', function (e) {
+    var keys = { ArrowDown: 1, ArrowUp: -1, Home: 'h', End: 'e' };
+    if (!(e.key in keys)) return;
+    e.preventDefault();
+    var vis = SECTIONS.filter(function (s) { return s.visible; }); if (!vis.length) return;
+    var i = vis.indexOf(cur); if (i < 0) i = 0;
+    var d = keys[e.key];
+    i = d === 'h' ? 0 : d === 'e' ? vis.length - 1 : Math.max(0, Math.min(vis.length - 1, i + d));
+    show(vis[i].id, true);
+  });
+  secsel.addEventListener('change', function () { show(secsel.value); });
+
+  /* ── "Salvo" ── */
+  var tOn = null, tOff = null;
+  function markSaved() {
+    clearTimeout(tOn); clearTimeout(tOff);
+    tOn = setTimeout(function () {
+      $('#savedtxt').textContent = 'Salvo'; $('#saved').classList.add('on');
+      tOff = setTimeout(function () { $('#saved').classList.remove('on'); $('#savedtxt').textContent = ''; }, 2200);
+    }, 1500);
+  }
+
+  /* ── Controles ── */
+  function setDis(id, dis) { $$('[data-k="' + id + '"]').forEach(function (el) { el.disabled = !!dis; }); }
+  function deps() {
+    setDis('interval', !S.rot); setDis('ordem', !S.rot);
+    setDis('colecao', !S.rot || S.ordem !== 'colecao');
+    setDis('fav', S.abrirPreset !== 'favorito');
+    setDis('minfps', !S.pular);
+  }
+  function paintScreens() {
+    $$('.scr').forEach(function (d) { d.classList.toggle('sel', d.dataset.scr === S.tela); });
+  }
+  wrap.addEventListener('input', function (e) {
+    var el = e.target; if (el.type !== 'range') return;
+    var k = el.dataset.k, v = parseFloat(el.value);
+    S[k] = v;
+    el.style.setProperty('--fill', ((v - el.min) / (el.max - el.min) * 100) + '%');
+    var t = FMT[k](v); $('#v-' + k).textContent = t; el.setAttribute('aria-valuetext', t);
+    markSaved();
+  });
+  wrap.addEventListener('change', function (e) {
+    var el = e.target, k = el.dataset && el.dataset.k; if (!k || el.type === 'range') return;
+    S[k] = el.type === 'checkbox' ? el.checked : el.value;
+    if (k === 'tela') paintScreens();
+    if (k === 'fonte') paintSource();
+    if (k === 'mcp') paintMcp();
+    deps(); markSaved();
+  });
+
+  /* ── Captura ── */
+  var upd = SOViz.meter($('#meter'), 20);
+  var viz = SOViz.create($('#viz'));
+  viz.setPreset(D.presets[0], 0);
+  (function loop() {
+    if (cur && cur.id === 'captura') upd(viz.level(), viz.peak());
+    requestAnimationFrame(loop);
+  })();
+  function paintSource() {
+    $('#srcMic').hidden = S.fonte !== 'mic'; $('#srcFile').hidden = S.fonte !== 'arquivo'; $('#srcSc').hidden = S.fonte !== 'soundcloud';
+    $('#backSys').hidden = S.fonte !== 'arquivo' && S.fonte !== 'soundcloud';
+    var t, sub;
+    if (S.fonte === 'sistema') { t = 'Ouvindo a saída padrão do Windows'; sub = esc(D.capture.device) + ' · <span class="num">' + esc(D.capture.rate) + '</span>'; }
+    else if (S.fonte === 'mic') { t = 'Ouvindo o microfone…'; sub = 'Microfone (Logitech C920)'; }
+    else if (S.fonte === 'soundcloud') { if (S.sc) { t = 'Tocando do SoundCloud'; sub = 'Midnight Drive — Kavinsky Tribute Band'; } else { t = 'Nenhuma faixa do SoundCloud'; sub = 'Cole o link de uma faixa ou playlist para tocar.'; } }
+    else if (S.file) { t = 'Tocando o arquivo de áudio'; sub = esc(S.file); }
+    else { t = 'Nenhum arquivo de áudio escolhido'; sub = 'Escolha um arquivo ou arraste-o para a janela.'; }
+    $('#capTitle').textContent = t; $('#capSub').innerHTML = sub;
+  }
+  $('#backSys').addEventListener('click', function () {
+    S.fonte = 'sistema'; var r = $('input[name="fonte"][value="sistema"]'); if (r) { r.checked = true; r.focus(); }
+    paintSource(); markSaved();
+  });
+  $('#scForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var u = $('#scUrl').value.trim(), ok = /^https?:\/\/(www\.|m\.)?soundcloud\.com\/[^\/\s?#]+\/[^\s?#]+/i.test(u) || /^https?:\/\/(www\.|m\.)?soundcloud\.com\/[^\/\s?#]+\/sets\/[^\s?#]+/i.test(u);
+    $('#scErr').hidden = ok; $('#scUrl').setAttribute('aria-invalid', String(!ok));
+    if (!ok) { S.sc = ''; $('#scCard').hidden = true; icons(); return; }
+    S.sc = u; $('#scCard').hidden = false; $('#scLink').href = u; paintSource(); markSaved();
+  });
+  function pickAudio(f) {
+    S.file = f.name; $('#audName').textContent = f.name;
+    if (S.fonte !== 'arquivo') { S.fonte = 'arquivo'; var r = $('input[name="fonte"][value="arquivo"]'); if (r) r.checked = true; }
+    paintSource(); markSaved();
+  }
+  $('#audBtn').addEventListener('click', function () { $('#audFile').click(); });
+  $('#audFile').addEventListener('change', function (e) { if (e.target.files[0]) pickAudio(e.target.files[0]); e.target.value = ''; });
+  function milkNote(n) {
+    var el = $('#milkNote'); el.hidden = false; el.className = 'note ok';
+    el.innerHTML = '<i data-lucide="check" class="ico"></i><span>' + n + (n === 1 ? ' preset importado e marcado como importado.' : ' presets importados e marcados como importados.') + '</span>'; icons(); markSaved();
+  }
+  $('#milkBtn').addEventListener('click', function () { $('#milkFile').click(); });
+  $('#milkFile').addEventListener('change', function (e) { if (e.target.files.length) milkNote(e.target.files.length); e.target.value = ''; });
+  var win = $('.win');
+  win.addEventListener('dragover', function (e) { if (e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') !== -1) e.preventDefault(); });
+  win.addEventListener('drop', function (e) {
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    var fs = Array.prototype.slice.call(e.dataTransfer.files);
+    var milk = fs.filter(function (f) { return /\.milk$/i.test(f.name); });
+    var aud = fs.filter(function (f) { return /\.(mp3|wav|flac|ogg|m4a)$/i.test(f.name); })[0];
+    if (milk.length) milkNote(milk.length);
+    if (aud) pickAudio(aud);
+  });
+  /* ── Integrações / MCP ── */
+  var MCP_HELP = {
+    desktop: 'Adicione ao arquivo claude_desktop_config.json e reinicie o Claude Desktop.',
+    code: 'Rode no terminal. O Claude Code passa a ver as ferramentas do Sonic Obsidian.',
+    cursor: 'Adicione ao arquivo .cursor/mcp.json, no projeto ou na sua pasta de usuário.',
+    outro: 'Para clientes que falam HTTP local (Streamable HTTP). Cada cliente usa o próprio token.'
+  };
+  var CFG = '{\n  "mcpServers": {\n    "sonic-obsidian": {\n      "command": "sonic-obsidian-mcp"\n    }\n  }\n}';
+  function mcpText(real) {
+    if (S.mcpTab === 'code') return 'claude mcp add sonic-obsidian -- sonic-obsidian-mcp';
+    if (S.mcpTab === 'outro') return 'URL    http://127.0.0.1:7341/mcp\nToken  ' + (real || S.showTok ? S.token : 'so_' + '\u2022'.repeat(16));
+    return CFG;
+  }
+  var copyIco = '<i data-lucide="copy" class="ico ico-sm"></i>Copiar';
+  function renderMcp() {
+    var pn = $('#mcpPanel'); pn.setAttribute('aria-labelledby', 'tab-' + S.mcpTab);
+    pn.innerHTML = '<p class="help" style="margin:12px 0 8px">' + MCP_HELP[S.mcpTab] + '</p><pre tabindex="0" aria-label="Configuração para copiar">' + esc(mcpText(false)) + '</pre>' +
+      '<div class="tabact"><button class="btn sm" type="button" data-act="copy">' + copyIco + '</button>' +
+      (S.mcpTab === 'outro' ? '<button class="btn btn-ghost sm" type="button" data-act="show">' + (S.showTok ? 'Ocultar' : 'Mostrar') + '</button><button class="btn btn-ghost sm" type="button" data-act="newtok">Gerar novo token</button>' : '') + '</div>';
+    $$('#mcpTabs [role=tab]').forEach(function (b) { var on = b.dataset.tab === S.mcpTab; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    icons();
+  }
+  function copyText(t, btn) {
+    function done() {
+      btn.innerHTML = '<i data-lucide="check" class="ico ico-sm"></i>Copiado'; icons(); $('#copyLive').textContent = 'Copiado';
+      setTimeout(function () { if (btn.isConnected) { btn.innerHTML = copyIco; icons(); } $('#copyLive').textContent = ''; }, 1800);
+    }
+    function fb() { var a = document.createElement('textarea'); a.value = t; a.className = 'sr'; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (e) {} a.remove(); done(); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fb); else fb();
+  }
+  $('#mcpPanel').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var a = b.dataset.act;
+    if (a === 'copy') copyText(mcpText(true), b);
+    else if (a === 'show') { S.showTok = !S.showTok; renderMcp(); $('#mcpPanel [data-act=show]').focus(); }
+    else if (a === 'newtok') {
+      S.token = 'so_' + Array.prototype.map.call(crypto.getRandomValues(new Uint8Array(8)), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      S.showTok = false; renderMcp(); $('#mcpPanel [data-act=newtok]').focus();
+      var n = $('#mcpNote'); n.hidden = false; n.className = 'note ok'; n.innerHTML = '<i data-lucide="check" class="ico"></i><span>Novo token gerado. Atualize os clientes que usavam o anterior.</span>'; icons(); markSaved();
+    }
+  });
+  $('#mcpTabs').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) { S.mcpTab = b.dataset.tab; renderMcp(); } });
+  $('#mcpTabs').addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    var ids = MCP_TABS.map(function (t) { return t[0]; }), i = ids.indexOf(S.mcpTab);
+    i = (i + (e.key === 'ArrowRight' ? 1 : ids.length - 1)) % ids.length; S.mcpTab = ids[i]; renderMcp(); $('#tab-' + S.mcpTab).focus();
+  });
+  function renderClients() {
+    $('#mcpClients').innerHTML = S.clients ? '<div class="row hrow"><div class="txt"><div class="nm">Claude Desktop</div><div class="by">Conectado há <span class="num">12 min</span> · stdio</div></div><div class="ctl"><button class="btn sm" type="button" data-disc="1" aria-label="Desconectar Claude Desktop">Desconectar</button></div></div>'
+      : '<p class="help" style="padding:14px 0">Nenhum cliente conectado. Configure uma ferramenta de IA na aba acima.</p>';
+  }
+  $('#mcpClients').addEventListener('click', function (e) { if (!e.target.closest('[data-disc]')) return; S.clients = false; renderClients(); $('#mcpClients').focus(); markSaved(); });
+  function paintMcp() { $('#mcpBody').hidden = !S.mcp; filter(); }
+  var testTimer = null;
+  $('#testBtn').addEventListener('click', function () {
+    var b = $('#testBtn'), r = $('#testRes');
+    b.disabled = true; r.className = 'testres'; r.textContent = 'Detectando som…';
+    clearTimeout(testTimer);
+    testTimer = setTimeout(function () {
+      r.className = 'testres done'; r.innerHTML = '<i data-lucide="check" class="ico ico-sm"></i>Som detectado'; icons();
+      b.disabled = false;
+    }, 3000);
+  });
+
+  /* ── Desempenho: ocultos ── */
+  function pname(id) { return D.presets[id]; }
+  function renderPerf() {
+    var el = $('#perfList');
+    el.innerHTML = PERF.length ? PERF.map(function (p) {
+      var pr = pname(p.id);
+      return '<div class="row hrow" data-search="' + esc(pr.full + ' oculto desempenho restaurar') + '"><div class="txt"><div class="nm">' + esc(pr.title) + '</div><div class="by">por ' + esc(pr.author) + '</div></div>' +
+        '<div class="ctl"><span class="num count warn">' + p.fps + ' fps</span><button class="btn sm" type="button" data-restore-perf="' + p.id + '" aria-label="Restaurar ' + esc(pr.title) + ', por ' + esc(pr.author) + '">Restaurar</button></div></div>';
+    }).join('') : '<p class="help" style="padding:14px 0">Nenhum preset oculto por desempenho. Presets que ficarem abaixo do mínimo de fps aparecem aqui.</p>';
+  }
+  $('#perfList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-restore-perf]'); if (!b) return;
+    var id = +b.dataset.restorePerf;
+    PERF = PERF.filter(function (p) { return p.id !== id; });
+    renderPerf(); $('#perfList').focus(); markSaved();
+  });
+
+  /* ── Biblioteca ── */
+  function renderHidden() {
+    $('#hidCount').textContent = HIDDEN.length + ' presets';
+    var el = $('#hidList');
+    el.innerHTML = HIDDEN.length ? HIDDEN.map(function (id) {
+      var pr = pname(id);
+      return '<div class="row hrow"><div class="txt"><div class="nm">' + esc(pr.title) + '</div><div class="by">por ' + esc(pr.author) + '</div></div>' +
+        '<div class="ctl"><button class="btn sm" type="button" data-restore-hid="' + id + '" aria-label="Restaurar ' + esc(pr.title) + ', por ' + esc(pr.author) + '">Restaurar</button></div></div>';
+    }).join('') : '<p class="help" style="padding:14px 0">Nenhum preset oculto. Use “Não mostrar mais” no menu de um preset para esconder.</p>';
+  }
+  $('#hidBtn').addEventListener('click', function () {
+    var open = $('#hidBtn').getAttribute('aria-expanded') === 'true';
+    $('#hidBtn').setAttribute('aria-expanded', String(!open));
+    $('#hidBtn').textContent = open ? 'Gerenciar' : 'Fechar lista';
+    $('#hidList').hidden = open;
+  });
+  $('#hidList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-restore-hid]'); if (!b) return;
+    var id = +b.dataset.restoreHid;
+    HIDDEN = HIDDEN.filter(function (x) { return x !== id; });
+    renderHidden(); $('#hidList').focus(); markSaved();
+  });
+  var dlTimer = null;
+  $('#dlBtn').addEventListener('click', function () {
+    var b = $('#dlBtn'); b.disabled = true; b.textContent = 'Baixando…'; $('#dlErr').hidden = true;
+    clearTimeout(dlTimer);
+    dlTimer = setTimeout(function () { b.disabled = false; b.textContent = 'Tentar de novo'; $('#dlErr').hidden = false; }, 1800);
+  });
+  function ioNote(ok, msg) {
+    var n = $('#ioNote'); n.hidden = false; n.className = 'note' + (ok ? ' ok' : '');
+    n.innerHTML = '<i data-lucide="' + (ok ? 'check' : 'circle-alert') + '" class="ico"></i><span>' + esc(msg) + '</span>'; icons();
+  }
+  $('#expBtn').addEventListener('click', function () {
+    var blob = new Blob([JSON.stringify({ version: 1, collections: D.collections }, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'sonic-obsidian-colecoes.json';
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    ioNote(true, D.collections.length + ' coleções exportadas para sonic-obsidian-colecoes.json.');
+  });
+  $('#impBtn').addEventListener('click', function () { $('#impFile').click(); });
+  $('#impFile').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var j = JSON.parse(r.result), list = Array.isArray(j) ? j : j.collections;
+        if (!Array.isArray(list) || !list.every(function (c) { return c && typeof c.name === 'string' && Array.isArray(c.ids); })) throw new Error('formato');
+        ioNote(true, list.length + ' coleções importadas de ' + f.name + '.'); markSaved();
+      } catch (err) { ioNote(false, 'Não foi possível ler ' + f.name + '. Escolha um arquivo .json exportado pelo Sonic Obsidian.'); }
+    };
+    r.onerror = function () { ioNote(false, 'Não foi possível abrir ' + f.name + '. Tente de novo.'); };
+    r.readAsText(f); e.target.value = '';
+  });
+
+  /* ── Atalhos ── */
+  function comboOf(e) {
+    var k = e.key, name;
+    if (k === ' ') name = 'Espaço';
+    else if (k === 'ArrowLeft') name = '←'; else if (k === 'ArrowRight') name = '→';
+    else if (k === 'ArrowUp') name = '↑'; else if (k === 'ArrowDown') name = '↓';
+    else if (k.length === 1) name = k.toUpperCase();
+    else name = k;
+    return (e.ctrlKey || e.metaKey ? 'Ctrl+' : '') + (e.altKey ? 'Alt+' : '') + (e.shiftKey && k.length === 1 && /[a-z]/i.test(k) ? 'Shift+' : '') + name;
+  }
+  function renderKeys(focusI) {
+    $('#keysBody').innerHTML = KEYS.map(function (k, i) {
+      var keys = cap && cap.i === i ? '<span class="capt">Pressione a nova tecla (Esc cancela)</span>' : k.keys.map(function (x) { return '<kbd>' + esc(x) + '</kbd>'; }).join('<span class="or">ou</span>');
+      return '<tr data-search="' + esc(k.act + ' ' + k.keys.join(' ') + ' atalho tecla') + '"><th scope="row">' + k.act + '</th><td>' + keys + '</td><td class="act"><button class="ibtn" type="button" data-edit="' + i + '" aria-label="Alterar tecla de ' + esc(k.act) + '" title="Alterar tecla"' + (k.locked ? ' disabled' : '') + '><i data-lucide="pencil" class="ico ico-sm"></i></button></td></tr>';
+    }).join('');
+    $('#keysReset').disabled = JSON.stringify(KEYS) === JSON.stringify(DEFAULT_KEYS);
+    icons(); filter();
+    if (focusI != null) { var b = $('[data-edit="' + focusI + '"]'); if (b) b.focus(); }
+  }
+  function keysNote(ok, msg) {
+    var n = $('#keysNote'); n.hidden = !msg; n.className = 'note' + (ok ? ' ok' : '');
+    n.innerHTML = msg ? '<i data-lucide="' + (ok ? 'check' : 'circle-alert') + '" class="ico"></i><span>' + esc(msg) + '</span>' : ''; icons();
+  }
+  $('#keysBody').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-edit]'); if (!b) return;
+    cap = { i: +b.dataset.edit }; keysNote(true, ''); renderKeys(cap.i);
+  });
+  $('#keysReset').addEventListener('click', function () {
+    KEYS = JSON.parse(JSON.stringify(DEFAULT_KEYS)); cap = null; keysNote(true, 'Atalhos restaurados para o padrão.'); renderKeys(); markSaved();
+    $('#keysReset').blur();
+  });
+
+  /* ── Teclado global ── */
+  document.addEventListener('keydown', function (e) {
+    if (cap) {
+      if (e.key === 'Tab') { var t = cap.i; cap = null; renderKeys(); return; }
+      e.preventDefault(); e.stopPropagation();
+      var i = cap.i;
+      if (e.key === 'Escape') { cap = null; renderKeys(i); return; }
+      if (['Control', 'Shift', 'Alt', 'Meta'].indexOf(e.key) !== -1) return;
+      var combo = comboOf(e);
+      var clash = KEYS.filter(function (k, j) { return j !== i && k.keys.indexOf(combo) !== -1; })[0];
+      cap = null;
+      if (clash) { keysNote(false, '“' + combo + '” já é usada por ' + clash.act + '. Escolha outra tecla.'); }
+      else { KEYS[i].keys = [combo]; keysNote(true, 'Tecla de ' + KEYS[i].act + ' alterada para ' + combo + '.'); markSaved(); }
+      renderKeys(i); return;
+    }
+    if (e.key === 'Escape') {
+      if (document.activeElement === q && q.value) { q.value = ''; filter(); return; }
+      e.preventDefault(); location.href = CLOSE_HREF; return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); q.focus(); q.select(); }
+  }, true);
+
+  /* ── Início ── */
+  renderPerf(); renderHidden(); renderMcp(); renderClients(); paintMcp(); renderKeys();
+  deps(); paintSource(); icons();
+  filter();
+  show('captura');
+  if (window.matchMedia('(min-width: 900px)').matches) cur.btn.focus({ preventScroll: true });
+})();
+</script>
+</body>
+</html>
