@@ -10,13 +10,13 @@ Terminar um app que eu abra todo dia: janela ou tela cheia, reagindo ao áudio d
 
 ## Estado atual (nov/2026)
 - **Retomada com mudança de stack:** o motor visual passa a ser o [Butterchurn](https://github.com/jberg/butterchurn) (MilkDrop em WebGL 2, MIT) dentro de um app **Electron**. O Python (Fase 1 de mar/2026) foi encostado em `legacy/python/` — ver [DECISIONS.md](DECISIONS.md).
-- **Próximo passo:** Fase 0, o spike de captura ([docs/specs/001-spike-electron-butterchurn.md](docs/specs/001-spike-electron-butterchurn.md)).
+- **Fase 0 concluída** (spike validado no Windows, PR #5). **Próximo passo:** Fase 1 — specs 002 a 005 (ver [TASKS.md](TASKS.md)).
 - Tarefas ativas: [TASKS.md](TASKS.md). Histórico de sessões: [SESSIONS.md](SESSIONS.md).
 
 ## Onde está cada coisa
 | O quê | Onde |
 |---|---|
-| Código do app | `src/` (vazio até o spike) |
+| Código do app | `src/` (Electron: `main/` e `renderer/`) |
 | Produto, roadmap, escopo | [docs/PRD.md](docs/PRD.md) |
 | Specs por feature | `docs/specs/` |
 | Design (exploração, moodboard, protótipo) | `docs/design/` |
