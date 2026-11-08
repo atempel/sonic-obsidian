@@ -1,5 +1,24 @@
-import { app, BrowserWindow, desktopCapturer, session } from 'electron'
+import { app, BrowserWindow, desktopCapturer, ipcMain, session } from 'electron'
 import { join } from 'node:path'
+import { JsonStore } from './store'
+
+const stores = new Map<string, JsonStore>()
+
+/** settings.json e library.json (architecture §7): só o main toca o disco. */
+function registerStores(): void {
+  for (const name of ['settings', 'library']) stores.set(name, new JsonStore(name))
+  const get = (name: unknown): JsonStore => {
+    const store = typeof name === 'string' ? stores.get(name) : undefined
+    if (!store) throw new Error(`store desconhecido: ${String(name)}`)
+    return store
+  }
+  ipcMain.handle('store:load', (_e, name: unknown) => get(name).load())
+  ipcMain.handle('store:save', (_e, name: unknown, data: unknown) => get(name).save(data))
+  ipcMain.handle('window:toggleFullScreen', (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (win) win.setFullScreen(!win.isFullScreen())
+  })
+}
 
 /**
  * Responde a todo getDisplayMedia do renderer sem mostrar seletor:
@@ -41,6 +60,7 @@ function createWindow(): void {
     // redimensionar pelas bordas continua nativo (resizable + thickFrame padrão).
     frame: false,
     webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       sandbox: true,
       nodeIntegration: false,
@@ -74,7 +94,19 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  registerStores()
   registerLoopbackCapture()
   createWindow()
 })
 app.on('window-all-closed', () => app.quit())
+
+// Grava o que estiver pendente no debounce antes de sair.
+let flushed = false
+app.on('before-quit', (event) => {
+  if (flushed) return
+  event.preventDefault()
+  Promise.all([...stores.values()].map((s) => s.flush())).finally(() => {
+    flushed = true
+    app.quit()
+  })
+})

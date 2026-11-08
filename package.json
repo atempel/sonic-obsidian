@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "butterchurn": "2.6.7",
-    "butterchurn-presets": "2.4.7"
+    "butterchurn-presets": "2.4.7",
+    "preact": "11.0.2"
   },
   "devDependencies": {
     "@types/node": "26.6.6",

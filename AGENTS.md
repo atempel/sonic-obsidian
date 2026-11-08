@@ -11,7 +11,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
   - `npm run dev` — app com HMR; só funciona onde há janela e Electron instalado (não na nuvem, não no host sem Node).
   - Testes automatizados: ainda não há.
 - CI: `.github/workflows/build-windows.yml` — typecheck no Ubuntu e build no `windows-latest`; o artifact `sonic-obsidian-win-<sha>` é o que o usuário baixa e testa.
-- `butterchurn` + `butterchurn-presets` (MIT), versões fixadas.
+- `butterchurn` + `butterchurn-presets` (MIT) e `preact` (MIT, interface do overlay), versões fixadas. Processo main + preload (`src/preload/`, API estreita em `window.so`) + renderer; estado salvo em `settings.json`/`library.json` no `userData`.
 - `legacy/python/` é referência histórica — não editar, não rodar junto.
 - **Onde roda:** desenvolvimento na nuvem (Linux, sem áudio/janela); validação no Windows com o build do GitHub Actions. Ver [CONTEXT.md](CONTEXT.md#ambiente-de-desenvolvimento).
 
@@ -36,7 +36,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 ## Limites — não fazer sem perguntar
 - Commitar direto em `main`.
 - Trocar de motor visual, de shell (Electron) ou adicionar framework grande de UI além do decidido — registrar em DECISIONS.md primeiro.
-- Adicionar dependência com licença copyleft (GPL/LGPL) ou paga.
+- Adicionar dependência com licença copyleft (GPL/LGPL) ou paga. Toda dependência nova passa antes pela checagem de [docs/dependencias.md](docs/dependencias.md) (≈1 min), registrada lá; sinal ruim → perguntar.
 - Remover/renomear créditos de autor dos presets.
 - Mexer em `legacy/` ou em `docs/legacy/`.
 - Qualquer coisa para capturar áudio com DRM.
