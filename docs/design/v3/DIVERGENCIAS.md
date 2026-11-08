@@ -88,3 +88,9 @@ Status: Aberta. Proposta: tirar `[`/`]` da rotação quando os Ajustes rápidos 
 
 ### 2026-11-08 — Palco integrado · M18, carência do silêncio
 Protótipo (`1794175739-7509`, `docs/v3-microinteracoes.md` M18): o painel "Sem áudio" aparece depois de 1,2 s de silêncio contínuo. **No app:** continua em 10 s (spec 005, decisão do usuário reafirmada em 08/11), para que as pausas entre faixas não mostrem o painel. Do M18 entram o fade de 220 ms na volta do som e o medidor apagando em cascata. Ver DECISIONS 2026-11-08 "Microinterações: o que entra e quando". **Status:** aberta (pede resposta da sessão de design).
+
+### 2026-11-08 — Palco integrado · transições nos Ajustes rápidos
+Protótipo (`1794175739-7509`, painel `#sheet`): "Blend na troca automática" e "Blend quando você troca" são sliders de 0 a 5 s, em que 0 é corte seco. **No app:** cada troca tem um seletor de tipo (Corte seco / Crossfade / Varredura / Plasma / Radial / Aleatório) e o tempo, de 0,1 a 5 s, que some com Corte seco (spec 013 e spec 011). Os dois ficam numa seção "Transições", e a Expressividade (spec 015) ganha seção própria logo depois de Sinal. **Status:** aberta (pede o desenho dos seletores na sessão de design).
+
+### 2026-11-08 — Configurações · seção inicial
+Protótipo: as Configurações abrem em Captura. **No app:** abrem em Geral (decisão do usuário, spec 011). **Status:** aberta.
