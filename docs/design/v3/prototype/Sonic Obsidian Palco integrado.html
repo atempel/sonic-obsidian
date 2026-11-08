@@ -19,7 +19,7 @@
   .proto .grp { display: inline-flex; align-items: center; gap: 2px; }
   .proto .grp span { color: var(--text-3); }
   a.btn { text-decoration: none; }
-  body.idle { cursor: none; }
+  body.idle, body.idle * { cursor: none; } /* M22 */
   #viz { position: fixed; inset: 0; width: 100%; height: 100%; display: block; transition: opacity var(--t-med) var(--ease-out); }
   body.sheet-open #viz { opacity: 0.4; }
 
@@ -34,20 +34,25 @@
 
   /* ── Faixa de controle ── */
   .strip-wrap { position: fixed; z-index: 10; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; pointer-events: none;
-    transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
-  body.idle .strip-wrap { opacity: 0; transform: translateY(12px); }
+    transition: opacity var(--t-fast) var(--ease-out); }
+  body.idle .strip-wrap { opacity: 0; transition-duration: 150ms; }
+  /* M01 · faixa entra em degrau: três blocos sobem 6 px com 20 ms de diferença; saída junta, 150 ms */
+  .strip > .now, .strip > .strip-t, .strip > .tail, .strip > .trow { transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  .strip > .strip-t { transition-delay: 20ms; }
+  .strip > .tail, .strip > .trow { transition-delay: 40ms; }
+  body.idle .strip > .now, body.idle .strip > .strip-t, body.idle .strip > .tail, body.idle .strip > .trow { opacity: 0; transform: translateY(6px); transition-duration: 150ms; transition-delay: 0ms; }
   body.lib-open .strip-wrap { padding-left: 376px; }
   body.lib-open .credit { padding-left: 400px; }
   @media (max-width: 900px) { body.lib-open .strip-wrap { padding-left: 16px; } }
   .strip { pointer-events: auto; position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
     padding: 10px 10px 10px 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
   body.idle .strip { pointer-events: none; }
-  .rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 0; }
+  .rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 100%; transform: scaleX(0); transform-origin: left; } /* M03 */
   .now { display: flex; align-items: center; gap: 8px; min-width: 0; }
   .now-text { min-width: 0; flex: 1 1 auto; }
   .now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ibtn.fav[aria-pressed="true"] svg { fill: var(--violet); }
+  .ibtn.fav:not(.favp)[aria-pressed="true"] svg { fill: var(--violet); }
   .strip-t { display: flex; align-items: center; gap: 2px; }
   .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 8px; }
   .rot { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; }
@@ -70,12 +75,12 @@
   .state.error h2 .ico { color: var(--warn); }
 
   /* ── Busca rápida (paleta) ── */
-  .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(8,8,9,0.6); opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out); }
+  .scrim { position: fixed; inset: 0; z-index: 40; background: rgba(8,8,9,0.6); opacity: 0; pointer-events: none; } /* M11: sem animação */
   body.palette-open .scrim.p { opacity: 1; pointer-events: auto; }
-  .palette { position: fixed; z-index: 41; left: 50%; top: 14vh; width: min(640px, calc(100vw - 32px)); transform: translate(-50%, -8px); opacity: 0; pointer-events: none; visibility: hidden;
+  .palette { position: fixed; z-index: 41; left: 50%; top: 14vh; width: min(640px, calc(100vw - 32px)); transform: translate(-50%, 0); opacity: 0; pointer-events: none; visibility: hidden;
     background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
-    transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out), visibility 0s linear var(--t-med); display: flex; flex-direction: column; max-height: 70vh; }
-  body.palette-open .palette { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; visibility: visible; transition-delay: 0s; }
+    display: flex; flex-direction: column; max-height: 70vh; } /* M11: sem animação */
+  body.palette-open .palette { opacity: 1; pointer-events: auto; visibility: visible; }
   .p-search { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 52px; border-bottom: 1px solid var(--line-1); color: var(--text-2); }
   .p-search input { flex: 1; height: 100%; background: transparent; border: 0; font-size: 16px; color: var(--text-1); }
   .p-search input::placeholder { color: var(--text-3); }
@@ -129,8 +134,8 @@
   .clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-2); }
   .sheet .line kbd { margin-left: 6px; }
   .winctl { position: fixed; top: 16px; right: 16px; z-index: 20; display: flex; gap: 2px; padding: 4px; background: rgba(15,15,20,0.94); border: 1px solid var(--line-2); border-radius: var(--r-3);
-    opacity: 0; pointer-events: none; transition: opacity var(--t-fast) linear; }
-  .winctl.on, .winctl:focus-within { opacity: 1; pointer-events: auto; }
+    opacity: 0; transform: translateX(4px); pointer-events: none; transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+  .winctl.on, .winctl:focus-within { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); } /* M16 */
   .winctl .ibtn:hover { background: var(--bg-04); color: var(--text-1); }
   body.lib-open .winctl, body.sheet-open .winctl, body.palette-open .winctl, body.dlg-open .winctl { opacity: 0; pointer-events: none; visibility: hidden; }
   .closed-screen { position: fixed; z-index: 1000; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg-00); color: var(--text-2); }
@@ -163,11 +168,10 @@
   .lib .search .si { position: absolute; left: 11px; top: 9px; color: var(--text-3); pointer-events: none; }
   .lib .search kbd { position: absolute; right: 9px; top: 9px; pointer-events: none; }
   .lib .search .clear { position: absolute; right: 2px; top: 2px; width: 32px; height: 32px; }
-  .ltabs { display: flex; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line-1); }
+  .ltabs { position: relative; display: flex; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid var(--line-1); }
   .ltabs button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0; background: none; border: 0; color: var(--text-2); font-weight: 500; cursor: pointer; border-radius: var(--r-1); transition: color var(--t-fast); }
   .ltabs button:hover { color: var(--text-1); }
   .ltabs button[aria-selected="true"] { color: var(--text-1); }
-  .ltabs button[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--violet); }
   .ltabs .num { font-size: 12px; color: var(--text-3); }
   .listwrap { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
   .list { flex: 1; min-height: 0; overflow-y: auto; padding: 8px; }
@@ -197,8 +201,8 @@
   .hiddenbar .btn { height: 28px; padding: 0 8px; font-size: 12px; }
   .toast { position: absolute; left: 12px; right: 12px; bottom: 10px; padding: 9px 12px; font-size: 13px;
     background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
-    opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
-  .toast.on { opacity: 1; transform: none; }
+    opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 150ms var(--ease-out), transform 0s linear 150ms; }
+  .toast.on { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); } /* M13 */
   .coll { min-height: 56px; }
   .collist li { height: 56px; border-radius: var(--r-2); transition: background var(--t-fast); }
   .collist li:hover { background: var(--bg-03); }
@@ -278,8 +282,8 @@
   .rmeta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; margin-top: 8px; font-size: 12px; min-height: 18px; }
   .rmeta .bpm { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
   .rmeta .bpm .num { font-size: 13px; }
-  .bdot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-3); display: inline-block; }
-  .bdot.on { background: var(--beat); }
+  .bdot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-3); display: inline-block; transition: background 400ms var(--ease-out); }
+  .bdot.on { background: var(--beat); transition-duration: 0ms; } /* liberação de beat: 400 ms */
   .rmeta .next { color: var(--text-2); }
   .rmeta .pos { color: var(--text-2); margin-left: auto; }
   .rmeta .noaudio { display: inline-flex; align-items: center; gap: 6px; color: var(--text-1); font-weight: 500; font-size: 13px; }
@@ -294,7 +298,6 @@
   .rtransport { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 6px 8px 8px; }
   .rtransport .ibtn { width: 30px; height: 30px; }
   .rtransport .ibtn .ico { width: 16px; height: 16px; }
-  .rtransport .ibtn[data-act="fav"][aria-pressed="true"] .ico { fill: var(--violet); }
   .rtransport .sep { height: 18px; margin: 0 6px; flex: none; }
   .rot-n { font-size: 12px; color: var(--text-2); margin: 0 4px 0 -2px; min-width: 28px; }
   .rot-n.off { color: var(--text-3); }
@@ -310,10 +313,10 @@
   .drawer.open { grid-template-rows: 1fr; }
   .dwrap { min-height: 0; overflow: hidden; }
   .dtop { border-top: 1px solid var(--line-2); }
-  .dtabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line-1); }
+  .dtabs { position: relative; display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line-1); }
   .dtab { height: 30px; padding: 0 12px; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--r-2) var(--r-2) 0 0; transition: color var(--t-fast), background var(--t-fast); }
   .dtab:hover { color: var(--text-1); background: var(--bg-03); }
-  .dtab[aria-selected="true"] { color: var(--text-1); border-bottom-color: var(--violet); }
+  .dtab[aria-selected="true"] { color: var(--text-1); }
   .tpanel { height: 218px; overflow-y: auto; padding: 8px; }
   .queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
   .qrow { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto 18px; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 8px; text-align: left; background: transparent; border: 0; border-radius: var(--r-2); color: var(--text-1); cursor: pointer; transition: background var(--t-fast); }
@@ -349,13 +352,13 @@
   .dropzone { position: fixed; z-index: 90; inset: 0; padding: 24px; opacity: 0; pointer-events: none; visibility: hidden; transition: opacity 180ms var(--ease-out), visibility 0s linear 180ms; }
   .dropzone.on { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
   .dz-box { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center;
-    border: 2px dashed var(--violet-line); border-radius: var(--r-3); background: rgba(8,8,9,0.7); }
+    position: relative; border: 2px solid transparent; border-radius: var(--r-3); background: rgba(8,8,9,0.7); }
   .dz-box .ico { width: 32px; height: 32px; color: var(--violet); margin-bottom: 8px; }
   .dz-box strong { font-size: 18px; font-weight: 600; }
   .dz-box span { font-size: 14px; color: var(--text-2); }
-  .gtoast { position: fixed; z-index: 80; left: 50%; top: auto; bottom: 128px; transform: translate(-50%, -8px); padding: 10px 16px; font-size: 14px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
-    opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
-  .gtoast.on { opacity: 1; transform: translate(-50%, 0); }
+  .gtoast { position: fixed; z-index: 80; left: 50%; top: auto; bottom: 128px; transform: translate(-50%, 8px); padding: 10px 16px; font-size: 14px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+    opacity: 0; pointer-events: none; transition: opacity 150ms var(--ease-out), transform 0s linear 150ms; }
+  .gtoast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); } /* M13 */
   .imp-tag { flex: none; font-size: 12px; line-height: 16px; padding: 0 5px; color: var(--text-2); border: 1px solid var(--line-3); border-radius: 3px; }
   .lib .a { display: flex; align-items: center; gap: 6px; }
   .lib .a .au { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
@@ -426,6 +429,109 @@
     .screen-2 { min-height: 340px; }
     .sig { padding: 80px 20px 20px; }
   }
+
+  /* ═══════════ Microinterações · docs/v3-microinteracoes.md ═══════════
+     ease-out expo em toda entrada e saída; sem ease-in, bounce ou blur; só transform e opacity. */
+  /* M01 */
+  .strip { transform-origin: 0 0; }
+  /* M02 · troca de título */
+  .stack { display: grid; }
+  .stack > span { grid-area: 1 / 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack > span:nth-child(2) { opacity: 0; }
+  /* M04 · pressão (só ponteiro: a classe .pr vem de pointerdown) */
+  .ibtn { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast) var(--ease-out); }
+  .ibtn.pr:not(:disabled) { transform: scale(0.97); transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform 80ms linear; }
+  .ibtn svg { overflow: visible; }
+  /* M06 · rotação liga */
+  .rot .ico, #rRot .ico { transition: color var(--t-fast), transform 0s; }
+  .rot[aria-pressed="true"] .ico, #rRot[aria-pressed="true"] .ico { transform: rotate(180deg); transition: color var(--t-fast), transform var(--t-med) var(--ease-out); }
+  /* M07 · favoritar com núcleo */
+  .favp .fav-wrap { position: relative; display: grid; place-items: center; }
+  .favp .fav-wrap > svg { grid-area: 1 / 1; }
+  .favp .fav-wrap .fill { fill: var(--violet); stroke: var(--violet); opacity: 0; transform: scale(0.6); transition: opacity var(--t-fast), transform 0s; }
+  .favp[aria-pressed="true"] .fav-wrap .fill { opacity: 1; transform: scale(1); transition: opacity var(--t-fast), transform var(--t-med) var(--ease-out); }
+  .favp.inst .fav-wrap .fill { transition: none !important; }
+  .favp .core { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--violet); opacity: 0; transform: translateY(-8px) rotate(45deg); pointer-events: none; }
+  /* M09 · odômetro do BPM (Rack) */
+  .odo { display: inline-flex; height: 1.2em; overflow: hidden; vertical-align: bottom; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .odo .col { display: block; width: 1ch; height: 1.2em; overflow: hidden; }
+  .odo .rail { display: block; }
+  .odo .rail > span { display: block; height: 1.2em; text-align: center; }
+  /* M10 · indicador que desliza */
+  .ind { position: absolute; left: 0; bottom: -1px; width: 1px; height: 2px; background: var(--violet); transform-origin: 0 50%; transition: transform var(--t-med) var(--ease-out); pointer-events: none; }
+  .dtabs .ind { bottom: 0; }
+  /* M12 · gaveta em degrau (as 8 primeiras linhas, 15 ms de diferença; só na abertura) */
+  @keyframes rowin { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+  .lib.enter .rows > li:nth-child(-n+8), .lib.enter .collist > li:nth-child(-n+8), .lib.enter .corder > li:nth-child(-n+8) { animation: rowin 220ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 15ms); }
+  /* M14 · switch com peso */
+  .switch { --st: 1.2857; --sh: 10px; }
+  .switch .track { transition: background var(--t-fast), border-color var(--t-fast); }
+  .switch .track::after { transform-origin: 0 50%; }
+  .switch.pr .track::after { transform: scaleX(var(--st)); transition: transform 80ms linear, background var(--t-fast); }
+  .switch.pr input:checked + .track::after { transform: translateX(var(--sh)) scaleX(var(--st)); }
+  /* M15 · balão do slider */
+  .sbub { position: fixed; z-index: 95; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+  .sbub .b { position: absolute; left: 0; bottom: 14px; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+    opacity: 0; transform: translate(-50%, 4px); transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .sbub.on .b { opacity: 1; transform: translate(-50%, 0); }
+  /* M16 · fechar gira 90° no hover */
+  #winClose .ico { transition: transform var(--t-fast) var(--ease-out); }
+  #winClose:hover .ico { transform: rotate(90deg); }
+  /* M18 · painel "Sem áudio" (aparece após 1,2 s de silêncio contínuo; some em 220 ms) */
+  .state.fade { opacity: 0; visibility: hidden; transition: opacity var(--t-med) var(--ease-out), visibility 0s linear var(--t-med); }
+  .state.fade.show { opacity: 1; visibility: visible; transition: opacity var(--t-med) var(--ease-out), visibility 0s; }
+  /* M19 · modo limpo: o texto some em 400 ms; ícone entra em 120 ms */
+  body.clean .credit, body.clean .sig, body.clean .bigtext { transition-duration: 400ms; }
+  .clean-ico { opacity: 0; transform: translateX(-4px); transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+  .clean-ico.on { opacity: 1; transform: none; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  /* M20 · Palco ⇄ Rack (FLIP) */
+  #flipGhost { position: fixed; z-index: 0; left: 0; top: 0; display: block; pointer-events: none; transform-origin: 0 0; background: var(--bg-00); }
+  .rack { transform-origin: 0 0; }
+  body.flipping .rack { z-index: 3; }
+  body.flipping .screen { overflow: visible; }
+  /* M21 · borda tracejada que anda; fecha num retângulo sólido por 120 ms */
+  .dz-box .march, .dz-box .solid { position: absolute; inset: -2px; border-radius: var(--r-3); pointer-events: none; }
+  .dz-box .march { opacity: 0; --d: var(--violet);
+    background:
+      linear-gradient(90deg, var(--d) 50%, transparent 50%) 0 0 / 12px 2px repeat-x,
+      linear-gradient(90deg, var(--d) 50%, transparent 50%) 0 100% / 12px 2px repeat-x,
+      linear-gradient(0deg, var(--d) 50%, transparent 50%) 0 0 / 2px 12px repeat-y,
+      linear-gradient(0deg, var(--d) 50%, transparent 50%) 100% 0 / 2px 12px repeat-y;
+    animation: march 600ms linear infinite; animation-play-state: paused; }
+  @keyframes march { to { background-position: 12px 0, -12px 100%, 0 -12px, 100% 12px; } }
+  .dz-box .solid { border: 2px solid var(--violet); opacity: 0; }
+  .dropzone.on .march { opacity: 1; animation-play-state: running; }
+  .dropzone.closing .march { opacity: 0; }
+  .dropzone.closing .solid { opacity: 1; }
+  /* M23 · aguardando o beat */
+  .ibtn.wait { border-style: dashed; border-color: var(--violet-line); background: var(--violet-soft); color: var(--text-1); }
+
+  /* ── Movimento reduzido (catálogo, seção 3): sem deslocamento nem escala; estado continua; medidor e beat continuam ── */
+  @media (prefers-reduced-motion: reduce) {
+    .strip-wrap { transition: opacity 120ms linear !important; }
+    .strip > .now, .strip > .strip-t, .strip > .tail, .strip > .trow,
+    body.idle .strip > .now, body.idle .strip > .strip-t, body.idle .strip > .tail, body.idle .strip > .trow { transform: none !important; transition: opacity 120ms linear !important; transition-delay: 0ms !important; }
+    .ibtn.pr:not(:disabled) { transform: none; }
+    .rot[aria-pressed="true"] .ico, #rRot[aria-pressed="true"] .ico { transform: none; }
+    .favp .fav-wrap .fill, .favp[aria-pressed="true"] .fav-wrap .fill { transform: none; transition: opacity 120ms linear !important; }
+    .favp .core { display: none; }
+    .ind { transition: none !important; }
+    .lib, .sheet { transform: none !important; opacity: 0; transition: opacity 120ms linear, visibility 0s linear 120ms !important; }
+    body.lib-open .lib, body.sheet-open .sheet { opacity: 1; transition: opacity 120ms linear, visibility 0s !important; }
+    .lib.enter .rows > li, .lib.enter .collist > li, .lib.enter .corder > li { animation: none !important; }
+    .edge, .edge.on { transform: none; }
+    .toast, .toast.on { transform: none; transition: opacity 120ms linear !important; }
+    .gtoast, .gtoast.on { transform: translate(-50%, 0); transition: opacity 120ms linear !important; }
+    .winctl, .winctl.on, .winctl:focus-within { transform: none; transition: opacity 120ms linear !important; }
+    #winClose:hover .ico { transform: none; }
+    .clean-ico, .clean-ico.on { transform: none; }
+    .switch { --st: 1; --sh: 14px; }
+    .sbub .b, .sbub.on .b { transform: translate(-50%, 0); }
+    .state.fade { transition: opacity 120ms linear, visibility 0s linear 120ms !important; }
+    .state.fade.show { transition: opacity 120ms linear, visibility 0s !important; }
+    .dz-box .march { animation: none !important; }
+    .bdot:not(.on) { transition: background 400ms var(--ease-out) !important; }
+  }
 </style>
 </head>
 <body>
@@ -439,7 +545,7 @@
   <div class="sweep"><i id="sweep"></i></div>
 </div>
 
-<div class="state" id="silence" hidden role="status">
+<div class="state fade" id="silence" role="status">
   <h2><i data-lucide="volume-x" class="ico"></i>Sem áudio</h2>
   <p>Toque algo no computador e o visual reage. A captura continua ligada.</p>
 </div>
@@ -458,14 +564,14 @@
     <div class="now">
       <button class="ibtn" id="libBtn" aria-label="Abrir biblioteca" title="Biblioteca (L)" aria-expanded="false" aria-controls="lib"><i data-lucide="library" class="ico"></i></button>
       <div class="now-text">
-        <div class="now-row"><div class="now-title" id="nowTitle"></div><span class="clean-ico" id="cleanIco" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)" hidden><i data-lucide="eye-off" class="ico ico-sm"></i></span></div>
-        <div class="now-author" id="nowAuthor"></div>
+        <div class="now-row"><div class="now-title stack" id="nowTitle"><span></span><span aria-hidden="true"></span></div><span class="clean-ico" id="cleanIco" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)" hidden><i data-lucide="eye-off" class="ico ico-sm"></i></span></div>
+        <div class="now-author stack" id="nowAuthor"><span></span><span aria-hidden="true"></span></div>
       </div>
-      <button class="ibtn fav" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+      <button class="ibtn fav favp" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
     </div>
     <div class="strip-t">
       <button class="ibtn" id="prevBtn" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
-      <button class="ibtn" id="shufBtn" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+      <button class="ibtn" id="shufBtn" aria-label="Preset aleatório" title="Aleatório (Espaço)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="shA"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/></g><g class="shB"><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></g></svg></button>
       <button class="ibtn" id="nextBtn" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
       <span class="sep" aria-hidden="true"></span>
       <button class="rot" id="rotBtn" aria-pressed="true" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num" id="rotTime">0:30</span></button>
@@ -523,10 +629,11 @@
     <button role="tab" id="ltab-fav" data-tab="fav" aria-selected="false" tabindex="-1" aria-controls="libList">Favoritos</button>
     <button role="tab" id="ltab-rec" data-tab="rec" aria-selected="false" tabindex="-1" aria-controls="libList">Recentes</button>
     <button role="tab" id="ltab-coll" data-tab="coll" aria-selected="false" tabindex="-1" aria-controls="libList">Coleções</button>
+    <i class="ind" aria-hidden="true"></i>
   </div>
   <div class="listwrap">
     <div class="list" id="libList" role="tabpanel" aria-labelledby="ltab-all"></div>
-    <div class="toast" id="libToast" role="status" aria-live="polite"></div>
+    <div class="toast" id="libToast" role="status" aria-live="polite"><span id="libToastTx"></span></div>
   </div>
   <div class="hiddenbar" id="libHidden" hidden></div>
 </aside>
@@ -552,6 +659,8 @@
         <label class="switch"><input type="checkbox" id="rotSwitch" checked aria-labelledby="rotSwLbl"><span class="track"></span></label></div>
       <div class="line"><label for="interval">Trocar a cada</label>
         <select class="sel" id="interval"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="90">90 s</option></select></div>
+      <div class="line"><span id="beatSwLbl">Trocar no beat</span>
+        <label class="switch"><input type="checkbox" id="beatSwitch" aria-labelledby="beatSwLbl"><span class="track"></span></label></div>
       <div class="field">
         <div class="field-top"><label for="blendA">Blend na troca automática</label><span class="val num" id="blendAVal">2,7 s</span></div>
         <input type="range" id="blendA" min="0" max="5" step="0.1" value="2.7">
@@ -614,12 +723,12 @@
 
       <div class="rtransport" role="group" aria-label="Transporte">
         <button type="button" class="ibtn" data-act="prev" aria-label="Anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
-        <button type="button" class="ibtn" data-act="shuffle" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+        <button type="button" class="ibtn" data-act="shuffle" aria-label="Preset aleatório" title="Aleatório (Espaço)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="shA"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/></g><g class="shB"><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></g></svg></button>
         <button type="button" class="ibtn" data-act="next" aria-label="Próximo" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
         <span class="sep" aria-hidden="true"></span>
         <button type="button" class="ibtn" data-act="rot" id="rRot" aria-pressed="true" aria-label="Rotação" title="Rotação (R)"><i data-lucide="repeat" class="ico"></i></button>
         <span class="rot-n num" id="rotN">30 s</span>
-        <button type="button" class="ibtn" data-act="fav" id="rFav" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+        <button type="button" class="ibtn favp" data-act="fav" id="rFav" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
         <span class="sep" aria-hidden="true"></span>
         <label for="rColl" class="vh">Coleção</label>
         <select class="rsel" id="rColl"></select>
@@ -637,6 +746,7 @@
               <button type="button" class="dtab" role="tab" id="dtab-q" aria-controls="p-q" aria-selected="true">Fila</button>
               <button type="button" class="dtab" role="tab" id="dtab-s" aria-controls="p-s" aria-selected="false" tabindex="-1">Sinal</button>
               <button type="button" class="dtab" role="tab" id="dtab-t" aria-controls="p-t" aria-selected="false" tabindex="-1">Tela</button>
+              <i class="ind" aria-hidden="true"></i>
             </div>
             <div class="tpanel" role="tabpanel" id="p-q" aria-labelledby="dtab-q"><ul class="queue" id="queue"></ul></div>
             <div class="tpanel" role="tabpanel" id="p-s" aria-labelledby="dtab-s" hidden>
@@ -726,10 +836,11 @@
   <div class="actions"><button type="button" class="btn btn-ghost" id="scNo">Cancelar</button><button type="button" class="btn btn-primary" id="scYes">Tocar</button></div>
 </div>
 <div class="dropzone" id="dropzone" aria-hidden="true">
-  <div class="dz-box"><i data-lucide="file-plus-2" class="ico"></i><strong>Solte para adicionar presets .milk</strong><span>Arquivos de áudio tocam como fonte temporária</span></div>
+  <div class="dz-box"><i class="march" aria-hidden="true"></i><i class="solid" aria-hidden="true"></i><i data-lucide="file-plus-2" class="ico"></i><strong>Solte para adicionar presets .milk</strong><span>Arquivos de áudio tocam como fonte temporária</span></div>
 </div>
-<div class="gtoast" id="gtoast" role="status" aria-live="polite"></div>
+<div class="gtoast" id="gtoast" role="status" aria-live="polite"><span id="gtoastTx"></span></div>
 
+<div class="sbub" id="sbub" aria-hidden="true"><div class="b num" id="sbubTx"></div></div>
 <div class="closed-screen" id="closedScreen" hidden role="dialog" aria-label="App fechado"><p>App fechado (protótipo)</p><button type="button" class="btn btn-ghost" id="reopenApp">Abrir de novo</button></div>
 
 <div class="proto" role="group" aria-label="Estados do protótipo">
@@ -763,10 +874,191 @@
   const setText = (el, t) => { if (el._t !== t) { el._t = t; el.textContent = t; } };
   const SETTINGS_URL = $('settingsLink').href;
 
+  // ═══════════ Microinterações (docs/v3-microinteracoes.md) ═══════════
+  const EO = 'cubic-bezier(0.16, 1, 0.3, 1)';
+  const RMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  const rm = () => RMQ.matches;
+  // Animação com regra de movimento reduzido: sem deslocamento/escala, fade curto (<= 120 ms)
+  function A(el, frames, o) {
+    if (rm()) {
+      frames = frames.map(f => { const g = Object.assign({}, f); delete g.transform; return g; });
+      o = Object.assign({}, o, { duration: Math.min(o.duration || 0, 120), delay: 0 });
+    }
+    return el.animate(frames, o);
+  }
+  // M02 · pilha de duas camadas (título e autor)
+  const nowAct = new Map();
+  function stackSet(st, text) {
+    const s2 = st.children, a = nowAct.get(st) || 0;
+    Array.from(s2).forEach(el => el.getAnimations().forEach(x => x.cancel()));
+    s2[a].textContent = text; s2[a].style.opacity = 1; s2[1 - a].style.opacity = 0;
+  }
+  function swapStack(st, text, delay, flash) {
+    const s2 = st.children, a = nowAct.get(st) || 0, prev = s2[a], next = s2[1 - a];
+    [prev, next].forEach(el => el.getAnimations().forEach(x => x.cancel()));
+    prev.style.opacity = 1; next.style.opacity = 0; next.textContent = text;
+    prev.removeAttribute('aria-hidden'); next.setAttribute('aria-hidden', 'true');
+    const o = A(prev, [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 120, delay, easing: EO, fill: 'both' });
+    if (flash) A(next, [{ color: '#C244FF' }, { color: '#EEEEF5' }], { duration: 120, easing: EO });
+    const n = A(next, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, delay, easing: EO, fill: 'both' });
+    o.onfinish = () => { prev.style.opacity = 0; o.cancel(); prev.setAttribute('aria-hidden', 'true'); };
+    n.onfinish = () => { next.style.opacity = 1; n.cancel(); next.removeAttribute('aria-hidden'); };
+    nowAct.set(st, 1 - a);
+  }
+  // M03 · a linha de rotação esvazia da direita para a esquerda em 220 ms
+  function drainRot(p) {
+    if (!(p > 0.02)) return;
+    const l = $('rotLine'); l.getAnimations().forEach(x => x.cancel());
+    l.animate([{ transformOrigin: '100% 50%', transform: 'scaleX(' + p + ')' }, { transformOrigin: '100% 50%', transform: 'scaleX(0)' }], { duration: 220, easing: EO });
+  }
+  // M04 · pressão só com ponteiro (teclado não anima); M14 usa a mesma classe nos switches
+  let prEl = null;
+  const prOff = () => { if (prEl) { prEl.classList.remove('pr'); prEl = null; } };
+  document.addEventListener('pointerdown', e => {
+    const b = e.target.closest && e.target.closest('.ibtn, .switch'); if (!b) return;
+    if (b.disabled || (b.classList.contains('switch') && b.querySelector('input:disabled'))) return;
+    prOff(); prEl = b; b.classList.add('pr');
+  }, true);
+  ['pointerup', 'pointercancel', 'dragend'].forEach(ev => document.addEventListener(ev, prOff, true));
+  document.addEventListener('pointerout', e => { if (prEl && e.target === prEl && !prEl.contains(e.relatedTarget)) prOff(); }, true);
+  addEventListener('blur', prOff);
+  // M04 (passo do ícone) e M05 (setas do aleatório trocam de lugar): só quando o gesto veio do ponteiro
+  const FX_SEL = { prev: ['#prevBtn', '[data-act="prev"]'], next: ['#nextBtn', '[data-act="next"]'], random: ['#shufBtn', '[data-act="shuffle"]'] };
+  function iconFx(key) {
+    if (rm()) return;
+    FX_SEL[key].forEach(sel => {
+      const b = document.querySelector(sel); if (!b || !b.offsetWidth) return;
+      if (key === 'random') {
+        [['.shA', 12], ['.shB', -12]].forEach(g => { const el = b.querySelector(g[0]); if (el) el.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(' + g[1] + 'px)' }, { transform: 'translateY(0)' }], { duration: 220, easing: EO }); });
+      } else {
+        const ic = b.querySelector('svg'), d = key === 'next' ? 2 : -2;
+        if (ic) ic.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + d + 'px)' }, { transform: 'translateX(0)' }], { duration: 240, easing: EO });
+      }
+    });
+  }
+  // M07 · núcleo que sobe 6 px e some (só ao favoritar)
+  function coreFx() {
+    if (rm()) return;
+    ['favBtn', 'rFav'].forEach(id => {
+      const c = $(id).querySelector('.core');
+      if (c && c.offsetParent) c.animate([{ opacity: 1, transform: 'translateY(-8px) rotate(45deg)' }, { opacity: 0, transform: 'translateY(-14px) rotate(45deg)' }], { duration: 400, easing: EO });
+    });
+  }
+  // M09 · odômetro do BPM (Rack): dígitos tabulares, 300 ms
+  const ODO = ['–', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  let bpmVal = 124;
+  const odoIdx = bpm => String(bpm).padStart(3, ' ').split('').map(c => c === ' ' ? 1 : +c + 2);
+  function odoHTML(bpm) {
+    return odoIdx(bpm).map(i => '<span class="col"><span class="rail" style="transform:translateY(' + (-i * 1.2) + 'em)">' + ODO.map(t => '<span>' + t + '</span>').join('') + '</span></span>').join('');
+  }
+  function setBpm(v) {
+    v = Math.max(30, Math.min(300, Math.round(v))); if (v === bpmVal) return;
+    const from = odoIdx(bpmVal), to = odoIdx(v); bpmVal = v;
+    document.querySelectorAll('.odo').forEach(od => {
+      const sr = od.parentNode.querySelector('.vh'); if (sr) sr.textContent = v;
+      od.querySelectorAll('.rail').forEach((r, i) => {
+        r.style.transform = 'translateY(' + (-to[i] * 1.2) + 'em)';
+        if (!rm() && from[i] !== to[i]) r.animate([{ transform: 'translateY(' + (-from[i] * 1.2) + 'em)' }, { transform: 'translateY(' + (-to[i] * 1.2) + 'em)' }], { duration: 300, easing: EO });
+      });
+    });
+  }
+  window.SO_setBpm = setBpm; // gancho para a detecção de BPM (Fase 3)
+  // M10 · indicador compartilhado (abas da Biblioteca e do painel do Rack)
+  function placeInd(host, instant) {
+    const ind = host.querySelector('.ind'), b = host.querySelector('[aria-selected="true"]');
+    if (!ind || !b || !b.offsetWidth) return;
+    if (instant) ind.style.transition = 'none';
+    ind.style.transform = 'translateX(' + b.offsetLeft + 'px) scaleX(' + b.offsetWidth + ')';
+    if (instant) { void ind.offsetWidth; ind.style.transition = ''; }
+  }
+  function watchInd(host) {
+    const ro = new ResizeObserver(() => placeInd(host, true));
+    ro.observe(host); host.querySelectorAll('[role=tab]').forEach(b => ro.observe(b));
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => placeInd(host, true));
+  }
+  // M13 · toast: entra 8 px de baixo + fade, sai só com fade; 4 s, pausa no hover; novo aviso troca o texto no lugar
+  function makeToast(el, textEl, life) {
+    let vis = false, timer = 0, remain = life, t0 = 0, paused = false;
+    const arm = () => { clearTimeout(timer); t0 = performance.now(); if (vis && !paused) timer = setTimeout(hide, remain); };
+    function show(msg) {
+      textEl.textContent = msg;
+      if (!vis) { el.classList.add('on'); vis = true; }
+      else textEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: EO });
+      remain = life; arm();
+    }
+    function hide() { clearTimeout(timer); el.classList.remove('on'); vis = false; paused = false; }
+    function pause() { if (!vis || paused) return; paused = true; clearTimeout(timer); remain = Math.max(300, remain - (performance.now() - t0)); }
+    function resume() { if (!paused) return; paused = false; arm(); }
+    el.addEventListener('mouseenter', pause); el.addEventListener('mouseleave', resume);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); else resume(); });
+    return { show, hide };
+  }
+  // M20 · Palco ⇄ Rack (FLIP, 300 ms): a faixa vira o rack e o visual encolhe para o visor (e volta pelo mesmo trajeto)
+  const flipGhost = document.createElement('canvas'); flipGhost.id = 'flipGhost'; flipGhost.hidden = true; flipGhost.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(flipGhost);
+  const gctx = flipGhost.getContext('2d');
+  let flipAnims = [], flipSrc = null, flipTok = 0;
+  function flipCancel() { flipTok++; flipAnims.forEach(a => { try { a.cancel(); } catch (e) {} }); flipAnims = []; flipSrc = null; flipGhost.hidden = true; document.body.classList.remove('flipping'); }
+  const invT = (f, l) => 'translate(' + (f.left - l.left) + 'px,' + (f.top - l.top) + 'px) scale(' + (f.width / l.width) + ',' + (f.height / l.height) + ')';
+  function flipMeasure(to) {
+    const ui = to === 'rack' ? document.querySelector('.strip') : ($('rack').hidden ? null : $('rack'));
+    const vz = to === 'rack' ? $('viz') : (screens === 1 ? $('visorWrap') : $('stage2'));
+    return { ui: ui && ui.offsetWidth ? ui.getBoundingClientRect() : null, vz: vz && vz.offsetWidth ? vz.getBoundingClientRect() : null };
+  }
+  function flipRun(to, f) {
+    flipCancel();
+    const uiEl = to === 'rack' ? $('rack') : document.querySelector('.strip');
+    const dst = to === 'rack' ? (screens === 1 ? $('visorWrap') : $('stage2')) : $('viz');
+    if (rm()) { if (uiEl.offsetWidth) uiEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: 'linear' }); return; }
+    const tok = flipTok, o = { duration: 300, easing: EO };
+    const lUi = f.ui && uiEl.offsetWidth ? uiEl.getBoundingClientRect() : null;
+    const lVz = f.vz && dst.offsetWidth ? dst.getBoundingClientRect() : null;
+    document.body.classList.add('flipping');
+    if (lUi) {
+      flipAnims.push(uiEl.animate([{ transform: invT(f.ui, lUi) }, { transform: 'none' }], o));
+      Array.from(uiEl.children).forEach(k => flipAnims.push(k.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: 0.45 }, { opacity: 1, offset: 1 }], { duration: 300, easing: 'linear' })));
+    }
+    if (lVz) {
+      const cv = dst.tagName === 'CANVAS' ? dst : dst.querySelector('canvas');
+      flipSrc = cv; flipGhost.width = cv.width; flipGhost.height = cv.height;
+      Object.assign(flipGhost.style, { left: lVz.left + 'px', top: lVz.top + 'px', width: lVz.width + 'px', height: lVz.height + 'px' });
+      flipGhost.hidden = false;
+      flipAnims.push(flipGhost.animate([{ transform: invT(f.vz, lVz) }, { transform: 'none' }], o));
+    }
+    Promise.all(flipAnims.map(a => a.finished.catch(() => {}))).then(() => { if (tok === flipTok) flipCancel(); });
+  }
+  // M18 · painel "Sem áudio" só depois de 1,2 s de silêncio contínuo; a volta do som o remove com fade de 220 ms
+  let silT = 0;
+  function syncSilence() {
+    const el = $('silence');
+    if (state !== 'silence') { clearTimeout(silT); silT = 0; el.classList.remove('show'); return; }
+    if (silT || el.classList.contains('show')) return;
+    silT = setTimeout(() => { silT = 0; el.classList.add('show'); }, 1200);
+  }
+  // M19 · ícone do modo limpo (eye-off) entra em 120 ms
+  let cleanIcoT = 0;
+  function cleanIcoFx(v) {
+    const ic = $('cleanIco'); clearTimeout(cleanIcoT);
+    if (v) { ic.hidden = false; void ic.offsetWidth; ic.classList.add('on'); }
+    else { ic.classList.remove('on'); cleanIcoT = setTimeout(() => { ic.hidden = true; }, 80); }
+  }
+  // M23 · "Trocar no beat": com o switch ligado, anterior/próximo/aleatório esperam o próximo beat do viz.onBeat
+  let beatSync = false, pend = null;
+  function markWait(key, on) {
+    FX_SEL[key].forEach(sel => { const b = document.querySelector(sel); if (!b) return; b.classList.toggle('wait', on); if (on) b.setAttribute('aria-busy', 'true'); else b.removeAttribute('aria-busy'); });
+  }
+  function clearPend() { if (pend) { markWait(pend.key, false); pend = null; } }
+  function request(key, fn, ptr) {
+    const run = () => { fn(); if (ptr) iconFx(key); };
+    if (!beatSync || isSilent()) { clearPend(); run(); return; }
+    if (pend && pend.key === key) { clearPend(); return; }
+    clearPend(); pend = { key, run }; markWait(key, true);
+  }
+
   // ── Visuais (Palco, Tela 2 do Rack, visor do Rack): mesmo estado, três canvases ──
   const viz = SOViz.create($('viz')), vizS2 = SOViz.create($('stage2')), vizV = SOViz.create($('visorCv'));
   const vizs = [viz, vizS2, vizV];
-  const meterUpd = SOViz.meter($('meter'), 20);
+  SOViz.meter($('meter'), 20);
 
   // ── Estado único ──
   const colls = D.collections.map(c => ({ id: c.id, name: c.name, ids: c.ids.slice(), interval: c.interval }));
@@ -805,6 +1097,7 @@
   function play(p, o) {
     o = o || {};
     const ms = o.auto ? blendA : blendM;
+    if (rotOn && mode === 'stage') drainRot(1 - left / interval); // M03
     if (!o.keepColl && activeColl) { activeColl = null; interval = baseInterval; syncInterval(); }
     cur = p;
     if (o.push !== false) { hist = hist.slice(0, hi + 1); hist.push(p.id); hi = hist.length - 1; }
@@ -828,17 +1121,30 @@
     if (lOpen) renderLib();
     if (pOpen) { renderTabs(); renderList(); }
   }
+  let nowId = null;
   function renderNow() {
-    $('nowTitle').textContent = cur.title; $('nowTitle').title = cur.full; $('nowAuthor').textContent = 'por ' + cur.author;
-    syncFavBtns();
+    const stT = $('nowTitle'), stA = $('nowAuthor');
+    stT.title = cur.full;
+    if (nowId !== cur.id) {
+      if (nowId === null) { stackSet(stT, cur.title); stackSet(stA, 'por ' + cur.author); }
+      else { swapStack(stT, cur.title, 0, true); swapStack(stA, 'por ' + cur.author, 40, false); } // M02
+      nowId = cur.id;
+    }
+    syncFavBtns(true);
     $('heavyChip').hidden = !(state === 'heavy' && cur.heavy);
   }
-  function syncFavBtns() {
-    ['favBtn', 'rFav'].forEach(id => { const b = $(id); b.setAttribute('aria-pressed', !!cur.fav); b.setAttribute('aria-label', cur.fav ? 'Desfavoritar' : 'Favoritar'); });
+  function syncFavBtns(instant) {
+    ['favBtn', 'rFav'].forEach(id => {
+      const b = $(id);
+      if (instant) b.classList.add('inst'); // troca de preset: a estrela muda sem animar
+      b.setAttribute('aria-pressed', !!cur.fav); b.setAttribute('aria-label', cur.fav ? 'Desfavoritar' : 'Favoritar');
+      if (instant) { void b.offsetWidth; b.classList.remove('inst'); }
+    });
   }
   function toggleFav(p) {
     p = p || cur; p.fav = !p.fav;
     syncFavBtns();
+    if (p.fav && p === cur) coreFx(); // M07
     if (lOpen) renderLib();
     if (pOpen) { renderTabs(); renderList(); }
   }
@@ -882,7 +1188,7 @@
     sel.value = String(interval); $('rotN').textContent = interval + ' s';
   }
 
-  $('prevBtn').onclick = prev; $('nextBtn').onclick = next; $('shufBtn').onclick = random;
+  $('prevBtn').onclick = e => request('prev', prev, e.detail > 0); $('nextBtn').onclick = e => request('next', next, e.detail > 0); $('shufBtn').onclick = e => request('random', random, e.detail > 0);
   $('favBtn').onclick = () => toggleFav(); $('rotBtn').onclick = () => setRot(!rotOn);
   $('rotSwitch').onchange = e => setRot(e.target.checked);
   $('interval').onchange = e => {
@@ -907,6 +1213,29 @@
   ['blendA', 'blendAR'].forEach(id => $(id).oninput = e => setBlendA(e.target.value));
   ['blendM', 'blendMR'].forEach(id => $(id).oninput = e => setBlendM(e.target.value));
   setGain(3); setBlendA(2.7); setBlendM(0);
+  // M15 · balão com o valor sobre o polegar: no arrasto; setas do teclado mostram por 600 ms; some em 120 ms
+  const SLID = { gain: 'gainVal', blendA: 'blendAVal', blendM: 'blendMVal', gainR: 'gainOut', blendAR: 'blendAOut', blendMR: 'blendMOut' };
+  const bub = $('sbub'); let bubFor = null, bubDrag = false, bubKt = 0;
+  function bubPlace(r) {
+    const rc = r.getBoundingClientRect(), pct = (r.value - r.min) / (r.max - r.min);
+    bub.style.left = (rc.left + 7 + (rc.width - 14) * pct) + 'px'; bub.style.top = (rc.top + rc.height / 2) + 'px';
+    $('sbubTx').textContent = $(SLID[r.id]).textContent;
+  }
+  function bubShow(r) { bubFor = r; bubPlace(r); bub.classList.add('on'); }
+  function bubHide() { bub.classList.remove('on'); }
+  Object.keys(SLID).forEach(id => {
+    const r = $(id);
+    r.addEventListener('pointerdown', () => { bubDrag = true; bubShow(r); });
+    r.addEventListener('input', () => { if (bub.classList.contains('on') && bubFor === r) bubPlace(r); });
+    r.addEventListener('keydown', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) return;
+      setTimeout(() => bubShow(r), 0); clearTimeout(bubKt);
+      bubKt = setTimeout(() => { if (!bubDrag) bubHide(); }, 600);
+    });
+    r.addEventListener('blur', () => { if (!bubDrag) bubHide(); });
+  });
+  const bubUp = () => { if (bubDrag) { bubDrag = false; bubHide(); } };
+  addEventListener('pointerup', bubUp); addEventListener('pointercancel', bubUp);
 
   // ── Rotação ──
   setInterval(() => {
@@ -945,11 +1274,37 @@
       }
     }
   }
+  // M08 · balística do medidor: ataque ~10 ms, queda de ~1,5 s do topo ao fundo (PPM); o pico é a própria queda lenta;
+  // silêncio: os segmentos se apagam um a um, 30 ms cada
+  const meterSegs = Array.from($('meter').children), NM = meterSegs.length;
+  let mLvl = 0, mPk = 0, mPkAt = 0, mPv = 0, mCas = NM, mSil = false, mLast = performance.now(), rotLineV = -1;
+  function meterStep(now, dt, sil, target) {
+    let on;
+    if (!sil) {
+      mSil = false;
+      if (target >= mLvl) mLvl += (target - mLvl) * (1 - Math.exp(-dt / 0.0045)); else mLvl = Math.max(target, mLvl - dt / 1.5);
+      if (mLvl >= mPk) { mPk = mLvl; mPkAt = now; mPv = 0; }
+      else if (now - mPkAt > 1500) { mPv += 0.3 * dt; mPk -= (0.12 + mPv) * dt; if (mPk < mLvl) mPk = mLvl; }
+      on = Math.round(mLvl * NM);
+    } else {
+      if (!mSil) { mSil = true; mCas = Math.round(mLvl * NM); }
+      mCas = Math.max(0, mCas - dt / 0.03);
+      mLvl = mCas / NM; mPk = Math.min(mPk, mLvl); on = Math.ceil(mCas - 1e-6);
+    }
+    let pi = Math.min(NM - 1, Math.round(mPk * NM) - 1); if (mPk * NM < 0.5) pi = -1;
+    for (let i = 0; i < NM; i++) {
+      const c = i < on ? (i >= NM - 2 ? 'clip' : i >= NM * 0.7 ? 'hot' : 'on') : (i === pi ? 'peak' : '');
+      if (meterSegs[i].className !== c) meterSegs[i].className = c;
+    }
+  }
   function tick(now) {
+    const dt = Math.min(0.05, Math.max(0, (now - mLast) / 1000)); mLast = now;
+    if (flipSrc) gctx.drawImage(flipSrc, 0, 0, flipGhost.width, flipGhost.height); // M20: o fantasma copia o visual de destino
     if (mode === 'stage') {
-      if (isSilent() || (track && !track.playing)) meterUpd(0, 0); else meterUpd(viz.level(), viz.peak());
+      meterStep(now, dt, isSilent() || !!(track && !track.playing), viz.level());
       setText($('rotTime'), rotOn ? fmt(left) : 'off');
-      $('rotLine').style.width = rotOn ? ((1 - left / interval) * 100) + '%' : '0';
+      const sx = rotOn ? 1 - left / interval : 0;
+      if (sx !== rotLineV) { rotLineV = sx; $('rotLine').style.transform = 'scaleX(' + sx + ')'; }
     } else {
       drawSpec(now);
       const nt = $('nextTxt'), nn = nt && nt.querySelector('.num'); if (nn) setText(nn, fmt(left));
@@ -1159,6 +1514,7 @@
       if (on) { libList.setAttribute('aria-labelledby', b.id); if (focus) b.focus(); }
     });
     renderLib();
+    placeInd($('libTabs'), false); // M10
   }
   $('libTabs').addEventListener('click', e => { const b = e.target.closest('[role=tab]'); if (b) { Lb.coll = null; setLibTab(b.dataset.tab); } });
   $('libTabs').addEventListener('keydown', e => {
@@ -1171,13 +1527,12 @@
   libQ.addEventListener('input', () => { Lb.q = libQ.value; syncSearchUI(); if (Lb.tab === 'coll') setLibTab('all'); else renderLib(); });
   $('libQclear').addEventListener('click', () => { setQuery(''); libQ.focus(); });
 
-  let toastT;
-  function libToast(msg) { libToastEl.textContent = msg; libToastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => libToastEl.classList.remove('on'), 2600); }
-  let gT;
+  const libT = makeToast(libToastEl, $('libToastTx'), 4000), gt = makeToast($('gtoast'), $('gtoastTx'), 4000); // M13
+  function libToast(msg) { libT.show(msg); }
   function gToast(msg, o) {
     o = o || {};
     if (!o.force && (overlayText.toasts === 'none' || ((overlayText.toasts === 'important' || cleanMode) && !o.important))) return;
-    const g = $('gtoast'); g.textContent = msg; g.classList.add('on'); clearTimeout(gT); gT = setTimeout(() => g.classList.remove('on'), 3200); }
+    gt.show(msg); }
 
   libList.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT') return;
@@ -1274,6 +1629,8 @@
       libEl.inert = false; body.classList.add('lib-open');
       $('libBtn').setAttribute('aria-expanded', true);
       edge.classList.remove('on'); renderLib();
+      libList.querySelectorAll('.rows > li, .collist > li, .corder > li').forEach((li, i) => li.style.setProperty('--i', i)); // M12
+      libEl.classList.add('enter'); clearTimeout(setLib._t); setLib._t = setTimeout(() => libEl.classList.remove('enter'), 600);
       libQ.focus({ preventScroll: true });
     } else {
       body.classList.remove('lib-open'); libEl.inert = true; closeMenu();
@@ -1326,7 +1683,7 @@
       hint.innerHTML = '<p class="hint">O Windows recusou a captura. Feche apps em modo exclusivo e tente de novo.</p><button type="button" class="btn" id="rRetry"><i data-lucide="rotate-cw" class="ico ico-sm"></i>Tentar de novo</button>';
       $('rRetry').onclick = () => setState('normal');
     } else {
-      m.innerHTML = '<span class="bpm"><i class="bdot" id="bdot"></i><span class="num cy">124</span><span>BPM</span></span>' +
+      m.innerHTML = '<span class="bpm"><i class="bdot" id="bdot"></i><span class="num cy"><span class="vh">' + bpmVal + '</span><span class="odo" aria-hidden="true">' + odoHTML(bpmVal) + '</span></span><span>BPM</span></span>' +
         '<span class="next" id="nextTxt">' + (rotOn ? 'próximo em <span class="num">' + fmt(left) + '</span>' : '<span style="color:var(--text-3)">rotação desligada</span>') + '</span>' + pos;
       hint.innerHTML = '';
     }
@@ -1379,7 +1736,9 @@
   rDrawerBtn.onclick = () => setDrawer(!drawer.classList.contains('open'));
   document.querySelector('.rtransport').addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b) return;
-    ({ prev, next, rot: () => setRot(!rotOn), fav: () => toggleFav(), shuffle: random })[b.dataset.act]();
+    const a = b.dataset.act, via = e.detail > 0;
+    if (a === 'prev') request('prev', prev, via); else if (a === 'next') request('next', next, via); else if (a === 'shuffle') request('random', random, via);
+    else if (a === 'rot') setRot(!rotOn); else if (a === 'fav') toggleFav();
   });
   $('rColl').addEventListener('change', e => {
     if (e.target.value === 'all') { activeColl = null; interval = baseInterval; syncInterval(); random(); }
@@ -1397,7 +1756,9 @@
   function selectDTab(t, focus) {
     dtabs.forEach(x => { const on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1; $(x.getAttribute('aria-controls')).hidden = !on; });
     if (focus) t.focus();
+    placeInd(t.parentNode, false); // M10
   }
+  watchInd($('libTabs')); watchInd(document.querySelector('.dtabs'));
   dtabs.forEach((t, i) => {
     t.addEventListener('click', () => selectDTab(t));
     t.addEventListener('keydown', e => {
@@ -1409,6 +1770,7 @@
   });
   function setMode(m) {
     if (m === mode) return;
+    const fl = flipMeasure(m); // M20: medidas antes da troca
     if (m === 'rack') {
       if (lOpen) setLib(false, null, true); if (sOpen) setSheet(false, true);
       mode = 'rack'; document.body.classList.add('is-rack'); document.body.classList.remove('idle', 'lib-open');
@@ -1418,6 +1780,7 @@
       mode = 'stage'; document.body.classList.remove('is-rack');
       $('rackScene').hidden = true; $('palco').hidden = false; wake(); $('rackBtn').focus();
     }
+    flipRun(m, fl);
   }
   function setScreens(n) {
     screens = n;
@@ -1435,6 +1798,8 @@
     const d = $('bdot'); if (!d || mode !== 'rack' || isSilent()) return;
     d.classList.add('on'); setTimeout(() => d.classList.remove('on'), 80);
   });
+  viz.onBeat(() => { if (pend) { const r = pend.run; clearPend(); r(); } }); // M23: a troca pedida sai no próximo beat
+  $('beatSwitch').onchange = e => { beatSync = e.target.checked; if (!beatSync && pend) { const r = pend.run; clearPend(); r(); } };
   addEventListener('resize', () => { clearTimeout(window.__rz); window.__rz = setTimeout(() => { if (mode === 'rack') measureMarquee(); }, 120); });
 
   // ═══════════ Estados do protótipo ═══════════
@@ -1446,7 +1811,7 @@
     s = state;
     document.querySelectorAll('.proto [data-state]').forEach(b => b.setAttribute('aria-pressed', b.dataset.state === uiState));
     applySilent();
-    $('silence').hidden = s !== 'silence'; $('denied').hidden = s !== 'denied';
+    syncSilence(); $('denied').hidden = s !== 'denied';
     if (s === 'heavy') play(P[16]);
     renderNow();
     if (mode === 'rack') { renderRMeta(); renderWarn(); }
@@ -1586,8 +1951,9 @@
     if (pop === 'ai') renderAiPop();
   }
   function setClean(v, announce) {
-    cleanMode = v; $('otClean').checked = v; $('protoClean').setAttribute('aria-pressed', v); $('cleanIco').hidden = !v;
-    if (v) { $('credit').classList.remove('show'); $('sig').classList.remove('show'); $('bigtext').classList.remove('show'); $('gtoast').classList.remove('on'); }
+    cleanMode = v; $('otClean').checked = v; $('protoClean').setAttribute('aria-pressed', v);
+    document.body.classList.toggle('clean', v); cleanIcoFx(v); // M19
+    if (v) { $('credit').classList.remove('show'); $('sig').classList.remove('show'); $('bigtext').classList.remove('show'); gt.hide(); }
     if (announce) gToast(v ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true });
   }
   $('otClean').onchange = e => setClean(e.target.checked, true);
@@ -1599,13 +1965,14 @@
   $('skipHeavy').onclick = skipHeavy;
 
   // ═══════════ Arrastar e soltar / importar .milk ═══════════
-  const dz = $('dropzone'); let dragDepth = 0;
+  const dz = $('dropzone'); let dragDepth = 0, dzT = 0;
+  function closeDz() { clearTimeout(dzT); dz.classList.add('closing'); dzT = setTimeout(() => dz.classList.remove('on', 'closing'), 120); }
   const hasFiles = e => e.dataTransfer && Array.from(e.dataTransfer.types || []).indexOf('Files') > -1;
-  addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; dz.classList.add('on'); });
+  addEventListener('dragenter', e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; clearTimeout(dzT); dz.classList.remove('closing'); dz.classList.add('on'); });
   addEventListener('dragover', e => { if (!hasFiles(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
   addEventListener('dragleave', e => { if (!hasFiles(e)) return; dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) dz.classList.remove('on'); });
   addEventListener('drop', e => {
-    if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; dz.classList.remove('on');
+    if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; closeDz();
     const names = Array.from(e.dataTransfer.files).map(f => f.name.toLowerCase());
     if (names.length && names.every(n => /\.(mp3|wav|flac|ogg|m4a|aac)$/.test(n))) setState('file'); else importMilk();
   });
@@ -1686,10 +2053,10 @@
     wake();
     const k = e.key.toLowerCase();
     if (e.key === '/') { e.preventDefault(); openPalette(); }
-    else if (e.key === ' ') { if (tag === 'BUTTON' || tag === 'A' || type === 'checkbox' || type === 'radio') return; e.preventDefault(); random(); }
+    else if (e.key === ' ') { if (tag === 'BUTTON' || tag === 'A' || type === 'checkbox' || type === 'radio') return; e.preventDefault(); request('random', random, false); }
     else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       if (type === 'range' || type === 'radio' || (ae && ae.getAttribute('role') === 'tab')) return;
-      e.preventDefault(); e.key === 'ArrowRight' ? next() : prev();
+      e.preventDefault(); e.key === 'ArrowRight' ? request('next', next, false) : request('prev', prev, false);
     }
     else if (k === 'f') toggleFav();
     else if (k === 'r') setRot(!rotOn);

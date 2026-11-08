@@ -1,6 +1,6 @@
 # Sonic Obsidian v3 — Microinterações
 
-> Passagem de 08/11/2026 sobre o Palco integrado. Exploração com laboratório ao vivo (páginas "Microinterações — Faixa e feedback" e "Microinterações — Navegação e estados"). Referências em `docs/v3-microinteracoes-referencias.md`. Status de cada item: **Proposto** até o usuário escolher.
+> Passagem de 08/11/2026 sobre o Palco integrado. Exploração com laboratório ao vivo (páginas "Microinterações — Faixa e feedback" e "Microinterações — Navegação e estados"). Referências em `docs/v3-microinteracoes-referencias.md`. **Status: aprovado em 08/11/2026 — os 23 itens (M01–M23) entram no app.** Implementação de referência: página "Palco integrado".
 
 ## 0. O que existe hoje
 Só fades e deslizamentos (faixa, gaveta, painel, toast, cartão de crédito com linha do blend, wipe no visor do Rack, letreiro). Não há resposta ao pressionar, indicador compartilhado entre abas, animação de valor, balística no medidor, nem transição entre modos.
@@ -22,7 +22,7 @@ Regras (destiladas das referências): o que acontece muitas vezes por dia não a
 ## 2. Catálogo
 
 ### Faixa de controle e transporte
-- **M01 · Faixa entra em degrau** — ao revelar, os três blocos sobem 6 px com 20 ms de diferença (agora tocando → transporte → cauda), `t-med`. Ao esconder, tudo junto, `ease-in` 150 ms.
+- **M01 · Faixa entra em degrau** — ao revelar, os três blocos sobem 6 px com 20 ms de diferença (agora tocando → transporte → cauda), `t-med`. Ao esconder, tudo junto, ease-out 150 ms.
 - **M02 · Troca de título na faixa** — na troca de preset, um flash curto do violeta (120 ms) confirma a troca; o título antigo sobe 4 px e some (120 ms), o novo entra de baixo; o autor vem 40 ms depois. Sincronizado com o início do blend.
 - **M03 · Linha de rotação que esvazia** — ao trocar, a linha de progresso não salta para zero: esvazia da direita para a esquerda em 220 ms e recomeça.
 - **M04 · Pressão dos botões** — `ibtn` desce para 0,97 em 80 ms ao pressionar e volta com `t-fast`. No clique com o ponteiro, o ícone de anterior/próximo dá um passo de 2 px na sua direção; pelas setas do teclado, nada anima.
