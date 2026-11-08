@@ -14,6 +14,12 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — atalhos globais · `F`
+Protótipo (`1794154301-3f85`): `F` favorita o preset atual; `F11` é tela cheia.
+Código: `F` alterna tela cheia (igual a `F11`), por decisão do usuário. Favoritar fica na estrela da faixa (spec 009) e em `Ctrl+F` na busca (spec 010), sem atalho global por enquanto.
+PR/spec: docs/specs/008-nucleo-comandos-persistencia.md
+Status: Aberta. Pedido ao design: atualizar a tabela de atalhos (Palco, Configurações › Atalhos, cartão de boas-vindas) e decidir se favoritar ganha outra tecla.
+
 ### 2026-11-08 — Configurações › Captura · Ganho padrão
 Protótipo (`1794154301-3f85`): "Ganho padrão" é um slider linear de 0,5× a 2× (padrão 1,0×), enquanto os Ajustes rápidos usam −12 a +12 dB com padrão +3 dB.
 Código (planejado): dB nos dois lugares, −12 a +12, padrão **0 dB** — uma unidade só para o mesmo valor, e 0 dB = sinal como chega (o +3 do protótipo seria um reforço escondido).

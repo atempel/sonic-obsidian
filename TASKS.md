@@ -10,6 +10,8 @@
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
+- [ ] Decidir sobre `electron@45.2.3` e `vite@8.3.6`, que tinham menos de 14 dias na checagem retroativa de dependências — [docs/dependencias.md](docs/dependencias.md)
+- [ ] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder` (só dev; o fix sugerido é downgrade de major)
 - [ ] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
 ## Feito

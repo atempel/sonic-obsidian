@@ -6,6 +6,7 @@ import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { Toast } from './toast'
+import { mountOverlay } from './ui/Overlay'
 import { PresetVisualizer } from './visualizer'
 import { setupWindowChrome } from './window'
 
@@ -92,6 +93,7 @@ async function start(): Promise<void> {
     console.log(`[viz] preset: ${name} (blend ${blendSeconds} s)`)
   })
   applyState()
+  mountOverlay(document.getElementById('ui') as HTMLElement, core)
 
   // Preset ao abrir: o último usado, se ainda existir; senão aleatório.
   const t0 = performance.now()
