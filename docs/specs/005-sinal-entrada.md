@@ -16,7 +16,12 @@ Dar ao usuário um ganho de entrada ajustável por teclado, aplicado no `GainNod
 - Nada vai para `ctx.destination`: o som que o usuário ouve não muda.
 
 **P1**
-- Estado de silêncio: se o RMS ficar abaixo de um limiar por alguns segundos (proposta: ~3 s), mostrar um aviso discreto "sem áudio" e deixar o visual em repouso. O aviso some e o visual volta a reagir quando o som volta.
+- Estado de silêncio: se o RMS ficar abaixo de um limiar por ~3 s:
+  - o movimento de base do preset **desacelera suavemente** (em ~1 s) até ~10–20% da velocidade normal, controlando o tempo passado ao Butterchurn (`visualizer.render({ elapsedTime })`);
+  - a imagem **escurece um pouco** (ex.: ~60–70% do brilho, por uma camada por cima do canvas);
+  - aparece um aviso discreto "sem áudio".
+- Quando o som volta, velocidade e brilho retomam o normal em ~1 s e o aviso some.
+- Contexto: os presets do MilkDrop se movem com o relógio mesmo sem áudio (equações dependem do tempo); o áudio só soma reações por cima. Sem este estado, o visual parece ignorar o silêncio.
 
 ## Fora de escopo
 Persistir o ganho entre sessões (Fase 4). Painel de sinal com suavização e sensibilidade de beat (Fase 2). Escolha de dispositivo de captura. Normalização automática (ver pergunta em aberto).
@@ -27,11 +32,13 @@ Persistir o ganho entre sessões (Fase 4). Painel de sinal com suavização e se
 3. `0` volta o ganho a 0 dB.
 4. O volume ouvido nos alto-falantes não muda ao ajustar o ganho.
 5. Com a música numa faixa tocando baixo, existe um ajuste de ganho em que a barra de nível chega perto de metade da escala e o visual reage com clareza (registrar o valor usado).
-6. (P1) Pausando a música por cerca de 5 s, aparece o aviso "sem áudio" e o visual fica em repouso; ao voltar a tocar, o aviso some em até 1 s e o visual reage de novo.
-7. (P1) Música baixa, mas audível, não dispara o aviso.
+6. (P1) Pausando a música, depois de ~3 s o movimento desacelera visivelmente (sem parar de vez nem dar tranco), a imagem escurece e aparece o aviso "sem áudio".
+7. (P1) Ao voltar a tocar, em ~1 s a velocidade e o brilho voltam ao normal, sem salto brusco, o aviso some e o visual reage de novo.
+8. (P1) Música baixa, mas audível, não dispara o estado de silêncio.
 
 ## Perguntas em aberto
 - Ganho automático (normalização) seria melhor que o manual? Prós: some a necessidade de ajustar a cada faixa. Contras: o pumping atrapalha a dinâmica que o preset deveria acompanhar. Avaliar depois de usar o manual por um tempo; se valer, vira spec própria (Fase 2 ou 3).
+- Velocidade (10–20%) e brilho (60–70%) em silêncio: ajustar no teste com o app rodando e registrar os valores finais em DECISIONS.md.
 - O limiar de silêncio deve ser fixo ou relativo ao ganho atual? Proposta: medir antes do ganho, para o aviso não depender do ajuste.
 - Em silêncio, o contador da rotação (003) deve congelar?
 
