@@ -1,6 +1,6 @@
 # 018 — Microinterações da faixa e da gaveta
 
-**Fase:** 2 · **Status:** Em teste · **Issue:** [#45](https://github.com/atempel/sonic-obsidian/issues/45) · **Depende de:** [009](009-palco-faixa-assinatura.md), [010](010-busca-biblioteca.md), [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Feito (validado no Windows, PR #46) · **Issue:** [#45](https://github.com/atempel/sonic-obsidian/issues/45) · **Depende de:** [009](009-palco-faixa-assinatura.md), [010](010-busca-biblioteca.md), [011](011-ajustes-configuracoes.md)
 
 ## Problema
 A faixa de controle só aparece e some com um fade. Trocar de preset, sortear, ligar a rotação, favoritar e o medidor não dão a resposta curta e precisa que o design aprovou (DECISIONS 2026-11-08, "Microinterações: o que entra e quando"). As da 011 (M04, M10, M13–M16, M19) já estão no app.
