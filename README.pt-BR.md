@@ -42,7 +42,7 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está em andamento. O código está sob a licença MIT; o repositório fica privado até o primeiro lançamento público.
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está em andamento. O código está sob a licença MIT. Ainda não há versão empacotada: para experimentar, compile a partir do código (veja [Desenvolvimento](#desenvolvimento)).
 
 <p align="center">
   <img alt="O Palco: o visual ocupa a janela, com a faixa de controle na parte de baixo" src="docs/media/app-palco.jpg" width="900">

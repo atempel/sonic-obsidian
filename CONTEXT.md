@@ -16,7 +16,7 @@ O que um agente precisa saber para trabalhar bem aqui: convenções, restriçõe
 - **O app não embute IA.** Integração com IA é só como servidor MCP local, desligado por padrão, em `127.0.0.1`, com token e escopos.
 - **Streaming de terceiros (SoundCloud):** nada em disco, crédito e link sempre visíveis, sem contornar CORS ou limites da API.
 - **Créditos dos presets:** os presets do `butterchurn-presets` são obras de artistas da comunidade MilkDrop; o nome do preset carrega o crédito e a UI nunca o remove ou renomeia.
-- **Licença:** o código é MIT (`Copyright (c) 2026 Alexandre Tempel`); o repo segue privado até a abertura. Dependências precisam ser compatíveis (MIT/BSD/Apache ok; perguntar antes de GPL/LGPL). Créditos de terceiros em `THIRD_PARTY_NOTICES.md`.
+- **Licença:** o código é MIT (`Copyright (c) 2026 Alexandre Tempel`); o repo é público desde 2026-11-08. Dependências precisam ser compatíveis (MIT/BSD/Apache ok; perguntar antes de GPL/LGPL). Créditos de terceiros em `THIRD_PARTY_NOTICES.md`.
 - **Dependência nova ou versão nova:** checagem rápida de segurança no momento em que entra (licença, versão publicada há ≥ 14 dias, install scripts, proveniência, `npm audit`), registrada em [docs/dependencias.md](docs/dependencias.md). Versão sempre exata.
 - Performance: o render nunca pode engasgar por causa da UI. Alvo 60 fps em tela cheia na máquina principal (RTX 3070).
 
