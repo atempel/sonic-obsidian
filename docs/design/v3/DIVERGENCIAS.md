@@ -14,6 +14,12 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — Ajustes rápidos e atalhos · tipo de transição
+Protótipo (`1794165177-f126`): os Ajustes rápidos e Configurações › Visual têm só o tempo do blend ("Blend na troca automática", "Blend quando você troca", padrão manual 0 s); não há tipo de transição nem teclas para isso.
+Código (planejado, spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. Proposta de manter `+`/`−`/`0` (ganho) como atalhos permanentes.
+PR/spec: docs/specs/013-transicoes.md · #31
+Status: Aberta. Pedido ao design: desenhar o seletor de tipo (com prévia da forma da mesclagem, P2) nos Ajustes rápidos e em Configurações › Visual, e incluir as teclas novas e as de ganho na tabela de Atalhos.
+
 ### 2026-11-08 — Palco integrado · Biblioteca e busca rápida (cortes de fase e ajustes)
 Protótipo (`1794165177-f126`): a gaveta tem "Novo preset" (Estúdio), chips "Importados"/"Meus", tags de preset importado/criado com IA, item "Editar uma cópia no Estúdio" no menu e miniaturas renderizadas do preset; o submenu "Adicionar à coleção" lista só as coleções existentes.
 Código: sem Estúdio, importação e IA (Fases 3–4), então esses itens não aparecem. Miniaturas são um gradiente estável por nome até haver captura de quadro. O submenu ganhou "Nova coleção" no fim. A aba Coleções da busca, sem coleções, diz "Nenhuma coleção ainda. / Crie coleções na Biblioteca (L)." (texto que o protótipo não tem).

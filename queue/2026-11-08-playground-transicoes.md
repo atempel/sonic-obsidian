@@ -1,5 +1,5 @@
 # Playground ao vivo: transições escolhidas pelo usuário e controle durante a música
-Status: Pending
+Status: Pending (transições do motor viraram a spec 013 / #31; efeitos próprios e o posicionamento "playground" no PRD seguem pendentes)
 Fonte: conversa com o usuário (2026-11-08), depois de testar as specs 008/009 no Windows
 Resumo: "A coisa mais divertida do app é ficar controlando: aumentar e diminuir o ganho, trocar de preset na mesma música quando ela muda." O usuário quer que a troca manual também possa ter crossfade e efeitos de mesclagem, **personalizável**: escolher entre corte seco e transição, e entre tipos de transição. Quer explorar o app como um playground de áudio com vídeo.
 Fatos técnicos levantados:
