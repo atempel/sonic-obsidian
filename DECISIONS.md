@@ -59,3 +59,28 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** a biblioteca junta o pacote padrão e os pacotes extras que já vêm no `butterchurn-presets` (Extra, Extra2, MD1): 395 presets, deduplicados por nome e em ordem alfabética, com o nome inteiro (que carrega o autor). Os extras entram por `import()` dinâmico depois do primeiro quadro (~85 ms medidos na nuvem), e a abertura continua reagindo em ~2 s no Windows.
 - **CSP:** `img-src 'self' data: blob:`, porque alguns presets trazem texturas embutidas como imagens `data:`. Sem isso eles renderizavam sem a textura, e isso já acontecia no build do spike.
 - **Descartado:** carregar tudo de forma síncrona no início (+1,7 MB de JS antes do primeiro quadro); os pacotes `Minimal` e `NonMinimal`, que são recortes dos mesmos presets.
+
+## 2026-11-08 — Interface v3: modelo de navegação combinado
+- **Decisão:** o **Palco** é a tela padrão (só o visual; faixa de controle aparece com o mouse e some em 2,5 s). A **Biblioteca** é uma gaveta oculta à esquerda (`L`, botão na faixa ou alça na borda). O **Rack** é um modo de visualização compacto, sempre por cima (`M`). **Ajustes rápidos** (`,`) num painel lateral; **Configurações** (`Ctrl+,`) em tela própria por cima do visual, com salvamento automático. **Setup** nunca bloqueia: o app abre tocando; boas-vindas e diagnósticos são não-modais e só aparecem quando algo pede.
+- **Por quê:** o usuário escolheu, entre as propostas A (Palco), B (Biblioteca) e C (Rack) do Claude Design, combinar as três como lugares do mesmo app em vez de alternativas.
+- **Referência:** [docs/design/v3-modelo-de-navegacao.md](docs/design/v3-modelo-de-navegacao.md) e o artefato "Sonic Obsidian" no Claude Design (páginas *Palco integrado*, *Configurações*, *Setup*, *Estúdio*, *Propostas*).
+- **Atalhos v3 são os definitivos** e substituem os provisórios da spec 002 (`R` deixa de ser "aleatório" e vira rotação; blend sai das teclas `1`–`3` e vai para os ajustes rápidos).
+- **Descartado:** Carbon Edition (identidade IBM, conteúdo da v1 Python) e a triagem de UI de `queue/2026-11-08-revisao-ui-presets.md`, que fica como histórico.
+
+## 2026-11-08 — Fontes de áudio além do loopback
+- **Decisão:** quatro fontes, escolhidas na faixa ou nas Configurações: **áudio do sistema** (padrão), **microfone**, **arquivo** (escolher ou arrastar; mp3, wav, flac, ogg, m4a) e **SoundCloud** (colar URL). Arquivo e SoundCloud são fontes temporárias com transporte próprio e botão "voltar ao áudio do sistema".
+- **SoundCloud é condicional:** desde mai/2026 as chaves da API só saem para assinantes Artist Pro; os streams agora são HLS AAC (exige `hls.js`); CORS dos segmentos não é documentado; os termos proíbem download/cache e *stream capture* e exigem crédito + link para a faixa. Entra só depois do spike [007](docs/specs/007-spike-soundcloud.md). Plano B: player oficial (widget) dentro do app, analisado pelo próprio loopback.
+- **Não fazer:** baixar ou cachear faixas do SoundCloud; contornar CORS ou limites da API pelo main process.
+
+## 2026-11-08 — Presets do usuário e controle por IA via MCP (escopo novo)
+- **Decisão:** entram no produto (revoga o "editor de presets fora de escopo" do PRD v2):
+  1. **Importar `.milk`** (escolher ou arrastar) e um **Estúdio de presets** para criar/remixar no formato `.milk`, com prévia ao vivo, erros por linha e histórico de versões. Presets de terceiros nunca são editados no lugar: viram "Remix de …" com o crédito original preservado.
+  2. O app é um **servidor MCP local**, desligado por padrão: qualquer ferramenta de IA do usuário (Claude, Cursor, etc.) controla o app ao vivo e cria presets. **O Sonic Obsidian não embute IA nem depende de um provedor.**
+- **Condição de segurança (inegociável):** preset vindo de fora — arquivo, Estúdio ou MCP — **nunca vira JavaScript**. No Butterchurn 2.x as equações viram JS via `new Function` no renderer; aceitar presets externos nesse modelo é execução arbitrária de código. Por isso o escopo novo depende da decisão abaixo.
+- **Detalhes:** [docs/architecture.md](docs/architecture.md).
+
+## 2026-11-08 — Proposta: migrar para Butterchurn 3.0 (equações em WebAssembly) — pendente do spike 006
+- **Proposta:** `butterchurn@3.0.0-beta.5` + `butterchurn-presets@3.0.0-beta.4` com `onlyUseWASM: true`. No 3.x as equações EEL do MilkDrop são compiladas para WebAssembly (`eel-wasm`) só com imports matemáticos: sem acesso a DOM, `window` ou IPC. Presets externos passam a ser seguros por construção, e a CSP pode trocar `'unsafe-eval'` por `'wasm-unsafe-eval'`.
+- **Por que reabre a entrada "Uso do Butterchurn" (que descartou o 3.0 por ser beta):** o escopo novo (presets do usuário e MCP) torna a execução de JS de terceiros o maior risco do projeto, e o 3.x é a saída sem fork. A master do Butterchurn está ativa (abr/2026), mas o beta não é promovido a estável desde jul/2025.
+- **Riscos a validar no spike [006](docs/specs/006-spike-butterchurn3-milk.md):** o pacote publicado (não a master) carrega os presets 3.x só com WASM; desempenho igual ou melhor; o canvas de saída no 3.x usa contexto 2D (o WebGL vai num `OffscreenCanvas`), o que muda o `visualizer.ts`; o conversor `.milk` (dormente desde 2021) gera presets no formato 3.x.
+- **Se o spike falhar:** presets externos ficam fora até haver sandbox equivalente; o MCP sobe só com ferramentas de controle (sem `create_preset`).

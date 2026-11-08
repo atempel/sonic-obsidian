@@ -12,6 +12,9 @@ O que um agente precisa saber para trabalhar bem aqui: convenções, restriçõe
 - **Windows é a plataforma-alvo.** A captura de áudio do sistema usa o loopback do Chromium, que no Electron só existe no Windows. O app precisa *rodar* no Windows para ser testado de verdade — WSL serve para editar, não para validar áudio.
 - **Butterchurn exige WebGL 2.** Toda a renderização visual passa por ele; efeitos próprios entram como camadas por cima (canvas/WebGL), não como fork do motor, até haver motivo forte (registrar em DECISIONS.md).
 - **Conteúdo com DRM fica fora de escopo** — não tentar contornar.
+- **Preset de fora nunca vira JavaScript.** Preset importado, criado no Estúdio ou recebido por MCP só carrega pelo caminho WASM do Butterchurn 3 (`onlyUseWASM`), sem campos `*_str`/`useJS`. Até o spike 006 aprovar, nenhum preset externo é carregado. Ver [docs/architecture.md §5](docs/architecture.md#5-presets-do-usuário-e-estúdio).
+- **O app não embute IA.** Integração com IA é só como servidor MCP local, desligado por padrão, em `127.0.0.1`, com token e escopos.
+- **Streaming de terceiros (SoundCloud):** nada em disco, crédito e link sempre visíveis, sem contornar CORS ou limites da API.
 - **Créditos dos presets:** os presets do `butterchurn-presets` são obras de artistas da comunidade MilkDrop; o nome do preset carrega o crédito e a UI nunca o remove ou renomeia.
 - **Licença:** o repositório é proprietário (uso pessoal); dependências precisam ser compatíveis (MIT/BSD/Apache ok; perguntar antes de GPL).
 - Performance: o render nunca pode engasgar por causa da UI. Alvo 60 fps em tela cheia na máquina principal (RTX 3070).
@@ -46,5 +49,8 @@ O Notion guarda planejamento, reflexão e o **estado** do projeto; o repo é a f
 - **Blend** — transição suave entre dois presets (segundos), nativa do Butterchurn.
 - **Loopback** — captura do áudio que está saindo pelo sistema, sem microfone nem cabo virtual.
 - **Overlay** — a interface Sonic Obsidian desenhada por cima do visual.
+- **Palco / Biblioteca / Rack / Estúdio** — lugares da interface v3 (ver [docs/design/v3-modelo-de-navegacao.md](docs/design/v3-modelo-de-navegacao.md)).
+- **Comando** — ação nomeada do núcleo (`preset.next`, `source.set`…); teclado, UI e MCP só agem por comandos.
+- **Fonte** — de onde vem o áudio analisado: sistema, microfone, arquivo, SoundCloud.
 - **Spike** — protótipo descartável para validar um risco técnico antes de construir em cima.
 - **Camada humana** = PROJECT/CONTEXT/DECISIONS/TASKS/SESSIONS. **Camada de agente** = CLAUDE.md/AGENTS.md/`.claude/skills/` (convenção do workspace//kit).
