@@ -2,7 +2,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'" />
+    <!-- 'unsafe-eval': o Butterchurn compila as equações dos presets com new Function. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'" />
     <title>Sonic Obsidian</title>
     <style>
       html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
