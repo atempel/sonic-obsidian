@@ -4,11 +4,17 @@ import {
   BLEND_MAX_S,
   BLEND_MIN_S,
   BLEND_TYPES,
+  EXPRESSION_ADAPTATIONS,
+  EXPRESSION_CURVES,
+  EXPRESSION_MAX,
+  EXPRESSION_MIN,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   RECENTS_MAX,
   num,
   type BlendType,
+  type ExpressionAdaptation,
+  type ExpressionCurve,
   type Collection,
   type FpsLimit,
   type Library,
@@ -177,6 +183,22 @@ export class Core {
       if (seconds !== undefined) rule.seconds = seconds
       this.changedSettings(origin)
       return { ...rule }
+    },
+    /** Expressividade (spike 015): `{ level?, curve?, adaptation? }`. */
+    'expression.set': (a, origin) => {
+      const e = this.state.settings.expression
+      const level = optNum(a.level, 'level', EXPRESSION_MIN, EXPRESSION_MAX)
+      if (level !== undefined) e.level = Math.round(level)
+      if (a.curve !== undefined) {
+        if (!EXPRESSION_CURVES.includes(a.curve as ExpressionCurve)) fail(`curve: ${EXPRESSION_CURVES.join(', ')}`)
+        e.curve = a.curve as ExpressionCurve
+      }
+      if (a.adaptation !== undefined) {
+        if (!EXPRESSION_ADAPTATIONS.includes(a.adaptation as ExpressionAdaptation)) fail(`adaptation: ${EXPRESSION_ADAPTATIONS.join(', ')}`)
+        e.adaptation = a.adaptation as ExpressionAdaptation
+      }
+      this.changedSettings(origin)
+      return { ...e }
     },
     'settings.set': (a, origin) => {
       const s = this.state.settings

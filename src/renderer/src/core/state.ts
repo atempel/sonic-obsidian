@@ -26,6 +26,24 @@ export const BLEND_TYPE_LABEL: Record<BlendType, string> = {
 export const BLEND_STEPS_S = [0.25, 0.5, 1, 2, 4, 8]
 export const BLEND_MIN_S = 0.1
 export const BLEND_MAX_S = 10
+/** Expressividade (spike da spec 015): −3 … +3, curva e adaptação em teste. */
+export const EXPRESSION_MIN = -3
+export const EXPRESSION_MAX = 3
+export const EXPRESSION_CURVES = ['a', 'b', 'c'] as const
+export type ExpressionCurve = (typeof EXPRESSION_CURVES)[number]
+export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked'] as const
+export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
+export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
+  a: 'A — contraste',
+  b: 'B — contraste + offset',
+  c: 'C — contraste + offset + nervoso'
+}
+export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> = {
+  normal: 'normal (~4 s)',
+  slow: 'lenta (~30 s)',
+  locked: 'travada'
+}
+
 /** Regra de uma troca: tipo e tempo. Com `cut`, o tempo fica guardado para quando voltar a misturar. */
 export interface BlendRule {
   type: BlendType
@@ -47,6 +65,7 @@ export interface Settings {
   }
   /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
   blend: { manual: BlendRule; auto: BlendRule }
+  expression: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
   fpsLimit: FpsLimit
   startupPreset: 'last' | 'random'
   lastPreset: string | null
@@ -80,6 +99,7 @@ export function defaultSettings(): Settings {
     gainDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
+    expression: { level: 0, curve: 'b', adaptation: 'normal' },
     fpsLimit: 'monitor',
     startupPreset: 'last',
     lastPreset: null,
@@ -130,6 +150,7 @@ export function sanitizeSettings(raw: unknown): Settings {
   if (!isObj(raw)) return d
   const rot = isObj(raw.rotation) ? raw.rotation : {}
   const blend = isObj(raw.blend) ? raw.blend : {}
+  const expr = isObj(raw.expression) ? raw.expression : {}
   return {
     version: 1,
     gainDb: Math.round(num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDb)),
@@ -142,6 +163,11 @@ export function sanitizeSettings(raw: unknown): Settings {
     blend: {
       manual: sanitizeBlendRule(blend.manual, blend.manualSeconds, d.blend.manual),
       auto: sanitizeBlendRule(blend.auto, blend.autoSeconds, d.blend.auto)
+    },
+    expression: {
+      level: Math.round(num(expr.level, EXPRESSION_MIN, EXPRESSION_MAX, d.expression.level)),
+      curve: oneOf(expr.curve, EXPRESSION_CURVES, d.expression.curve),
+      adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation)
     },
     fpsLimit: raw.fpsLimit === 'monitor' ? 'monitor' : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),

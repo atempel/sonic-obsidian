@@ -2,12 +2,17 @@ import { captureSystemAudio } from './capture'
 import { Core, type Origin } from './core/commands'
 import {
   BLEND_TYPE_LABEL,
+  EXPRESSION_ADAPTATIONS,
+  EXPRESSION_ADAPTATION_LABEL,
+  EXPRESSION_CURVES,
+  EXPRESSION_CURVE_LABEL,
   cycleBlendType,
   sanitizeLibrary,
   sanitizeSettings,
   stepBlendSeconds,
   stepInterval
 } from './core/state'
+import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
@@ -62,6 +67,7 @@ async function start(): Promise<void> {
     toggleFullScreen: () => window.so.window.toggleFullScreen()
   })
   const settings = core.state.settings
+  const exprProbe = hookExpression(viz.visualizer, () => settings.expression)
   const rotation = new AutoRotation(performance.now(), () => ({
     enabled: settings.rotation.enabled,
     intervalSeconds: core.rotationIntervalSeconds
@@ -160,6 +166,12 @@ async function start(): Promise<void> {
   }
   const gainText = (): string => `Ganho ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb} dB`
   const secondsText = (s: number): string => `${String(s).replace('.', ',')} s`
+  const exprLevel = (): string => {
+    const l = settings.expression.level
+    return l === 0 ? 'neutra' : `${l > 0 ? '+' : '−'}${Math.abs(l)}`
+  }
+  const exprText = (): string =>
+    exprProbe ? `Expressividade ${exprLevel()}` : 'Expressividade indisponível (motor sem audioLevels)'
   /** Toast da transição manual: "Transição: Plasma, 1 s" (spec 013). */
   const blendText = (): string => {
     const { type, seconds } = settings.blend.manual
@@ -170,7 +182,7 @@ async function start(): Promise<void> {
 
   window.addEventListener('resize', () => viz.resize())
   window.addEventListener('keydown', (e) => {
-    if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
+    if (e.repeat && e.code !== 'PageDown' && e.code !== 'PageUp') return
     // HUD de depuração (fps, áudio): escondido por padrão desde a 009.
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
       hudEl.hidden = !hudEl.hidden
@@ -211,11 +223,25 @@ async function start(): Promise<void> {
     let handled = true
     // Shift na troca = corte seco na hora, sem mudar o ajuste salvo (spec 013).
     const cut = e.shiftKey
-    // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md), agora como comandos do Core.
-    if (e.code === 'ArrowRight') {
+    // Spike 015: ←/→ = expressividade; a troca de preset foi para PageDown/N e PageUp.
+    if (e.code === 'PageDown' || e.code === 'KeyN') {
       run('preset.next', { cut })
-    } else if (e.code === 'ArrowLeft') {
+    } else if (e.code === 'PageUp') {
       run('preset.previous', { cut })
+    } else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
+      run('expression.set', { level: settings.expression.level + (e.code === 'ArrowRight' ? 1 : -1) })
+      showToast(exprText(), 1500)
+    } else if (e.code === 'KeyX') {
+      // Só no spike: X cicla a curva, Shift+X a adaptação.
+      if (e.shiftKey) {
+        const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
+        run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
+        showToast(`Adaptação: ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`, 1800)
+      } else {
+        const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
+        run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
+        showToast(`Curva ${EXPRESSION_CURVE_LABEL[settings.expression.curve]} · ${exprLevel()}`, 1800)
+      }
     } else if (e.code === 'Space') {
       run('preset.random', { cut })
     } else if (e.code === 'KeyB') {
@@ -312,6 +338,10 @@ async function start(): Promise<void> {
       state.fps = (frames * 1000) / (now - windowStart)
       frames = 0
       windowStart = now
+      if (exprProbe) {
+        const ex = settings.expression
+        state.expression = `expr ${exprLevel()} · curva ${ex.curve.toUpperCase()} · adaptação ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
+      }
       if (!hudEl.hidden) hud.show(state)
     }
   }

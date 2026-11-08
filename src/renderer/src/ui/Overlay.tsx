@@ -177,13 +177,13 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           </button>
         </div>
         <div class="strip-t">
-          <button class="ibtn" aria-label="Preset anterior" title="Anterior (←)" onClick={() => core.run('preset.previous', {}, 'ui')}>
+          <button class="ibtn" aria-label="Preset anterior" title="Anterior (PgUp)" onClick={() => core.run('preset.previous', {}, 'ui')}>
             <Icon name="skip-back" />
           </button>
           <button class="ibtn" aria-label="Preset aleatório" title="Aleatório (Espaço)" onClick={() => core.run('preset.random', {}, 'ui')}>
             <Icon name="shuffle" />
           </button>
-          <button class="ibtn" aria-label="Próximo preset" title="Próximo (→)" onClick={() => core.run('preset.next', {}, 'ui')}>
+          <button class="ibtn" aria-label="Próximo preset" title="Próximo (PgDn ou N)" onClick={() => core.run('preset.next', {}, 'ui')}>
             <Icon name="skip-forward" />
           </button>
           <span class="sep" aria-hidden="true" />
