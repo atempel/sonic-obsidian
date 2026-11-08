@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { Core } from '../core/commands'
 import type { Collection } from '../core/state'
 import { Highlight } from './Highlight'
+import { useSlideIndicator } from './slide-indicator'
 import { Icon } from './icons'
 import { COLLECTION_INTERVALS, TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
@@ -29,6 +30,9 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
   const [menu, setMenu] = useState<MenuState | null>(null)
   const input = useRef<HTMLInputElement>(null)
   const panel = useRef<HTMLElement>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  // M10: o sublinhado desliza entre as abas.
+  useSlideIndicator(tabsRef, '[role=tab][aria-selected=true]', 'x', [tab, open])
   const allSet = useMemo(() => new Set(presets), [presets])
   const lib = core.state.library
   const query = q.trim()
@@ -161,13 +165,14 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
             <kbd>/</kbd>
           )}
         </div>
-        <div class="ltabs" role="tablist" aria-label="Seções da biblioteca" onKeyDown={onTabKey}>
+        <div class="ltabs" ref={tabsRef} role="tablist" aria-label="Seções da biblioteca" onKeyDown={onTabKey}>
           {TABS.map((t) => (
             <button key={t.id} role="tab" aria-selected={tab === t.id} tabIndex={tab === t.id ? 0 : -1} onClick={() => selectTab(t.id)}>
               {t.label}
               {t.id !== 'collections' && <span class="num">{counts[t.id]}</span>}
             </button>
           ))}
+          <i class="ind" aria-hidden="true" />
         </div>
         <div class="listwrap">
           <div class="list">{body}</div>

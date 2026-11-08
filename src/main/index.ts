@@ -1,5 +1,6 @@
-import { app, BrowserWindow, desktopCapturer, ipcMain, session, shell } from 'electron'
-import { join } from 'node:path'
+import { app, BrowserWindow, desktopCapturer, dialog, ipcMain, session, shell } from 'electron'
+import { readFile, writeFile } from 'node:fs/promises'
+import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
 import { JsonStore } from './store'
 
@@ -30,6 +31,48 @@ function registerStores(): void {
   ipcMain.handle('log:show', () => shell.showItemInFolder(logPath()))
   // URL fixa: o renderer não escolhe o que abrir.
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
+  ipcMain.handle('app:version', () => app.getVersion())
+  // Créditos de terceiros: o arquivo vai ao lado do .exe (extraFiles); em dev, na raiz do projeto.
+  ipcMain.handle('system:openNotices', () =>
+    shell.openPath(join(app.isPackaged ? dirname(process.execPath) : app.getAppPath(), 'THIRD_PARTY_NOTICES.md'))
+  )
+  // Links do Sobre: só https, abertos no navegador.
+  ipcMain.handle('system:openLink', (_e, url: unknown) => {
+    if (typeof url === 'string' && /^https:\/\/[^\s]+$/.test(url)) return shell.openExternal(url)
+    return undefined
+  })
+  registerCollectionFiles()
+}
+
+/**
+ * Exportar e importar coleções (spec 011): o main escolhe o arquivo pelo diálogo nativo;
+ * o renderer só manda e recebe texto JSON. Limite de 2 MB na leitura.
+ */
+function registerCollectionFiles(): void {
+  const filters = [{ name: 'JSON', extensions: ['json'] }]
+  ipcMain.handle('collections:export', async (e, text: unknown) => {
+    if (typeof text !== 'string' || text.length > 2_000_000) return { ok: false }
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = { defaultPath: 'sonic-obsidian-colecoes.json', filters }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true }
+    await writeFile(res.filePath, text, 'utf8')
+    return { ok: true, name: basename(res.filePath) }
+  })
+  ipcMain.handle('collections:import', async (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = { properties: ['openFile' as const], filters }
+    const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    const path = res.filePaths[0]
+    if (res.canceled || !path) return { ok: false, canceled: true }
+    try {
+      const buf = await readFile(path)
+      if (buf.length > 2_000_000) return { ok: false, name: basename(path), error: 'read' }
+      return { ok: true, name: basename(path), text: buf.toString('utf8') }
+    } catch {
+      return { ok: false, name: basename(path), error: 'read' }
+    }
+  })
 }
 
 /**
@@ -67,6 +110,8 @@ function createWindow(): void {
     height: 720,
     backgroundColor: '#000000',
     title: 'Sonic Obsidian',
+    // Ícone da janela e da barra de tarefas (marca "The Core", docs/brand/app-icon.svg).
+    icon: join(app.getAppPath(), 'resources/icon.ico'),
     autoHideMenuBar: true,
     // Sem moldura: o visual é a janela. Arrasto pela área de drag do renderer;
     // redimensionar pelas bordas continua nativo (resizable + thickFrame padrão).
@@ -89,6 +134,12 @@ function createWindow(): void {
   })
   win.webContents.on('unresponsive', () => log('main', 'renderer sem responder'))
   win.webContents.on('responsive', () => log('main', 'renderer voltou a responder'))
+
+  // Nenhuma janela nova dentro do app: links externos vão para o navegador.
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https:\/\//.test(url)) void shell.openExternal(url)
+    return { action: 'deny' }
+  })
 
   win.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return
@@ -117,6 +168,9 @@ app.on('child-process-gone', (_e, details) => {
   log('main', `processo ${details.type}${details.name ? ` (${details.name})` : ''} caiu: ${details.reason} (exit ${details.exitCode})`)
   logMetrics()
 })
+
+// Agrupa a janela na barra de tarefas do Windows sob o mesmo id do pacote (appId do electron-builder).
+if (process.platform === 'win32') app.setAppUserModelId('dev.atempel.sonic-obsidian')
 
 app.whenReady().then(() => {
   log('main', `abriu ${app.getVersion()} · Electron ${process.versions.electron} · log em ${logPath()}`)

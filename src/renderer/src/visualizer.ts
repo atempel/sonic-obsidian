@@ -1,5 +1,5 @@
 import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
-import type { BlendType } from './core/state'
+import type { BlendType, RenderSettings } from './core/state'
 
 /**
  * Partes internas do Butterchurn 2.6.7 usadas para escolher o tipo de transição
@@ -26,17 +26,58 @@ export class PresetVisualizer {
   readonly blendTypesAvailable: boolean
   /** Tipo pedido para o próximo `createBlendPattern` (lido pela sobrescrita). */
   private pendingType: BlendType = 'random'
+  private render_: RenderSettings
+  private extraImagesLoaded = false
 
-  constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement) {
+  constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement, render: RenderSettings) {
+    this.render_ = { ...render }
     const { width, height } = this.size()
     canvas.width = width
     canvas.height = height
     this.visualizer = butterchurn.createVisualizer(ctx, canvas, {
       width,
       height,
-      pixelRatio: window.devicePixelRatio || 1
+      pixelRatio: this.pixelRatio(),
+      textureRatio: render.textureRatio,
+      meshWidth: render.meshWidth,
+      meshHeight: render.meshHeight,
+      outputFXAA: render.fxaa
     })
     this.blendTypesAvailable = this.hookBlendPattern()
+    if (render.extraImages) void this.loadExtraImages()
+  }
+
+  /**
+   * Configurações › Renderização, na hora e sem reiniciar (spec 011). Malha, escala de
+   * pixels, texturas e tamanho do canvas passam por setRendererSize; FXAA por setOutputAA.
+   * Desligar as imagens extras não as descarrega (só vale na próxima abertura).
+   */
+  applyRender(next: RenderSettings): void {
+    const prev = this.render_
+    this.render_ = { ...next }
+    if (next.fxaa !== prev.fxaa) this.visualizer.setOutputAA(next.fxaa)
+    if (next.meshWidth !== prev.meshWidth || next.meshHeight !== prev.meshHeight) {
+      this.visualizer.setInternalMeshSize(next.meshWidth, next.meshHeight)
+    }
+    if (next.pixelRatio !== prev.pixelRatio || next.textureRatio !== prev.textureRatio || next.canvasScale !== prev.canvasScale) this.resize()
+    if (next.extraImages) void this.loadExtraImages()
+  }
+
+  private async loadExtraImages(): Promise<void> {
+    if (this.extraImagesLoaded) return
+    this.extraImagesLoaded = true
+    try {
+      const mod = await import('butterchurn/lib/butterchurnExtraImages.min.js')
+      this.visualizer.loadExtraImages(mod.default.getImages())
+    } catch (err) {
+      this.extraImagesLoaded = false
+      console.error('[viz] falha ao carregar o pacote de imagens extras', err)
+    }
+  }
+
+  private pixelRatio(): number {
+    const r = this.render_.pixelRatio
+    return r === 'auto' ? window.devicePixelRatio || 1 : r
   }
 
   /** Corte seco = blend 0; os demais tipos usam o tempo pedido. */
@@ -49,7 +90,7 @@ export class PresetVisualizer {
     const { width, height } = this.size()
     this.canvas.width = width
     this.canvas.height = height
-    this.visualizer.setRendererSize(width, height)
+    this.visualizer.setRendererSize(width, height, { pixelRatio: this.pixelRatio(), textureRatio: this.render_.textureRatio })
   }
 
   /** elapsedSeconds controla o relógio do preset (silêncio = relógio mais lento). */
@@ -113,6 +154,8 @@ export class PresetVisualizer {
   }
 
   private size(): { width: number; height: number } {
-    return { width: window.innerWidth, height: window.innerHeight }
+    // Tamanho do canvas (Nativo / 75% / 50%): menos pixels; o CSS estica para a janela.
+    const k = this.render_.canvasScale
+    return { width: Math.max(2, Math.round(window.innerWidth * k)), height: Math.max(2, Math.round(window.innerHeight * k)) }
   }
 }

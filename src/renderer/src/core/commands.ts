@@ -14,6 +14,7 @@ import {
   GAIN_MIN_DB,
   RECENTS_MAX,
   num,
+  sanitizeRender,
   type BlendType,
   type ExpressionAdaptation,
   type ExpressionCurve,
@@ -24,7 +25,8 @@ import {
   type Library,
   type OverlayName,
   type RotationOrder,
-  type Settings
+  type Settings,
+  type StartupPreset
 } from './state'
 
 /**
@@ -229,13 +231,26 @@ export class Core {
         s.fpsLimit = v as FpsLimit
       }
       if (a.startupPreset !== undefined) {
-        if (a.startupPreset !== 'last' && a.startupPreset !== 'random') fail('startupPreset: last ou random')
-        s.startupPreset = a.startupPreset as 'last' | 'random'
+        if (!['last', 'random', 'favorite'].includes(a.startupPreset as string)) fail('startupPreset: last, random ou favorite')
+        s.startupPreset = a.startupPreset as StartupPreset
       }
-      const pin = optBool(a.pinControls, 'pinControls')
-      if (pin !== undefined) s.pinControls = pin
+      if (a.startupFavorite !== undefined) s.startupFavorite = a.startupFavorite === null ? null : str(a.startupFavorite, 'startupFavorite')
+      const gainDefault = optNum(a.gainDefaultDb, 'gainDefaultDb', GAIN_MIN_DB, GAIN_MAX_DB)
+      if (gainDefault !== undefined) s.gainDefaultDb = Math.round(gainDefault)
+      for (const key of ['pinControls', 'startFullscreen', 'showFps'] as const) {
+        const v = optBool(a[key], key)
+        if (v !== undefined) s[key] = v
+      }
       this.changedSettings(origin)
-      return { fpsLimit: s.fpsLimit, startupPreset: s.startupPreset, pinControls: s.pinControls }
+      const { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps } = s
+      return { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps }
+    },
+    /** Renderização (Configurações): `{ meshWidth+meshHeight?, pixelRatio?, textureRatio?, fxaa?, canvasScale?, extraImages? }`. */
+    'render.set': (a, origin) => {
+      const next = sanitizeRender({ ...this.state.settings.render, ...a })
+      this.state.settings.render = next
+      this.changedSettings(origin)
+      return { ...next }
     },
 
     // ── biblioteca ──────────────────────────────────────────
@@ -324,6 +339,34 @@ export class Core {
       return interval
     },
     /** Liga a rotação na ordem da coleção, com o intervalo dela, e toca o primeiro. */
+    /**
+     * Importa coleções de um JSON exportado (`{version: 1, collections}` ou só a lista).
+     * Mesmo id substitui; id novo entra no fim. Devolve quantas entraram.
+     */
+    'collection.import': (a, origin) => {
+      const raw = a.data as { collections?: unknown } | unknown[]
+      const list = Array.isArray(raw) ? raw : Array.isArray((raw as { collections?: unknown })?.collections) ? ((raw as { collections: unknown[] }).collections) : null
+      if (!list) fail('formato inválido')
+      const valid = list!.filter(
+        (c): c is { id?: unknown; name: string; presets: unknown[]; intervalSeconds?: unknown } =>
+          typeof c === 'object' && c !== null && typeof (c as { name?: unknown }).name === 'string' && Array.isArray((c as { presets?: unknown }).presets)
+      )
+      if (valid.length === 0) fail('nenhuma coleção no arquivo')
+      const cols = this.state.library.collections
+      for (const c of valid) {
+        const col: Collection = {
+          id: typeof c.id === 'string' && c.id ? c.id : `c${Date.now().toString(36)}${cols.length}`,
+          name: c.name.trim() || 'Coleção',
+          presets: [...new Set(c.presets.filter((n): n is string => typeof n === 'string' && n.length > 0))],
+          intervalSeconds: num(c.intervalSeconds, 5, 600, 30)
+        }
+        const i = cols.findIndex((x) => x.id === col.id)
+        if (i >= 0) cols[i] = col
+        else cols.push(col)
+      }
+      this.changedLibrary(origin)
+      return valid.length
+    },
     'collection.play': (a, origin) => {
       const col = this.collectionOrFail(a.id)
       if (col.presets.length === 0) fail('coleção vazia')

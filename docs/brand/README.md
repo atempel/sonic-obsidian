@@ -32,3 +32,6 @@ A fonte da verdade é o Design System "Sonic Obsidian" no Claude Design ([artefa
 Girar até virar quadrado; preencher a casca ou contornar o núcleo; animar a casca; gradientes, chanfros ou brilho na marca estática; cores fora de violeta, beat, warn, branco e tinta; usar o glifo ◆ no lugar da marca.
 
 Os PNGs foram gerados a partir da construção acima. Se o Design System mudar a marca, regenere-os e atualize esta página.
+
+## Ícone do app no Windows
+`resources/icon.ico` (16, 20, 24, 32, 40, 48, 64, 128 e 256 px, com transparência) e `resources/icon.png` (256 px) são gerados de `app-icon.svg`: render no Chromium (Playwright) em cada tamanho e `convert` (ImageMagick) para juntar o `.ico`. O main usa o `.ico` como ícone da janela e da barra de tarefas; o `electron-builder.yml` o aponta em `win.icon`. Se a marca mudar, regenere os dois.

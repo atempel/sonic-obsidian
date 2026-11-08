@@ -70,13 +70,41 @@ export interface BlendRule {
 }
 
 export type RotationOrder = 'random' | 'collection'
+export type StartupPreset = 'last' | 'random' | 'favorite'
+
+/** Renderização (spec 011, Configurações › Renderização): aplicada na hora, sem reiniciar. */
+export const MESH_SIZES = [
+  [32, 24],
+  [48, 36],
+  [64, 48],
+  [96, 72],
+  [128, 96]
+] as const
+export const PIXEL_RATIOS = ['auto', 1, 1.5, 2] as const
+export type PixelRatio = (typeof PIXEL_RATIOS)[number]
+export const TEXTURE_RATIOS = [0.5, 0.75, 1] as const
+export const CANVAS_SCALES = [1, 0.75, 0.5] as const
+export const FPS_LIMITS = [30, 45, 60, 144, 'monitor'] as const
+export interface RenderSettings {
+  meshWidth: number
+  meshHeight: number
+  pixelRatio: PixelRatio
+  textureRatio: number
+  fxaa: boolean
+  /** Fração da janela usada como tamanho do render (o canvas estica). */
+  canvasScale: number
+  extraImages: boolean
+}
 export type FpsLimit = 'monitor' | number
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings'
 
 export interface Settings {
   /** 2 = limite de fps padrão 60 (antes: taxa do monitor). */
   version: 2
+  /** Ganho em vigor (Ajustes rápidos). Ao abrir, volta ao `gainDefaultDb`. */
   gainDb: number
+  /** Ganho padrão: o ganho ao abrir (Configurações › Captura). */
+  gainDefaultDb: number
   rotation: {
     enabled: boolean
     intervalSeconds: number
@@ -88,10 +116,16 @@ export interface Settings {
   expression: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
   overlayText: OverlayText
   fpsLimit: FpsLimit
-  startupPreset: 'last' | 'random'
+  startupPreset: StartupPreset
+  /** Usado quando `startupPreset` é 'favorite'. */
+  startupFavorite: string | null
+  startFullscreen: boolean
   lastPreset: string | null
   /** Faixa de controle sempre visível (sem UI até a 011). */
   pinControls: boolean
+  /** Mostrar fps na faixa (Configurações › Desempenho). */
+  showFps: boolean
+  render: RenderSettings
 }
 
 export interface Collection {
@@ -118,14 +152,38 @@ export function defaultSettings(): Settings {
   return {
     version: 2,
     gainDb: 0,
+    gainDefaultDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { level: 0, curve: 'b', adaptation: 'normal' },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
     fpsLimit: 60,
     startupPreset: 'last',
+    startupFavorite: null,
+    startFullscreen: false,
     lastPreset: null,
-    pinControls: false
+    pinControls: false,
+    showFps: false,
+    render: defaultRender()
+  }
+}
+
+export function defaultRender(): RenderSettings {
+  return { meshWidth: 48, meshHeight: 36, pixelRatio: 'auto', textureRatio: 1, fxaa: true, canvasScale: 1, extraImages: false }
+}
+
+/** Valida `render` (de settings.json ou do comando `render.set`), campo a campo. */
+export function sanitizeRender(raw: unknown, base: RenderSettings = defaultRender()): RenderSettings {
+  const r = isObj(raw) ? raw : {}
+  const mesh = MESH_SIZES.find(([w, h]) => w === r.meshWidth && h === r.meshHeight)
+  return {
+    meshWidth: mesh ? mesh[0] : base.meshWidth,
+    meshHeight: mesh ? mesh[1] : base.meshHeight,
+    pixelRatio: PIXEL_RATIOS.includes(r.pixelRatio as PixelRatio) ? (r.pixelRatio as PixelRatio) : base.pixelRatio,
+    textureRatio: TEXTURE_RATIOS.includes(r.textureRatio as 1) ? (r.textureRatio as number) : base.textureRatio,
+    fxaa: bool(r.fxaa, base.fxaa),
+    canvasScale: CANVAS_SCALES.includes(r.canvasScale as 1) ? (r.canvasScale as number) : base.canvasScale,
+    extraImages: bool(r.extraImages, base.extraImages)
   }
 }
 
@@ -178,9 +236,12 @@ export function sanitizeSettings(raw: unknown): Settings {
   // migra uma vez para 60. Depois da versão 2, 'monitor' salvo é escolha e fica.
   const fpsLimit: FpsLimit =
     raw.fpsLimit === 'monitor' ? (raw.version === 2 ? 'monitor' : 60) : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit
+  // O ganho padrão nasce do ganho salvo (antes da 011, o ganho salvo era o ganho ao abrir).
+  const gainDefaultDb = Math.round(num(raw.gainDefaultDb, GAIN_MIN_DB, GAIN_MAX_DB, num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDefaultDb)))
   return {
     version: 2,
-    gainDb: Math.round(num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDb)),
+    gainDb: gainDefaultDb,
+    gainDefaultDb,
     rotation: {
       enabled: bool(rot.enabled, d.rotation.enabled),
       intervalSeconds: num(rot.intervalSeconds, 5, 600, d.rotation.intervalSeconds),
@@ -203,9 +264,13 @@ export function sanitizeSettings(raw: unknown): Settings {
       clean: bool(text.clean, d.overlayText.clean)
     },
     fpsLimit,
-    startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),
+    startupPreset: oneOf(raw.startupPreset, ['last', 'random', 'favorite'], d.startupPreset),
+    startupFavorite: typeof raw.startupFavorite === 'string' && raw.startupFavorite ? raw.startupFavorite : null,
+    startFullscreen: bool(raw.startFullscreen, d.startFullscreen),
     lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null,
-    pinControls: bool(raw.pinControls, d.pinControls)
+    pinControls: bool(raw.pinControls, d.pinControls),
+    showFps: bool(raw.showFps, d.showFps),
+    render: sanitizeRender(raw.render)
   }
 }
 

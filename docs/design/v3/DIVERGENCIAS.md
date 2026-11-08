@@ -94,3 +94,14 @@ Protótipo (`1794175739-7509`, painel `#sheet`): "Blend na troca automática" e 
 
 ### 2026-11-08 — Configurações · seção inicial
 Protótipo: as Configurações abrem em Captura. **No app:** abrem em Geral (decisão do usuário, spec 011). **Status:** aberta.
+
+### 2026-11-08 — Configurações · diferenças da implementação (spec 011, PR 2)
+Protótipo `1794175739-7509`, página Configurações. **No app:**
+- **M10 no menu lateral:** o protótipo só tem o indicador deslizante nas abas horizontais. Aqui ele foi adaptado ao menu vertical, como uma barra de 2 px à esquerda que desliza até a seção (t-med). Nas abas da Biblioteca, segue o protótipo.
+- **Transição:** um seletor de tipo e o tempo de 0,1 a 10 s, no lugar dos dois sliders de 0 a 10 s (spec 013).
+- **Testar captura:** sem som em 3 s, mostra "Nenhum som em 3 s. Toque algo no computador e tente de novo." O protótipo não tem esse estado.
+- **Atalhos:** a tabela traz os atalhos reais da Fase 2 (B, ↑/↓, +/−/0, X, Shift+X, F para tela cheia). Saem "Favoritar F", Modo Rack, Estúdio e IA, que são de outras fases. Regravar tecla é P1, e "Restaurar padrões" fica desabilitado.
+- **Desempenho** mostra só "Mostrar fps na faixa". Pular presets lentos, Mínimo de fps e Ocultos por desempenho chegam com a spec 012.
+- **Biblioteca › Pacotes** mostra só a contagem total. Pacote extra para baixar e importar `.milk` são da Fase 3.
+- **Sobre** ganha a linha "Licenças de terceiros" (abre o THIRD_PARTY_NOTICES) e mostra a versão do `package.json`.
+**Status:** aberta.

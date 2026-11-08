@@ -56,7 +56,8 @@ async function start(): Promise<void> {
   gain.connect(meter)
   const samples = new Float32Array(meter.fftSize)
 
-  const viz = new PresetVisualizer(ctx, canvas)
+  const initialSettings = sanitizeSettings(rawSettings)
+  const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
   viz.visualizer.connectAudio(gain)
   hookShaderCleanup(viz.visualizer)
 
@@ -70,7 +71,7 @@ async function start(): Promise<void> {
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
-  const core = new Core(library, sanitizeSettings(rawSettings), sanitizeLibrary(rawLibrary), {
+  const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
     toggleFullScreen: () => window.so.window.toggleFullScreen()
@@ -86,6 +87,7 @@ async function start(): Promise<void> {
 
   // ── Captura do áudio do sistema, com "Tentar de novo" (spec 009) ──
   let source: MediaStreamAudioSourceNode | null = null
+  let captureInfo = { device: '', sampleRate: ctx.sampleRate }
   let capturing = false
   const connectCapture = async (): Promise<void> => {
     if (capturing) return
@@ -108,6 +110,7 @@ async function start(): Promise<void> {
         source = null
         core.setCapture('denied')
       })
+      captureInfo = { device: audioTrack.label, sampleRate: audioTrack.getSettings().sampleRate ?? ctx.sampleRate }
       source = ctx.createMediaStreamSource(stream)
       source.connect(gain)
       source.connect(preGain)
@@ -124,7 +127,13 @@ async function start(): Promise<void> {
   // Efeitos dos eventos: o Core não toca o Butterchurn nem o áudio.
   let appliedGainDb = Number.NaN
   let rotationKey = ''
+  let renderKey = JSON.stringify(settings.render)
   const applyState = (): void => {
+    const rk = JSON.stringify(settings.render)
+    if (rk !== renderKey) {
+      renderKey = rk
+      viz.applyRender(settings.render)
+    }
     if (settings.gainDb !== appliedGainDb) {
       appliedGainDb = settings.gainDb
       gain.gain.setTargetAtTime(10 ** (settings.gainDb / 20), ctx.currentTime, 0.02)
@@ -155,13 +164,20 @@ async function start(): Promise<void> {
     openSoundSettings: () => void window.so.system.openSoundSettings(),
     isFullScreen,
     blendTypesAvailable: viz.blendTypesAvailable,
-    expressionAvailable: !!exprProbe
+    expressionAvailable: !!exprProbe,
+    fps: () => state.fps,
+    captureInfo: () => captureInfo,
+    presetCount: () => library.count
   })
+  // Abrir em tela cheia (Configurações › Geral).
+  if (settings.startFullscreen && !isFullScreen()) core.run('window.fullscreen', {}, 'startup')
 
   // Preset ao abrir: o último usado, se ainda existir; senão aleatório.
   const t0 = performance.now()
   const extras = library.loadExtraPacks()
-  const last = settings.startupPreset === 'last' ? settings.lastPreset : null
+  // Preset ao abrir: último usado, aleatório ou um favorito (Configurações › Geral).
+  const last =
+    settings.startupPreset === 'last' ? settings.lastPreset : settings.startupPreset === 'favorite' ? settings.startupFavorite : null
   if (last && !library.has(last)) {
     // Pode estar nos pacotes extras: espera um pouco por eles, sem passar do limite.
     await Promise.race([extras.catch(() => 0), new Promise((r) => setTimeout(r, STARTUP_EXTRAS_WAIT_MS))])
@@ -216,6 +232,12 @@ async function start(): Promise<void> {
       toggleOverlay(core, 'search')
       return
     }
+    // Ctrl+, abre e fecha as Configurações (spec 011).
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === ',') {
+      e.preventDefault()
+      toggleOverlay(core, 'settings')
+      return
+    }
     if (e.ctrlKey || e.altKey || e.metaKey) return
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
     const t = e.target as HTMLElement | null
@@ -233,13 +255,15 @@ async function start(): Promise<void> {
       else if (isFullScreen()) run('window.fullscreen')
       return
     }
+    // Com as Configurações abertas, as teclas do Palco não valem (só Esc e os atalhos com Ctrl).
+    if (core.state.overlay === 'settings') return
     if (e.code === 'KeyL') {
       e.preventDefault()
       toggleOverlay(core, 'library')
       return
     }
     // Dentro da Biblioteca, da busca ou de um menu, as setas e o Espaço são da lista.
-    if (t?.closest('.lib, .palette, .menu, .sheet')) return
+    if (t?.closest('.lib, .palette, .menu, .sheet, .settings')) return
     if (e.key === '/') {
       e.preventDefault()
       run('ui.open', { overlay: 'search' })

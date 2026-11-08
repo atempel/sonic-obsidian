@@ -24,6 +24,16 @@ contextBridge.exposeInMainWorld('so', {
   showLog: (): Promise<void> => ipcRenderer.invoke('log:show'),
   system: {
     /** Abre Configurações › Som do Windows (URL fixa no main). */
-    openSoundSettings: (): Promise<void> => ipcRenderer.invoke('system:openSoundSettings')
+    openSoundSettings: (): Promise<void> => ipcRenderer.invoke('system:openSoundSettings'),
+    /** Abre o THIRD_PARTY_NOTICES.md com o app padrão. */
+    openNotices: (): Promise<string> => ipcRenderer.invoke('system:openNotices'),
+    /** Abre um link https no navegador. */
+    openLink: (url: string): Promise<void> => ipcRenderer.invoke('system:openLink', url)
+  },
+  app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
+  /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */
+  collections: {
+    export: (text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }> => ipcRenderer.invoke('collections:export', text),
+    import: (): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }> => ipcRenderer.invoke('collections:import')
   }
 })

@@ -224,3 +224,16 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Atualização (mesmo dia):** o repo abriu antes, com MIT e arquivos de comunidade ([#43](https://github.com/atempel/sonic-obsidian/pull/43), entrada acima). Das specs 016/017 sobram o pipeline de release, a landing e ligar o Pages.
 - **Fixado com o usuário:** nome do repo `atempel/sonic-obsidian` e `appId` `dev.atempel.sonic-obsidian` não mudam na abertura; o MIT sai como `Copyright (c) 2026 Alexandre Tempel`.
 - **Descartado:** Cloudflare (Pages está em modo de manutenção, a recomendação atual é Workers com arquivos estáticos). Ganharia prévia por PR, cabeçalhos HTTP, analytics sem cookies e publicação com o repo ainda privado; reavaliar se algum desses virar necessidade. Também descartados: assinatura de código e Microsoft Store por ora (SmartScreen avisa; a landing explica).
+
+## 2026-11-08 — Ícone do app na barra de tarefas
+- **Pedido do usuário:** o logo do app na barra de tarefas do Windows.
+- **Como:** `resources/icon.ico` gerado de `docs/brand/app-icon.svg` (9 tamanhos, 16–256 px), passado ao `BrowserWindow` (`icon`) e ao `win.icon` do electron-builder, mais `app.setAppUserModelId` com o `appId`, para o Windows agrupar a janela com o ícone certo.
+- **`.exe` com o ícone** (decisão do usuário): `signAndEditExecutable: true`, para o electron-builder editar o executável (rcedit) e o ícone aparecer também no Explorer e no atalho fixado. Sem certificado, nada é assinado. Se o CI falhar baixando o `winCodeSign`, a volta é desligar de novo.
+- **Descartado:** dependência nova para gerar o `.ico` (Chromium e ImageMagick já estão no ambiente).
+
+## 2026-11-08 — Spec 011, PR 2: Configurações
+- **Ganho padrão × ganho em vigor:** `settings.gainDefaultDb` é o ganho ao abrir (Configurações › Captura); `gainDb` é o ganho mexido nos Ajustes rápidos durante a música e **volta ao padrão a cada abertura**, como no protótipo ("Aplicado ao abrir. Durante a música, use os Ajustes rápidos."). Na migração, o `gainDefaultDb` nasce do `gainDb` salvo, então ninguém perde o ganho que usava. **Descartado:** manter o ganho dos Ajustes entre aberturas (seriam dois controles para a mesma coisa).
+- **Renderização na hora:** malha por `setInternalMeshSize`, FXAA por `setOutputAA`, escala de pixels, texturas e tamanho do canvas por `setRendererSize(w, h, {pixelRatio, textureRatio})`, com o canvas menor esticado pelo CSS. O pacote de imagens extras é carregado sob demanda (import dinâmico) e só sai na próxima abertura. FXAA passa a vir ligado por padrão, como no protótipo.
+- **Arquivos de coleções** pelo diálogo nativo no main (`collections:export`/`collections:import`, limite de 2 MB); o renderer só passa texto. Importar substitui coleções de mesmo id e acrescenta as novas.
+- **Links do Sobre** abrem no navegador por `system:openLink` (só `https://`), e toda janela nova é negada (`setWindowOpenHandler`).
+- **Fora deste PR:** regravar teclas (P1), Telas e Integrações (Fases 3–5) e as opções de desempenho da spec 012.

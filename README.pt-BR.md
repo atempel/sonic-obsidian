@@ -98,7 +98,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 - **Persistência.** Configurações e biblioteca sobrevivem ao reinício.
 - **Diagnóstico.** `Ctrl+Shift+D` mostra um HUD de depuração (fps, memória, áudio); um arquivo de log registra travamentos e eventos da GPU.
 
-**Próximos passos** — a tela de Configurações completa, configuração do primeiro uso e diagnóstico, desempenho por preset, arquivos de áudio e microfone como fontes, importação e criação de presets `.milk` em um Estúdio, e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
+**Próximos passos** — configuração do primeiro uso e diagnóstico, desempenho por preset, arquivos de áudio e microfone como fontes, importação e criação de presets `.milk` em um Estúdio, e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
 
 ## Teclado
 
@@ -110,6 +110,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 | `B` / `Shift+B` | Alterna o tipo de transição |
 | `↑` / `↓` | Duração da transição (0,25 s a 8 s) |
 | `R` | Liga/desliga a rotação automática |
+| `Ctrl+,` | Configurações |
 | `,` | Ajustes rápidos (ganho, rotação, transições, Expressividade, texto sobre o visual) |
 | `+` / `−` / `0` | Aumenta / diminui / restaura a Expressividade |
 | `X` / `Shift+X` | Caráter / Memória da reação |
