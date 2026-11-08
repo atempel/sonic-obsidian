@@ -3,7 +3,7 @@
 Índice: cada item aponta para sua spec (`docs/specs/`) e issue. O detalhe vive na spec, não aqui. Roadmap completo em [docs/PRD.md](docs/PRD.md). Referências pendentes em `queue/`; histórico em [SESSIONS.md](SESSIONS.md).
 
 ## Agora — Fase 1
-- [ ] **Presets: biblioteca e navegação** (inclui toast com nome e autor) — [spec 002](docs/specs/002-presets-biblioteca-navegacao.md) · issue [#6](https://github.com/atempel/sonic-obsidian/issues/6)
+- [x] **Presets: biblioteca e navegação** (inclui toast com nome e autor) — [spec 002](docs/specs/002-presets-biblioteca-navegacao.md) · issue [#6](https://github.com/atempel/sonic-obsidian/issues/6)
 - [ ] **Rotação automática** (depende da 002) — [spec 003](docs/specs/003-rotacao-automatica.md) · issue [#7](https://github.com/atempel/sonic-obsidian/issues/7)
 - [ ] **Janela: tela cheia, sem moldura e fps** — [spec 004](docs/specs/004-janela.md) · issue [#8](https://github.com/atempel/sonic-obsidian/issues/8)
 - [ ] **Sinal de entrada: ganho e silêncio** — [spec 005](docs/specs/005-sinal-entrada.md) · issue [#9](https://github.com/atempel/sonic-obsidian/issues/9)

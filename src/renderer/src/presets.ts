@@ -1,0 +1,83 @@
+import type { Preset } from 'butterchurn'
+import butterchurnPresets from 'butterchurn-presets'
+
+type PresetPack = { getPresets(): Record<string, Preset> }
+
+/**
+ * Biblioteca de presets: lista única ordenada por nome (o nome carrega o autor
+ * e nunca é alterado), deduplicada, com histórico para voltar.
+ */
+export class PresetLibrary {
+  private readonly presets = new Map<string, Preset>()
+  private names: string[] = []
+  private readonly history: string[] = []
+  private current = ''
+
+  constructor() {
+    this.addPack(butterchurnPresets)
+  }
+
+  /** Pacotes extras do mesmo butterchurn-presets, carregados depois do primeiro quadro. */
+  async loadExtraPacks(): Promise<number> {
+    const packs = await Promise.all([
+      import('butterchurn-presets/lib/butterchurnPresetsExtra.min.js'),
+      import('butterchurn-presets/lib/butterchurnPresetsExtra2.min.js'),
+      import('butterchurn-presets/lib/butterchurnPresetsMD1.min.js')
+    ])
+    for (const mod of packs) this.addPack(mod.default)
+    return this.count
+  }
+
+  get count(): number {
+    return this.names.length
+  }
+
+  get currentName(): string {
+    return this.current
+  }
+
+  get(name: string): Preset {
+    const preset = this.presets.get(name)
+    if (!preset) throw new Error(`preset desconhecido: ${name}`)
+    return preset
+  }
+
+  /** Próximo na ordem alfabética (dá a volta no fim). */
+  next(): string {
+    const i = this.names.indexOf(this.current)
+    return this.go(this.names[(i + 1) % this.names.length]!)
+  }
+
+  /** Volta pelo histórico de navegação; sem histórico, fica onde está. */
+  back(): string | null {
+    const previous = this.history.pop()
+    if (previous === undefined) return null
+    this.current = previous
+    return previous
+  }
+
+  /** Aleatório diferente do atual. */
+  random(): string {
+    let name = this.current
+    while (this.names.length > 1 && name === this.current) {
+      name = this.names[Math.floor(Math.random() * this.names.length)]!
+    }
+    return this.go(name)
+  }
+
+  private go(name: string): string {
+    if (this.current) this.history.push(this.current)
+    if (this.history.length > 500) this.history.shift()
+    this.current = name
+    return name
+  }
+
+  private addPack(pack: PresetPack): void {
+    for (const [name, preset] of Object.entries(pack.getPresets())) {
+      if (!this.presets.has(name)) this.presets.set(name, preset)
+    }
+    this.names = [...this.presets.keys()].sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true })
+    )
+  }
+}
