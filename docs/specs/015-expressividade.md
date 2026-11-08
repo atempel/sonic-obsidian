@@ -1,6 +1,6 @@
 # 015 — Expressividade: `+`/`−` mudam o quanto o visual reage
 
-**Fase:** 2 · **Status:** Em teste no Windows · **Issue:** [#36](https://github.com/atempel/sonic-obsidian/issues/36) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); os controles visuais entram na [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Feito (critérios validados no Windows em 2026-11-08) · **Issue:** [#36](https://github.com/atempel/sonic-obsidian/issues/36) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); os controles visuais entram na [011](011-ajustes-configuracoes.md)
 
 ## Problema
 Mexer no ganho ao vivo era a principal forma de "tocar" o visual, mas o efeito passa em segundos. O Butterchurn não entrega o volume aos presets: `bass`/`mid`/`treb` = nível agora ÷ média longa (`imm / longAvg`, ~4 s a 30 fps, `src/audio/audioLevels.js`), e os `_att` = média curta ÷ média longa. Subir o ganho sobe as duas partes da divisão, e em 4–8 s tudo volta a oscilar em torno de 1. É o comportamento do MilkDrop: os presets reagem ao contraste da música, não ao volume.
