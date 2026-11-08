@@ -209,6 +209,22 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Esc nos Ajustes** fecha o painel mesmo com o foco num slider ou seletor. Teclas globais com o foco no painel ficam desligadas, como na Biblioteca: as setas são do slider.
 - **O visual a 40%** com o painel aberto é aplicado no `<canvas>` (opacidade via CSS), sem tocar no render.
 
+## 2026-11-08 — Licença MIT antecipada e arquivos de comunidade
+- **Decisão (do usuário):** o código passa a ser **MIT** já, `Copyright (c) 2026 Alexandre Tempel`, com o repo ainda privado. `LICENSE`, `package.json` (`"license": "MIT"`), READMEs e CONTEXT atualizados. Isso antecipa parte do checklist "no dia" da spec 016 (PR #42): a troca do `LICENSE`, a seção de licença do README e os arquivos de comunidade (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, templates de issue — bug, ideia, crédito de preset — e de PR). Responde também à pergunta em aberto da 016 sobre quem assina o copyright: nome pessoal.
+- **Por quê:** a licença já estava decidida; com ela e os arquivos de comunidade prontos antes, a abertura vira só tornar o repo público, e os templates podem ser testados enquanto ele ainda é privado.
+- **Contato:** sem e-mail público. Segurança e conduta vão pelo relato privado de vulnerabilidade do GitHub (*Security → Report a vulnerability*), que precisa estar ligado nas configurações.
+- **Configurações do repo** (descrição em inglês, tópicos, merge só por squash com título do PR, apagar branch após o merge, Projects desligado, Dependabot, prévia social `docs/media/social-preview.jpg`): aprovadas pelo usuário, aplicadas pela interface do GitHub, porque o proxy da sessão na nuvem não permite gravar configurações pela API.
+- **Repo público (2026-11-08, decisão do usuário):** aberto no mesmo dia, antes das releases e da landing (specs 016/017), que seguem como próximos passos. Até a primeira release, o README manda compilar a partir do código.
+- **Descartado:** esperar a abertura para trocar a licença (era a recomendação; o usuário preferiu adiantar); texto integral do Contributor Covenant (adotado por link, com resumo e forma de contato).
+
+## 2026-11-08 — Abertura: GitHub Pages e releases por tag
+- **Decisão:** na abertura do repo (sem data; quando o usuário decidir), o projeto passa a MIT, a landing page fica no **GitHub Pages** (`atempel.github.io/sonic-obsidian`, `/pt/` para português) e o app é distribuído pelo **GitHub Releases**. Uma tag `vX.Y.Z` gera um rascunho de release com instalador, zip portátil e `SHA256SUMS.txt`; o usuário publica à mão. Os arquivos têm nome **sem versão**, para a landing usar o link fixo `releases/latest/download/<arquivo>`. Specs [016](docs/specs/016-releases-abertura.md) e [017](docs/specs/017-landing-github-pages.md).
+- **Por quê:** o usuário já publicou landings no GitHub Pages; tudo (código, releases, site) fica num lugar só e sem custo. Como o Pages gratuito só publica de repo público, o site só vai ao ar junto com a abertura; o workflow de Pages fica pronto antes, com guarda para pular enquanto o repo for privado.
+- **Landing:** o protótipo é o canvas do Claude Design (EN + PT-BR, responsivo, demo ao vivo com Butterchurn, aviso de fotossensibilidade). O site final não usa CDN nem Google Fonts: motor, presets e fontes são servidos do próprio site, coerente com a promessa de privacidade.
+- **Atualização (mesmo dia):** o repo abriu antes, com MIT e arquivos de comunidade ([#43](https://github.com/atempel/sonic-obsidian/pull/43), entrada acima). Das specs 016/017 sobram o pipeline de release, a landing e ligar o Pages.
+- **Fixado com o usuário:** nome do repo `atempel/sonic-obsidian` e `appId` `dev.atempel.sonic-obsidian` não mudam na abertura; o MIT sai como `Copyright (c) 2026 Alexandre Tempel`.
+- **Descartado:** Cloudflare (Pages está em modo de manutenção, a recomendação atual é Workers com arquivos estáticos). Ganharia prévia por PR, cabeçalhos HTTP, analytics sem cookies e publicação com o repo ainda privado; reavaliar se algum desses virar necessidade. Também descartados: assinatura de código e Microsoft Store por ora (SmartScreen avisa; a landing explica).
+
 ## 2026-11-08 — Ícone do app na barra de tarefas
 - **Pedido do usuário:** o logo do app na barra de tarefas do Windows.
 - **Como:** `resources/icon.ico` gerado de `docs/brand/app-icon.svg` (9 tamanhos, 16–256 px), passado ao `BrowserWindow` (`icon`) e ao `win.icon` do electron-builder, mais `app.setAppUserModelId` com o `appId`, para o Windows agrupar a janela com o ícone certo.
