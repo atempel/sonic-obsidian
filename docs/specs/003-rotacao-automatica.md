@@ -1,6 +1,6 @@
 # 003 — Rotação automática
 
-**Fase:** 1 · **Status:** A fazer · **Issue:** [#7](https://github.com/atempel/sonic-obsidian/issues/7) · **Depende de:** [002](002-presets-biblioteca-navegacao.md)
+**Fase:** 1 · **Status:** Concluído (7/7 critérios verificados pelo usuário) · **Issue:** [#7](https://github.com/atempel/sonic-obsidian/issues/7) · **Depende de:** [002](002-presets-biblioteca-navegacao.md)
 
 ## Problema
 Deixar o app rodando como pano de fundo de uma música ou de uma sessão longa exige apertar uma tecla a cada troca. O visual deveria se renovar sozinho, sem tirar o controle do usuário.
@@ -23,7 +23,7 @@ Um temporizador troca para um preset aleatório a cada N segundos, usando a mesm
 Trocar no tempo da música / detecção de beat (Fase 3). Rotação por coleção ou favoritos (Fase 2). Persistir intervalo e estado de pausa (Fase 4).
 
 ## Critérios de aceite
-1. Ao abrir o app e não tocar em nada, o preset muda sozinho cerca de 30 s depois (±2 s), com transição gradual de 2 s, e continua mudando a cada 30 s.
+1. Ao abrir o app e não tocar em nada, o preset muda sozinho cerca de 30 s depois (±2 s), com transição gradual (blend automático, 2,7 s), e continua mudando a cada 30 s.
 2. Apertar `R` interrompe as trocas automáticas: em 1 minuto sem tocar em nada o preset não muda, e o indicador de pausa está visível.
 3. Apertar `R` de novo retoma a rotação, o indicador some, e a próxima troca ocorre cerca de 30 s depois.
 4. Uma troca manual aos 25 s de contagem não é seguida de troca automática logo depois: a próxima automática vem ~30 s após a manual.
