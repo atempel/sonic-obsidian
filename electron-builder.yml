@@ -15,4 +15,5 @@ asar: true
 win:
   target: dir
   icon: resources/icon.ico
-  signAndEditExecutable: false
+  # Edita o .exe (rcedit) para pôr o ícone e os metadados; sem certificado, não assina.
+  signAndEditExecutable: true
