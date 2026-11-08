@@ -14,6 +14,9 @@
         font: 12px/1.4 ui-monospace, Consolas, monospace; color: #cfd3dc;
         background: rgba(0, 0, 0, 0.55); border-radius: 4px; white-space: pre; pointer-events: none;
       }
+      #drag { position: fixed; inset: 6px; -webkit-app-region: drag; }
+      body.fullscreen #drag { display: none; }
+      body.fullscreen.cursor-idle, body.fullscreen.cursor-idle * { cursor: none; }
       #toast {
         position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
         max-width: min(90vw, 900px); padding: 6px 12px; text-align: center;
@@ -26,6 +29,7 @@
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="drag"></div>
     <div id="toast"></div>
     <div id="hud">Sonic Obsidian — iniciando…</div>
     <script type="module" src="./src/main.ts"></script>

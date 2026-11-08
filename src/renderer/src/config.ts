@@ -6,5 +6,7 @@ export const config = {
   /** Blend da troca manual (←, →, Espaço). 0 = corte seco. */
   blendManualSeconds: 0,
   /** Blend da troca automática (rotação). */
-  blendAutoSeconds: 2.7
+  blendAutoSeconds: 2.7,
+  /** Limite de quadros: 'monitor' segue a taxa da tela; número = fps máximo. */
+  fpsLimit: 'monitor' as 'monitor' | number
 }
