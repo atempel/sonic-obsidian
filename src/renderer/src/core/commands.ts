@@ -8,6 +8,8 @@ import {
   EXPRESSION_CURVES,
   EXPRESSION_MAX,
   EXPRESSION_MIN,
+  PRESET_NAME_MODES,
+  TOAST_MODES,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   RECENTS_MAX,
@@ -15,6 +17,8 @@ import {
   type BlendType,
   type ExpressionAdaptation,
   type ExpressionCurve,
+  type PresetNameMode,
+  type ToastMode,
   type Collection,
   type FpsLimit,
   type Library,
@@ -199,6 +203,24 @@ export class Core {
       }
       this.changedSettings(origin)
       return { ...e }
+    },
+    /** Texto sobre o visual (spec 014): `{ presetName?, trackTitle?, toasts?, clean? }`. */
+    'overlayText.set': (a, origin) => {
+      const t = this.state.settings.overlayText
+      if (a.presetName !== undefined) {
+        if (!PRESET_NAME_MODES.includes(a.presetName as PresetNameMode)) fail(`presetName: ${PRESET_NAME_MODES.join(', ')}`)
+        t.presetName = a.presetName as PresetNameMode
+      }
+      if (a.toasts !== undefined) {
+        if (!TOAST_MODES.includes(a.toasts as ToastMode)) fail(`toasts: ${TOAST_MODES.join(', ')}`)
+        t.toasts = a.toasts as ToastMode
+      }
+      const track = optBool(a.trackTitle, 'trackTitle')
+      if (track !== undefined) t.trackTitle = track
+      const clean = optBool(a.clean, 'clean')
+      if (clean !== undefined) t.clean = clean
+      this.changedSettings(origin)
+      return { ...t }
     },
     'settings.set': (a, origin) => {
       const s = this.state.settings

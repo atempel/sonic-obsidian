@@ -19,6 +19,9 @@ function registerStores(): void {
     const win = BrowserWindow.fromWebContents(e.sender)
     if (win) win.setFullScreen(!win.isFullScreen())
   })
+  // Controles da janela (spec 014): fechar é o mesmo caminho do Ctrl+W.
+  ipcMain.handle('window:minimize', (e) => BrowserWindow.fromWebContents(e.sender)?.minimize())
+  ipcMain.handle('window:close', (e) => BrowserWindow.fromWebContents(e.sender)?.close())
   // Log do renderer: só texto curto, sem escolher arquivo nem nível arbitrário.
   ipcMain.on('log:write', (_e, message: unknown) => {
     if (typeof message === 'string') log('renderer', message)

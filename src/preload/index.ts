@@ -14,7 +14,9 @@ contextBridge.exposeInMainWorld('so', {
   settings: store('settings'),
   library: store('library'),
   window: {
-    toggleFullScreen: (): Promise<void> => ipcRenderer.invoke('window:toggleFullScreen')
+    toggleFullScreen: (): Promise<void> => ipcRenderer.invoke('window:toggleFullScreen'),
+    minimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),
+    close: (): Promise<void> => ipcRenderer.invoke('window:close')
   },
   /** Uma linha no log em arquivo (falhas e eventos raros, nunca por quadro). */
   log: (message: string): void => ipcRenderer.send('log:write', String(message).slice(0, 2000)),

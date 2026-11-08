@@ -22,7 +22,7 @@ Status: Aberta. Pedido ao design: grupo "Expressividade" nos Ajustes rápidos e 
 
 ### 2026-11-08 — Controles da janela · arrasto
 Protótipo (`1794165177-f126`): `docs/v3-modelo-de-navegacao.md` › Controles da janela diz "Arrastar a janela: pelo visual (spec 004); a zona dos controles não arrasta".
-Código (planejado, spec 014): desde a 009 o arrasto é só pela faixa invisível de 40 px no topo (decisão do usuário: no Windows a região de arrasto engole o `mousemove`, e a faixa de controle e a zona do canto não detectariam o ponteiro). A faixa passa a terminar antes da zona dos controles (`right: 166px`).
+Código (spec 014): desde a 009 o arrasto é só pela faixa invisível de 40 px no topo (decisão do usuário: no Windows a região de arrasto engole o `mousemove`, e a faixa de controle e a zona do canto não detectariam o ponteiro). A faixa passa a terminar antes da zona dos controles (`right: 166px`).
 PR/spec: docs/specs/014-texto-sobre-visual-janela.md · #34
 Status: Aberta. Pedido ao design: trocar o texto para "pela faixa do topo, fora do canto dos controles".
 

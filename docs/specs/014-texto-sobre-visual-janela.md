@@ -1,6 +1,6 @@
 # 014 — Texto sobre o visual, Modo limpo e controles da janela
 
-**Fase:** 2 · **Status:** A fazer · **Issue:** [#34](https://github.com/atempel/sonic-obsidian/issues/34) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); os controles visuais das preferências entram na [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Em teste no Windows · **Issue:** [#34](https://github.com/atempel/sonic-obsidian/issues/34) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); os controles visuais das preferências entram na [011](011-ajustes-configuracoes.md)
 
 ## Problema
 Tudo o que aparece por cima do visual (a assinatura com o nome do preset em cada troca, os toasts) aparece sempre. Quem quer só o visual, tocando ao vivo ou deixando rodar, não tem como limpar a tela. A janela sem moldura também não tem como minimizar nem fechar com o mouse: só `Ctrl+W`/`Alt+F4`.

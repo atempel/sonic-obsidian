@@ -14,7 +14,7 @@
         font: 12px/1.4 'JetBrains Mono', ui-monospace, Consolas, monospace; z-index: 50; color: #cfd3dc;
         background: rgba(0, 0, 0, 0.55); border-radius: 4px; white-space: pre; pointer-events: none;
       }
-      #drag { position: fixed; left: 6px; right: 6px; top: 6px; height: 40px; -webkit-app-region: drag; }
+      #drag { position: fixed; left: 6px; right: 166px; top: 6px; height: 40px; -webkit-app-region: drag; } /* termina antes do canto dos controles da janela (spec 014): o drag engole o mousemove */
       body.fullscreen #drag { display: none; }
       #dim { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; }
     </style>

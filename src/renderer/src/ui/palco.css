@@ -70,3 +70,16 @@ body.idle .strip { pointer-events: none; }
   background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
   opacity: 0; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
 .gtoast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── Texto sobre o visual: Modo limpo (spec 014) ── */
+.now-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.now-row .now-title { min-width: 0; }
+.clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-3); }
+
+/* ── Controles da janela (spec 014; protótipo .winctl) ── */
+.winctl { position: fixed; z-index: 20; top: 16px; right: 16px; display: flex; gap: 2px; padding: 4px;
+  background: rgba(15, 15, 20, 0.94); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+  opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out); }
+.winctl.on, .winctl:focus-within { opacity: 1; pointer-events: auto; transition-duration: var(--t-fast); }
+.winctl.blocked { opacity: 0; pointer-events: none; visibility: hidden; }
+.winctl .ibtn:hover { background: var(--bg-04); color: var(--text-1); }

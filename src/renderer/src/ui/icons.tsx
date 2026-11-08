@@ -23,6 +23,7 @@ const PATHS = {
   'chevron-right': <path d="m9 18 6-6-6-6" />,
   'arrow-left': <><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></>,
   plus: <><path d="M5 12h14" /><path d="M12 5v14" /></>,
+  minus: <path d="M5 12h14" />,
   play: <polygon points="6 3 20 12 6 21 6 3" />,
   'audio-lines': <><path d="M2 10v3" /><path d="M6 6v11" /><path d="M10 3v18" /><path d="M14 8v7" /><path d="M18 5v13" /><path d="M22 10v3" /></>,
   'grip-vertical': <><circle cx="9" cy="12" r="1" /><circle cx="9" cy="5" r="1" /><circle cx="9" cy="19" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="5" r="1" /><circle cx="15" cy="19" r="1" /></>,
