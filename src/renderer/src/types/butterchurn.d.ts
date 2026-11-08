@@ -33,3 +33,9 @@ declare module 'butterchurn-presets' {
   }
   export default butterchurnPresets
 }
+
+declare module 'butterchurn-presets/lib/*.min.js' {
+  import type { Preset } from 'butterchurn'
+  const pack: { getPresets(): Record<string, Preset> }
+  export default pack
+}

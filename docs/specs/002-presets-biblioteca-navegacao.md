@@ -1,6 +1,6 @@
 # 002 — Presets: biblioteca e navegação
 
-**Fase:** 1 · **Status:** A fazer · **Issue:** [#6](https://github.com/atempel/sonic-obsidian/issues/6)
+**Fase:** 1 · **Status:** Concluído — 7/7 critérios verificados pelo usuário com os atalhos provisórios (`R` aleatório, blend em `1`/`2`/`3`); os atalhos e o blend v3 descritos abaixo entram com a spec 003 · **Issue:** [#6](https://github.com/atempel/sonic-obsidian/issues/6)
 
 ## Problema
 O spike carrega só o conjunto padrão de `butterchurn-presets` e oferece uma única ação: `Espaço` = aleatório. Para usar o app de verdade é preciso ter a biblioteca inteira à mão e poder voltar ao preset que acabou de passar.

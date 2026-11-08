@@ -16,7 +16,7 @@ Fazer da janela parte do visual: sem moldura, arrastável, redimensionável e fe
 - Em tela cheia, o cursor some após ~3 s sem mexer o mouse e volta ao mexer.
 
 **P1**
-- Limite opcional de fps: tecla (sugestão `F`) alterna entre "monitor" (padrão, como hoje) e 60 fps. O HUD mostra o modo ativo.
+- Limite opcional de fps: "monitor" (padrão, como hoje) ou 60 fps, como valor em `src/renderer/src/config.ts` (sem tecla: `F` é favoritar nos atalhos v3; a opção ganha UI em Configurações › Renderização, "limite de quadros", na Fase 2). Para testar na Fase 1, o build pode sair com o limite ligado. O HUD mostra o modo ativo.
 - Registrar em DECISIONS.md a técnica escolhida para limitar.
 
 ## Fora de escopo
@@ -28,7 +28,7 @@ Botões de janela desenhados (minimizar/maximizar/fechar) e barra de título pr�
 3. É possível arrastar a janela pelo visual e redimensioná-la pelas bordas; o visual acompanha o novo tamanho sem esticar.
 4. `Alt+F4` e `Ctrl+W` fecham o app.
 5. Em tela cheia, parar o mouse faz o cursor sumir em cerca de 3 s; mexer o mouse o traz de volta.
-6. (P1) Com a tecla de limite ativada, o fps no HUD fica em 60 (±2) num monitor de 180 Hz; desativada, volta a acompanhar o monitor.
+6. (P1) Com o limite ligado, o fps no HUD fica em 60 (±2) num monitor de 180 Hz; desligado, volta a acompanhar o monitor.
 7. (P1) Com o limite em 60 fps, o uso de GPU no Gerenciador de Tarefas cai de forma visível em relação ao modo "monitor", com o mesmo preset.
 
 ## Perguntas em aberto
