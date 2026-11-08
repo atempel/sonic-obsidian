@@ -208,3 +208,11 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **`[` e `]` saem;** `ROTATION_STEPS_S` vira a lista dos Ajustes (15/30/45/90 s). Um intervalo salvo fora dela (10, 60, 120 s) aparece como opção a mais, para não ser trocado sem querer.
 - **Esc nos Ajustes** fecha o painel mesmo com o foco num slider ou seletor. Teclas globais com o foco no painel ficam desligadas, como na Biblioteca: as setas são do slider.
 - **O visual a 40%** com o painel aberto é aplicado no `<canvas>` (opacidade via CSS), sem tocar no render.
+
+## 2026-11-08 — Licença MIT antecipada e arquivos de comunidade
+- **Decisão (do usuário):** o código passa a ser **MIT** já, `Copyright (c) 2026 Alexandre Tempel`, com o repo ainda privado. `LICENSE`, `package.json` (`"license": "MIT"`), READMEs e CONTEXT atualizados. Isso antecipa parte do checklist "no dia" da spec 016 (PR #42): a troca do `LICENSE`, a seção de licença do README e os arquivos de comunidade (`CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, templates de issue — bug, ideia, crédito de preset — e de PR). Responde também à pergunta em aberto da 016 sobre quem assina o copyright: nome pessoal.
+- **Por quê:** a licença já estava decidida; com ela e os arquivos de comunidade prontos antes, a abertura vira só tornar o repo público, e os templates podem ser testados enquanto ele ainda é privado.
+- **Contato:** sem e-mail público. Segurança e conduta vão pelo relato privado de vulnerabilidade do GitHub (*Security → Report a vulnerability*), que precisa estar ligado nas configurações.
+- **Configurações do repo** (descrição em inglês, tópicos, merge só por squash com título do PR, apagar branch após o merge, Projects desligado, Dependabot, prévia social `docs/media/social-preview.jpg`): aprovadas pelo usuário, aplicadas pela interface do GitHub, porque o proxy da sessão na nuvem não permite gravar configurações pela API.
+- **Repo público (2026-11-08, decisão do usuário):** aberto no mesmo dia, antes das releases e da landing (specs 016/017), que seguem como próximos passos. Até a primeira release, o README manda compilar a partir do código.
+- **Descartado:** esperar a abertura para trocar a licença (era a recomendação; o usuário preferiu adiantar); texto integral do Contributor Covenant (adotado por link, com resumo e forma de contato).

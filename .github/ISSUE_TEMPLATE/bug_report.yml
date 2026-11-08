@@ -1,0 +1,45 @@
+name: Bug report
+description: Something doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time. A clear report makes the fix much faster.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app
+        2. Play music in …
+        3. Press …
+  - type: input
+    id: version
+    attributes:
+      label: App version or build
+      placeholder: v0.1.0 or sonic-obsidian-win-<sha>
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Windows version, GPU and audio output
+      placeholder: Windows 11 24H2, RTX 3070, USB headphones
+  - type: input
+    id: preset
+    attributes:
+      label: Preset on screen (if it matters)
+      description: The full name shown in the control strip.
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: If the app froze or closed, press Ctrl+Shift+L, open sonic-obsidian.log and paste the last lines.
+      render: text

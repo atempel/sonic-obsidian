@@ -1,0 +1,23 @@
+name: Feature idea
+description: Suggest something new or a change.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Check the [roadmap](https://github.com/atempel/sonic-obsidian/blob/main/docs/PRD.md) first; some things are out of scope on purpose (recording, DRM content, embedded AI).
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: How you imagine it working. Sketches and references welcome.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered

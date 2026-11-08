@@ -1,0 +1,31 @@
+name: Preset credit
+description: A preset is credited wrong, or you are its author and want it changed or removed.
+labels: [credits]
+body:
+  - type: markdown
+    attributes:
+      value: Every preset is someone's work. Credit requests are handled first.
+  - type: input
+    id: preset
+    attributes:
+      label: Preset name
+      description: The full name as shown in the app or the Library.
+    validations:
+      required: true
+  - type: dropdown
+    id: request
+    attributes:
+      label: Request
+      options:
+        - Fix the credit
+        - Remove the preset (I am the author)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: The correct credit, or anything that helps confirm authorship (links to the original release, forum posts…).
+    validations:
+      required: true
