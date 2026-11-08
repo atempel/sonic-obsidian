@@ -1,10 +1,14 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
 import {
+  BLEND_MAX_S,
+  BLEND_MIN_S,
+  BLEND_TYPES,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   RECENTS_MAX,
   num,
+  type BlendType,
   type Collection,
   type FpsLimit,
   type Library,
@@ -26,7 +30,8 @@ export type CaptureState = 'pending' | 'ok' | 'denied'
 export type Result<T = unknown> = { ok: true; value: T } | { ok: false; error: string }
 
 export interface CoreEvents extends Record<string, unknown> {
-  presetChanged: { name: string; blendSeconds: number; origin: Origin }
+  /** `blendSeconds` 0 = corte seco (o tipo vem como `cut`). */
+  presetChanged: { name: string; blendType: BlendType; blendSeconds: number; origin: Origin }
   /** settings ou library mudaram (a UI relê `core.state`). */
   stateChanged: { origin: Origin }
   /** Nível de entrada (RMS depois do ganho), ~10×/s. Não passa pelo store. */
@@ -117,12 +122,13 @@ export class Core {
       if (!this.presets.has(name)) fail(`preset desconhecido: ${name}`)
       return this.show(this.presets.go(name), origin)
     },
-    'preset.next': (_a, origin) => this.show(this.presets.next(), origin),
-    'preset.previous': (_a, origin) => {
+    // `cut: true` troca sem blend, sem mudar o ajuste salvo (Shift na troca, spec 013).
+    'preset.next': (a, origin) => this.show(this.presets.next(), origin, true, optBool(a.cut, 'cut')),
+    'preset.previous': (a, origin) => {
       const name = this.presets.back()
-      return name ? this.show(name, origin, false) : this.state.current
+      return name ? this.show(name, origin, false, optBool(a.cut, 'cut')) : this.state.current
     },
-    'preset.random': (_a, origin) => this.show(this.presets.random(), origin),
+    'preset.random': (a, origin) => this.show(this.presets.random(), origin, true, optBool(a.cut, 'cut')),
     /** Troca da rotação: aleatório ou o próximo da coleção. */
     'rotation.advance': (_a, origin) => {
       const rot = this.state.settings.rotation
@@ -159,13 +165,18 @@ export class Core {
       this.changedSettings(origin)
       return this.state.settings.gainDb
     },
+    /** `{ target: 'manual' | 'auto', type?, seconds? }` (spec 013). */
     'blend.set': (a, origin) => {
-      const auto = optNum(a.autoSeconds, 'autoSeconds', 0, 10)
-      const manual = optNum(a.manualSeconds, 'manualSeconds', 0, 10)
-      if (auto !== undefined) this.state.settings.blend.autoSeconds = auto
-      if (manual !== undefined) this.state.settings.blend.manualSeconds = manual
+      if (a.target !== 'manual' && a.target !== 'auto') fail('target: manual ou auto')
+      const rule = this.state.settings.blend[a.target as 'manual' | 'auto']
+      if (a.type !== undefined) {
+        if (!BLEND_TYPES.includes(a.type as BlendType)) fail(`type: ${BLEND_TYPES.join(', ')}`)
+        rule.type = a.type as BlendType
+      }
+      const seconds = optNum(a.seconds, 'seconds', BLEND_MIN_S, BLEND_MAX_S)
+      if (seconds !== undefined) rule.seconds = seconds
       this.changedSettings(origin)
-      return { ...this.state.settings.blend }
+      return { ...rule }
     },
     'settings.set': (a, origin) => {
       const s = this.state.settings
@@ -320,10 +331,12 @@ export class Core {
   }
 
   // ── internos ──────────────────────────────────────────────
-  private show(name: string, origin: Origin, track = true): string {
+  private show(name: string, origin: Origin, track = true, cut = false): string {
     if (!name) return this.state.current
-    const { blend } = this.state.settings
-    const blendSeconds = origin === 'startup' ? 0 : origin === 'rotation' ? blend.autoSeconds : blend.manualSeconds
+    // Rotação usa a regra automática; o resto (teclado, UI) a manual. Abertura e Shift = corte seco.
+    const rule = origin === 'rotation' ? this.state.settings.blend.auto : this.state.settings.blend.manual
+    const blendType: BlendType = origin === 'startup' || cut ? 'cut' : rule.type
+    const blendSeconds = blendType === 'cut' ? 0 : rule.seconds
     this.state.current = name
     this.state.settings.lastPreset = name
     if (track) {
@@ -333,7 +346,7 @@ export class Core {
       recents.unshift(name)
       recents.length = Math.min(recents.length, RECENTS_MAX)
     }
-    this.events.emit('presetChanged', { name, blendSeconds, origin })
+    this.events.emit('presetChanged', { name, blendType, blendSeconds, origin })
     this.changedSettings(origin)
     if (track) this.changedLibrary(origin)
     return name

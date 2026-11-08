@@ -11,6 +11,27 @@ export const GAIN_MIN_DB = -12
 export const GAIN_MAX_DB = 12
 export const RECENTS_MAX = 8
 
+/** Tipos de transição (spec 013), na ordem que `B` percorre. */
+export const BLEND_TYPES = ['cut', 'crossfade', 'wipe', 'plasma', 'radial', 'random'] as const
+export type BlendType = (typeof BLEND_TYPES)[number]
+export const BLEND_TYPE_LABEL: Record<BlendType, string> = {
+  cut: 'Corte seco',
+  crossfade: 'Crossfade',
+  wipe: 'Varredura',
+  plasma: 'Plasma',
+  radial: 'Radial',
+  random: 'Aleatório'
+}
+/** Tempos que `↑` / `↓` percorrem (troca manual). */
+export const BLEND_STEPS_S = [0.25, 0.5, 1, 2, 4, 8]
+export const BLEND_MIN_S = 0.1
+export const BLEND_MAX_S = 10
+/** Regra de uma troca: tipo e tempo. Com `cut`, o tempo fica guardado para quando voltar a misturar. */
+export interface BlendRule {
+  type: BlendType
+  seconds: number
+}
+
 export type RotationOrder = 'random' | 'collection'
 export type FpsLimit = 'monitor' | number
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings'
@@ -24,7 +45,8 @@ export interface Settings {
     order: RotationOrder
     collectionId: string | null
   }
-  blend: { autoSeconds: number; manualSeconds: number }
+  /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
+  blend: { manual: BlendRule; auto: BlendRule }
   fpsLimit: FpsLimit
   startupPreset: 'last' | 'random'
   lastPreset: string | null
@@ -57,7 +79,7 @@ export function defaultSettings(): Settings {
     version: 1,
     gainDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
-    blend: { autoSeconds: 2.7, manualSeconds: 0 },
+    blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     fpsLimit: 'monitor',
     startupPreset: 'last',
     lastPreset: null,
@@ -87,6 +109,22 @@ function names(v: unknown, max = 10_000): string[] {
   return [...new Set(v.filter((x): x is string => typeof x === 'string' && x.length > 0))].slice(0, max)
 }
 
+/**
+ * Regra de transição. Aceita o formato da 008/009 (`manualSeconds`/`autoSeconds`):
+ * segundos > 0 viram Aleatório com esse tempo; 0 vira Corte seco (com o tempo padrão guardado).
+ */
+function sanitizeBlendRule(rule: unknown, legacySeconds: unknown, d: BlendRule): BlendRule {
+  if (isObj(rule)) {
+    return { type: oneOf(rule.type, BLEND_TYPES, d.type), seconds: num(rule.seconds, BLEND_MIN_S, BLEND_MAX_S, d.seconds) }
+  }
+  if (typeof legacySeconds === 'number' && Number.isFinite(legacySeconds)) {
+    return legacySeconds > 0
+      ? { type: 'random', seconds: num(legacySeconds, BLEND_MIN_S, BLEND_MAX_S, d.seconds) }
+      : { type: 'cut', seconds: d.seconds }
+  }
+  return { ...d }
+}
+
 export function sanitizeSettings(raw: unknown): Settings {
   const d = defaultSettings()
   if (!isObj(raw)) return d
@@ -102,8 +140,8 @@ export function sanitizeSettings(raw: unknown): Settings {
       collectionId: typeof rot.collectionId === 'string' ? rot.collectionId : null
     },
     blend: {
-      autoSeconds: num(blend.autoSeconds, 0, 10, d.blend.autoSeconds),
-      manualSeconds: num(blend.manualSeconds, 0, 10, d.blend.manualSeconds)
+      manual: sanitizeBlendRule(blend.manual, blend.manualSeconds, d.blend.manual),
+      auto: sanitizeBlendRule(blend.auto, blend.autoSeconds, d.blend.auto)
     },
     fpsLimit: raw.fpsLimit === 'monitor' ? 'monitor' : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),
@@ -142,4 +180,16 @@ export function sanitizeLibrary(raw: unknown): Library {
 export function stepInterval(current: number, direction: -1 | 1): number {
   if (direction > 0) return ROTATION_STEPS_S.find((s) => s > current) ?? ROTATION_STEPS_S.at(-1)!
   return [...ROTATION_STEPS_S].reverse().find((s) => s < current) ?? ROTATION_STEPS_S[0]!
+}
+
+/** Próximo tempo da lista de `↑` / `↓` a partir de um tempo qualquer. */
+export function stepBlendSeconds(current: number, direction: -1 | 1): number {
+  if (direction > 0) return BLEND_STEPS_S.find((s) => s > current + 1e-6) ?? BLEND_STEPS_S.at(-1)!
+  return [...BLEND_STEPS_S].reverse().find((s) => s < current - 1e-6) ?? BLEND_STEPS_S[0]!
+}
+
+/** Próximo tipo no ciclo de `B` (ou anterior, com `Shift+B`). */
+export function cycleBlendType(current: BlendType, direction: -1 | 1): BlendType {
+  const i = BLEND_TYPES.indexOf(current)
+  return BLEND_TYPES[(i + direction + BLEND_TYPES.length) % BLEND_TYPES.length]!
 }

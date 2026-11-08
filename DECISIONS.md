@@ -155,3 +155,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Padrão novo da troca manual:** Aleatório, 1 s (antes: corte seco, como no protótipo). Quem já tinha 0 s salvo continua com corte seco.
 - **Descartado:** `patch-package` no `blendPattern.js` (primeiro degrau da escada "Butterchurn como dependência fixada": mais robusto, mas dependência e patch a manter); efeitos próprios por cima do canvas no P0 (ficam para uma spec "Efeitos de transição").
 - **Risco:** depende de nomes internos do bundle 2.6.7; o spike 006 (Butterchurn 3) precisa refazer a ligação.
+
+## 2026-11-08 — Spec 013: transições implementadas
+- **Respostas do usuário às perguntas da spec:** `+`/`−`/`0` (ganho) ficam como atalhos **permanentes**, também depois dos Ajustes rápidos (a 011 tira só `[`/`]`); o tipo da troca automática **não ganha tecla**, só Ajustes rápidos (011) e, até lá, o `settings.json`.
+- **Estado:** `settings.blend = { manual: {type, seconds}, auto: {type, seconds} }`, tempo de 0,1 a 10 s. Com Corte seco o tempo fica guardado, para `B` voltar a misturar com o mesmo tempo. O formato antigo (`manualSeconds`/`autoSeconds`) é migrado na leitura, em `sanitizeSettings`.
+- **Shift = corte seco** entra como argumento `cut: true` em `preset.next/previous/random`, e não como um comando novo. O evento `presetChanged` passa a levar `blendType`.
+- **Sobrescrita na instância:** `visualizer.renderer.blendPattern.createBlendPattern` é trocado só naquele objeto (não no protótipo da classe). No crossfade, a malha é preenchida até `(mesh_width+1)×(mesh_height+1)`, recalculado a cada troca. Se a estrutura não existir, `blendTypesAvailable = false`, o console avisa e o toast de `B` diz "indisponível: sorteio do motor".
+- **Efeito da migração no PC do usuário:** o `settings.json` salvo pela 008/009 tem `manualSeconds: 0`, então a troca manual abre em **Corte seco** (critério 9). O padrão novo, Aleatório 1 s, só vale para instalação nova; com o usuário é só apertar `B`.
