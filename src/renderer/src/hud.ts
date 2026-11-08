@@ -26,6 +26,6 @@ export class Hud {
       `${s.preset}\n` +
       `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressividade indisponível'}\n` +
-      `PgDn/N próximo · PgUp anterior · ← → expressividade · X curva · Shift+X adaptação · Espaço aleatório · B/↑↓ transição · + − 0 ganho`
+      `→ ← presets · + − 0 expressividade · X curva · Shift+X adaptação · Shift+↑↓ ganho · B ↑↓ transição · Espaço aleatório`
   }
 }

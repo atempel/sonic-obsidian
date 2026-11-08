@@ -182,7 +182,7 @@ async function start(): Promise<void> {
 
   window.addEventListener('resize', () => viz.resize())
   window.addEventListener('keydown', (e) => {
-    if (e.repeat && e.code !== 'PageDown' && e.code !== 'PageUp') return
+    if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
     // HUD de depuração (fps, áudio): escondido por padrão desde a 009.
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
       hudEl.hidden = !hudEl.hidden
@@ -223,14 +223,11 @@ async function start(): Promise<void> {
     let handled = true
     // Shift na troca = corte seco na hora, sem mudar o ajuste salvo (spec 013).
     const cut = e.shiftKey
-    // Spike 015: ←/→ = expressividade; a troca de preset foi para PageDown/N e PageUp.
-    if (e.code === 'PageDown' || e.code === 'KeyN') {
+    // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md), agora como comandos do Core.
+    if (e.code === 'ArrowRight') {
       run('preset.next', { cut })
-    } else if (e.code === 'PageUp') {
+    } else if (e.code === 'ArrowLeft') {
       run('preset.previous', { cut })
-    } else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft') {
-      run('expression.set', { level: settings.expression.level + (e.code === 'ArrowRight' ? 1 : -1) })
-      showToast(exprText(), 1500)
     } else if (e.code === 'KeyX') {
       // Só no spike: X cicla a curva, Shift+X a adaptação.
       if (e.shiftKey) {
@@ -248,6 +245,10 @@ async function start(): Promise<void> {
       // B / Shift+B: ciclo do tipo da troca manual.
       run('blend.set', { target: 'manual', type: cycleBlendType(settings.blend.manual.type, e.shiftKey ? -1 : 1) })
       showToast(blendText(), 1500)
+    } else if (e.shiftKey && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
+      // Spike 015: o ganho saiu do +/− e ficou provisório em Shift+↑/↓ (UI definitiva na 011).
+      run('signal.set', { gainDb: settings.gainDb + (e.code === 'ArrowUp' ? 1 : -1) })
+      showToast(gainText(), 1200)
     } else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
       // ↑ / ↓: tempo da troca manual (0,25 · 0,5 · 1 · 2 · 4 · 8 s).
       const seconds = stepBlendSeconds(settings.blend.manual.seconds, e.code === 'ArrowUp' ? 1 : -1)
@@ -265,15 +266,13 @@ async function start(): Promise<void> {
       // Pelo caractere (e.key), não pela posição: no ABNT2 os colchetes ficam em outras teclas.
       run('rotation.set', { intervalSeconds: stepInterval(settings.rotation.intervalSeconds, e.key === '[' ? -1 : 1) })
       showToast(`Rotação a cada ${settings.rotation.intervalSeconds} s${settings.rotation.enabled ? '' : ' (desligada)'}.`, 1500)
-    } else if (e.key === '+' || e.key === '=') {
-      run('signal.set', { gainDb: settings.gainDb + 1 })
-      showToast(gainText(), 1200)
-    } else if (e.key === '-' || e.key === '_') {
-      run('signal.set', { gainDb: settings.gainDb - 1 })
-      showToast(gainText(), 1200)
+    } else if (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') {
+      // Spike 015: + / − = expressividade (o ganho se adapta em segundos; ver expression.ts).
+      run('expression.set', { level: settings.expression.level + (e.key === '+' || e.key === '=' ? 1 : -1) })
+      showToast(exprText(), 1500)
     } else if (e.key === '0') {
-      run('signal.set', { gainDb: 0 })
-      showToast(gainText(), 1200)
+      run('expression.set', { level: 0 })
+      showToast(exprText(), 1500)
     } else {
       handled = false
     }
