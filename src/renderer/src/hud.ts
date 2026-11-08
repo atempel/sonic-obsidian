@@ -23,6 +23,6 @@ export class Hud {
       `${s.fps.toFixed(0)} fps (${s.fpsMode}) · áudio: ${s.audio} · nível ${bars}\n` +
       `${s.preset}\n` +
       `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
-      `→ próximo · ← anterior · Espaço aleatório · R rotação · [ ] intervalo · + − 0 ganho · F11 tela cheia`
+      `→ próximo · ← anterior · Espaço aleatório · R rotação · [ ] intervalo · + − 0 ganho · F ou F11 tela cheia`
   }
 }

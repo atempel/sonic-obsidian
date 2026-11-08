@@ -12,6 +12,8 @@ export class PresetLibrary {
   private names: string[] = []
   private readonly history: string[] = []
   private current = ''
+  /** Presets que next/random pulam (ocultos). Definido pelo Core. */
+  isSkipped: (name: string) => boolean = () => false
 
   constructor() {
     this.addPack(butterchurnPresets)
@@ -36,16 +38,29 @@ export class PresetLibrary {
     return this.current
   }
 
+  has(name: string): boolean {
+    return this.presets.has(name)
+  }
+
+  /** Todos os nomes, em ordem alfabética. */
+  all(): readonly string[] {
+    return this.names
+  }
+
   get(name: string): Preset {
     const preset = this.presets.get(name)
     if (!preset) throw new Error(`preset desconhecido: ${name}`)
     return preset
   }
 
-  /** Próximo na ordem alfabética (dá a volta no fim). */
+  /** Próximo na ordem alfabética, pulando ocultos (dá a volta no fim). */
   next(): string {
-    const i = this.names.indexOf(this.current)
-    return this.go(this.names[(i + 1) % this.names.length]!)
+    const start = this.names.indexOf(this.current)
+    for (let k = 1; k <= this.names.length; k++) {
+      const name = this.names[(start + k) % this.names.length]!
+      if (!this.isSkipped(name)) return this.go(name)
+    }
+    return this.current // tudo oculto: fica onde está
   }
 
   /** Volta pelo histórico de navegação; sem histórico, fica onde está. */
@@ -56,16 +71,15 @@ export class PresetLibrary {
     return previous
   }
 
-  /** Aleatório diferente do atual. */
+  /** Aleatório diferente do atual, entre os não ocultos. */
   random(): string {
-    let name = this.current
-    while (this.names.length > 1 && name === this.current) {
-      name = this.names[Math.floor(Math.random() * this.names.length)]!
-    }
-    return this.go(name)
+    const pool = this.names.filter((n) => n !== this.current && !this.isSkipped(n))
+    if (pool.length === 0) return this.current
+    return this.go(pool[Math.floor(Math.random() * pool.length)]!)
   }
 
-  private go(name: string): string {
+  /** Vai para um preset escolhido (guarda o atual no histórico). */
+  go(name: string): string {
     if (this.current) this.history.push(this.current)
     if (this.history.length > 500) this.history.shift()
     this.current = name
