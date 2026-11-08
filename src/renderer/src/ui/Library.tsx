@@ -11,7 +11,7 @@ import { showToast } from './toast'
  * Biblioteca em gaveta (spec 010) — protótipo "Palco integrado" (`#lib`), versão 1794165177-f126.
  * Abre com `L`, o botão da faixa ou a alça da borda; fecha com `Esc`, `L`, o botão ou clique fora.
  */
-const say = (text: string): void => showToast(text, 2600)
+const say = (text: string): void => showToast(text)
 
 interface MenuState {
   name: string

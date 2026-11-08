@@ -195,3 +195,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão (do usuário):** M04, M13, M14, M15, M16 e M19 entram no PR 1 da spec 011 (Ajustes rápidos), porque mexem nos componentes que esse PR já toca. M10 entra no PR 2 (Configurações). M01–M03, M05–M08, M12 e M22 entram num PR curto de "microinterações da faixa" logo depois da 011. M09, M17, M20, M21 e M23 esperam a feature que lhes dá sentido (tap tempo, copiar, Rack, soltar arquivos, BPM: Fases 3–4). M11 já é assim (busca sem animação).
 - **M18 (silêncio):** o painel "Sem áudio" continua aparecendo depois de **10 s** (spec 005), não de 1,2 s como no design, para que as pausas entre faixas não mostrem o painel. Do M18 entram o fade de 220 ms e o medidor apagando em cascata. Registrado em DIVERGENCIAS.
 - **Descartado:** tudo num PR só (ficaria grande e misturaria a faixa com a 011); deixar a faixa para depois da 012.
+
+## 2026-11-08 — Spec 011, PR 1: Ajustes rápidos
+- **Toast único de 4 s (M13):** todo toast passa a viver 4 s, pausa com o mouse em cima e troca o texto no lugar. Antes eram 1,5 s nas teclas, 2,4 s em `X` e 2,6 s na Biblioteca e na busca. `showToast` perdeu o parâmetro de duração. **Descartado:** manter durações por origem, que o design 7509 unificou.
+- **`[` e `]` saem;** `ROTATION_STEPS_S` vira a lista dos Ajustes (15/30/45/90 s). Um intervalo salvo fora dela (10, 60, 120 s) aparece como opção a mais, para não ser trocado sem querer.
+- **Esc nos Ajustes** fecha o painel mesmo com o foco num slider ou seletor. Teclas globais com o foco no painel ficam desligadas, como na Biblioteca: as setas são do slider.
+- **O visual a 40%** com o painel aberto é aplicado no `<canvas>` (opacidade via CSS), sem tocar no render.

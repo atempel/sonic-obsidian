@@ -6,15 +6,17 @@ import '@fontsource/jetbrains-mono/500.css'
 import './theme.css'
 import './palco.css'
 import './biblioteca.css'
+import './ajustes.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureState, Core } from '../core/commands'
 import { Icon } from './icons'
 import { Library } from './Library'
 import { Palette } from './Palette'
+import { QuickSettings } from './QuickSettings'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
-import { onToast, showToast } from './toast'
+import { TOAST_MS, onToast, showToast } from './toast'
 
 /**
  * Interface v3 por cima do visual — spec 009 (Palco: faixa de controle e
@@ -31,6 +33,10 @@ export interface PalcoBridge {
   retryCapture(): void
   openSoundSettings(): void
   isFullScreen(): boolean
+  /** Tipos de transição forçados (spec 013); sem eles, o motor sorteia. */
+  blendTypesAvailable: boolean
+  /** Expressividade ligada ao motor (spec 015). */
+  expressionAvailable: boolean
 }
 
 /**
@@ -185,11 +191,16 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               <div class="now-title" title={current}>
                 {title}
               </div>
-              {settings.overlayText.clean && (
-                <span class="clean-ico" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)">
-                  <Icon name="eye-off" small />
-                </span>
-              )}
+              {/* M19: o ícone entra em 120 ms (por isso fica no DOM, só escondido). */}
+              <span
+                class={settings.overlayText.clean ? 'clean-ico on' : 'clean-ico'}
+                role="img"
+                aria-label="Modo limpo ligado"
+                aria-hidden={!settings.overlayText.clean}
+                title="Modo limpo ligado (T)"
+              >
+                <Icon name="eye-off" small />
+              </span>
             </div>
             {author && <div class="now-author">por {author}</div>}
           </div>
@@ -221,7 +232,13 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)" onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
           </button>
-          <button class="ibtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,) — em breve" disabled>
+          <button
+            class="ibtn"
+            aria-label="Ajustes rápidos"
+            title="Ajustes rápidos (,)"
+            aria-expanded={core.state.overlay === 'quick'}
+            onClick={() => toggleOverlay(core, 'quick')}
+          >
             <Icon name="sliders-horizontal" />
           </button>
           <button
@@ -338,35 +355,80 @@ function WindowControls({ core }: { core: Core }) {
       <button class="ibtn" aria-label="Minimizar" title="Minimizar" onClick={() => void window.so.window.minimize()}>
         <Icon name="minus" />
       </button>
-      <button class="ibtn" aria-label="Fechar" title="Fechar (Ctrl+W)" onClick={() => void window.so.window.close()}>
+      <button class="ibtn win-close" aria-label="Fechar" title="Fechar (Ctrl+W)" onClick={() => void window.so.window.close()}>
         <Icon name="x" />
       </button>
     </div>
   )
 }
 
-// ── Toast global ─────────────────────────────────────────────
+// ── Toast global (M13) ───────────────────────────────────────
+/** Entra 8 px de baixo; sai só com fade. 4 s, pausa com o mouse em cima; aviso novo troca o texto no lugar (120 ms). */
 function GlobalToast() {
-  const [text, setText] = useState('')
-  const [on, setOn] = useState(false)
+  const el = useRef<HTMLDivElement>(null)
+  const textEl = useRef<HTMLSpanElement>(null)
   useLayoutEffect(() => {
+    const box = el.current!
+    const label = textEl.current!
+    let visible = false
+    let paused = false
     let timer: number | undefined
-    return onToast((t, ms) => {
-      setText(t)
-      setOn(true)
+    let remain = TOAST_MS
+    let armedAt = 0
+    const hide = (): void => {
       window.clearTimeout(timer)
-      timer = window.setTimeout(() => setOn(false), ms)
+      box.classList.remove('on')
+      visible = false
+      paused = false
+    }
+    const arm = (): void => {
+      window.clearTimeout(timer)
+      armedAt = performance.now()
+      if (visible && !paused) timer = window.setTimeout(hide, remain)
+    }
+    const pause = (): void => {
+      if (!visible || paused) return
+      paused = true
+      window.clearTimeout(timer)
+      remain = Math.max(300, remain - (performance.now() - armedAt))
+    }
+    const resume = (): void => {
+      if (!paused) return
+      paused = false
+      arm()
+    }
+    const onVisibility = (): void => (document.hidden ? pause() : resume())
+    box.addEventListener('mouseenter', pause)
+    box.addEventListener('mouseleave', resume)
+    document.addEventListener('visibilitychange', onVisibility)
+    const off = onToast((t) => {
+      label.textContent = t
+      if (!visible) {
+        box.classList.add('on')
+        visible = true
+      } else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        label.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+      }
+      remain = TOAST_MS
+      arm()
     })
+    return () => {
+      off()
+      window.clearTimeout(timer)
+      box.removeEventListener('mouseenter', pause)
+      box.removeEventListener('mouseleave', resume)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
   return (
-    <div class={on ? 'gtoast on' : 'gtoast'} role="status" aria-live="polite">
-      {text}
+    <div class="gtoast" ref={el} role="status" aria-live="polite">
+      <span ref={textEl} />
     </div>
   )
 }
 
 /** Abre ou fecha um overlay pelo Core (`ui.open` / `ui.close`). */
-export function toggleOverlay(core: Core, overlay: 'library' | 'search'): void {
+export function toggleOverlay(core: Core, overlay: 'library' | 'search' | 'quick'): void {
   if (core.state.overlay === overlay) core.run('ui.close', {}, 'ui')
   else core.run('ui.open', { overlay }, 'ui')
 }
@@ -375,9 +437,12 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
   const { core } = bridge
   useCoreVersion(core)
   const overlay = core.state.overlay
+  const clean = core.state.settings.overlayText.clean
+  // M19: o texto sobre o visual some em 400 ms com o Modo limpo.
+  useLayoutEffect(() => void document.body.classList.toggle('clean', clean), [clean])
   useLayoutEffect(() => {
     // Fechar devolve o foco ao visual (as teclas globais voltam a valer).
-    if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu')) {
+    if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu, .sheet')) {
       document.activeElement.blur()
     }
   }, [overlay])
@@ -391,9 +456,38 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <WindowControls core={core} />
       <Library core={core} presets={presets} />
       <Palette core={core} presets={presets} />
+      <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <GlobalToast />
     </>
   )
+}
+
+/**
+ * M04 e M14: botões de ícone e switches afundam (0,97 / o botão do switch estica) enquanto o
+ * ponteiro aperta. Só com ponteiro: pelo teclado nada anima.
+ */
+function setupPress(): void {
+  let pressed: HTMLElement | null = null
+  const release = (): void => {
+    pressed?.classList.remove('pr')
+    pressed = null
+  }
+  document.addEventListener(
+    'pointerdown',
+    (e) => {
+      const el = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('.ibtn, .switch')
+      if (!el || (el as HTMLButtonElement).disabled || el.querySelector('input:disabled')) return
+      release()
+      pressed = el
+      el.classList.add('pr')
+    },
+    true
+  )
+  for (const ev of ['pointerup', 'pointercancel', 'dragend']) document.addEventListener(ev, release, true)
+  document.addEventListener('pointerout', (e) => {
+    if (pressed && e.target === pressed && !pressed.contains(e.relatedTarget as Node | null)) release()
+  }, true)
+  window.addEventListener('blur', release)
 }
 
 /** Monta a interface e devolve o controle do auto-hide (para a tecla `H`). */
@@ -404,9 +498,10 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   // de trocar de preset) e o Espaço aciona o botão em vez de sortear. Pelo teclado
   // (Tab + Enter/Espaço, detail === 0) o foco fica, para acessibilidade.
   el.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement | null)?.closest?.('.strip button, .winctl button, .edge')
+    const btn = (e.target as HTMLElement | null)?.closest?.('.strip button, .winctl button, .edge, .sheet button')
     if (btn instanceof HTMLElement && e.detail > 0) btn.blur()
   })
+  setupPress()
   const { state } = bridge.core
   return setupIdle(
     () => state.settings.pinControls || state.overlay !== null || !!document.activeElement?.closest('.strip')

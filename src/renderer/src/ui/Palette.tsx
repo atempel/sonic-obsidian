@@ -53,13 +53,13 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   }
   const playCollection = (id: string, name: string): void => {
     const r = core.run('collection.play', { id }, 'ui')
-    if (r.ok) showToast(`Tocando ${name}.`, 2600)
-    else showToast('Esta coleção está vazia.', 2600)
+    if (r.ok) showToast(`Tocando ${name}.`)
+    else showToast('Esta coleção está vazia.')
     close()
   }
   const fav = (name: string): void => {
     const r = core.run<boolean>('library.favorite', { name }, 'ui')
-    if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.', 2600)
+    if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
   }
 
   const onKey = (e: KeyboardEvent): void => {

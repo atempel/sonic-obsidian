@@ -1,0 +1,66 @@
+/* Ajustes rápidos (spec 011; protótipo "Palco integrado" 1794175739-7509, painel #sheet)
+   e as microinterações que eles trazem: M04 (pressão), M14 (switch), M15 (balão do slider). */
+
+/* ── Painel à direita ── */
+#ui .sheet { pointer-events: auto; }
+#canvas { transition: opacity var(--t-med) var(--ease-out); }
+body.sheet-open #canvas { opacity: 0.4; }
+body.sheet-open .strip-wrap { padding-right: 356px; }
+@media (max-width: 900px) { body.sheet-open .strip-wrap { padding-right: 16px; } }
+body.sheet-open .edge { opacity: 0; visibility: hidden; }
+.sheet { position: fixed; z-index: 30; top: 0; right: 0; bottom: 0; width: min(340px, 100vw); background: var(--bg-01); border-left: 1px solid var(--line-2);
+  box-shadow: var(--shadow-pop); transform: translateX(100%); visibility: hidden; transition: transform 180ms var(--ease-out), visibility 0s linear 180ms; display: flex; flex-direction: column; }
+body.sheet-open .sheet { transform: none; visibility: visible; transition: transform 250ms var(--ease-out), visibility 0s; }
+.sheet:focus { outline: none; }
+.sheet header { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--line-1); }
+.sheet header h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.sheet .body { overflow-y: auto; padding: 4px 20px 24px; }
+.sheet section { padding: 18px 0 6px; border-bottom: 1px solid var(--line-1); }
+.sheet section:last-child { border-bottom: 0; }
+.sheet h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; }
+.sheet .group + .group { margin-top: 6px; padding-top: 12px; border-top: 1px dashed var(--line-1); }
+.field { margin-bottom: 16px; }
+.field-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.field label { color: var(--text-2); font-size: 13px; }
+.field .val { font-size: 13px; color: var(--cyan); }
+.note { font-size: 12px; color: var(--text-3); margin: 2px 0 14px; }
+.note.hint { margin-top: -8px; }
+.line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--text-2); font-size: 13px; }
+.sheet .line kbd { margin-left: 6px; }
+select.sel { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); color-scheme: dark; font-size: 13px; }
+.phase { margin-left: 8px; padding: 1px 6px; border: 1px solid var(--line-3); border-radius: var(--r-1); font-size: 11px; color: var(--text-3); }
+.switch:has(input:disabled) { opacity: 0.55; cursor: default; }
+.sheet-link { width: 100%; justify-content: space-between; height: 38px; }
+.sheet-link span { display: inline-flex; align-items: center; gap: 8px; }
+.sheet-link:disabled { opacity: 0.55; cursor: default; }
+.sheet-link .soon { font-size: 12px; color: var(--text-3); }
+
+/* ── M15 · balão do slider (no arrasto; setas mostram por 600 ms) ── */
+.range { position: relative; }
+.sbub { position: absolute; top: 50%; width: 0; height: 0; pointer-events: none; }
+.sbub .b { position: absolute; left: 0; bottom: 14px; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03);
+  border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+  opacity: 0; transform: translate(-50%, 4px); transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+.sbub.on .b { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── M04 · pressão (a classe .pr vem do pointerdown; teclado não anima) ── */
+.ibtn { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast) var(--ease-out); }
+.ibtn.pr:not(:disabled) { transform: scale(0.97); transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform 80ms linear; }
+
+/* ── M14 · switch: o botão estica (14 → 18 px) enquanto aperta ── */
+.switch { --st: 1.2857; --sh: 10px; }
+.switch .track { transition: background var(--t-fast), border-color var(--t-fast); }
+.switch .track::after { transform-origin: 0 50%; }
+.switch.pr .track::after { transform: scaleX(var(--st)); transition: transform 80ms linear, background var(--t-fast); }
+.switch.pr input:checked + .track::after { transform: translateX(var(--sh)) scaleX(var(--st)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ibtn.pr:not(:disabled) { transform: none; }
+  .switch { --st: 1; --sh: 14px; }
+  .sbub .b, .sbub.on .b { transform: translate(-50%, 0); }
+  .gtoast, .gtoast.on { transform: translate(-50%, 0); transition: opacity 120ms linear !important; }
+  .winctl, .winctl.on, .winctl:focus-within { transform: none; transition: opacity 120ms linear !important; }
+  .winctl .win-close:hover .ico { transform: none; }
+  .clean-ico, .clean-ico.on { transform: none; }
+}
+.strip .ibtn[aria-expanded="true"] { color: var(--violet); }
