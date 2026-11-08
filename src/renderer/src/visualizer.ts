@@ -25,8 +25,9 @@ export class PresetVisualizer {
     this.visualizer.setRendererSize(width, height)
   }
 
-  render(): void {
-    this.visualizer.render()
+  /** elapsedSeconds controla o relógio do preset (silêncio = relógio mais lento). */
+  render(elapsedSeconds?: number): void {
+    this.visualizer.render(elapsedSeconds ? { elapsedTime: elapsedSeconds } : undefined)
   }
 
   private size(): { width: number; height: number } {
