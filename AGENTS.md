@@ -6,6 +6,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - Electron + Vite + TypeScript, código em `src/` — **ainda não existe**; é criado pelo spike ([docs/specs/001-spike-electron-butterchurn.md](docs/specs/001-spike-electron-butterchurn.md)). Ao concluir o spike, substituir esta linha pelos comandos reais (`npm run dev`, `npm run build`, testes).
 - `butterchurn` + `butterchurn-presets` (MIT), versões fixadas.
 - `legacy/python/` é referência histórica — não editar, não rodar junto.
+- **Onde roda:** desenvolvimento na nuvem (Linux, sem áudio/janela); validação no Windows com o build do GitHub Actions. Ver [CONTEXT.md](CONTEXT.md#ambiente-de-desenvolvimento).
 
 ## Antes de começar qualquer trabalho
 1. Ler [PROJECT.md](PROJECT.md) e a seção "Agora" de [TASKS.md](TASKS.md).
@@ -18,7 +19,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - **Encerrar:** skill `encerrar-sessao` → SESSIONS.md, TASKS.md, DECISIONS.md e o estado no Notion.
 
 ## Limites — não fazer sem perguntar
-- Commitar direto em `master`.
+- Commitar direto em `main`.
 - Trocar de motor visual, de shell (Electron) ou adicionar framework grande de UI além do decidido — registrar em DECISIONS.md primeiro.
 - Adicionar dependência com licença copyleft (GPL/LGPL) ou paga.
 - Remover/renomear créditos de autor dos presets.

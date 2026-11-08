@@ -6,7 +6,7 @@ O que um agente precisa saber para trabalhar bem aqui: convenções, restriçõe
 - Documentação e mensagens de commit em português; nomes de arquivo de convenção de ferramenta (CLAUDE.md, AGENTS.md, SKILL.md) e identificadores de código em inglês.
 - Commits no padrão Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`).
 - Uma feature = uma spec em `docs/specs/NNN-slug.md` + uma entrada em [TASKS.md](TASKS.md) + uma issue no GitHub.
-- Branch por task (`feat/<slug>`, `fix/<slug>`, `docs/<slug>`); merge via PR em `master`.
+- Branch por task (`feat/<slug>`, `fix/<slug>`, `docs/<slug>`); merge via PR em `main`.
 
 ## Restrições
 - **Windows é a plataforma-alvo.** A captura de áudio do sistema usa o loopback do Chromium, que no Electron só existe no Windows. O app precisa *rodar* no Windows para ser testado de verdade — WSL serve para editar, não para validar áudio.
@@ -17,7 +17,11 @@ O que um agente precisa saber para trabalhar bem aqui: convenções, restriçõe
 - Performance: o render nunca pode engasgar por causa da UI. Alvo 60 fps em tela cheia na máquina principal (RTX 3070).
 
 ## Ambiente de desenvolvimento
-- Pergunta em aberto, resolvida pelo spike: rodar Claude Code nativo no Windows com o repo em disco Windows, ou Claude Code no WSL editando e `npm run dev` num terminal Windows. Registrar a escolha em DECISIONS.md.
+- **Código:** Claude Code na nuvem (claude.ai/code). O container é Linux: dá para instalar dependências, compilar, rodar typecheck/lint/testes — **não** dá para abrir a janela nem capturar áudio.
+- **Validação:** no Windows do usuário, com o build portátil gerado pelo GitHub Actions (`windows-latest`) e baixado como artifact. Não há Node/npm no host Windows — não peça para instalar.
+- Na nuvem, o hook `SessionStart` (`.claude/hooks/session-start.sh`) roda `npm ci`/`npm install` com `ELECTRON_SKIP_BINARY_DOWNLOAD=1` quando existe `package.json`.
+- O repo local fica no OneDrive; `node_modules/` está no `.gitignore` e não deve existir lá (sem Node no host).
+- Decisão completa em [DECISIONS.md](DECISIONS.md) (2026-11-08 — Ambiente de dev).
 
 ## Vocabulário
 - **Preset** — uma visualização do MilkDrop/Butterchurn (equações + shaders). Substitui o conceito de "modo visual" da v1.
