@@ -14,7 +14,7 @@ Dois lugares, como no protótipo: **Ajustes rápidos** (painel à direita, só o
 - **Sinal:** Ganho −12 a +12 dB, passo 1 ("+3 dB", "−5 dB", "0 dB").
 - **Rotação:** switch "Rotação automática"; "Trocar a cada" 15 / 30 / 45 / 90 s; "Blend na troca automática" e "Blend quando você troca", 0–5 s, passo 0,1 ("2,7 s").
 - Link "Todas as configurações" (`Ctrl+,`).
-- Saem as teclas `+`/`−`/`0` e `[`/`]` (fecha as duas entradas abertas de DIVERGENCIAS).
+- Saem as teclas `[`/`]`. `+`/`−`/`0` (ganho) ficam permanentes (decisão do usuário na spec 013, ver DIVERGENCIAS).
 
 **P0 — Configurações** (`Ctrl+,`; navegação lateral; em tela estreita vira um seletor; `Esc` fecha; abre na seção Geral)
 - Busca de configurações (`Ctrl+F`), com o vazio "Nada encontrado".
@@ -37,7 +37,7 @@ Fontes microfone, arquivo e SoundCloud; Integrações (MCP); Telas e Rack; pacot
 ## Critérios de aceite
 1. `,` abre os Ajustes rápidos; mover o ganho muda a barra de nível e a reação do visual, e o valor aparece em dB.
 2. Desligar a rotação, trocar o intervalo para 15 s e mudar os dois blends nos Ajustes: a troca automática passa a usar o novo intervalo e blend, e a manual o outro blend.
-3. `+`, `−`, `0`, `[` e `]` não fazem mais nada.
+3. `[` e `]` não fazem mais nada; `+`, `−` e `0` continuam mudando o ganho.
 4. `Ctrl+,` abre as Configurações com o visual rodando atrás, esmaecido; `Esc` fecha.
 5. Mudar qualquer opção mostra "Salvo"; fechar e abrir o app mantém o valor.
 6. Os valores mudados nos Ajustes aparecem nas Configurações e vice-versa (é o mesmo estado).

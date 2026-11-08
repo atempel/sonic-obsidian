@@ -16,7 +16,7 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ### 2026-11-08 — Ajustes rápidos e atalhos · tipo de transição
 Protótipo (`1794165177-f126`): os Ajustes rápidos e Configurações › Visual têm só o tempo do blend ("Blend na troca automática", "Blend quando você troca", padrão manual 0 s); não há tipo de transição nem teclas para isso.
-Código (planejado, spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. Proposta de manter `+`/`−`/`0` (ganho) como atalhos permanentes.
+Código (spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. `+`/`−`/`0` (ganho) ficam como atalhos permanentes (decisão do usuário). O tipo da troca automática não tem tecla: só Ajustes rápidos (011) e, até lá, o `settings.json`.
 PR/spec: docs/specs/013-transicoes.md · #31
 Status: Aberta. Pedido ao design: desenhar o seletor de tipo (com prévia da forma da mesclagem, P2) nos Ajustes rápidos e em Configurações › Visual, e incluir as teclas novas e as de ganho na tabela de Atalhos.
 
@@ -64,9 +64,9 @@ Status: Aberta. Pedido ao design: escolher um texto (proposta: título do Palco 
 
 ### 2026-11-08 — atalhos globais e Ajustes rápidos · ganho
 Protótipo (`1794154301-3f85`): o ganho é um slider nos Ajustes rápidos / faixa (Palco integrado, `#gainMini`) de −12 a +12 dB em passos de 1 dB; não há atalho de teclado para ganho.
-Código: faixa e passo **alinhados ao protótipo** (−12 a +12 dB, 1 dB), depois que o teste mostrou que +6 a +9 dB bastam para a barra chegar à metade. Continuam as teclas `+`/`−`/`0`, porque não há UI na Fase 1.
+Código: faixa e passo **alinhados ao protótipo** (−12 a +12 dB, 1 dB), depois que o teste mostrou que +6 a +9 dB bastam para a barra chegar à metade. As teclas `+`/`−`/`0` ficam **permanentes**, mesmo com os Ajustes rápidos (decisão do usuário na spec 013: mexer no ganho ao vivo é parte do uso).
 PR/spec: (PR da spec 005) · docs/specs/005-sinal-entrada.md
-Status: Aberta só quanto às teclas. Proposta: saem junto com `[`/`]` quando os Ajustes rápidos existirem.
+Status: Aberta só quanto às teclas. Pedido ao design: incluir `+`/`−`/`0` na tabela de Atalhos (entrada "tipo de transição" acima).
 
 ### 2026-11-08 — atalhos globais · `[` / `]`
 Protótipo (`1794154301-3f85`): `[`/`]` não estão nos atalhos globais; em `v3-video-vj.md` §6 eles controlam a opacidade da camada de vídeo (frente VJ, ainda pendente no PRD). O intervalo da rotação fica nos Ajustes rápidos e em Configurações › Visual.

@@ -1,6 +1,13 @@
 import { captureSystemAudio } from './capture'
 import { Core, type Origin } from './core/commands'
-import { sanitizeLibrary, sanitizeSettings, stepInterval } from './core/state'
+import {
+  BLEND_TYPE_LABEL,
+  cycleBlendType,
+  sanitizeLibrary,
+  sanitizeSettings,
+  stepBlendSeconds,
+  stepInterval
+} from './core/state'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
@@ -116,11 +123,11 @@ async function start(): Promise<void> {
     state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `limite ${settings.fpsLimit}`
   }
   core.events.on('stateChanged', applyState)
-  core.events.on('presetChanged', ({ name, blendSeconds }) => {
-    viz.load(library.get(name), blendSeconds)
+  core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
+    viz.load(library.get(name), blendType, blendSeconds)
     rotation.restart(performance.now())
     state.preset = name
-    console.log(`[viz] preset: ${name} (blend ${blendSeconds} s)`)
+    console.log(`[viz] preset: ${name} (${blendType}, ${blendSeconds} s)`)
   })
   applyState()
   const idle = mountOverlay(document.getElementById('ui') as HTMLElement, {
@@ -152,6 +159,14 @@ async function start(): Promise<void> {
     return result
   }
   const gainText = (): string => `Ganho ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb} dB`
+  const secondsText = (s: number): string => `${String(s).replace('.', ',')} s`
+  /** Toast da transição manual: "Transição: Plasma, 1 s" (spec 013). */
+  const blendText = (): string => {
+    const { type, seconds } = settings.blend.manual
+    const label = BLEND_TYPE_LABEL[type]
+    const unavailable = !viz.blendTypesAvailable && type !== 'cut' && type !== 'random' ? ' (indisponível: sorteio do motor)' : ''
+    return type === 'cut' ? `Transição: ${label}` : `Transição: ${label}, ${secondsText(seconds)}${unavailable}`
+  }
 
   window.addEventListener('resize', () => viz.resize())
   window.addEventListener('keydown', (e) => {
@@ -194,13 +209,24 @@ async function start(): Promise<void> {
     // Espaço com foco num botão aciona o botão (acessibilidade), não o aleatório.
     if (e.code === 'Space' && t?.closest('button, a')) return
     let handled = true
+    // Shift na troca = corte seco na hora, sem mudar o ajuste salvo (spec 013).
+    const cut = e.shiftKey
     // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md), agora como comandos do Core.
     if (e.code === 'ArrowRight') {
-      run('preset.next')
+      run('preset.next', { cut })
     } else if (e.code === 'ArrowLeft') {
-      run('preset.previous')
+      run('preset.previous', { cut })
     } else if (e.code === 'Space') {
-      run('preset.random')
+      run('preset.random', { cut })
+    } else if (e.code === 'KeyB') {
+      // B / Shift+B: ciclo do tipo da troca manual.
+      run('blend.set', { target: 'manual', type: cycleBlendType(settings.blend.manual.type, e.shiftKey ? -1 : 1) })
+      showToast(blendText(), 1500)
+    } else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
+      // ↑ / ↓: tempo da troca manual (0,25 · 0,5 · 1 · 2 · 4 · 8 s).
+      const seconds = stepBlendSeconds(settings.blend.manual.seconds, e.code === 'ArrowUp' ? 1 : -1)
+      run('blend.set', { target: 'manual', seconds })
+      showToast(settings.blend.manual.type === 'cut' ? `Tempo da transição: ${secondsText(seconds)} (Corte seco ativo)` : blendText(), 1500)
     } else if (e.code === 'KeyF') {
       // F = tela cheia (como F11), por decisão do usuário; ver DIVERGENCIAS.
       run('window.fullscreen')

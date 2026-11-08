@@ -1,6 +1,6 @@
 # 013 — Transições: tipo e tempo escolhidos pelo usuário
 
-**Fase:** 2 · **Status:** A fazer · **Issue:** [#31](https://github.com/atempel/sonic-obsidian/issues/31) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); a UI completa entra junto com a [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Feito (validado no Windows em 2026-11-08) · **Issue:** [#31](https://github.com/atempel/sonic-obsidian/issues/31) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); a UI completa entra junto com a [011](011-ajustes-configuracoes.md)
 
 ## Problema
 A troca de preset é o gesto mais divertido do app: trocar na mesma música quando ela muda, mexer no ganho, brincar ao vivo. Hoje a troca manual é sempre corte seco (blend 0 s) e a automática sempre um blend de 2,7 s com um padrão de mesclagem sorteado pelo motor. O usuário não escolhe nem o tipo nem o tempo, e não consegue alternar entre cortar no beat e misturar devagar sem abrir arquivo de configuração.
@@ -62,6 +62,7 @@ Efeitos próprios por cima do canvas (flash, zoom, blur, glitch, corte sincroniz
 10. O fps durante e depois das trocas fica igual ao de hoje (`Ctrl+Shift+D`).
 
 ## Perguntas em aberto
+*Respondidas pelo usuário em 2026-11-08: `+`/`−`/`0` ficam permanentes; o tipo da troca automática não ganha tecla.*
 - **Teclas de ganho:** a DIVERGENCIAS propõe tirar `+`/`−`/`0` quando os Ajustes rápidos existirem (011), mas o usuário descreveu mexer no ganho ao vivo como parte do que é mais divertido no app. Proposta: **manter** `+`/`−`/`0` como atalhos permanentes e pedir ao design para incluí-los na tabela de atalhos.
 - **`B` e `↑`/`↓`** não estão nos atalhos do protótipo (e `Shift+←/→` aparece na frente VJ, ainda fora do PRD). Registrar em DIVERGENCIAS e pedir ao design.
 - O tipo da troca automática também merece tecla própria, ou o ajuste fica só nos Ajustes rápidos?
