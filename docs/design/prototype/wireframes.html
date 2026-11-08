@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — UI Wireframes</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a1a;
+    font-family: 'Caveat', cursive;
+    color: #f0ece0;
+    min-height: 100vh;
+    padding: 40px 48px 80px;
+  }
+
+  /* TWEAKS panel */
+  #tweaks-panel {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #ccc;
+    z-index: 1000;
+    display: none;
+    min-width: 200px;
+  }
+  #tweaks-panel.visible { display: block; }
+  #tweaks-panel h4 { font-size: 11px; color: #aaa; margin-bottom: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .tweak-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 10px; }
+  .tweak-row label { color: #999; }
+  .tweak-row input[type=range] { width: 80px; accent-color: #9b59ff; }
+  .tweak-row input[type=checkbox] { accent-color: #9b59ff; }
+
+  /* Page header */
+  .page-header {
+    margin-bottom: 48px;
+  }
+  .page-header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f0ece0;
+    letter-spacing: 0.01em;
+  }
+  .page-header p {
+    font-size: 17px;
+    color: #888;
+    margin-top: 4px;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 64px;
+  }
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #e8e4d8;
+  }
+  .section-desc {
+    font-size: 15px;
+    color: #888;
+    margin-bottom: 28px;
+    max-width: 680px;
+    line-height: 1.4;
+  }
+
+  /* Annotation arrow */
+  .anno {
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    color: #888;
+    font-style: italic;
+  }
+
+  /* Options grid */
+  .options-grid {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .options-grid.two-col { gap: 28px; }
+
+  /* Option card */
+  .option-card {
+    background: #242424;
+    border: 1.5px solid #333;
+    border-radius: 6px;
+    overflow: hidden;
+    flex: 1;
+    min-width: 300px;
+    max-width: 520px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .option-card:hover { border-color: #9b59ff; }
+  .option-card.active-option { border-color: #9b59ff; }
+  .option-card.active-option::after {
+    content: '★ selected';
+    position: absolute;
+    top: 8px; right: 10px;
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    color: #9b59ff;
+  }
+
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 8px 14px 0;
+    color: #9b59ff;
+  }
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 2px 14px 8px;
+    color: #e8e4d8;
+  }
+
+  /* Frame container */
+  .frame-wrap {
+    margin: 0 12px 12px;
+    border: 1.5px dashed #3a3a3a;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #111;
+    position: relative;
+  }
+  .frame-wrap canvas-sim {
+    display: block;
+  }
+
+  /* Notes below card */
+  .card-notes {
+    padding: 10px 14px 14px;
+    font-size: 14px;
+    color: #777;
+    line-height: 1.45;
+    border-top: 1px solid #2e2e2e;
+  }
+  .card-notes strong { color: #aaa; }
+
+  /* ── VISUALIZER SCREEN ── */
+  .viz-screen {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #0a0a0c;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Fake audio viz shapes */
+  .fake-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 60%;
+    width: 80%;
+    opacity: 0.55;
+  }
+  .fake-bar {
+    flex: 1;
+    background: linear-gradient(to top, #00e5ff33, #9b59ff22);
+    border-top: 1px solid #00e5ff55;
+    border-radius: 1px 1px 0 0;
+  }
+  .fake-radial {
+    width: 90px; height: 90px;
+    border-radius: 50%;
+    border: 1px solid #9b59ff44;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0.5;
+  }
+  .fake-radial::after {
+    content: '';
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 1px solid #00e5ff33;
+  }
+
+  /* Sketch overlay lines */
+  .sketch-label {
+    position: absolute;
+    font-family: 'Caveat', cursive;
+    font-size: 12px;
+    color: #555;
+    pointer-events: none;
+  }
+
+  /* ── FLOATING PANEL styles per option ── */
+
+  /* Option A: Bottom bar */
+  .bottom-bar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 44px;
+    background: rgba(15,15,20,0.9);
+    border-top: 1px dashed #333;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 6px;
+  }
+  .mode-chip {
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid #333;
+    border-radius: 3px;
+    background: #16161e;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #666;
+    display: flex; align-items: center; gap: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .mode-chip.mode-active {
+    border-color: #9b59ff;
+    color: #c244ff;
+  }
+  .mode-chip .num { color: #00e5ff; font-size: 8px; }
+  .bar-spacer { flex: 1; }
+  .bar-icon {
+    width: 26px; height: 26px;
+    border: 1px solid #2a2a3a;
+    border-radius: 3px;
+    background: #16161e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #555;
+  }
+  .bar-level {
+    display: flex; align-items: flex-end; gap: 1px;
+    height: 20px;
+  }
+  .bar-seg {
+    width: 3px;
+    background: #00e5ff66;
+    border-radius: 1px;
+  }
+
+  /* Option B: Floating island panel */
+  .float-island {
+    position: absolute;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(22,22,30,0.92);
+    border: 1px solid #2a2a3a;
+    border-radius: 10px;
+    padding: 10px 14px;
+    backdrop-filter: blur(12px);
+    display: flex; align-items: center; gap: 10px;
+    min-width: 320px;
+  }
+  .island-modes {
+    display: flex; gap: 4px;
+  }
+  .island-chip {
+    width: 28px; height: 28px;
+    border: 1px solid #2a2a3a;
+    border-radius: 4px;
+    background: #0f0f14;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #555;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .island-chip.i-active {
+    border-color: #9b59ff88;
+    color: #c244ff;
+    background: #1d1d28;
+  }
+  .island-divider {
+    width: 1px; height: 28px;
+    background: #2a2a3a;
+  }
+  .island-btn {
+    width: 28px; height: 28px;
+    border: 1px solid #2a2a3a;
+    border-radius: 4px;
+    background: #0f0f14;
+    font-size: 11px;
+    color: #555;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Option C: Draggable floating window */
+  .float-window {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 200px;
+    background: rgba(15,15,20,0.94);
+    border: 1px solid #2a2a3a;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .fwin-titlebar {
+    padding: 6px 10px;
+    border-bottom: 1px solid #1e1e2a;
+    display: flex; align-items: center; justify-content: space-between;
+    background: #16161e;
+  }
+  .fwin-title { font-family: 'JetBrains Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #555; }
+  .fwin-btns { display: flex; gap: 4px; }
+  .fwin-btn { width: 8px; height: 8px; border-radius: 50%; background: #333; }
+  .fwin-body { padding: 8px 10px; }
+  .fwin-section { font-family: 'JetBrains Mono', monospace; font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #444; margin-bottom: 5px; margin-top: 8px; }
+  .fwin-section:first-child { margin-top: 0; }
+  .fwin-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .fwin-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #555; }
+  .fwin-val { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #00e5ff88; }
+  .fwin-slider { width: 100%; height: 3px; background: #1e1e2a; border-radius: 2px; margin-bottom: 6px; position: relative; }
+  .fwin-slider-fill { height: 3px; background: linear-gradient(90deg, #00e5ff44, #9b59ff88); border-radius: 2px; }
+  .fwin-slider-thumb { width: 7px; height: 7px; border-radius: 50%; background: #c244ff; position: absolute; top: -2px; }
+  .fwin-modes { display: flex; flex-wrap: wrap; gap: 3px; }
+  .fwin-mode { font-family: 'JetBrains Mono', monospace; font-size: 8px; padding: 3px 5px; border: 1px solid #2a2a3a; border-radius: 2px; color: #444; }
+  .fwin-mode.fwm-active { border-color: #9b59ff88; color: #c244ff; background: #1d1d28; }
+
+  /* Option D: Radial / corner pie */
+  .corner-hud {
+    position: absolute;
+    bottom: 14px; right: 14px;
+    display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  }
+  .hud-stat { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #00e5ff44; text-align: right; }
+  .hud-trigger {
+    width: 36px; height: 36px;
+    border: 1px dashed #3a3a50;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: #3a3a50;
+  }
+  .radial-menu {
+    position: absolute;
+    bottom: 55px; right: 10px;
+    width: 120px; height: 120px;
+  }
+  .radial-item {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: #555;
+    background: rgba(15,15,20,0.9);
+    border: 1px solid #2a2a3a;
+    border-radius: 3px;
+    padding: 3px 5px;
+    white-space: nowrap;
+  }
+
+  /* Option E: Ghost overlay */
+  .ghost-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8,8,12,0.78);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .ghost-panel {
+    width: 72%;
+    background: rgba(15,15,20,0.96);
+    border: 1px solid #2a2a3a;
+    border-radius: 8px;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .ghost-card {
+    border: 1px solid #2a2a3a;
+    border-radius: 4px;
+    padding: 8px;
+    background: #16161e;
+    text-align: center;
+  }
+  .ghost-card .gc-num { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #00e5ff66; }
+  .ghost-card .gc-name { font-size: 13px; color: #666; }
+  .ghost-card.gc-active { border-color: #9b59ff88; background: #1d1d28; }
+  .ghost-card.gc-active .gc-name { color: #c244ff; }
+
+  /* Annotations */
+  .callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 4px;
+    padding: 6px 14px 10px;
+  }
+  .callout-arrow { font-size: 16px; line-height: 1; margin-top: 2px; }
+  .callout-text { font-size: 13px; color: #666; line-height: 1.4; }
+
+  /* Pros/cons */
+  .pro-con {
+    display: flex; gap: 16px;
+    padding: 0 14px 12px;
+    font-size: 13px;
+  }
+  .pros { color: #5a9; }
+  .cons { color: #a55; }
+  .pros ul, .cons ul { list-style: none; padding: 0; }
+  .pros ul li::before { content: '+ '; }
+  .cons ul li::before { content: '− '; }
+
+  /* Divider */
+  hr.sketch {
+    border: none;
+    border-top: 1.5px dashed #2a2a2a;
+    margin: 48px 0 0;
+  }
+
+  /* Navigation between sections */
+  .wf-nav {
+    display: flex; gap: 8px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .wf-nav-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 5px 12px;
+    border: 1px solid #333;
+    border-radius: 3px;
+    background: #1e1e1e;
+    color: #666;
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .wf-nav-btn:hover, .wf-nav-btn.active { border-color: #9b59ff; color: #c244ff; }
+
+  /* second section: floating window variations */
+  .float-win-var {
+    position: absolute;
+    background: rgba(13,13,20,0.96);
+    border: 1px solid #2a2a3a;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  /* Tabs inside floating window */
+  .ftabs {
+    display: flex;
+    border-bottom: 1px solid #1e1e2a;
+    background: #16161e;
+  }
+  .ftab {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    padding: 6px 9px;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+  .ftab.t-active { color: #c244ff; border-bottom: 1px solid #c244ff; margin-bottom: -1px; }
+
+  /* highlight ring */
+  .ring {
+    position: absolute;
+    border: 2px dashed #9b59ff66;
+    border-radius: 4px;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:#666;margin-bottom:6px;">Sonic Obsidian · UI Exploration · April 2026</div>
+  <h1>Wireframes — Visualizer + Floating Controls</h1>
+  <p>5 layout concepts for the main visualizer window & control panel</p>
+</div>
+
+<!-- NAV -->
+<div class="wf-nav">
+  <button class="wf-nav-btn active" onclick="showSection('controls')">Control Panel Concepts</button>
+  <button class="wf-nav-btn" onclick="showSection('window')">Floating Window Layouts</button>
+  <button class="wf-nav-btn" onclick="showSection('fullscreen')">Fullscreen Behavior</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 1 — CONTROL PANEL CONCEPTS
+═══════════════════════════════════════════════════════ -->
+<div id="sec-controls">
+
+  <div class="section">
+    <div class="section-label">Section 01</div>
+    <div class="section-title">How do controls surface?</div>
+    <div class="section-desc">The visualizer canvas is the hero. Controls need to exist but stay out of the way. Five distinct strategies — from always-visible to completely hidden.</div>
+
+    <div class="options-grid">
+
+      <!-- OPTION A: Bottom Bar -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Option A</div>
+        <div class="card-title">Persistent Bottom Bar</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars">
+              <div class="fake-bar" style="height:45%"></div>
+              <div class="fake-bar" style="height:72%"></div>
+              <div class="fake-bar" style="height:38%"></div>
+              <div class="fake-bar" style="height:91%"></div>
+              <div class="fake-bar" style="height:60%"></div>
+              <div class="fake-bar" style="height:28%"></div>
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:83%"></div>
+              <div class="fake-bar" style="height:47%"></div>
+              <div class="fake-bar" style="height:34%"></div>
+              <div class="fake-bar" style="height:67%"></div>
+              <div class="fake-bar" style="height:50%"></div>
+            </div>
+            <span class="sketch-label" style="top:8px;left:10px;font-size:10px;">← full canvas</span>
+            <!-- Bottom bar -->
+            <div class="bottom-bar">
+              <div class="mode-chip mode-active"><span class="num">1</span> BARS</div>
+              <div class="mode-chip"><span class="num">2</span> WAVE</div>
+              <div class="mode-chip"><span class="num">3</span> RADIAL</div>
+              <div class="mode-chip"><span class="num">4</span> TRAIL</div>
+              <div class="mode-chip"><span class="num">5</span> SHADER</div>
+              <div class="bar-spacer"></div>
+              <div class="bar-icon">≡</div>
+              <div class="bar-icon">⟐</div>
+              <div class="bar-level">
+                <div class="bar-seg" style="height:40%"></div>
+                <div class="bar-seg" style="height:75%"></div>
+                <div class="bar-seg" style="height:100%"></div>
+                <div class="bar-seg" style="height:60%"></div>
+                <div class="bar-seg" style="height:30%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">44px bar always visible. Mode buttons + device + level meter. Settings icon opens floating panel.</span>
+        </div>
+        <div class="pro-con">
+          <div class="pros"><ul><li>Always accessible</li><li>Familiar pattern</li><li>Level meter always visible</li></ul></div>
+          <div class="cons"><ul><li>Eats 44px of canvas</li><li>Not minimal enough?</li></ul></div>
+        </div>
+      </div>
+
+      <!-- OPTION B: Floating Island -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Option B</div>
+        <div class="card-title">Floating Island (Centered)</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars">
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:42%"></div>
+              <div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:33%"></div>
+              <div class="fake-bar" style="height:61%"></div>
+              <div class="fake-bar" style="height:95%"></div>
+              <div class="fake-bar" style="height:49%"></div>
+              <div class="fake-bar" style="height:77%"></div>
+              <div class="fake-bar" style="height:36%"></div>
+              <div class="fake-bar" style="height:58%"></div>
+              <div class="fake-bar" style="height:45%"></div>
+            </div>
+            <!-- Island -->
+            <div class="float-island">
+              <div class="island-modes">
+                <div class="island-chip i-active">1</div>
+                <div class="island-chip">2</div>
+                <div class="island-chip">3</div>
+                <div class="island-chip">4</div>
+                <div class="island-chip">5</div>
+                <div class="island-chip">6</div>
+              </div>
+              <div class="island-divider"></div>
+              <div class="island-btn">⟐</div>
+              <div class="island-btn">≡</div>
+              <div class="island-divider"></div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00e5ff55;line-height:1.5;">
+                <div>144 FPS</div>
+                <div>48kHz</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">Glassmorphism pill centered at bottom. Draggable. Collapses to small dot on hover-out. Expands on hover/click.</span>
+        </div>
+        <div class="pro-con">
+          <div class="pros"><ul><li>Minimal footprint</li><li>Feels modern</li><li>Doesn't anchor to edge</li></ul></div>
+          <div class="cons"><ul><li>Can obscure viz center</li><li>Drag state complex</li></ul></div>
+        </div>
+      </div>
+
+      <!-- OPTION C: Floating Window -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Option C</div>
+        <div class="card-title">Detached Floating Window</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars">
+              <div class="fake-bar" style="height:66%"></div>
+              <div class="fake-bar" style="height:44%"></div>
+              <div class="fake-bar" style="height:80%"></div>
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:30%"></div>
+              <div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:90%"></div>
+              <div class="fake-bar" style="height:50%"></div>
+              <div class="fake-bar" style="height:40%"></div>
+              <div class="fake-bar" style="height:65%"></div>
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:75%"></div>
+            </div>
+            <!-- Floating window -->
+            <div class="float-window">
+              <div class="fwin-titlebar">
+                <span class="fwin-title">◆ Controls</span>
+                <div class="fwin-btns">
+                  <div class="fwin-btn"></div>
+                  <div class="fwin-btn"></div>
+                  <div class="fwin-btn"></div>
+                </div>
+              </div>
+              <div class="fwin-body">
+                <div class="fwin-section">MODES</div>
+                <div class="fwin-modes">
+                  <div class="fwin-mode fwm-active">1·BARS</div>
+                  <div class="fwin-mode">2·WAVE</div>
+                  <div class="fwin-mode">3·RADIAL</div>
+                  <div class="fwin-mode">4·TRAIL</div>
+                  <div class="fwin-mode">5·SHADER</div>
+                  <div class="fwin-mode">6·WARP</div>
+                </div>
+                <div class="fwin-section">SIGNAL</div>
+                <div class="fwin-row">
+                  <span class="fwin-label">SENSITIVITY</span>
+                  <span class="fwin-val">85%</span>
+                </div>
+                <div class="fwin-slider">
+                  <div class="fwin-slider-fill" style="width:85%"></div>
+                  <div class="fwin-slider-thumb" style="left:calc(85% - 3px)"></div>
+                </div>
+                <div class="fwin-row">
+                  <span class="fwin-label">SMOOTHING</span>
+                  <span class="fwin-val">0.85</span>
+                </div>
+                <div class="fwin-slider">
+                  <div class="fwin-slider-fill" style="width:85%"></div>
+                  <div class="fwin-slider-thumb" style="left:calc(85% - 3px)"></div>
+                </div>
+                <div class="fwin-section">ENGINE</div>
+                <div class="fwin-row"><span class="fwin-label">FPS</span><span class="fwin-val">144</span></div>
+                <div class="fwin-row"><span class="fwin-label">LATENCY</span><span class="fwin-val">2.4ms</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">Separate draggable window. Lives alongside the visualizer. Can be positioned anywhere on screen, even moved off-canvas.</span>
+        </div>
+        <div class="pro-con">
+          <div class="pros"><ul><li>Max canvas freedom</li><li>Multi-monitor friendly</li><li>Familiar desktop UX</li></ul></div>
+          <div class="cons"><ul><li>Two windows to manage</li><li>Desktop metaphor feels old</li></ul></div>
+        </div>
+      </div>
+
+      <!-- OPTION D: Corner HUD + Radial -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Option D</div>
+        <div class="card-title">Corner HUD + Radial Menu</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars">
+              <div class="fake-bar" style="height:50%"></div>
+              <div class="fake-bar" style="height:76%"></div>
+              <div class="fake-bar" style="height:40%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:32%"></div>
+              <div class="fake-bar" style="height:64%"></div>
+              <div class="fake-bar" style="height:92%"></div>
+              <div class="fake-bar" style="height:48%"></div>
+              <div class="fake-bar" style="height:72%"></div>
+              <div class="fake-bar" style="height:37%"></div>
+              <div class="fake-bar" style="height:58%"></div>
+            </div>
+            <!-- Corner HUD -->
+            <div class="corner-hud">
+              <div class="hud-stat">144 FPS · 2.4ms</div>
+              <div class="hud-stat">MODE: BARS [1]</div>
+              <div class="hud-trigger">◉</div>
+            </div>
+            <!-- Radial popup (ghost/inactive state) -->
+            <div class="radial-menu">
+              <div class="radial-item" style="top:0;right:30px;opacity:0.35;">MODES</div>
+              <div class="radial-item" style="top:30px;right:0;opacity:0.35;">SETTINGS</div>
+              <div class="radial-item" style="top:60px;right:15px;opacity:0.35;">DEVICE</div>
+              <div class="radial-item" style="top:90px;right:35px;opacity:0.35;">PRESETS</div>
+            </div>
+            <span class="sketch-label" style="bottom:70px;right:145px;font-size:11px;">← click ◉ to open →</span>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">Tiny corner stats + trigger button. Click opens radial/contextual menu. Canvas is 100% unobstructed by default.</span>
+        </div>
+        <div class="pro-con">
+          <div class="pros"><ul><li>Almost invisible</li><li>Full canvas 99% of time</li><li>Feels ambient/minimal</li></ul></div>
+          <div class="cons"><ul><li>Discoverability low</li><li>Radial menus are tricky</li></ul></div>
+        </div>
+      </div>
+
+      <!-- OPTION E: Fullscreen overlay (press H) -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Option E</div>
+        <div class="card-title">Fullscreen Overlay (press H)</div>
+        <div class="frame-wrap">
+          <div class="viz-screen" id="optE-screen">
+            <div class="fake-bars" id="optE-bars" style="opacity:0.18;">
+              <div class="fake-bar" style="height:50%"></div>
+              <div class="fake-bar" style="height:76%"></div>
+              <div class="fake-bar" style="height:40%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:32%"></div>
+              <div class="fake-bar" style="height:64%"></div>
+              <div class="fake-bar" style="height:92%"></div>
+              <div class="fake-bar" style="height:48%"></div>
+              <div class="fake-bar" style="height:72%"></div>
+              <div class="fake-bar" style="height:37%"></div>
+              <div class="fake-bar" style="height:58%"></div>
+            </div>
+            <!-- Overlay panel — shown -->
+            <div style="position:absolute;inset:0;background:rgba(8,8,12,0.7);display:flex;align-items:center;justify-content:center;">
+              <div class="ghost-panel">
+                <div class="ghost-card gc-active">
+                  <div class="gc-num">KEY 1</div>
+                  <div class="gc-name">Classic Bars</div>
+                </div>
+                <div class="ghost-card">
+                  <div class="gc-num">KEY 2</div>
+                  <div class="gc-name">Oscilloscope</div>
+                </div>
+                <div class="ghost-card">
+                  <div class="gc-num">KEY 3</div>
+                  <div class="gc-name">Circular</div>
+                </div>
+                <div class="ghost-card">
+                  <div class="gc-num">KEY 4</div>
+                  <div class="gc-name">Trail/Decay</div>
+                </div>
+                <div class="ghost-card">
+                  <div class="gc-num">KEY 5</div>
+                  <div class="gc-name">Shader Bars</div>
+                </div>
+                <div class="ghost-card">
+                  <div class="gc-num">KEY 6</div>
+                  <div class="gc-name">Psych Warp</div>
+                </div>
+              </div>
+            </div>
+            <span class="sketch-label" style="top:8px;left:10px;font-size:10px;opacity:0.6;">press H to toggle HUD</span>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">No permanent UI. Press H (or hover edge) to invoke full HUD overlay. Visualizer dims behind. Click to dismiss.</span>
+        </div>
+        <div class="pro-con">
+          <div class="pros"><ul><li>Canvas 100% clean</li><li>Mode gallery visible</li><li>Keyboard-first feel</li></ul></div>
+          <div class="cons"><ul><li>Breaks immersion to control</li><li>Less discoverable</li></ul></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /sec-controls -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 2 — FLOATING WINDOW LAYOUTS
+═══════════════════════════════════════════════════════ -->
+<div id="sec-window" style="display:none;">
+
+  <div class="section">
+    <div class="section-label">Section 02</div>
+    <div class="section-title">Floating Panel — Internal Layout</div>
+    <div class="section-desc">Once we have a floating control surface, how is it organized internally? Three takes on hierarchy and information density.</div>
+
+    <div class="options-grid">
+
+      <!-- Layout W1: Tabbed -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Layout W1</div>
+        <div class="card-title">Tabbed Navigation</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="opacity:0.3;">
+              <div class="fake-bar" style="height:60%"></div><div class="fake-bar" style="height:80%"></div>
+              <div class="fake-bar" style="height:45%"></div><div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:55%"></div><div class="fake-bar" style="height:90%"></div>
+              <div class="fake-bar" style="height:35%"></div><div class="fake-bar" style="height:65%"></div>
+              <div class="fake-bar" style="height:75%"></div><div class="fake-bar" style="height:50%"></div>
+            </div>
+            <!-- Tabbed floating window -->
+            <div class="float-win-var" style="top:12px;right:12px;width:210px;">
+              <div class="fwin-titlebar">
+                <span class="fwin-title">◆ SONIC OBSIDIAN</span>
+                <div class="fwin-btns">
+                  <div class="fwin-btn"></div><div class="fwin-btn"></div><div class="fwin-btn"></div>
+                </div>
+              </div>
+              <div class="ftabs">
+                <div class="ftab t-active">MODES</div>
+                <div class="ftab">SIGNAL</div>
+                <div class="ftab">DEVICE</div>
+                <div class="ftab">STATS</div>
+              </div>
+              <div class="fwin-body">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+                  <div style="border:1px solid #9b59ff88;border-radius:3px;padding:6px 5px;background:#1d1d28;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00e5ff88;margin-bottom:2px;">KEY 1</div>
+                    <div style="font-size:11px;color:#c244ff;">Classic Bars</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#444;margin-top:2px;">ACTIVE ENGINE</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:3px;padding:6px 5px;background:#16161e;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;margin-bottom:2px;">KEY 2</div>
+                    <div style="font-size:11px;color:#555;">Oscilloscope</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:3px;padding:6px 5px;background:#16161e;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;margin-bottom:2px;">KEY 3</div>
+                    <div style="font-size:11px;color:#555;">Circular</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:3px;padding:6px 5px;background:#16161e;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;margin-bottom:2px;">KEY 4</div>
+                    <div style="font-size:11px;color:#555;">Trail/Decay</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:3px;padding:6px 5px;background:#16161e;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;margin-bottom:2px;">KEY 5</div>
+                    <div style="font-size:11px;color:#555;">Shader Bars</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:3px;padding:6px 5px;background:#16161e;text-align:center;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;margin-bottom:2px;">KEY 6</div>
+                    <div style="font-size:11px;color:#555;">Psych Warp</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">Tabbed top nav: Modes · Signal · Device · Stats. Compact, expandable. Mode grid shows 2-column cards with active state.</span>
+        </div>
+      </div>
+
+      <!-- Layout W2: Sidebar list -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Layout W2</div>
+        <div class="card-title">Sidebar + Content (PRD Layout)</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="opacity:0.3;">
+              <div class="fake-bar" style="height:60%"></div><div class="fake-bar" style="height:80%"></div>
+              <div class="fake-bar" style="height:45%"></div><div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:55%"></div><div class="fake-bar" style="height:90%"></div>
+              <div class="fake-bar" style="height:35%"></div><div class="fake-bar" style="height:65%"></div>
+              <div class="fake-bar" style="height:75%"></div><div class="fake-bar" style="height:50%"></div>
+            </div>
+            <!-- Sidebar layout window -->
+            <div class="float-win-var" style="top:12px;right:12px;width:230px;height:200px;display:flex;">
+              <!-- Sidebar -->
+              <div style="width:50px;background:#0f0f14;border-right:1px solid #1e1e2a;display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:6px;">
+                <div style="font-size:14px;color:#c244ff;margin-bottom:4px;">◆</div>
+                <div style="width:32px;height:32px;border:1px solid #9b59ff88;border-radius:3px;background:#1d1d28;display:flex;align-items:center;justify-content:center;font-size:12px;">▤</div>
+                <div style="width:32px;height:32px;border:1px solid #2a2a3a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;">⟐</div>
+                <div style="width:32px;height:32px;border:1px solid #2a2a3a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;">⊞</div>
+                <div style="width:32px;height:32px;border:1px solid #2a2a3a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;">☰</div>
+                <div style="flex:1"></div>
+                <div style="width:32px;height:32px;border:1px solid #2a2a3a;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#444;">+</div>
+              </div>
+              <!-- Main content -->
+              <div style="flex:1;overflow:hidden;">
+                <div style="background:#16161e;padding:6px 8px;border-bottom:1px solid #1e1e2a;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#444;letter-spacing:0.1em;text-transform:uppercase;">RENDERING ENVIRONMENT</div>
+                </div>
+                <div style="padding:6px 8px;display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+                  <div style="border:1px solid #9b59ff55;border-radius:2px;padding:4px;background:#1d1d28;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#00e5ff66;">KEY 1</div>
+                    <div style="font-size:10px;color:#c244ff;">Classic Bars</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#9b59ff88;margin-top:1px;">ACTIVE</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:2px;padding:4px;background:#16161e;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#333;">KEY 2</div>
+                    <div style="font-size:10px;color:#444;">Oscilloscope</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:2px;padding:4px;background:#16161e;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#333;">KEY 3</div>
+                    <div style="font-size:10px;color:#444;">Circular</div>
+                  </div>
+                  <div style="border:1px solid #2a2a3a;border-radius:2px;padding:4px;background:#16161e;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#333;">KEY 4</div>
+                    <div style="font-size:10px;color:#444;">Trail/Decay</div>
+                  </div>
+                </div>
+                <!-- Status bar -->
+                <div style="position:absolute;bottom:0;left:50px;right:0;height:16px;background:#0f0f14;border-top:1px solid #1e1e2a;display:flex;align-items:center;padding:0 6px;gap:8px;">
+                  <div style="width:5px;height:5px;border-radius:50%;background:#50fa7b;flex-shrink:0;"></div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:6px;color:#444;">144 FPS · 48kHz · 2.4ms</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">PRD-specified layout: icon sidebar + content area + status bar. Closest to original spec. Compact version of the full app window.</span>
+        </div>
+      </div>
+
+      <!-- Layout W3: Stacked accordion -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">Layout W3</div>
+        <div class="card-title">Stacked Accordion / Minimal</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="opacity:0.3;">
+              <div class="fake-bar" style="height:60%"></div><div class="fake-bar" style="height:80%"></div>
+              <div class="fake-bar" style="height:45%"></div><div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:55%"></div><div class="fake-bar" style="height:90%"></div>
+              <div class="fake-bar" style="height:35%"></div><div class="fake-bar" style="height:65%"></div>
+              <div class="fake-bar" style="height:75%"></div><div class="fake-bar" style="height:50%"></div>
+            </div>
+            <!-- Accordion panel -->
+            <div class="float-win-var" style="bottom:12px;right:12px;width:180px;">
+              <!-- Section: active mode (always visible) -->
+              <div style="padding:8px 10px;border-bottom:1px solid #1e1e2a;display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#9b59ff88;text-transform:uppercase;letter-spacing:0.1em;">Active Mode</div>
+                  <div style="font-size:14px;color:#c244ff;margin-top:1px;">Classic Bars</div>
+                </div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:#00e5ff44;">1</div>
+              </div>
+              <!-- Modes list (expanded) -->
+              <div style="border-bottom:1px solid #1e1e2a;">
+                <div style="padding:5px 10px;background:#16161e;display:flex;justify-content:space-between;cursor:pointer;">
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#555;text-transform:uppercase;letter-spacing:0.1em;">Modes</div>
+                  <div style="font-size:8px;color:#444;">▲</div>
+                </div>
+                <div style="padding:4px 10px 6px;">
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;">
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #9b59ff88;border-radius:2px;color:#c244ff;">1</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">2</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">3</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">4</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">5</div>
+                    <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 5px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">6</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Signal (collapsed) -->
+              <div style="padding:5px 10px;border-bottom:1px solid #1e1e2a;display:flex;justify-content:space-between;cursor:pointer;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:0.1em;">Signal</div>
+                <div style="font-size:8px;color:#444;">▼</div>
+              </div>
+              <!-- Device (collapsed) -->
+              <div style="padding:5px 10px;border-bottom:1px solid #1e1e2a;display:flex;justify-content:space-between;cursor:pointer;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:0.1em;">Device</div>
+                <div style="font-size:8px;color:#444;">▼</div>
+              </div>
+              <!-- Footer stats -->
+              <div style="padding:5px 10px;display:flex;gap:8px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00e5ff44;">144fps</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;">·</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#444;">48kHz</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="callout-arrow">↑</span>
+          <span class="callout-text">Vertically stacked collapsible sections. Only one section open at a time. Smallest footprint when collapsed.</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /sec-window -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION 3 — FULLSCREEN BEHAVIOR
+═══════════════════════════════════════════════════════ -->
+<div id="sec-fullscreen" style="display:none;">
+
+  <div class="section">
+    <div class="section-label">Section 03</div>
+    <div class="section-title">Fullscreen — What Happens to Controls?</div>
+    <div class="section-desc">In fullscreen (F11), the visualizer should be fully immersive. Three behaviors for how controls appear or disappear.</div>
+
+    <div class="options-grid">
+
+      <!-- FS-A: Auto-hide on edge hover -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">FS-A</div>
+        <div class="card-title">Auto-hide — Edge Hover</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="height:70%;width:90%;">
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:42%"></div>
+              <div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:33%"></div>
+              <div class="fake-bar" style="height:61%"></div>
+              <div class="fake-bar" style="height:95%"></div>
+              <div class="fake-bar" style="height:49%"></div>
+            </div>
+            <!-- Floating window ghost -->
+            <div style="position:absolute;bottom:0;right:0;width:170px;background:rgba(13,13,20,0.92);border-top:1px solid #2a2a3a;border-left:1px solid #2a2a3a;border-top-left-radius:6px;padding:8px 10px;opacity:0.7;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:0.1em;color:#444;margin-bottom:5px;">Controls (hover corner →)</div>
+              <div style="display:flex;gap:4px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:3px 6px;border:1px solid #9b59ff55;border-radius:2px;color:#c244ff;">1·BARS</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:3px 6px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">2</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:3px 6px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">3</div>
+              </div>
+            </div>
+            <!-- Arrow annotation -->
+            <span class="sketch-label" style="bottom:50px;right:175px;font-size:12px;">hover bottom-right →</span>
+            <span class="sketch-label" style="top:10px;left:10px;font-size:11px;">pure canvas, no chrome</span>
+          </div>
+        </div>
+        <div class="card-notes">
+          <strong>Behavior:</strong> In fullscreen, all UI disappears. Moving mouse to bottom-right corner reveals the control panel (fade in, 200ms). Auto-hides after 2s of no movement.
+        </div>
+      </div>
+
+      <!-- FS-B: Floating window stays floating -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">FS-B</div>
+        <div class="card-title">Floating Window Persists</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="height:70%;width:90%;">
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:42%"></div>
+              <div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:33%"></div>
+              <div class="fake-bar" style="height:61%"></div>
+              <div class="fake-bar" style="height:95%"></div>
+              <div class="fake-bar" style="height:49%"></div>
+            </div>
+            <!-- Always-on floating window -->
+            <div class="float-win-var" style="top:12px;right:12px;width:150px;padding:8px 10px;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#444;margin-bottom:5px;text-transform:uppercase;letter-spacing:0.1em;">◆ Controls</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px;">
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #9b59ff55;border-radius:2px;color:#c244ff;">1</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">2</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">3</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">4</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">5</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:8px;padding:2px 4px;border:1px solid #2a2a3a;border-radius:2px;color:#444;">6</div>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#00e5ff44;">144fps · 48kHz · 2.4ms</div>
+            </div>
+            <span class="sketch-label" style="top:10px;left:10px;font-size:11px;">panel always-on, draggable</span>
+          </div>
+        </div>
+        <div class="card-notes">
+          <strong>Behavior:</strong> Floating window stays on top regardless of fullscreen state. User places it wherever they want. Can be hidden with <code style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#00e5ff88">H</code> key.
+        </div>
+      </div>
+
+      <!-- FS-C: Full hide, keyboard only -->
+      <div class="option-card" onclick="toggleSelect(this)">
+        <div class="card-tag">FS-C</div>
+        <div class="card-title">Pure Fullscreen — Keys Only</div>
+        <div class="frame-wrap">
+          <div class="viz-screen">
+            <div class="fake-bars" style="height:70%;width:90%;">
+              <div class="fake-bar" style="height:55%"></div>
+              <div class="fake-bar" style="height:88%"></div>
+              <div class="fake-bar" style="height:42%"></div>
+              <div class="fake-bar" style="height:70%"></div>
+              <div class="fake-bar" style="height:33%"></div>
+              <div class="fake-bar" style="height:61%"></div>
+              <div class="fake-bar" style="height:95%"></div>
+              <div class="fake-bar" style="height:49%"></div>
+            </div>
+            <!-- Zero UI annotation -->
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) translateY(50px);display:flex;flex-direction:column;align-items:center;gap:4px;opacity:0.25;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#9b59ff;text-transform:uppercase;letter-spacing:0.12em;">SONIC OBSIDIAN</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#333;">CLASSIC BARS · 144fps</div>
+            </div>
+            <span class="sketch-label" style="top:10px;left:10px;font-size:11px;">zero UI chrome</span>
+            <!-- Keyboard shortcuts hint in corner -->
+            <div style="position:absolute;bottom:10px;left:10px;opacity:0.25;">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;color:#555;line-height:1.8;">
+                1–6 mode · F11 exit · H controls
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-notes">
+          <strong>Behavior:</strong> F11 = pure canvas. Zero UI. Keys 1–6 switch modes instantly. Tiny watermark + keyboard hint in corners at 5% opacity. H key summons HUD overlay.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /sec-fullscreen -->
+
+
+<!-- TWEAKS PANEL -->
+<div id="tweaks-panel">
+  <h4>Tweaks</h4>
+  <div class="tweak-row">
+    <label>Show annotations</label>
+    <input type="checkbox" checked onchange="toggleAnnotations(this.checked)">
+  </div>
+  <div class="tweak-row">
+    <label>Viz opacity</label>
+    <input type="range" min="0" max="100" value="55" oninput="setVizOpacity(this.value)">
+  </div>
+  <div class="tweak-row">
+    <label>Card size</label>
+    <input type="range" min="260" max="560" value="300" oninput="setCardSize(this.value)">
+  </div>
+</div>
+
+<script>
+  // Section nav
+  function showSection(id) {
+    ['controls','window','fullscreen'].forEach(s => {
+      document.getElementById('sec-'+s).style.display = s===id ? 'block' : 'none';
+    });
+    document.querySelectorAll('.wf-nav-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', ['controls','window','fullscreen'][i] === id);
+    });
+  }
+
+  // Card select toggle
+  function toggleSelect(el) {
+    el.classList.toggle('active-option');
+  }
+
+  // Tweaks
+  window.addEventListener('message', e => {
+    if (e.data?.type === '__activate_edit_mode') {
+      document.getElementById('tweaks-panel').classList.add('visible');
+    } else if (e.data?.type === '__deactivate_edit_mode') {
+      document.getElementById('tweaks-panel').classList.remove('visible');
+    }
+  });
+  window.parent.postMessage({type: '__edit_mode_available'}, '*');
+
+  function toggleAnnotations(on) {
+    document.querySelectorAll('.callout, .card-notes, .sketch-label, .anno').forEach(el => {
+      el.style.opacity = on ? '' : '0';
+    });
+  }
+  function setVizOpacity(v) {
+    document.querySelectorAll('.fake-bars').forEach(el => el.style.opacity = v/100);
+  }
+  function setCardSize(v) {
+    document.querySelectorAll('.option-card').forEach(el => el.style.minWidth = v+'px');
+  }
+</script>
+
+</body>
+</html>
