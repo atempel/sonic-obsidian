@@ -1,6 +1,6 @@
 # 012 — Setup, diagnóstico e desempenho
 
-**Fase:** 2 · **Status:** A fazer · **Issue:** [#25](https://github.com/atempel/sonic-obsidian/issues/25) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); P2 depende da [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Em teste (um PR só, decisão do usuário) · **Issue:** [#25](https://github.com/atempel/sonic-obsidian/issues/25) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); P2 depende da [011](011-ajustes-configuracoes.md)
 
 ## Problema
 Quando algo dá errado (captura recusada, sem WebGL 2, nenhum som chegando) o app fica preto ou parado sem dizer por quê, e na primeira abertura ninguém sabe os atalhos. Alguns presets derrubam o fps e não há como identificá-los nem pular.
@@ -35,10 +35,11 @@ Superfícies **não-modais** que nunca bloqueiam o visual: um cartão de boas-vi
 6. Nenhuma dessas superfícies impede usar as teclas do visual (exceto quando o próprio visual não existe, no caso do WebGL).
 7. (P2) **Preset pesado:** num preset abaixo do mínimo, o chip aparece com o fps medido; "Pular e ocultar" troca o preset e ele passa a constar em "Ocultos por desempenho", de onde "Restaurar" o devolve.
 
-## Perguntas em aberto
-- Como provocar a captura recusada de forma reproduzível no Windows para o teste 3? Levantar na implementação (WASAPI exclusivo de um player, ou flag de teste).
-- Medir fps por preset custa algo visível? Proposta: só medir, sem gravar a cada quadro.
+## Perguntas em aberto (respondidas em 8/nov, DECISIONS "Spec 012")
+- Captura recusada e WebGL 2 reproduzíveis: `test-flags.json` na pasta de dados do app (`{"captureFail": true}`, `{"noWebgl2": true}`).
+- Medir fps: só conta quadros durante 5 s depois do blend e grava uma vez por preset.
+- Texto do silêncio: o do Setup. Boas-vindas: uma vez para todos.
 
 ## Referências
-- Protótipo v3 `1794154301-3f85` ([SYNC.md](../design/v3/SYNC.md)): `Sonic Obsidian Setup.html` — estados Primeira abertura, Sem som por 10 s, Captura falhou, WebGL 2 indisponível (Duas telas fica fora); `Sonic Obsidian Palco integrado.html` — estado Preset pesado; `Sonic Obsidian Configurações.html` › Desempenho
+- Protótipo v3 `1794178325-0fd0` (antes, `1794154301-3f85`) ([SYNC.md](../design/v3/SYNC.md)): `Sonic Obsidian Setup.html` — estados Primeira abertura, Sem som por 10 s, Captura falhou, WebGL 2 indisponível (Duas telas fica fora); `Sonic Obsidian Palco integrado.html` — estado Preset pesado; `Sonic Obsidian Configurações.html` › Desempenho
 - Spec [005](005-sinal-entrada.md) (detecção de silêncio); DECISIONS 2026-11-08 (spec 004, "Ocultos por desempenho")

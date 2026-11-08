@@ -10,12 +10,13 @@ import './ajustes.css'
 import './settings.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
-import type { CaptureState, Core } from '../core/commands'
+import type { CaptureCheck, Core } from '../core/commands'
 import { Icon } from './icons'
 import { Library } from './Library'
 import { Palette } from './Palette'
 import { QuickSettings } from './QuickSettings'
 import { Settings } from './Settings'
+import { CaptureDiag, SilenceNotice, SlowChip, WelcomeCard } from './Diagnostics'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
 import { TextStack, coreRise, drainLine, nudgeIcon, shuffleIcon } from './motion'
@@ -33,7 +34,9 @@ export interface PalcoBridge {
   presets(): readonly string[]
   /** Segundos até a próxima troca automática. */
   rotationRemaining(): number
-  retryCapture(): void
+  /** Refaz a captura passo a passo (spec 012); `true` se funcionou. */
+  retryCapture(): Promise<boolean>
+  captureChecks(): CaptureCheck[]
   openSoundSettings(): void
   isFullScreen(): boolean
   /** Tipos de transição forçados (spec 013); sem eles, o motor sorteia. */
@@ -241,6 +244,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
 
   return (
     <div class="strip-wrap">
+      <SlowChip core={core} />
       <div class="strip" role="toolbar" aria-label="Controles do visual">
         <i class="rot-line" ref={line} />
         <div class="now">
@@ -374,53 +378,6 @@ function Edge({ core }: { core: Core }) {
   )
 }
 
-// ── Cartões de estado ────────────────────────────────────────
-function StateCards({ bridge }: { bridge: PalcoBridge }) {
-  const { core } = bridge
-  const [silent, setSilent] = useState(false)
-  const [capture, setCapture] = useState<CaptureState>(core.state.capture)
-  useLayoutEffect(() => {
-    const offs = [
-      core.events.on('silenceChanged', ({ notice }) => setSilent(notice)),
-      core.events.on('captureChanged', ({ state }) => setCapture(state))
-    ]
-    return () => offs.forEach((off) => off())
-  }, [core])
-
-  if (capture === 'denied') {
-    return (
-      <div class="state error" role="alert">
-        <h2>
-          <Icon name="triangle-alert" />
-          Não foi possível capturar o áudio
-        </h2>
-        <p>O Windows recusou a captura da saída padrão. Feche apps que usam o áudio em modo exclusivo e tente de novo.</p>
-        <div class="actions">
-          <button class="btn btn-primary" onClick={() => bridge.retryCapture()}>
-            <Icon name="rotate-cw" small />
-            Tentar de novo
-          </button>
-          <button class="btn btn-ghost" onClick={() => bridge.openSoundSettings()}>
-            Abrir configurações de som
-          </button>
-        </div>
-      </div>
-    )
-  }
-  if (silent && capture === 'ok') {
-    return (
-      <div class="state" role="status">
-        <h2>
-          <Icon name="volume-x" />
-          Sem áudio
-        </h2>
-        <p>Toque algo no computador e o visual reage. A captura continua ligada.</p>
-      </div>
-    )
-  }
-  return null
-}
-
 // ── Controles da janela (spec 014) ───────────────────────────
 /** Zona do canto superior direito que mostra minimizar e fechar (protótipo: ~160×96 px). */
 const WIN_ZONE_W = 160
@@ -551,7 +508,8 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
   return (
     <>
       <Credit core={core} />
-      <StateCards bridge={bridge} />
+      <SilenceNotice core={core} />
+      <CaptureDiag bridge={bridge} />
       <Edge core={core} />
       <Strip bridge={bridge} />
       <WindowControls core={core} />
@@ -559,6 +517,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Palette core={core} presets={presets} />
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <Settings bridge={bridge} />
+      <WelcomeCard core={core} />
       <GlobalToast />
     </>
   )

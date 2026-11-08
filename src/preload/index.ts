@@ -28,7 +28,13 @@ contextBridge.exposeInMainWorld('so', {
     /** Abre o THIRD_PARTY_NOTICES.md com o app padrão. */
     openNotices: (): Promise<string> => ipcRenderer.invoke('system:openNotices'),
     /** Abre um link https no navegador. */
-    openLink: (url: string): Promise<void> => ipcRenderer.invoke('system:openLink', url)
+    openLink: (url: string): Promise<void> => ipcRenderer.invoke('system:openLink', url),
+    /** Copia texto (diagnóstico) para a área de transferência. */
+    copyText: (text: string): Promise<void> => ipcRenderer.invoke('system:copyText', text),
+    /** Driver e ids da GPU (diagnóstico de WebGL 2). */
+    gpuInfo: (): Promise<{ driver: string; ids: string }> => ipcRenderer.invoke('system:gpuInfo'),
+    /** Flags de teste lidas de test-flags.json (spec 012). */
+    testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean }> => ipcRenderer.invoke('system:testFlags')
   },
   app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
   /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */

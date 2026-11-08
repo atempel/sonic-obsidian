@@ -12,6 +12,7 @@ import {
   TOAST_MODES,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
+  PRESET_FPS_MAX,
   RECENTS_MAX,
   num,
   sanitizeRender,
@@ -52,6 +53,18 @@ export interface CoreEvents extends Record<string, unknown> {
   captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
   saved: { store: 'settings' | 'library' }
+  /** Checklist da captura (spec 012), a cada passo verificado. */
+  captureChecks: { checks: CaptureCheck[] }
+  /** Preset abaixo do mínimo de fps (spec 012, P2); `null` limpa o aviso. */
+  slowPreset: { name: string; fps: number } | null
+}
+
+export type CheckState = 'ok' | 'fail' | 'busy' | 'pending'
+export interface CaptureCheck {
+  label: string
+  state: CheckState
+  detail: string
+  help?: string
 }
 
 export interface AppState {
@@ -237,13 +250,23 @@ export class Core {
       if (a.startupFavorite !== undefined) s.startupFavorite = a.startupFavorite === null ? null : str(a.startupFavorite, 'startupFavorite')
       const gainDefault = optNum(a.gainDefaultDb, 'gainDefaultDb', GAIN_MIN_DB, GAIN_MAX_DB)
       if (gainDefault !== undefined) s.gainDefaultDb = Math.round(gainDefault)
-      for (const key of ['pinControls', 'startFullscreen', 'showFps'] as const) {
+      for (const key of ['pinControls', 'startFullscreen', 'showFps', 'welcomeSeen'] as const) {
         const v = optBool(a[key], key)
         if (v !== undefined) s[key] = v
       }
       this.changedSettings(origin)
       const { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps } = s
       return { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps }
+    },
+    /** Desempenho por preset (spec 012): `{ skipSlow?, minFps? }`. */
+    'perf.set': (a, origin) => {
+      const p = this.state.settings.perf
+      const skip = optBool(a.skipSlow, 'skipSlow')
+      if (skip !== undefined) p.skipSlow = skip
+      const min = optNum(a.minFps, 'minFps', 15, 60)
+      if (min !== undefined) p.minFps = Math.round(min / 5) * 5
+      this.changedSettings(origin)
+      return { ...p }
     },
     /** Renderização (Configurações): `{ meshWidth+meshHeight?, pixelRatio?, textureRatio?, fxaa?, canvasScale?, extraImages? }`. */
     'render.set': (a, origin) => {
@@ -268,8 +291,24 @@ export class Core {
       if (name === this.state.current) this.show(this.presets.random(), origin)
       return name
     },
+    /** fps medido de um preset (spec 012); não emite stateChanged a cada medida para não re-renderizar. */
+    'library.setFps': (a) => {
+      const name = str(a.name, 'name')
+      const fps = optNum(a.fps, 'fps', 0, 1000)
+      if (fps === undefined) fail('fps obrigatório')
+      const map = this.state.library.presetFps
+      if (!(name in map) && Object.keys(map).length >= PRESET_FPS_MAX) return false
+      map[name] = Math.round(fps!)
+      this.effects.saveLibrary(this.state.library).catch((err: unknown) => console.error('[core] falha ao salvar library', err))
+      return true
+    },
     'library.restore': (a, origin) => {
       const lib = this.state.library
+      // Restaurar um oculto por desempenho apaga a medida antiga: ele é medido de novo.
+      if (a.reason !== 'user') {
+        if (a.name === undefined) for (const n of lib.hiddenPerf) delete lib.presetFps[n]
+        else if (typeof a.name === 'string') delete lib.presetFps[a.name]
+      }
       const lists = a.reason === 'performance' ? [lib.hiddenPerf] : a.reason === 'user' ? [lib.hidden] : [lib.hidden, lib.hiddenPerf]
       for (const list of lists) {
         if (a.name === undefined) list.length = 0

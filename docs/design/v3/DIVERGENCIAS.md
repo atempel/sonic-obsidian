@@ -105,3 +105,12 @@ Protótipo `1794175739-7509`, página Configurações. **No app:**
 - **Biblioteca › Pacotes** mostra só a contagem total. Pacote extra para baixar e importar `.milk` são da Fase 3.
 - **Sobre** ganha a linha "Licenças de terceiros" (abre o THIRD_PARTY_NOTICES) e mostra a versão do `package.json`.
 **Status:** aberta.
+
+### 2026-11-08 — Setup e Palco · diferenças da spec 012
+Protótipo `1794178325-0fd0` (Setup, Palco integrado, Configurações › Desempenho). **No app:**
+- **Aviso de silêncio:** o Palco do protótipo tem "Sem áudio" (1,2 s) e o Setup tem "Nenhum som chegando". O app usa só o do Setup, aos 10 s, com "Testar captura".
+- **Boas-vindas:** sem "M Modo compacto" e sem "Iniciar com o Windows" (Fase 5).
+- **WebGL 2:** sem o botão "Como atualizar o driver" (o protótipo aponta para a Intel); GPU e driver são lidos da máquina.
+- **Checklist da captura:** estados reais em vez do tempo fixo do protótipo. O rótulo do estado continua só para leitor de tela, como no protótipo.
+- **Preset pesado:** o aviso fica logo acima da faixa, alinhado à direita, e não dentro da cauda (com busca, ajustes e tela cheia, não cabe sem cobrir a Rotação). "Pular presets lentos" avisa e não oculta sozinho (DECISIONS).
+**Status:** aberta.

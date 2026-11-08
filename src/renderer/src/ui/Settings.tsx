@@ -38,7 +38,7 @@ const SECTIONS: { id: SectionId; label: string; icon: IconName; lead: string }[]
   { id: 'captura', label: 'Captura', icon: 'audio-lines', lead: 'De onde vem o som que o visual escuta.' },
   { id: 'visual', label: 'Visual', icon: 'sparkles', lead: 'Como os presets passam de um para o outro.' },
   { id: 'render', label: 'Renderização', icon: 'cpu', lead: 'Qualidade e custo do Butterchurn na sua GPU.' },
-  { id: 'desempenho', label: 'Desempenho', icon: 'gauge', lead: 'Leitura de fps.' },
+  { id: 'desempenho', label: 'Desempenho', icon: 'gauge', lead: 'Proteção contra presets lentos e leitura de fps.' },
   { id: 'biblioteca', label: 'Biblioteca', icon: 'library', lead: 'Pacotes de presets, presets ocultos e coleções.' },
   { id: 'atalhos', label: 'Atalhos', icon: 'keyboard', lead: 'Teclas globais do app.' },
   { id: 'sobre', label: 'Sobre', icon: 'info', lead: 'Versão, créditos e links.' }
@@ -476,12 +476,60 @@ function Render({ core, run }: { core: Core; run: Run }) {
 }
 
 function Desempenho({ core, run }: { core: Core; run: Run }) {
+  const { perf, showFps } = core.state.settings
+  const lib = core.state.library
+  const listRef = useRef<HTMLDivElement>(null)
   return (
-    <Grp title="Faixa de controle">
-      <Row id="st-showfps" label="Mostrar fps na faixa" help="Exibe o valor ao vivo ao lado do nível de entrada." kw="fps">
-        <Sw id="st-showfps" label="Mostrar fps na faixa" checked={core.state.settings.showFps} onChange={(showFps) => run('settings.set', { showFps })} />
-      </Row>
-    </Grp>
+    <>
+      <Grp title="Proteção">
+        <Row id="st-skip" label="Pular presets lentos" help="Avisa na faixa quando um preset fica abaixo do mínimo de fps, com “Pular e ocultar”." kw="lento pesado fps">
+          <Sw id="st-skip" label="Pular presets lentos" checked={perf.skipSlow} onChange={(skipSlow) => run('perf.set', { skipSlow })} />
+        </Row>
+        <Row id="st-minfps" label="Mínimo de fps" help="Abaixo disso, o preset é marcado como pesado." kw="fps">
+          <Rng id="st-minfps" value={perf.minFps} min={15} max={60} step={5} text={`${perf.minFps} fps`} disabled={!perf.skipSlow} onInput={(minFps) => run('perf.set', { minFps })} />
+        </Row>
+      </Grp>
+      <Grp title="Ocultos por desempenho">
+        <div class="hlist" ref={listRef} tabIndex={-1}>
+          {lib.hiddenPerf.length === 0 ? (
+            <p class="help" style="padding:14px 0" data-search="ocultos por desempenho">
+              Nenhum preset oculto por desempenho. Presets que ficarem abaixo do mínimo de fps aparecem aqui.
+            </p>
+          ) : (
+            lib.hiddenPerf.map((n) => {
+              const { title, author } = splitPresetName(n)
+              const fps = lib.presetFps[n]
+              return (
+                <div class="row hrow" key={n} data-search={`${title} ${author} desempenho`}>
+                  <div class="txt">
+                    <div class="nm">{title}</div>
+                    {author && <div class="by">por {author}</div>}
+                  </div>
+                  <div class="ctl">
+                    {fps !== undefined && <span class="num count warn">{fps} fps</span>}
+                    <button
+                      class="btn sm"
+                      aria-label={`Restaurar ${title}${author ? `, por ${author}` : ''}`}
+                      onClick={() => {
+                        run('library.restore', { name: n, reason: 'performance' })
+                        listRef.current?.focus()
+                      }}
+                    >
+                      Restaurar
+                    </button>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </Grp>
+      <Grp title="Faixa de controle">
+        <Row id="st-showfps" label="Mostrar fps na faixa" help="Exibe o valor ao vivo ao lado do nível de entrada." kw="fps">
+          <Sw id="st-showfps" label="Mostrar fps na faixa" checked={showFps} onChange={(v) => run('settings.set', { showFps: v })} />
+        </Row>
+      </Grp>
+    </>
   )
 }
 

@@ -1,5 +1,5 @@
 import { captureSystemAudio } from './capture'
-import { Core, type Origin } from './core/commands'
+import { Core, type CaptureCheck, type Origin } from './core/commands'
 import {
   BLEND_TYPE_LABEL,
   EXPRESSION_ADAPTATIONS,
@@ -18,6 +18,7 @@ import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
+import { dismissFloat, mountWebglError } from './ui/Diagnostics'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { isFullScreen, setupWindowChrome } from './window'
@@ -38,6 +39,14 @@ async function start(): Promise<void> {
     window.so.settings.load().catch(() => null),
     window.so.library.load().catch(() => null)
   ])
+
+  const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
+  // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
+  if (testFlags.noWebgl2 || !document.createElement('canvas').getContext('webgl2')) {
+    window.so.log(`WebGL 2 indisponível${testFlags.noWebgl2 ? ' (simulado por test-flags.json)' : ''}`)
+    mountWebglError(document.getElementById('ui') as HTMLElement)
+    return
+  }
 
   const ctx = new AudioContext()
   if (ctx.state === 'suspended') await ctx.resume()
@@ -85,18 +94,80 @@ async function start(): Promise<void> {
     intervalSeconds: core.rotationIntervalSeconds
   }))
 
-  // ── Captura do áudio do sistema, com "Tentar de novo" (spec 009) ──
+  // ── Captura do áudio do sistema, com checklist (spec 012) e "Tentar de novo" ──
   let source: MediaStreamAudioSourceNode | null = null
   let captureInfo = { device: '', sampleRate: ctx.sampleRate }
   let capturing = false
-  const connectCapture = async (): Promise<void> => {
-    if (capturing) return
+  // Flag de teste: a primeira tentativa falha como se o Windows recusasse; "Tentar de novo" é real.
+  let simulateFail = testFlags.captureFail
+  const PERMISSION_HELP = 'Outro app pode estar usando a saída em modo exclusivo (ex.: players com WASAPI exclusivo).'
+  let checks: CaptureCheck[] = []
+  const setCheck = (i: number, c: Partial<CaptureCheck>): void => {
+    checks = checks.map((x, j) => (j === i ? { ...x, ...c } : x))
+    core.events.emit('captureChecks', { checks })
+  }
+  /** RMS antes do ganho acima do limiar em até `ms`. */
+  const waitSignal = (ms: number): Promise<boolean> =>
+    new Promise((resolve) => {
+      const buf = new Float32Array(preGain.fftSize)
+      const t0 = performance.now()
+      const id = window.setInterval(() => {
+        preGain.getFloatTimeDomainData(buf)
+        let sq = 0
+        for (const v of buf) sq += v * v
+        const rms = Math.sqrt(sq / buf.length)
+        if (rms > 0.001 || performance.now() - t0 > ms) {
+          window.clearInterval(id)
+          resolve(rms > 0.001)
+        }
+      }, 100)
+    })
+  const connectCapture = async (): Promise<boolean> => {
+    if (capturing) return false
     capturing = true
     core.setCapture('pending')
     source?.disconnect()
     source = null
+    checks = [
+      { label: 'Saída padrão encontrada', state: 'busy', detail: 'verificando…' },
+      { label: 'Permissão de captura do sistema', state: 'busy', detail: 'verificando…' },
+      { label: 'Formato de áudio', state: 'busy', detail: 'verificando…' },
+      { label: 'Teste de sinal', state: 'busy', detail: 'verificando…' }
+    ]
+    core.events.emit('captureChecks', { checks })
     try {
-      const { stream, audioTrack } = await captureSystemAudio()
+      // 1. Saída padrão: o Chromium lista a saída "default" do Windows.
+      const outputs = await navigator.mediaDevices.enumerateDevices().catch(() => [] as MediaDeviceInfo[])
+      const out = outputs.find((d) => d.kind === 'audiooutput' && d.deviceId === 'default') ?? outputs.find((d) => d.kind === 'audiooutput')
+      const outName = out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '') || 'Saída padrão do Windows'
+      setCheck(0, out ? { state: 'ok', detail: outName } : { state: 'fail', detail: 'Nenhuma saída de áudio encontrada' })
+      // 2. Permissão (getDisplayMedia com loopback).
+      let cap: Awaited<ReturnType<typeof captureSystemAudio>>
+      try {
+        if (simulateFail) {
+          simulateFail = false
+          throw new DOMException('simulada por test-flags.json', 'NotAllowedError')
+        }
+        cap = await captureSystemAudio()
+      } catch (err) {
+        console.error('[capture] captura recusada ou indisponível', err)
+        window.so.log(`captura recusada: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+        setCheck(1, { state: 'fail', detail: 'Recusada pelo Windows', help: PERMISSION_HELP })
+        setCheck(2, { state: 'pending', detail: 'Aguardando a permissão' })
+        setCheck(3, { state: 'pending', detail: 'Aguardando a permissão' })
+        state.audio = 'recusada'
+        core.setCapture('denied')
+        return false
+      }
+      const { stream, audioTrack } = cap
+      setCheck(1, { state: 'ok', detail: 'Concedida', help: undefined })
+      // A captura funcionou: a saída existe, mesmo que o sistema não a tenha listado.
+      if (checks[0]!.state !== 'ok') setCheck(0, { state: 'ok', detail: audioTrack.label || 'Saída padrão do Windows' })
+      // 3. Formato.
+      const ts = audioTrack.getSettings()
+      captureInfo = { device: audioTrack.label || outName, sampleRate: ts.sampleRate ?? ctx.sampleRate }
+      const rate = `${(captureInfo.sampleRate / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kHz`
+      setCheck(2, { state: 'ok', detail: ts.channelCount ? `${rate}, ${ts.channelCount} canais` : rate })
       const updateTrack = (): void => {
         state.audio = `${audioTrack.readyState}${audioTrack.muted ? ' (muted)' : ''}`
       }
@@ -106,19 +177,20 @@ async function start(): Promise<void> {
       audioTrack.addEventListener('ended', () => {
         updateTrack()
         console.error('[capture] a track de áudio terminou')
+        window.so.log('captura: a track de áudio terminou')
         source?.disconnect()
         source = null
+        setCheck(1, { state: 'fail', detail: 'A captura parou', help: PERMISSION_HELP })
         core.setCapture('denied')
       })
-      captureInfo = { device: audioTrack.label, sampleRate: audioTrack.getSettings().sampleRate ?? ctx.sampleRate }
       source = ctx.createMediaStreamSource(stream)
       source.connect(gain)
       source.connect(preGain)
       core.setCapture('ok')
-    } catch (err) {
-      console.error('[capture] captura recusada ou indisponível', err)
-      state.audio = 'recusada'
-      core.setCapture('denied')
+      // 4. Sinal: até 3 s; sem música, a captura funciona do mesmo jeito.
+      const signal = await waitSignal(3000)
+      setCheck(3, signal ? { state: 'ok', detail: 'Sinal detectado' } : { state: 'pending', detail: 'Sem som agora: toque algo para testar' })
+      return true
     } finally {
       capturing = false
     }
@@ -149,7 +221,32 @@ async function start(): Promise<void> {
     state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `limite ${settings.fpsLimit}`
   }
   core.events.on('stateChanged', applyState)
+  // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
+  // Só mede com a janela visível; o limite de fps vira teto do mínimo.
+  let probe: { name: string; from: number; start: number; frames: number } | null = null
+  const PROBE_MS = 5000
+  const probeFrame = (now: number): void => {
+    if (!probe || now < probe.from) return
+    if (document.hidden) {
+      probe = null
+      return
+    }
+    if (probe.start === 0) probe.start = now
+    probe.frames++
+    if (now - probe.start < PROBE_MS) return
+    const fps = (probe.frames * 1000) / (now - probe.start)
+    const { name } = probe
+    probe = null
+    core.run('library.setFps', { name, fps }, 'rotation')
+    const cap = settings.fpsLimit === 'monitor' ? Infinity : settings.fpsLimit - 2
+    if (settings.perf.skipSlow && fps < Math.min(settings.perf.minFps, cap) && name === core.state.current && !core.isHidden(name)) {
+      window.so.log(`preset pesado: ${name} a ${fps.toFixed(1)} fps`)
+      core.events.emit('slowPreset', { name, fps })
+    }
+  }
   core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
+    core.events.emit('slowPreset', null)
+    probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0 }
     viz.load(library.get(name), blendType, blendSeconds)
     rotation.restart(performance.now())
     state.preset = name
@@ -160,7 +257,8 @@ async function start(): Promise<void> {
     core,
     presets: () => library.all(),
     rotationRemaining: () => rotation.remaining(performance.now()),
-    retryCapture: () => void connectCapture(),
+    retryCapture: () => connectCapture(),
+    captureChecks: () => checks,
     openSoundSettings: () => void window.so.system.openSoundSettings(),
     isFullScreen,
     blendTypesAvailable: viz.blendTypesAvailable,
@@ -251,6 +349,8 @@ async function start(): Promise<void> {
     // Esc fecha o que estiver aberto; sem nada aberto, sai da tela cheia.
     if (e.key === 'Escape') {
       e.preventDefault()
+      // Cartão de boas-vindas e aviso de silêncio fecham antes (spec 012).
+      if (!core.state.overlay && dismissFloat()) return
       if (core.state.overlay) run('ui.close')
       else if (isFullScreen()) run('window.fullscreen')
       return
@@ -382,6 +482,7 @@ async function start(): Promise<void> {
     dim.style.opacity = String(((1 - speed) / (1 - 0.15)) * SILENT_DIM)
     if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
     viz.render(dt * speed)
+    probeFrame(now)
     frames++
     if (now - windowStart >= 1000) {
       state.fps = (frames * 1000) / (now - windowStart)
