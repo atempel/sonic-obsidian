@@ -11,7 +11,8 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] **Ajustes rápidos e Configurações** (tira `[`/`]`; ganho só no slider, `+`/`−`/`0` viraram Expressividade na 015) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
 - [x] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
 - [x] **Expressividade em `+`/`−`** (Caráter `X`, Memória `Shift+X`; ganho só nos Ajustes) — [spec 015](docs/specs/015-expressividade.md) · issue [#36](https://github.com/atempel/sonic-obsidian/issues/36) · spike no PR #35
-- [ ] **Escolher as microinterações** do design `6542` (M01–M23, todas Propostas) — [queue/2026-11-08-microinteracoes.md](queue/2026-11-08-microinteracoes.md)
+- [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
+- [ ] **Microinterações da faixa** (M01–M03, M05–M08, M12, M22; logo depois da 011) — [queue/2026-11-08-microinteracoes.md](queue/2026-11-08-microinteracoes.md)
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção

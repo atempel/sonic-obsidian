@@ -85,3 +85,6 @@ Protótipo (`1794154301-3f85`): `[`/`]` não estão nos atalhos globais; em `v3-
 Código: `[`/`]` mudam o intervalo da rotação (10/15/30/60/120 s), porque não há UI na Fase 1 para ajustar o intervalo (spec 003, P1).
 PR/spec: #13 · docs/specs/003-rotacao-automatica.md
 Status: Aberta. Proposta: tirar `[`/`]` da rotação quando os Ajustes rápidos (Fase 2) existirem ou quando a frente VJ entrar, o que vier primeiro.
+
+### 2026-11-08 — Palco integrado · M18, carência do silêncio
+Protótipo (`1794175739-7509`, `docs/v3-microinteracoes.md` M18): o painel "Sem áudio" aparece depois de 1,2 s de silêncio contínuo. **No app:** continua em 10 s (spec 005, decisão do usuário reafirmada em 08/11), para que as pausas entre faixas não mostrem o painel. Do M18 entram o fade de 220 ms na volta do som e o medidor apagando em cascata. Ver DECISIONS 2026-11-08 "Microinterações: o que entra e quando". **Status:** aberta (pede resposta da sessão de design).
