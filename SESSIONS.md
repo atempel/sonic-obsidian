@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `docs/abertura-landing-releases`
+**Fez:** Planejou a abertura com `planejar-feature`. Specs **016** (releases por tag → rascunho com instalador, zip e checksums; nomes sem versão para `releases/latest/download/`; checklist MIT do dia) e **017** (landing no GitHub Pages, EN + PT-BR, portada do canvas do Claude Design; sem CDN; workflow com guarda para repo privado). Issues #40 e #41 (label novo `abertura`). DECISIONS: GitHub Pages escolhido, Cloudflare descartado com o porquê. TASKS ganhou a seção *Abertura*; PRD ganhou nota aditiva em "Fora de escopo". Fora do repo, nesta mesma conversa: o canvas da landing (EN e PT-BR, responsivo, aviso de fotossensibilidade) e o Design System "Sonic Obsidian", links nas specs.
+**Deixou em:** PR #42 → `main`, só docs. Nada a verificar no app. Notion não atualizado nesta sessão.
+
 ### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `docs/readme-revitalizacao`
 **Fez:** README reescrito para a abertura futura: inglês (`README.md`) + tradução completa (`README.pt-BR.md`), com lockup da marca, banner, prints reais da interface (Palco e Biblioteca, capturados em Chromium headless com SwiftShader), galeria de 6 presets com crédito, recursos entregues até a spec 015, atalhos tirados de `main.ts`, privacidade, arquitetura em Mermaid e roadmap. Novo: `docs/README.md` (índice da documentação), `docs/brand/` (SVGs e PNGs do *The Core*, regras), `docs/media/` (imagens com origem e créditos, e como refazer os prints). PROJECT.md aponta para as pastas novas; DECISIONS registra a escolha.
 **Deixou em:** PR `docs/readme-revitalizacao` → `main`. Sem código. Nenhum arquivo movido. Os prints da interface vão envelhecer com as specs 011/012: refazer pelo passo em `docs/media/README.md`. Notion não atualizado nesta sessão.
