@@ -821,7 +821,9 @@
   renderPerf(); renderHidden(); renderMcp(); renderClients(); paintMcp(); renderKeys();
   deps(); paintSource(); icons();
   filter();
-  show('captura');
+  function fromHash() { var h = (location.hash || '').slice(1); show(byId(h) ? h : 'captura'); }
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
   if (window.matchMedia('(min-width: 900px)').matches) cur.btn.focus({ preventScroll: true });
 })();
 </script>

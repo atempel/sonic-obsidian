@@ -175,6 +175,28 @@
   .load .lt { font-family: var(--font-ui); font-size: 12px; font-weight: 600; }
   .load .lt[hidden] { display: none; }
 
+  /* Painel de atalhos */
+  .kbo { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(8, 8, 9, 0.5); }
+  .kbo[hidden] { display: none; }
+  .kbp { width: min(860px, 100%); max-height: 80vh; overflow-y: auto; padding: 16px 20px 18px; background: rgba(15, 15, 20, 0.94); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .kbh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .kbp:focus { outline: none; }
+  .kbh h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .kbd-board { display: flex; flex-direction: column; gap: 6px; }
+  .kbrow { display: flex; gap: 6px; align-items: stretch; }
+  .kbrow.off1 { padding-left: 26px; } .kbrow.off2 { padding-left: 52px; }
+  .kbrow .gap { width: 20px; flex: none; }
+  .cap { flex: 1 1 0; min-width: 0; max-width: 78px; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 4px; background: var(--bg-03); border: 1px solid var(--line-3); border-bottom-width: 3px; border-radius: var(--r-2); }
+  .cap .kc { font-family: var(--font-num); font-size: 16px; font-weight: 600; line-height: 1; color: var(--text-1); }
+  .cap .kn { max-width: 100%; font-size: 12px; line-height: 1.1; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cap.pad-empty .kn { color: var(--text-3); }
+  .cap.fx .kn, .cap.ut .kn { color: var(--text-1); }
+  .cap.fx { border-bottom-color: var(--violet); }
+  .kbnote { align-self: center; font-size: 12px; color: var(--text-2); margin-left: 6px; }
+  .kbl { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line-1); display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; }
+  .kbl li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; font-size: 13px; color: var(--text-2); }
+  .kbl .ks { display: inline-flex; align-items: center; gap: 4px; color: var(--text-2); }
+
   /* Aviso */
   .toast { position: fixed; z-index: 50; right: 316px; bottom: 40px; max-width: 360px; padding: 10px 14px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); font-size: 13px; opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
   .toast.show { opacity: 1; transform: none; }
@@ -214,6 +236,7 @@
       <option>Janela flutuante</option>
     </select>
   </div>
+  <button class="ibtn" id="kbBtn" type="button" aria-label="Atalhos" title="Atalhos (?)" aria-haspopup="dialog"><i data-lucide="keyboard" class="ico"></i></button>
   <span class="sep"></span>
   <a class="btn btn-ghost exit" id="exit" href="Sonic Obsidian Palco com vídeo.html" aria-label="Sair (Esc)" title="Sair (Esc)"><i data-lucide="x" class="ico"></i><span>Sair</span><kbd>Esc</kbd></a>
 </header>
@@ -334,6 +357,20 @@
   <div class="load" id="load" role="status"><span class="lt" id="loadLt" hidden>Carga alta</span><span class="num" id="gpu">GPU 62% · 16,4 ms</span></div>
 </footer>
 
+<div class="kbo" id="kbo" hidden>
+  <div class="kbp" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="kbT">
+    <div class="kbh"><h2 id="kbT">Atalhos do Modo performance</h2><button class="ibtn" id="kbX" type="button" aria-label="Fechar atalhos" title="Fechar (? ou Esc)"><i data-lucide="x" class="ico"></i></button></div>
+    <div class="kbd-board" id="kbBoard"></div>
+    <ul class="kbl">
+      <li><span>Corte</span><span class="ks"><kbd>Espaço</kbd></span></li>
+      <li><span>Fade</span><span class="ks"><kbd>V</kbd></span></li>
+      <li><span>Alternar deck em edição</span><span class="ks"><kbd>Tab</kbd></span></li>
+      <li><span>Banco anterior / próximo</span><span class="ks"><kbd>PgUp</kbd><kbd>PgDn</kbd></span></li>
+      <li><span>Direto no Program</span><span class="ks"><kbd>Shift</kbd> + pad</span></li>
+      <li><span>Sair do Modo performance</span><span class="ks"><kbd>Esc</kbd></span></li>
+    </ul>
+  </div>
+</div>
 <input type="file" id="clipFile" accept="video/mp4,video/webm" hidden aria-label="Importar clipe">
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -610,9 +647,29 @@
   }
   setInterval(gpuTick, 900);
 
+  /* ── Painel de atalhos ── */
+  var kbOpen = false, kbFocus = null;
+  function cap(k, n, cls) { return '<div class="cap ' + (cls || '') + '"><span class="kc">' + k + '</span><span class="kn">' + n + '</span></div>'; }
+  function buildBoard() {
+    var r1 = '', r2 = '', i, c;
+    for (i = 0; i < 10; i++) { c = slotClip(i); r1 += cap(KEYS[i], c ? clipName(c) : '—', c ? '' : 'pad-empty'); }
+    for (i = 10; i < 20; i++) { c = slotClip(i); r2 += cap(KEYS[i], c ? clipName(c) : '—', c ? '' : 'pad-empty'); }
+    var r3 = cap('A', 'Ré', 'fx') + cap('S', 'Stutter', 'fx') + cap('D', 'Strobe', 'fx') + cap('F', 'Congelar', 'fx') + '<span class="gap"></span>' + cap('B', 'Tap', 'ut') + cap('N', 'Sincronizar', 'ut');
+    var r4 = cap('Z', 'A', 'ut') + cap('X', 'centro', 'ut') + cap('C', 'B', 'ut') + '<span class="kbnote">Crossfader: Z todo em A · X centro · C todo em B</span>';
+    $('kbBoard').innerHTML = '<div class="kbrow">' + r1 + '</div><div class="kbrow off1">' + r2 + '</div><div class="kbrow off2">' + r3 + '</div><div class="kbrow off2">' + r4 + '</div>';
+  }
+  function openKb() { if (kbOpen) return; releaseAll(); buildBoard(); kbFocus = document.activeElement; kbOpen = true; $('kbo').hidden = false; document.querySelector('.kbp').focus(); icons(); }
+  function closeKb() { if (!kbOpen) return; kbOpen = false; $('kbo').hidden = true; if (kbFocus && kbFocus.focus) kbFocus.focus(); }
+  $('kbBtn').addEventListener('click', function () { kbOpen ? closeKb() : openKb(); });
+  $('kbX').addEventListener('click', closeKb);
+  $('kbo').addEventListener('click', function (e) { if (e.target === this) closeKb(); });
+
   /* ── Teclado (só nesta página) ── */
   function exit() { $('exit').click(); }
   document.addEventListener('keydown', function (e) {
+    var t0 = e.target && e.target.tagName;
+    if (e.key === '?' && t0 !== 'TEXTAREA' && !(t0 === 'INPUT' && /^(text|search|number|email|url)$/.test(e.target.type))) { e.preventDefault(); if (!e.repeat) { kbOpen ? closeKb() : openKb(); } return; }
+    if (kbOpen) { if (e.code === 'Escape') { e.preventDefault(); closeKb(); } else if (e.code === 'Space' || e.code === 'ArrowLeft' || e.code === 'ArrowRight' || (e.code === 'Tab' && !e.shiftKey)) { e.preventDefault(); } return; }
     if (e.ctrlKey || e.metaKey) { if (e.code === 'KeyS') { e.preventDefault(); if (!e.repeat) saveScene(); } return; }
     if (e.altKey) return;
     var c = e.code;
