@@ -1,6 +1,6 @@
 # 007 — Spike: SoundCloud como fonte
 
-**Fase:** 3 (fontes) · **Status:** A fazer · **Issue:** (criar ao iniciar) · **Depende de:** conta Artist Pro do usuário para gerar as chaves
+**Fase:** 3 (fontes) · **Status:** A fazer · **Issue:** [#20](https://github.com/atempel/sonic-obsidian/issues/20) · **Depende de:** conta Artist Pro do usuário para gerar as chaves
 
 ## Problema
 O design prevê colar uma URL do SoundCloud e ver o visual reagir àquela faixa. A viabilidade é incerta:
