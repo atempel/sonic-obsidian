@@ -120,3 +120,6 @@ body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
 .menu .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .menu hr { border: 0; border-top: 1px solid var(--line-2); margin: 4px 0; }
 #ui mark { background: none; color: var(--violet); }
+/* Cabeçalho, abas e rodapé não encolhem quando a lista é longa (só a lista rola). */
+.p-search, .p-tabs, .p-foot { flex: none; }
+.p-list { min-height: 0; }

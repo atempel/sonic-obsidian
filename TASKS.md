@@ -6,7 +6,7 @@
 - [x] **Núcleo de comandos e persistência** (bloqueia as demais) — [spec 008](docs/specs/008-nucleo-comandos-persistencia.md) · issue [#21](https://github.com/atempel/sonic-obsidian/issues/21)
 - [x] **Palco: faixa de controle e assinatura** — [spec 009](docs/specs/009-palco-faixa-assinatura.md) · issue [#22](https://github.com/atempel/sonic-obsidian/issues/22)
 - [ ] **Incorporar o design `1794165177-f126`** (texto sobre o visual, Modo limpo `T`, controles da janela) nas specs 011 ou numa spec nova — [queue/2026-11-08-design-f126-texto-e-janela.md](queue/2026-11-08-design-f126-texto-e-janela.md)
-- [ ] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
+- [x] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
 - [ ] **Ajustes rápidos e Configurações** (remove `+`/`−`/`0` e `[`/`]`) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
 - [ ] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)

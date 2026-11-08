@@ -1,6 +1,6 @@
 # 010 — Busca rápida e Biblioteca (gaveta)
 
-**Fase:** 2 · **Status:** Em verificação (código pronto; critérios aguardando o teste no Windows) · **Issue:** [#23](https://github.com/atempel/sonic-obsidian/issues/23) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md)
+**Fase:** 2 · **Status:** Concluído (9/9 critérios e o `Esc` em tela cheia verificados pelo usuário no Windows, build `f0e6dfc`; margem da busca corrigida depois) · **Issue:** [#23](https://github.com/atempel/sonic-obsidian/issues/23) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md)
 
 ## Problema
 Com centenas de presets, só dá para navegar em sequência ou no aleatório. Não há como achar um preset pelo nome ou pelo autor, guardar os preferidos, esconder os que incomodam ou montar coleções para a rotação.
