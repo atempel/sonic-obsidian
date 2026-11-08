@@ -164,7 +164,6 @@ async function start(): Promise<void> {
     if (!result.ok) console.warn(`[core] ${name}: ${result.error}`)
     return result
   }
-  const gainText = (): string => `Ganho ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb} dB`
   const secondsText = (s: number): string => `${String(s).replace('.', ',')} s`
   const exprLevel = (): string => {
     const l = settings.expression.level
@@ -229,15 +228,15 @@ async function start(): Promise<void> {
     } else if (e.code === 'ArrowLeft') {
       run('preset.previous', { cut })
     } else if (e.code === 'KeyX') {
-      // Só no spike: X cicla a curva, Shift+X a adaptação.
+      // X cicla o Caráter; Shift+X a Memória (spec 015).
       if (e.shiftKey) {
         const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
         run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
-        showToast(`Adaptação: ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`, 1800)
+        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`, 2400)
       } else {
         const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
         run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
-        showToast(`Curva ${EXPRESSION_CURVE_LABEL[settings.expression.curve]} · ${exprLevel()}`, 1800)
+        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`, 2400)
       }
     } else if (e.code === 'Space') {
       run('preset.random', { cut })
@@ -245,10 +244,6 @@ async function start(): Promise<void> {
       // B / Shift+B: ciclo do tipo da troca manual.
       run('blend.set', { target: 'manual', type: cycleBlendType(settings.blend.manual.type, e.shiftKey ? -1 : 1) })
       showToast(blendText(), 1500)
-    } else if (e.shiftKey && (e.code === 'ArrowUp' || e.code === 'ArrowDown')) {
-      // Spike 015: o ganho saiu do +/− e ficou provisório em Shift+↑/↓ (UI definitiva na 011).
-      run('signal.set', { gainDb: settings.gainDb + (e.code === 'ArrowUp' ? 1 : -1) })
-      showToast(gainText(), 1200)
     } else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
       // ↑ / ↓: tempo da troca manual (0,25 · 0,5 · 1 · 2 · 4 · 8 s).
       const seconds = stepBlendSeconds(settings.blend.manual.seconds, e.code === 'ArrowUp' ? 1 : -1)
@@ -267,7 +262,7 @@ async function start(): Promise<void> {
       run('rotation.set', { intervalSeconds: stepInterval(settings.rotation.intervalSeconds, e.key === '[' ? -1 : 1) })
       showToast(`Rotação a cada ${settings.rotation.intervalSeconds} s${settings.rotation.enabled ? '' : ' (desligada)'}.`, 1500)
     } else if (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') {
-      // Spike 015: + / − = expressividade (o ganho se adapta em segundos; ver expression.ts).
+      // + / − = expressividade (spec 015). O ganho se adapta em segundos (ver expression.ts) e só muda nos Ajustes rápidos.
       run('expression.set', { level: settings.expression.level + (e.key === '+' || e.key === '=' ? 1 : -1) })
       showToast(exprText(), 1500)
     } else if (e.key === '0') {
@@ -339,7 +334,7 @@ async function start(): Promise<void> {
       windowStart = now
       if (exprProbe) {
         const ex = settings.expression
-        state.expression = `expr ${exprLevel()} · curva ${ex.curve.toUpperCase()} · adaptação ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
+        state.expression = `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
       }
       if (!hudEl.hidden) hud.show(state)
     }

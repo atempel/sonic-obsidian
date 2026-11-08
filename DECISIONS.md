@@ -168,3 +168,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Toasts de resposta a tecla não são "importantes"** (decisão do usuário, igual ao protótipo): com "Só importantes" ou com o Modo limpo, ganho, rotação, transição e favoritos não mostram toast. A confirmação do próprio Modo limpo sempre aparece.
 - **Modo limpo salvo** em `settings.overlayText.clean`, porque o protótipo não diz se ele volta ao reabrir. Faz sentido para quem deixa a tela limpa como padrão.
 - **Arrasto:** a faixa de 40 px termina antes da zona dos controles (`right: 166px`), porque a região de arrasto engole o `mousemove` no Windows. O design diz "arrastar pelo visual"; a divergência está em DIVERGENCIAS.
+
+## 2026-11-08 — Spec 015: expressividade no lugar do ganho em `+`/`−`
+- **Problema observado pelo usuário:** subir o ganho tem efeito só por alguns segundos. **Causa:** o Butterchurn entrega aos presets `bass = imm / longAvg` (média longa de ~4 s), então o ganho entra no numerador e no denominador ao mesmo tempo.
+- **Decisão (do usuário, depois do spike no Windows):** `+`/`−`/`0` passam a controlar a **Expressividade** (−3…+3), com dois controles de "playground": **Caráter** (`X`: Contraste / Energia / Nervo) e **Memória** (`Shift+X`: Curta / Longa / Fixa). O ganho sai do teclado e fica só nos Ajustes rápidos e nas Configurações. Isso **reverte** a resposta da spec 013 ("`+`/`−`/`0` ganho permanente").
+- **Como:** `renderer.audioLevels.updateAudioLevels` envolvido na instância (sem patch), reescrevendo `val`/`att` depois do original, com a saída limitada a 0–4. Mesmo risco da 013: depende de nomes internos da 2.6.7, e o spike 006 precisa refazer a ligação.
+- **Nomes:** "curva A/B/C" e "adaptação" do spike não diziam nada a quem toca; viraram Caráter e Memória, e o toast explica cada opção. Valor salvo e global; por preset fica para P2.
+- **Descartado:** offset de beat sozinho (sobe a base, mas não muda o contraste); manter o ganho no teclado em `Shift+↑`/`↓` (o usuário preferiu só nos Ajustes, já que o efeito some).

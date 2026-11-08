@@ -26,7 +26,11 @@ export const BLEND_TYPE_LABEL: Record<BlendType, string> = {
 export const BLEND_STEPS_S = [0.25, 0.5, 1, 2, 4, 8]
 export const BLEND_MIN_S = 0.1
 export const BLEND_MAX_S = 10
-/** Expressividade (spike da spec 015): −3 … +3, curva e adaptação em teste. */
+/**
+ * Expressividade (spec 015): `+`/`−` de −3 a +3. Caráter (`X`) = como o nível age;
+ * Memória (`Shift+X`) = quanto tempo o visual leva para se acostumar ao volume.
+ * Nos dados, `curve` e `adaptation` (nomes do spike).
+ */
 export const EXPRESSION_MIN = -3
 export const EXPRESSION_MAX = 3
 export const EXPRESSION_CURVES = ['a', 'b', 'c'] as const
@@ -34,14 +38,14 @@ export type ExpressionCurve = (typeof EXPRESSION_CURVES)[number]
 export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked'] as const
 export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
 export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
-  a: 'A — contraste',
-  b: 'B — contraste + offset',
-  c: 'C — contraste + offset + nervoso'
+  a: 'Contraste — picos mais altos, vales mais fundos',
+  b: 'Energia — contraste e a base mais agitada',
+  c: 'Nervo — energia e reação seca (+) ou suave (−)'
 }
 export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> = {
-  normal: 'normal (~4 s)',
-  slow: 'lenta (~30 s)',
-  locked: 'travada'
+  normal: 'curta — se acostuma ao volume em ~4 s',
+  slow: 'longa — o volume pesa por ~30 s',
+  locked: 'fixa — partes altas da música sempre mais fortes'
 }
 
 /** Regra de uma troca: tipo e tempo. Com `cut`, o tempo fica guardado para quando voltar a misturar. */
