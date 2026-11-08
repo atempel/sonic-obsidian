@@ -140,3 +140,18 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **HUD de depuração** escondido por padrão; `Ctrl+Shift+D` mostra e esconde. Erro fatal na abertura continua aparecendo nele.
 - **Botões das próximas specs** (Biblioteca, busca, Ajustes) e a alça da borda aparecem desabilitados, com "em breve" no `title`, até as specs 010/011.
 - **Teste visual na nuvem:** a página compilada roda no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados (oscilador ou recusa). Serve para layout e estados; áudio real e fps continuam só no Windows.
+
+## 2026-11-08 — Spec 010: busca rápida e Biblioteca
+- **Mesmo índice nas duas portas:** `ui/library-data.ts` filtra por trecho do nome completo (autor + título), sem diferenciar maiúsculas; ocultos nunca aparecem na busca, na Biblioteca, no aleatório nem na rotação (o filtro está no `PresetLibrary`, desde a 008).
+- **`Esc` saiu do processo main:** fecha o que estiver aberto (menu → busca do campo → coleção → gaveta) e, sem nada aberto, sai da tela cheia. Antes o main engolia o `Esc` em tela cheia e a gaveta não fecharia. `L` alterna a Biblioteca; `/` abre a busca fora de campos de texto; `Ctrl+K` abre e fecha a busca de qualquer lugar.
+- **Foco na abertura com `useLayoutEffect`** e a classe do body aplicada pelo próprio componente: com `setTimeout`, o que se digitava logo depois do `Ctrl+K` se perdia (pego no teste headless).
+- **Miniaturas provisórias:** gradiente com matiz estável por nome (hash), sem capturar quadro. A miniatura real (P1 da spec) fica para depois: renderizar cada preset fora da tela custa GPU e não pode atrapalhar o render.
+- **Reordenar coleção** por arrastar (HTML5 drag-and-drop) com a alça; remover com o `x` da linha.
+- **"Nova coleção" também no submenu "Adicionar à coleção"**, para não obrigar a ir à aba Coleções antes.
+
+## 2026-11-08 — Transições: tipo escolhido sobrescrevendo o BlendPattern em tempo de execução
+- **Contexto:** o usuário quer a troca manual também com transição e quer escolher entre corte seco e tipos de transição ("playground" ao vivo). Spec [013](docs/specs/013-transicoes.md).
+- **Decisão (do usuário):** expor os 4 padrões que o Butterchurn 2.6.7 já tem (crossfade, varredura, plasma, radial) mais Corte seco e Aleatório, separados para troca manual e automática. O tipo é forçado **em tempo de execução**, envolvendo `visualizer.renderer.blendPattern.createBlendPattern`: troca o `Math.random` só na chamada que sorteia o tipo, ou preenche a malha de crossfade. Sem patch no pacote e sem dependência nova; se a estrutura interna mudar, o app volta ao sorteio do motor.
+- **Padrão novo da troca manual:** Aleatório, 1 s (antes: corte seco, como no protótipo). Quem já tinha 0 s salvo continua com corte seco.
+- **Descartado:** `patch-package` no `blendPattern.js` (primeiro degrau da escada "Butterchurn como dependência fixada": mais robusto, mas dependência e patch a manter); efeitos próprios por cima do canvas no P0 (ficam para uma spec "Efeitos de transição").
+- **Risco:** depende de nomes internos do bundle 2.6.7; o spike 006 (Butterchurn 3) precisa refazer a ligação.

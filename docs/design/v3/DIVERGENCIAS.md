@@ -14,6 +14,18 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — Ajustes rápidos e atalhos · tipo de transição
+Protótipo (`1794165177-f126`): os Ajustes rápidos e Configurações › Visual têm só o tempo do blend ("Blend na troca automática", "Blend quando você troca", padrão manual 0 s); não há tipo de transição nem teclas para isso.
+Código (planejado, spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. Proposta de manter `+`/`−`/`0` (ganho) como atalhos permanentes.
+PR/spec: docs/specs/013-transicoes.md · #31
+Status: Aberta. Pedido ao design: desenhar o seletor de tipo (com prévia da forma da mesclagem, P2) nos Ajustes rápidos e em Configurações › Visual, e incluir as teclas novas e as de ganho na tabela de Atalhos.
+
+### 2026-11-08 — Palco integrado · Biblioteca e busca rápida (cortes de fase e ajustes)
+Protótipo (`1794165177-f126`): a gaveta tem "Novo preset" (Estúdio), chips "Importados"/"Meus", tags de preset importado/criado com IA, item "Editar uma cópia no Estúdio" no menu e miniaturas renderizadas do preset; o submenu "Adicionar à coleção" lista só as coleções existentes.
+Código: sem Estúdio, importação e IA (Fases 3–4), então esses itens não aparecem. Miniaturas são um gradiente estável por nome até haver captura de quadro. O submenu ganhou "Nova coleção" no fim. A aba Coleções da busca, sem coleções, diz "Nenhuma coleção ainda. / Crie coleções na Biblioteca (L)." (texto que o protótipo não tem).
+PR/spec: docs/specs/010-busca-biblioteca.md
+Status: Aberta. Pedido ao design: confirmar "Nova coleção" no submenu e o texto do vazio de coleções na busca.
+
 ### 2026-11-08 — Palco integrado · faixa de controle (itens fora da Fase 2)
 Protótipo (`1794154301-3f85`): a faixa tem botão de fonte de áudio (`monitor-speaker`), modo compacto (`M`), chips de IA e de preset pesado, e o `title` da estrela diz "Favoritar (F)".
 Código: sem fonte de áudio, modo compacto e chip de IA (Fases 3–5); o chip de preset pesado entra na spec 012. A estrela não cita tecla (`F` é tela cheia, ver a entrada de `F`) e o botão de tela cheia diz "(F ou F11)". Biblioteca, busca e Ajustes aparecem desabilitados até as specs 010/011.

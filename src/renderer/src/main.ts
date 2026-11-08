@@ -5,7 +5,7 @@ import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
-import { mountOverlay } from './ui/Overlay'
+import { mountOverlay, toggleOverlay } from './ui/Overlay'
 import { showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { isFullScreen, setupWindowChrome } from './window'
@@ -125,6 +125,7 @@ async function start(): Promise<void> {
   applyState()
   const idle = mountOverlay(document.getElementById('ui') as HTMLElement, {
     core,
+    presets: () => library.all(),
     rotationRemaining: () => rotation.remaining(performance.now()),
     retryCapture: () => void connectCapture(),
     openSoundSettings: () => void window.so.system.openSoundSettings(),
@@ -161,10 +162,35 @@ async function start(): Promise<void> {
       e.preventDefault()
       return
     }
+    // Ctrl+K abre e fecha a busca rápida de qualquer lugar (spec 010).
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyK') {
+      e.preventDefault()
+      toggleOverlay(core, 'search')
+      return
+    }
     if (e.ctrlKey || e.altKey || e.metaKey) return
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
     const t = e.target as HTMLElement | null
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
+    // Esc fecha o que estiver aberto; sem nada aberto, sai da tela cheia.
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      if (core.state.overlay) run('ui.close')
+      else if (isFullScreen()) run('window.fullscreen')
+      return
+    }
+    if (e.code === 'KeyL') {
+      e.preventDefault()
+      toggleOverlay(core, 'library')
+      return
+    }
+    // Dentro da Biblioteca, da busca ou de um menu, as setas e o Espaço são da lista.
+    if (t?.closest('.lib, .palette, .menu')) return
+    if (e.key === '/') {
+      e.preventDefault()
+      run('ui.open', { overlay: 'search' })
+      return
+    }
     // Espaço com foco num botão aciona o botão (acessibilidade), não o aleatório.
     if (e.code === 'Space' && t?.closest('button, a')) return
     let handled = true
@@ -269,6 +295,7 @@ async function start(): Promise<void> {
   extras
     .then((count) => {
       state.presetCount = count
+      core.events.emit('stateChanged', { origin: 'startup' }) // Biblioteca e busca veem os presets novos
       console.log(`[viz] ${count} presets após os pacotes extras (${(performance.now() - t0).toFixed(0)} ms)`)
     })
     .catch((err: unknown) => console.error('[viz] falha ao carregar pacotes extras', err))
