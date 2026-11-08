@@ -37,6 +37,9 @@ function createWindow(): void {
     backgroundColor: '#000000',
     title: 'Sonic Obsidian',
     autoHideMenuBar: true,
+    // Sem moldura: o visual é a janela. Arrasto pela área de drag do renderer;
+    // redimensionar pelas bordas continua nativo (resizable + thickFrame padrão).
+    frame: false,
     webPreferences: {
       contextIsolation: true,
       sandbox: true,
@@ -53,6 +56,9 @@ function createWindow(): void {
       event.preventDefault()
     } else if (input.key === 'F12') {
       win.webContents.toggleDevTools()
+      event.preventDefault()
+    } else if (input.control && !input.alt && input.key.toLowerCase() === 'w') {
+      win.close()
       event.preventDefault()
     } else if (input.key === 'Escape' && win.isFullScreen()) {
       win.setFullScreen(false)

@@ -5,11 +5,13 @@ import { PresetLibrary } from './presets'
 import { AutoRotation } from './rotation'
 import { Toast } from './toast'
 import { PresetVisualizer } from './visualizer'
+import { setupWindowChrome } from './window'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
+setupWindowChrome()
 const hud = new Hud(document.getElementById('hud') as HTMLElement)
 const toast = new Toast(document.getElementById('toast') as HTMLElement)
-const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', audio: 'aguardando', level: 0 }
+const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', fpsMode: 'monitor', audio: 'aguardando', level: 0 }
 
 async function start(): Promise<void> {
   const { stream, audioTrack } = await captureSystemAudio()
@@ -84,9 +86,20 @@ async function start(): Promise<void> {
     }
   })
 
+  // Limite de fps: pula quadros do rAF até completar o intervalo-alvo.
+  // A tolerância de 1 ms evita perder quadros por jitter em telas múltiplas de 60 Hz.
+  const frameInterval = config.fpsLimit === 'monitor' ? 0 : 1000 / config.fpsLimit
+  state.fpsMode = config.fpsLimit === 'monitor' ? 'monitor' : `limite ${config.fpsLimit}`
+  let lastFrame = 0
   let frames = 0
   let windowStart = performance.now()
   const loop = (now: number): void => {
+    requestAnimationFrame(loop)
+    if (frameInterval > 0) {
+      if (now - lastFrame < frameInterval - 1) return
+      // Mantém a cadência sem acumular atraso depois de uma pausa longa.
+      lastFrame = now - lastFrame > frameInterval * 2 ? now : lastFrame + frameInterval
+    }
     if (rotation.due(now)) show(library.random(), config.blendAutoSeconds)
     viz.render()
     frames++
@@ -100,7 +113,6 @@ async function start(): Promise<void> {
       state.level = Math.sqrt(sum / samples.length)
       hud.show(state)
     }
-    requestAnimationFrame(loop)
   }
   hud.show(state)
   requestAnimationFrame(loop)

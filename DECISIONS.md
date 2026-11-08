@@ -96,3 +96,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Precedência:** fato técnico segue o repo (`docs/architecture.md`); comportamento e aparência seguem o protótipo na versão sincronizada.
 - **Descartado:** apontar só o link do artefato (versão muda sem aviso e nem toda superfície lê artefatos); copiar páginas sem versão (vira cópia órfã).
 
+## 2026-11-08 — Spec 004: janela sem moldura e limite de fps
+- **Arrasto:** `frame: false` com uma área `-webkit-app-region: drag` (`#drag`) recuada 6 px das bordas, para o redimensionamento nativo continuar funcionando, e ativa só em janela. Em tela cheia ela some, porque regiões de drag engolem o `mousemove` e o cursor não conseguiria sumir. Controles da Fase 2 por cima do visual precisarão de `-webkit-app-region: no-drag`.
+- **Tela cheia no renderer:** `BrowserWindow.setFullScreen` não aciona a Fullscreen API. O renderer considera tela cheia quando a janela ocupa a tela inteira (`innerWidth/innerHeight >= screen`).
+- **Limite de fps:** pular quadros do `requestAnimationFrame` até completar o intervalo-alvo (tolerância de 1 ms, cadência sem acumular atraso). Em simulação deu 60 fps exatos em telas de 180/144/120/60 Hz, e no Windows ficou fixo em 60. Fica em `config.fpsLimit`, com padrão `'monitor'`; a UI entra em Configurações › Desempenho ("limite de fps", protótipo v3 `1794154301-3f85`) na Fase 2.
+- **Resultado:** na máquina principal (RTX 3070, 1080p a 180 Hz), a GPU ficou ~20% com o limite e essencialmente igual sem ele, então o ganho não foi visível (critério 7 não atendido). O custo varia mais por preset do que pela taxa de quadros, o que reforça "pular presets abaixo de N fps" e "Ocultos por desempenho" (v3, Configurações › Desempenho).
+- **Descartado:** `setTimeout` agendado (sai do vsync e gera tearing/jitter) e flags do Chromium para a taxa de quadros (globais, sem ajuste em tempo de execução).
