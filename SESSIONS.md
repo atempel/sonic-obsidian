@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `chore/licenca-mit-comunidade`
+**Fez:** Revisão das configurações do repo. Licença trocada para MIT (decisão do usuário), arquivos de comunidade (CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, templates de issue e PR), imagem de prévia social, entrada em DECISIONS. Configurações do GitHub aprovadas pelo usuário; o proxy da nuvem bloqueia gravação de configurações pela API, então foram feitas pela interface do GitHub no navegador.
+**Deixou em:** PR `chore/licenca-mit-comunidade` → `main`. A spec 016 (PR #42, de outra sessão) ainda lista essas tarefas como "no dia": ao mesclar o #42, marcar os itens de licença e comunidade como feitos. 13 branches já mescladas por squash continuam no remoto (apagar pela interface; a sessão não pode deletar refs).
+
 ### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `docs/readme-revitalizacao`
 **Fez:** README reescrito para a abertura futura: inglês (`README.md`) + tradução completa (`README.pt-BR.md`), com lockup da marca, banner, prints reais da interface (Palco e Biblioteca, capturados em Chromium headless com SwiftShader), galeria de 6 presets com crédito, recursos entregues até a spec 015, atalhos tirados de `main.ts`, privacidade, arquitetura em Mermaid e roadmap. Novo: `docs/README.md` (índice da documentação), `docs/brand/` (SVGs e PNGs do *The Core*, regras), `docs/media/` (imagens com origem e créditos, e como refazer os prints). PROJECT.md aponta para as pastas novas; DECISIONS registra a escolha.
 **Deixou em:** PR `docs/readme-revitalizacao` → `main`. Sem código. Nenhum arquivo movido. Os prints da interface vão envelhecer com as specs 011/012: refazer pelo passo em `docs/media/README.md`. Notion não atualizado nesta sessão.

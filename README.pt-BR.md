@@ -16,6 +16,7 @@
   <img alt="Plataforma: Windows" src="https://img.shields.io/badge/platform-Windows-1D1D28?style=flat-square">
   <img alt="Electron" src="https://img.shields.io/badge/Electron-45-1D1D28?style=flat-square&logo=electron&logoColor=EEEEF5">
   <img alt="Butterchurn" src="https://img.shields.io/badge/engine-Butterchurn%20(WebGL%202)-1D1D28?style=flat-square">
+  <img alt="Licença: MIT" src="https://img.shields.io/badge/license-MIT-1D1D28?style=flat-square">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-1D1D28?style=flat-square&logo=typescript&logoColor=EEEEF5">
 </p>
 
@@ -41,7 +42,7 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo e privado por enquanto. A fase 2 (a interface completa) está em andamento. A ideia é abrir o código sob a licença MIT quando o projeto estiver pronto. Até lá o código é proprietário — veja [Licença](#licença).
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está em andamento. O código está sob a licença MIT; o repositório fica privado até o primeiro lançamento público.
 
 <p align="center">
   <img alt="O Palco: o visual ocupa a janela, com a faixa de controle na parte de baixo" src="docs/media/app-palco.jpg" width="900">
@@ -211,7 +212,9 @@ Obrigado. Os textos de licença dessas dependências estão em [THIRD_PARTY_NOTI
 
 ## Licença
 
-Proprietária por enquanto — veja [LICENSE](LICENSE). A ideia é que o projeto se torne código aberto sob a licença MIT quando estiver pronto para o lançamento público.
+[MIT](LICENSE) © 2026 Alexandre Tempel. O Butterchurn e os presets mantêm suas próprias licenças e créditos — veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Quer ajudar? Leia o [CONTRIBUTING.md](CONTRIBUTING.md) (em inglês). Achou um problema de segurança? Veja o [SECURITY.md](SECURITY.md).
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
