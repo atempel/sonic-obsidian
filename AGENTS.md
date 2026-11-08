@@ -12,6 +12,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 1. Ler [PROJECT.md](PROJECT.md) e a seção "Agora" de [TASKS.md](TASKS.md).
 2. Ler a spec da tarefa em `docs/specs/`. Sem spec, use a skill `planejar-feature` antes de codar.
 3. Conferir [CONTEXT.md](CONTEXT.md) (restrições) e as últimas entradas de [DECISIONS.md](DECISIONS.md).
+4. Se houver acesso ao Notion, ler a linha do projeto (estado declarado). IDs e regras de leitura/escrita em [CONTEXT.md](CONTEXT.md#notion-contexto-externo) — seguir à risca.
 
 ## Fluxo de trabalho
 - **Planejar:** skill `planejar-feature` → spec + entrada em TASKS + issue no GitHub.
@@ -25,6 +26,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - Remover/renomear créditos de autor dos presets.
 - Mexer em `legacy/` ou em `docs/legacy/`.
 - Qualquer coisa para capturar áudio com DRM.
+- Escrever no Notion fora do que [CONTEXT.md](CONTEXT.md#notion-contexto-externo) permite (apagar, mudar schema, editar outras páginas/projetos).
 
 ## Toda sessão
 - Antes de encerrar, adicionar uma entrada em [SESSIONS.md](SESSIONS.md) (ferramenta, o que foi feito, estado deixado) — a skill `encerrar-sessao` faz isso.

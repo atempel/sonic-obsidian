@@ -24,4 +24,5 @@ description: Use ao final de toda sessão de trabalho no Sonic Obsidian para reg
    - `Status`: só mudar se a fase mudou (Starting / In Development / Paused / Done).
    Só atualizar esses campos; nunca apagar outras propriedades nem mudar tipos.
    Sem acesso ao Notion nesta superfície → imprimir os três valores prontos para colar.
-7. Responder ao usuário com 2–3 linhas: o que ficou pronto, o que vem a seguir.
+7. **Notion — página do projeto** (`334d16734c17814ea20cf9f6dcb8b2fd`): só se a sessão mudou stack, fase ou arquitetura. Edição pontual do trecho afetado (seções "Stack técnica", "Fases", "Arquitetura", "Limitações"), avisando o usuário. Regras completas em `CONTEXT.md` → "Notion (contexto externo)".
+8. Responder ao usuário com 2–3 linhas: o que ficou pronto, o que vem a seguir.
