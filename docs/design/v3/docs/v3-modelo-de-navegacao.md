@@ -23,3 +23,23 @@ Espaço aleatório · ←/→ anterior/próximo · F favoritar · R rotação ·
 6. Telas — tela do visual (radio com as telas detectadas), Rack sempre por cima, posição do Rack (canto).
 7. Atalhos — tabela de atalhos (ação | tecla), com botão "Restaurar padrões" (edição de tecla pode ser só visual).
 8. Sobre — Sonic Obsidian versão 0.3.0, Electron, Butterchurn (MIT), créditos: MilkDrop — Ryan Geiss; Butterchurn — Jordan Berg e contribuidores; presets — artistas da comunidade MilkDrop, creditados no nome de cada preset.
+
+## Texto sobre o visual (08/11/2026)
+O usuário escolhe quanto texto aparece por cima do visual. Vale no Palco, no Rack (na tela do visual) e em qualquer modo.
+- **Configurações › Visual › grupo "Texto sobre o visual":**
+  - **Nome do preset** (o cartão de crédito na troca): select *Sempre* (padrão) / *Só quando eu troco* (trocas manuais; a rotação automática troca em silêncio) / *Nunca*.
+  - **Título da faixa** (arquivo ou SoundCloud, `launchSongTitleAnim`): switch, ligado por padrão.
+  - **Avisos** (toasts): select *Todos* (padrão) / *Só importantes* / *Nenhum*. "Importantes" = ações feitas pela IA via MCP e falhas (codec não suportado, importação que falhou, captura que caiu). Painéis de estado (sem áudio, captura falhou, WebGL 2) não são avisos e nunca são ocultados.
+  - Nota fixa: "O crédito do autor continua na faixa de controle e na Biblioteca." A regra "nunca remover o crédito" vale para a interface, não para o texto sobreposto ao visual.
+- **Ajustes rápidos (`,`)**: grupo "Texto sobre o visual" com os mesmos três controles e o switch **Modo limpo**.
+- **Modo limpo — tecla `T`** (global, fora do Modo performance): esconde de uma vez o nome do preset, o título da faixa e os avisos não importantes, sem mexer nas escolhas acima; `T` de novo volta a elas. A confirmação "Modo limpo ligado/desligado" aparece uma vez, discreta, e a faixa de controle mostra o ícone `eye-off` ao lado do nome do preset enquanto estiver ligado.
+- **Modo performance:** a saída (Program) nunca recebe texto; créditos e avisos ficam só na janela de controle.
+
+## Controles da janela (08/11/2026)
+A janela não tem moldura nem barra de título (spec 004). Para fechar e minimizar com o mouse:
+- **Onde:** canto superior direito, afastado `space-4` (16px) do topo e da direita. Dois botões de ícone (`ibtn`, 36px), da esquerda para a direita: `minus` "Minimizar" e `x` "Fechar (Ctrl+W)". Ficam sobre uma pequena superfície `overlay` com `line-2` e `r-3`, sem barra de título.
+- **Quando aparecem:** só quando o ponteiro entra na zona do canto (cerca de 160×96px a partir do canto superior direito) ou quando um deles recebe foco por teclado. Aparecem com fade em `t-fast` e somem `t-med` depois que o ponteiro sai da zona. Não aparecem junto com a faixa de controle, nem quando a Biblioteca, os Ajustes ou um diálogo estão abertos sobre o canto (o painel de ajustes tem o próprio fechar).
+- **Fechar:** fecha o app na hora, sem confirmação (tudo já salva sozinho). Hover = fundo `bg-04` e ícone `text-1`; sem vermelho. Teclado: `Ctrl+W` e `Alt+F4` continuam.
+- **Tela cheia:** os mesmos controles, na mesma zona.
+- **Arrastar a janela:** pelo visual (spec 004); a zona dos controles não arrasta.
+- **Rack:** mantém o próprio título com fechar; Modo performance tem "Sair (Esc)" e também ganha os controles da janela na mesma zona.

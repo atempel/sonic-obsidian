@@ -495,6 +495,15 @@
   .cc-star { position: absolute; right: 2px; bottom: 2px; width: 32px; height: 32px; }
   .scene-tools { padding: 0 0 8px; }
   .scene-tools .btn { gap: 8px; }
+  .clean-ico { display: inline-flex; color: var(--text-2); }
+  .proto { left: 12px; right: auto; top: auto; bottom: 136px; transform: none; max-width: min(760px, calc(100vw - 24px)); }
+  .winc { position: fixed; z-index: 60; top: 16px; right: 16px; display: flex; gap: 2px; padding: 4px; background: rgba(15,15,20,0.94); border: 1px solid var(--line-2); border-radius: var(--r-3);
+    opacity: 0; pointer-events: none; transition: opacity var(--t-fast) var(--ease-out); }
+  .winc.on, .winc:focus-within { opacity: 1; pointer-events: auto; }
+  body.lib-open .winc, body.sheet-open .winc, body.palette-open .winc, body.is-rack .winc, .winc.blk { opacity: 0; pointer-events: none; }
+  #winClose:hover { background: var(--bg-04); color: var(--text-1); }
+  .closed { position: fixed; z-index: 200; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg-00); }
+  .closed p { margin: 0; font-size: 16px; color: var(--text-2); }
 </style>
 </head>
 <body>
@@ -531,6 +540,7 @@
         <div class="now-title" id="nowTitle"></div>
         <div class="now-author" id="nowAuthor"></div>
       </div>
+      <span class="clean-ico" id="cleanIco" hidden role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)"><i data-lucide="eye-off" class="ico ico-sm"></i></span>
       <button class="ibtn fav" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
     </div>
     <div class="strip-t">
@@ -637,6 +647,18 @@
         <div class="field-top"><label for="blendM">Blend quando você troca</label><span class="val num" id="blendMVal">0,0 s</span></div>
         <input type="range" id="blendM" min="0" max="5" step="0.1" value="0">
       </div>
+    </section>
+    <section>
+      <h3>Texto sobre o visual</h3>
+      <div class="line"><label for="qtPreset">Nome do preset</label>
+        <select class="sel" id="qtPreset"><option value="always">Sempre</option><option value="manual">Só quando eu troco</option><option value="never">Nunca</option></select></div>
+      <div class="line"><span id="qtTrackLbl">Título da faixa</span>
+        <label class="switch"><input type="checkbox" id="qtTrack" checked aria-labelledby="qtTrackLbl"><span class="track"></span></label></div>
+      <div class="line"><label for="qtToasts">Avisos</label>
+        <select class="sel" id="qtToasts"><option value="all">Todos</option><option value="important">Só importantes</option><option value="none">Nenhum</option></select></div>
+      <div class="line"><span id="qtCleanLbl">Modo limpo <kbd>T</kbd></span>
+        <label class="switch"><input type="checkbox" id="qtClean" aria-labelledby="qtCleanLbl"><span class="track"></span></label></div>
+      <p class="note" style="color:var(--text-3)">O crédito do autor continua na faixa de controle e na Biblioteca.</p>
     </section>
     <section>
       <h3>Vídeo</h3>
@@ -849,6 +871,11 @@
 </div>
 <div class="gtoast" id="gtoast" role="status" aria-live="polite"></div>
 
+<div class="winc" id="winc" role="group" aria-label="Janela">
+  <button type="button" class="ibtn" id="winMin" aria-label="Minimizar" title="Minimizar"><i data-lucide="minus" class="ico"></i></button>
+  <button type="button" class="ibtn" id="winClose" aria-label="Fechar" title="Fechar (Ctrl+W)"><i data-lucide="x" class="ico"></i></button>
+</div>
+<div class="closed" id="closed" hidden role="status"><p>App fechado (protótipo)</p><button type="button" class="btn btn-ghost" id="reopen">Abrir de novo</button></div>
 <div class="proto" role="group" aria-label="Estados do protótipo">
   <b>Protótipo</b>
   <button data-state="normal" aria-pressed="true">Normal</button>
@@ -857,6 +884,7 @@
   <button data-state="noclips" aria-pressed="false">Sem clipes</button>
   <button data-state="codec" aria-pressed="false">Codec não suportado</button>
   <button data-state="ai" aria-pressed="false">IA conectada</button>
+  <button id="cleanBtn" aria-pressed="false">Modo limpo</button>
   <button id="importBtn">Importar .milk</button>
   <button id="pinUi" aria-pressed="false">Fixar controles</button>
   <span class="grp" role="group" aria-label="Telas"><b>Telas:</b><button data-screens="1" aria-pressed="false">1</button><span aria-hidden="true">·</span><button data-screens="2" aria-pressed="true">2</button></span>
@@ -930,11 +958,11 @@
     $('creditTitle').textContent = sc ? 'Cena · ' + sc.name : p.title;
     $('creditAuthor').textContent = sc ? p.title + ', por ' + p.author + (scClip ? ' + ' + cShort(scClip) : '') : 'por ' + p.author;
     const c = $('credit'), sw = $('sweep');
-    c.classList.add('show');
+    if (presetCardOk(o.auto)) c.classList.add('show'); else c.classList.remove('show');
     sw.style.transition = 'none'; sw.style.width = '0'; void sw.offsetWidth;
     sw.style.transition = `width ${sigMs}ms linear`; sw.style.width = '100%';
     clearTimeout(creditTimer); creditTimer = setTimeout(() => c.classList.remove('show'), Math.max(4000, sigMs + 1500));
-    if (mode === 'rack') { renderRack(true); sigRack(p, sigMs); }
+    if (mode === 'rack') { renderRack(true); if (presetCardOk(o.auto)) sigRack(p, sigMs); }
     if (lOpen) renderLib();
     if (pOpen) { renderTabs(); renderList(); }
   }
@@ -1289,7 +1317,8 @@
   let toastT;
   function libToast(msg, ms) { libToastEl.textContent = msg; libToastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => libToastEl.classList.remove('on'), ms || 2600); }
   let gT;
-  function gToast(msg, ms) { const g = $('gtoast'); g.textContent = msg; g.classList.add('on'); clearTimeout(gT); gT = setTimeout(() => g.classList.remove('on'), ms || 3200); }
+  function gToast(msg, ms, important) { if (toastOk(important)) rawToast(msg, ms); }
+  function rawToast(msg, ms) { const g = $('gtoast'); g.textContent = msg; g.classList.add('on'); clearTimeout(gT); gT = setTimeout(() => g.classList.remove('on'), ms || 3200); }
 
   libList.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT') return;
@@ -1593,7 +1622,7 @@
     const isTrack = sname === 'file' || sname === 'sc';
     track = isTrack ? { pos: 0, playing: true } : null;
     $('trackRow').hidden = !isTrack; $('tSc').hidden = sname !== 'sc'; $('tSc').href = url || TRACK.url; $('tPlay')._pl = null;
-    if (isTrack) { renderTrack(); showBigText(TRACK.title, TRACK.artist); }
+    if (isTrack) { renderTrack(); if (trackTextOk()) showBigText(TRACK.title, TRACK.artist); }
     applySilent(); icons();
     if (!quiet && (uiState === 'file' || uiState === 'sc' || uiState === 'normal')) {
       const ns = sname === 'file' || sname === 'sc' ? sname : (uiState === 'file' || uiState === 'sc' ? 'normal' : uiState);
@@ -1688,12 +1717,12 @@
   }
   function aiAct() {
     if (aiPaused) return; aiN++;
-    if (aiN === 2) { showBigText('olá, Alexandre'); aiAdd('show_text', '“olá, Alexandre”'); return; }
+    if (aiN === 2) { if (toastOk(true)) showBigText('olá, Alexandre'); aiAdd('show_text', '“olá, Alexandre”'); return; }
     const p = randomPick(); if (!p) return;
-    play(p, { auto: true }); aiAdd('play_preset', p.title); gToast('Claude Desktop tocou ' + p.title);
+    play(p, { auto: true }); aiAdd('play_preset', p.title); gToast('Claude Desktop tocou ' + p.title, 3200, true);
   }
   function toggleAiPause() {
-    if (!aiOn) return; aiPaused = !aiPaused; renderAiChip(); gToast(aiPaused ? 'Controle por IA pausado.' : 'Controle por IA retomado.');
+    if (!aiOn) return; aiPaused = !aiPaused; renderAiChip(); gToast(aiPaused ? 'Controle por IA pausado.' : 'Controle por IA retomado.', 3200, true);
     if (pop === 'ai') renderAiPop();
   }
   function skipHeavy() { hidden.add(cur.id); setState('normal'); random(); }
@@ -1744,7 +1773,7 @@
   const blendLabel = id => (BL.filter(b => b.id === id)[0] || BL[0]).label;
   const shortName = p => p.title.split(' - ')[0].replace(/\s*[\(\[].*$/, '');
   const fmtX = v => (+v).toFixed(2).replace('.', ',') + '×';
-  const notify = (m, ms) => { if (lOpen) libToast(m, ms); else gToast(m, ms); };
+  const notify = (m, ms) => { if (lOpen) libToast(m, ms); else gToast(m, ms, true); };
   const L1 = { type: 'clip', clip: anyClip('c04'), blend: 'screen', opacity: 0.6, speed: 1, enabled: true, reactions: { opacityByLevel: true, speedByEnergy: false, flashOnBass: false } };
   const scenes = [
     { id: 's1', name: 'Cauldron + Clip 04', presetId: 0, clipId: 'c04', blend: 'screen', opacity: 0.6, speed: 1, rx: { opacityByLevel: true } },
@@ -1848,7 +1877,7 @@
   }
   function guardClips() {
     if (allClips().length) return true;
-    gToast('Nenhum clipe ainda. Arraste vídeos MP4 ou WebM para a janela.'); return false;
+    gToast('Nenhum clipe ainda. Arraste vídeos MP4 ou WebM para a janela.', 3200, true); return false;
   }
   function toggleLayer() { if (!guardClips()) return; L1.enabled = !L1.enabled; syncVid(); gToast(L1.enabled ? 'Camada de vídeo ligada.' : 'Camada de vídeo desligada.'); }
   function bumpOpacity(d) {
@@ -1912,7 +1941,7 @@
   // ── Cenas ──
   function sceneName(p, c, blend) { return shortName(p) + ' + ' + cShort(c) + (blend === 'luma-key' ? ' (chave)' : blend === 'luma-mask' ? ' (máscara)' : ''); }
   function saveScene() {
-    if (!L1.clip) { gToast('Nenhum clipe na camada. Escolha um clipe para salvar a cena.'); return; }
+    if (!L1.clip) { gToast('Nenhum clipe na camada. Escolha um clipe para salvar a cena.', 3200, true); return; }
     const s = { id: 's' + (++nScene), name: sceneName(cur, L1.clip, L1.blend), presetId: cur.id, clipId: L1.clip.id, blend: L1.blend, opacity: L1.opacity, speed: L1.speed, rx: Object.assign({}, L1.reactions) };
     scenes.unshift(s); curScene = s; renderNow();
     gToast('Cena salva: ' + s.name);
@@ -2031,6 +2060,44 @@
   $('vidSave').onclick = () => saveScene();
   $('vidPick').onclick = () => { closePop(false); Lb.kind = 'clips'; setLib(true, $('vidChip')); setLibKind('clips'); };
 
+  // ═══════════ Texto sobre o visual ═══════════
+  const overlayText = { preset: 'always', track: true, toasts: 'all' };
+  let cleanMode = false;
+  const toastOk = imp => overlayText.toasts !== 'none' && (imp || (overlayText.toasts === 'all' && !cleanMode));
+  const presetCardOk = auto => !cleanMode && (overlayText.preset === 'always' || (overlayText.preset === 'manual' && !auto));
+  const trackTextOk = () => !cleanMode && overlayText.track;
+  function syncText() {
+    $('cleanIco').hidden = !cleanMode; $('qtClean').checked = cleanMode; $('cleanBtn').setAttribute('aria-pressed', cleanMode);
+    $('qtPreset').value = overlayText.preset; $('qtTrack').checked = overlayText.track; $('qtToasts').value = overlayText.toasts;
+  }
+  function toggleClean() {
+    cleanMode = !cleanMode;
+    if (cleanMode) { $('credit').classList.remove('show'); $('bigtext').classList.remove('show'); $('sig').classList.remove('show'); const g = $('gtoast'); g.classList.remove('on'); }
+    syncText(); rawToast(cleanMode ? 'Modo limpo ligado' : 'Modo limpo desligado', 1800);
+  }
+  $('qtPreset').onchange = e => { overlayText.preset = e.target.value; };
+  $('qtTrack').onchange = e => { overlayText.track = e.target.checked; };
+  $('qtToasts').onchange = e => { overlayText.toasts = e.target.value; };
+  $('qtClean').onchange = () => toggleClean();
+  $('cleanBtn').onclick = () => toggleClean();
+
+  // ═══════════ Controles da janela ═══════════
+  const wincEl = $('winc'); let wincT = 0;
+  const winBlocked = () => mode === 'rack' || lOpen || sOpen || pOpen || !$('scDialog').hidden;
+  function wincShow(v) {
+    clearTimeout(wincT);
+    if (v) wincEl.classList.add('on'); else wincT = setTimeout(() => wincEl.classList.remove('on'), 220);
+  }
+  addEventListener('mousemove', e => {
+    wincEl.classList.toggle('blk', !$('scDialog').hidden);
+    wincShow(!winBlocked() && e.clientX > innerWidth - 160 && e.clientY < 96);
+  });
+  document.addEventListener('mouseleave', () => wincShow(false));
+  function closeApp() { $('closed').hidden = false; $('reopen').focus(); }
+  $('winMin').onclick = () => gToast('Minimizado (protótipo)', 3200, true);
+  $('winClose').onclick = closeApp;
+  $('reopen').onclick = () => { $('closed').hidden = true; };
+
   // ═══════════ Teclado ═══════════
   function handleEsc(e) {
     if (!$('scDialog').hidden) { closeScDialog(); return; }
@@ -2052,6 +2119,7 @@
     if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); location.href = SETTINGS_URL; return; }
     if (e.key === 'Escape') { handleEsc(e); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'w') { e.preventDefault(); closeApp(); return; }
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') { e.preventDefault(); if (mode === 'stage') saveScene(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'F11') { e.preventDefault(); toggleFs(); return; }
@@ -2084,6 +2152,7 @@
     else if (k === 'r') setRot(!rotOn);
     else if (k === 'e') { location.href = STUDIO_URL + '?copiar=' + cur.id; }
     else if (k === 'm') setMode(mode === 'rack' ? 'stage' : 'rack');
+    else if (k === 't') toggleClean();
     else if (mode === 'stage') {
       if (k === 'h') { pinned = false; $('pinUi').setAttribute('aria-pressed', false); document.body.classList.add('idle'); }
       else if (k === 'l') { e.preventDefault(); setLib(!lOpen); }
@@ -2098,7 +2167,7 @@
   });
 
   // ── Início ──
-  syncInterval(); syncSearchUI(); setScreens(2); setDrawer(false); syncVid();
+  syncInterval(); syncSearchUI(); setScreens(2); setDrawer(false); syncVid(); syncText();
   icons();
   play(P[0], { auto: true });
   setLibTab('all');

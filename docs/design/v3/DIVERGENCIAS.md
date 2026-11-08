@@ -24,7 +24,7 @@ Status: Aberta só como registro (corte de fase, não pedido de mudança no dese
 Protótipo (`1794154301-3f85`): não trata de arrasto (é uma página web).
 Código: a janela sem moldura arrasta por uma faixa invisível de 40 px no topo (decisão do usuário; DECISIONS, spec 009). O resto do visual recebe o mouse, para a faixa de controle aparecer.
 PR/spec: docs/specs/009-palco-faixa-assinatura.md
-Status: Aberta. Pedido ao design: avaliar se a faixa do topo merece alguma indicação visual ao passar o mouse.
+Status: Aberta. Pedido ao design: avaliar se a faixa do topo merece alguma indicação visual ao passar o mouse. Na versão `1794165177-f126`, "Controles da janela" ainda diz "Arrastar a janela: pelo visual (spec 004)": atualizar para a faixa do topo, onde os controles de minimizar/fechar ficam como `no-drag`.
 
 ### 2026-11-08 — atalhos globais · `F`
 Protótipo (`1794154301-3f85`): `F` favorita o preset atual; `F11` é tela cheia.

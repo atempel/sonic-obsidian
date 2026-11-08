@@ -248,7 +248,7 @@
   var S = {
     abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
     gain: 1, rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, blendAuto: 2.7, blendManual: 0, beat: false,
-    canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
+    canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, nomePreset: 'sempre', avisos: 'todos', limpo: false, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
     rackTop: true, rackPos: 'br', tela: '2'
   };
   var FMT = {
@@ -321,6 +321,7 @@
     { act: 'Tela cheia', keys: ['F11'] },
     { act: 'Estúdio de presets', keys: ['E'] },
     { act: 'Pausar controle por IA', keys: ['Ctrl+Shift+P'] },
+    { act: 'Modo limpo', keys: ['T'] },
     { act: 'Fechar o que estiver aberto', keys: ['Esc'], locked: true }
   ];
   var KEYS = JSON.parse(JSON.stringify(DEFAULT_KEYS));
@@ -354,8 +355,7 @@
         '<div class="cap-test"><button class="btn" type="button" id="testBtn">Testar captura</button><span class="testres" id="testRes" role="status"></span><button class="btn btn-ghost sm" type="button" id="backSys" hidden>Voltar ao áudio do sistema</button></div></div>' +
         grp('SoundCloud',
           row({ id: 'scConn', group: 1, label: 'Conexão com a API', help: 'Credenciais de app (OAuth 2.1, client credentials).', kw: 'soundcloud api credenciais', ctl: '<span class="conn"><span class="dot" aria-hidden="true"></span>Credenciais do app configuradas</span>' }) +
-          '<p class="note" data-search="soundcloud limite diário 15 mil reproduções preview 30 s"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>A API limita cada app a <span class="num">15 mil</span> reproduções por dia. Faixas com acesso preview tocam só <span class="num">30 s</span>.</span></p>' +
-          row({ id: 'titulo', label: 'Mostrar título da faixa no visual', help: 'Usa ' + par('launchSongTitleAnim') + ' ao começar uma faixa de arquivo ou SoundCloud.', kw: 'título', ctl: sw('titulo', S.titulo) })) +
+          '<p class="note" data-search="soundcloud limite diário 15 mil reproduções preview 30 s"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>A API limita cada app a <span class="num">15 mil</span> reproduções por dia. Faixas com acesso preview tocam só <span class="num">30 s</span>.</span></p>') +
         grp('Entrada',
           row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) })) +
         grp('Nível',
@@ -371,8 +371,12 @@
         row({ id: 'blendAuto', label: 'Blend na troca automática', help: 'Tempo da mistura quando a rotação troca o preset.', ctl: rng('blendAuto', 0, 10, 0.1, S.blendAuto) }) +
         row({ id: 'blendManual', label: 'Blend quando você troca', help: 'Troca imediata responde melhor ao teclado.', ctl: rng('blendManual', 0, 10, 0.1, S.blendManual) }) +
         row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', phase: 1, ctl: sw('beat', false, true) })) +
-        grp('Crédito do preset',
-        row({ id: 'credito', label: 'Mostrar crédito do preset', help: 'O crédito do autor é sempre exibido.', ctl: sw('credito', true, true) }));
+        grp('Texto sobre o visual',
+        row({ id: 'nomePreset', label: 'Nome do preset', help: 'Cartão com o nome e o autor que aparece a cada troca.', kw: 'texto sobre o visual crédito cartão autor', ctl: sel('nomePreset', [['sempre', 'Sempre'], ['manual', 'Só quando eu troco'], ['nunca', 'Nunca']], S.nomePreset) }) +
+        row({ id: 'titulo', label: 'Título da faixa', help: 'Ao tocar um arquivo ou uma faixa do SoundCloud. ' + par('launchSongTitleAnim'), kw: 'texto sobre o visual', ctl: sw('titulo', S.titulo) }) +
+        row({ id: 'avisos', label: 'Avisos', help: 'Importantes: ações da IA e falhas. Painéis de erro aparecem sempre.', kw: 'toast toasts notificações texto sobre o visual Todos Só importantes Nenhum', ctl: sel('avisos', [['todos', 'Todos'], ['importantes', 'Só importantes'], ['nenhum', 'Nenhum']], S.avisos) }) +
+        row({ id: 'limpo', label: 'Modo limpo', help: 'Esconde tudo acima de uma vez, sem mudar estas escolhas. Atalho <kbd>T</kbd>.', kw: 'texto sobre o visual esconder', ctl: sw('limpo', S.limpo) }) +
+        '<p class="note" style="color:var(--text-3)" data-search="texto sobre o visual crédito do autor faixa de controle Biblioteca">O crédito do autor continua na faixa de controle e na Biblioteca.</p>');
     } },
     { id: 'renderizacao', name: 'Renderização', icon: 'cpu', desc: 'Qualidade e custo do Butterchurn na sua GPU.', html: function () {
       return grp('Qualidade',
