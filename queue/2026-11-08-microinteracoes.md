@@ -1,5 +1,5 @@
-# Microinterações do design (versão 1794171149-6542)
-Status: Pending (todas "Propostas" no design; o usuário escolhe quais entram)
+# Microinterações do design (versões 1794171149-6542 e 1794175739-7509)
+Status: Ingested (escolha do usuário em 08/11: ver DECISIONS "Microinterações: o que entra e quando"). PR 1 da 011: M04, M13, M14, M15, M16, M19. PR 2 da 011: M10. PR "microinterações da faixa" logo depois: M01–M03, M05–M08, M12, M22. Fases 3–4: M09, M17, M20, M21, M23. M18: só o fade e o medidor; o painel continua em 10 s (DIVERGENCIAS).
 Fonte: docs/design/v3/docs/v3-microinteracoes.md (catálogo M01–M23 e sistema de movimento) e v3-microinteracoes-referencias.md; laboratórios `Sonic Obsidian Micro Faixa.html` e `Micro Navegação.html`
 Resumo: sistema de movimento ("a casca não se mexe sozinha"; tudo < 400 ms, ease-out, nada anima a cada quadro além do medidor) e 23 microinterações: faixa em degrau (M01), flash e troca de título na troca de preset (M02), linha de rotação que esvazia (M03), pressão 0,97 nos botões (M04), ícones de aleatório, rotação e favorito (M05–M07), medidor com balística de PPM (M08), indicador deslizante nas abas (M10), gaveta em degrau (M12), toast de 4 s com pausa no hover (M13), switch e slider com leitura (M14–M15), controles da janela deslizando 4 px e `x` girando no hover (M16), silêncio com carência (M18), Modo limpo com fade de 400 ms (M19), Palco → Rack por FLIP (M20).
 Destino provável:

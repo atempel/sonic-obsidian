@@ -1,6 +1,6 @@
 # 016 — Releases no GitHub e abertura do repositório (MIT)
 
-**Fase:** Abertura · **Status:** A fazer (executar quando o usuário decidir abrir o repo) · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
+**Fase:** Abertura · **Status:** A fazer — o repo já é **público e MIT** desde 2026-11-08 ([#43](https://github.com/atempel/sonic-obsidian/pull/43)); falta o pipeline de release · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
 
 ## Problema
 Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, exige login no GitHub, pasta sem instalador). Para abrir o projeto, uma pessoa qualquer precisa de um link estável que sempre entregue a versão mais nova, e o repo precisa estar pronto para ser público (licença, créditos, como contribuir).
@@ -19,12 +19,12 @@ Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, e
 - `package.json` `version` alinhada à tag (o workflow falha se divergir).
 - Versionamento semver em `0.x` até o app estar estável; *pre-release* marcado para `-beta`/`-rc`.
 
-**P0 — abertura (no dia)**
-- `LICENSE` → texto MIT, `Copyright (c) 2026 Alexandre Tempel`.
-- README EN/pt-BR: trocar a seção "License" de proprietária para MIT e remover o aviso "private for now".
-- `CONTRIBUTING.md` curto (como rodar, padrão de commit, como sugerir preset/crédito) e templates de issue (bug, crédito/remoção de preset) e de PR.
+**P0 — abertura** *(feita no #43, exceto o que está marcado como pendente)*
+- ~~`LICENSE` → texto MIT, `Copyright (c) 2026 Alexandre Tempel`.~~ Feito (#43).
+- ~~README EN/pt-BR: seção "License" para MIT.~~ Feito (#43). **Pendente:** depois da primeira release, trocar "compile a partir do código" pelo link de download.
+- ~~`CONTRIBUTING.md` e templates de issue e de PR.~~ Feito (#43, com SECURITY e CODE_OF_CONDUCT).
 - Conferir `THIRD_PARTY_NOTICES.md` (Butterchurn, presets, Preact, Electron) e os créditos dos autores de preset.
-- Tornar o repo público; habilitar GitHub Pages (spec 017).
+- ~~Tornar o repo público.~~ Feito (2026-11-08). **Pendente:** habilitar GitHub Pages (spec 017).
 - PRD: "Distribuição pública" sai de "Fora de escopo" (loja e assinatura de código continuam fora).
 
 **P1**

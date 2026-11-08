@@ -65,21 +65,29 @@ body.idle .strip { pointer-events: none; }
 .edge:hover { background: var(--bg-03); color: var(--text-1); }
 .edge:disabled { cursor: default; }
 
-/* ── Toast global ── */
-.gtoast { position: fixed; z-index: 80; left: 50%; bottom: 128px; transform: translate(-50%, -8px); max-width: min(90vw, 640px); padding: 10px 16px; font-size: 14px; pointer-events: none;
+/* ── Toast global (M13: entra 8 px de baixo + fade; sai só com fade) ── */
+.gtoast { position: fixed; z-index: 80; left: 50%; bottom: 128px; transform: translate(-50%, 8px); max-width: min(90vw, 640px); padding: 10px 16px; font-size: 14px; pointer-events: none;
   background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
-  opacity: 0; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
-.gtoast.on { opacity: 1; transform: translate(-50%, 0); }
+  opacity: 0; transition: opacity 150ms var(--ease-out), transform 0s linear 150ms; }
+.gtoast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
 
 /* ── Texto sobre o visual: Modo limpo (spec 014) ── */
 .now-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .now-row .now-title { min-width: 0; }
-.clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-3); }
+/* M19: o ícone entra em 120 ms; o texto sobre o visual some em 400 ms. */
+.clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-3);
+  opacity: 0; transform: translateX(-4px); transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+.clean-ico:not(.on) { width: 0; overflow: hidden; }
+.clean-ico.on { opacity: 1; transform: none; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+body.clean .credit { transition-duration: 400ms; }
 
 /* ── Controles da janela (spec 014; protótipo .winctl) ── */
 .winctl { position: fixed; z-index: 20; top: 16px; right: 16px; display: flex; gap: 2px; padding: 4px;
   background: rgba(15, 15, 20, 0.94); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
-  opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out); }
-.winctl.on, .winctl:focus-within { opacity: 1; pointer-events: auto; transition-duration: var(--t-fast); }
+  opacity: 0; transform: translateX(4px); pointer-events: none; transition: opacity 80ms var(--ease-out), transform 80ms var(--ease-out); }
+/* M16: entra deslizando 4 px; o x gira 90° no hover. */
+.winctl.on, .winctl:focus-within { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+.winctl .win-close .ico { transition: transform var(--t-fast) var(--ease-out); }
+.winctl .win-close:hover .ico { transform: rotate(90deg); }
 .winctl.blocked { opacity: 0; pointer-events: none; visibility: hidden; }
 .winctl .ibtn:hover { background: var(--bg-04); color: var(--text-1); }

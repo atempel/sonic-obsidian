@@ -16,6 +16,7 @@
   <img alt="Platform: Windows" src="https://img.shields.io/badge/platform-Windows-1D1D28?style=flat-square">
   <img alt="Electron" src="https://img.shields.io/badge/Electron-45-1D1D28?style=flat-square&logo=electron&logoColor=EEEEF5">
   <img alt="Butterchurn" src="https://img.shields.io/badge/engine-Butterchurn%20(WebGL%202)-1D1D28?style=flat-square">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-1D1D28?style=flat-square">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-1D1D28?style=flat-square&logo=typescript&logoColor=EEEEF5">
 </p>
 
@@ -41,7 +42,7 @@ Sonic Obsidian is a desktop app that turns the audio you choose to play — Spot
 Under the hood it runs [Butterchurn](https://github.com/jberg/butterchurn), a WebGL 2 implementation of MilkDrop 2, with its library of community presets. On top of that sits the Sonic Obsidian interface: a quiet, exact shell around something alive.
 
 > [!NOTE]
-> **Status:** in active development and private for now. Phase 2 (the full interface) is under way. The plan is to open-source the project under the MIT license once it is ready. Until then the code is proprietary — see [License](#license).
+> **Status:** in active development. Phase 2 (the full interface) is under way. The code is MIT-licensed. There is no packaged release yet: to try it, build it from source (see [Development](#development)).
 
 <p align="center">
   <img alt="The Stage: the visual fills the window, with the control strip at the bottom" src="docs/media/app-palco.jpg" width="900">
@@ -97,7 +98,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 - **Persistence.** Settings and library survive restarts.
 - **Diagnostics.** `Ctrl+Shift+D` shows a debug HUD (fps, memory, audio); a log file records crashes and GPU events.
 
-**Coming next** — quick settings and the full Settings screen, first-run setup and diagnostics, performance per preset, audio files and microphone as sources, importing and creating `.milk` presets in a Studio, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
+**Coming next** — the full Settings screen, first-run setup and diagnostics, performance per preset, audio files and microphone as sources, importing and creating `.milk` presets in a Studio, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
 
 ## Keyboard
 
@@ -109,7 +110,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 | `B` / `Shift+B` | Cycle the transition type |
 | `↑` / `↓` | Transition duration (0.25 s to 8 s) |
 | `R` | Auto-rotation on/off |
-| `[` / `]` | Rotation interval |
+| `,` | Quick settings (gain, rotation, transitions, expressiveness, text over the visual) |
 | `+` / `−` / `0` | Expressiveness up / down / reset |
 | `X` / `Shift+X` | Character / memory of the reaction |
 | `/` or `Ctrl+K` | Quick search |
@@ -211,7 +212,9 @@ Thank you. License texts for these dependencies are in [THIRD_PARTY_NOTICES.md](
 
 ## License
 
-Proprietary for now — see [LICENSE](LICENSE). The project is planned to become open source under the MIT license when it is ready for public release.
+[MIT](LICENSE) © 2026 Alexandre Tempel. Butterchurn and the presets keep their own licenses and credits — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md). Found a security issue? See [SECURITY.md](SECURITY.md).
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>

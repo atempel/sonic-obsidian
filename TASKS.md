@@ -8,10 +8,11 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Palco: faixa de controle e assinatura** — [spec 009](docs/specs/009-palco-faixa-assinatura.md) · issue [#22](https://github.com/atempel/sonic-obsidian/issues/22)
 - [x] **Texto sobre o visual, Modo limpo `T` e controles da janela** (design f126; comportamento aqui, controles visuais na 011) — [spec 014](docs/specs/014-texto-sobre-visual-janela.md) · issue [#34](https://github.com/atempel/sonic-obsidian/issues/34)
 - [x] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
-- [ ] **Ajustes rápidos e Configurações** (tira `[`/`]`; ganho só no slider, `+`/`−`/`0` viraram Expressividade na 015) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
+- [ ] **Ajustes rápidos e Configurações** (PR 1 Ajustes rápidos em teste; PR 2 Configurações a fazer) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
 - [x] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
 - [x] **Expressividade em `+`/`−`** (Caráter `X`, Memória `Shift+X`; ganho só nos Ajustes) — [spec 015](docs/specs/015-expressividade.md) · issue [#36](https://github.com/atempel/sonic-obsidian/issues/36) · spike no PR #35
-- [ ] **Escolher as microinterações** do design `6542` (M01–M23, todas Propostas) — [queue/2026-11-08-microinteracoes.md](queue/2026-11-08-microinteracoes.md)
+- [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
+- [ ] **Microinterações da faixa** (M01–M03, M05–M08, M12, M22; logo depois da 011) — [queue/2026-11-08-microinteracoes.md](queue/2026-11-08-microinteracoes.md)
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
@@ -34,9 +35,9 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue [#19](https://github.com/atempel/sonic-obsidian/issues/19)
 - [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue [#20](https://github.com/atempel/sonic-obsidian/issues/20)
 
-## Abertura (quando o usuário decidir abrir o repo)
-- [ ] **Releases no GitHub e abertura (MIT)** — tag → rascunho de release com instalador, zip e checksums; nomes sem versão; checklist do dia — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
-- [ ] **Landing page no GitHub Pages** (EN + PT-BR, portada do canvas do Claude Design; workflow com guarda para repo privado) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
+## Abertura (repo público e MIT desde 2026-11-08, PR #43)
+- [ ] **Releases no GitHub** — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
+- [ ] **Landing page no GitHub Pages** (EN + PT-BR, portada do canvas espelhado em `docs/design/landing/`; publica assim que mergear) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))

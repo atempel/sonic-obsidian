@@ -9,8 +9,7 @@ import {
   cycleBlendType,
   sanitizeLibrary,
   sanitizeSettings,
-  stepBlendSeconds,
-  stepInterval
+  stepBlendSeconds
 } from './core/state'
 import { hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
@@ -66,7 +65,7 @@ async function start(): Promise<void> {
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault()
     window.so.log('contexto WebGL perdido; recarregando em 1,5 s')
-    setTimeout(() => location.reload(), 1500)
+    setTimeout(() => location.reload())
   })
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
@@ -154,7 +153,9 @@ async function start(): Promise<void> {
     rotationRemaining: () => rotation.remaining(performance.now()),
     retryCapture: () => void connectCapture(),
     openSoundSettings: () => void window.so.system.openSoundSettings(),
-    isFullScreen
+    isFullScreen,
+    blendTypesAvailable: viz.blendTypesAvailable,
+    expressionAvailable: !!exprProbe
   })
 
   // Preset ao abrir: o último usado, se ainda existir; senão aleatório.
@@ -218,6 +219,12 @@ async function start(): Promise<void> {
     if (e.ctrlKey || e.altKey || e.metaKey) return
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
     const t = e.target as HTMLElement | null
+    // Nos Ajustes rápidos, Esc fecha o painel mesmo com o foco num slider ou seletor.
+    if (e.key === 'Escape' && t?.closest('.sheet')) {
+      e.preventDefault()
+      run('ui.close')
+      return
+    }
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
     // Esc fecha o que estiver aberto; sem nada aberto, sai da tela cheia.
     if (e.key === 'Escape') {
@@ -232,7 +239,7 @@ async function start(): Promise<void> {
       return
     }
     // Dentro da Biblioteca, da busca ou de um menu, as setas e o Espaço são da lista.
-    if (t?.closest('.lib, .palette, .menu')) return
+    if (t?.closest('.lib, .palette, .menu, .sheet')) return
     if (e.key === '/') {
       e.preventDefault()
       run('ui.open', { overlay: 'search' })
@@ -253,46 +260,45 @@ async function start(): Promise<void> {
       if (e.shiftKey) {
         const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
         run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
-        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`, 2400)
+        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`)
       } else {
         const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
         run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
-        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`, 2400)
+        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`)
       }
     } else if (e.code === 'Space') {
       run('preset.random', { cut })
     } else if (e.code === 'KeyB') {
       // B / Shift+B: ciclo do tipo da troca manual.
       run('blend.set', { target: 'manual', type: cycleBlendType(settings.blend.manual.type, e.shiftKey ? -1 : 1) })
-      showToast(blendText(), 1500)
+      showToast(blendText())
     } else if (e.code === 'ArrowUp' || e.code === 'ArrowDown') {
       // ↑ / ↓: tempo da troca manual (0,25 · 0,5 · 1 · 2 · 4 · 8 s).
       const seconds = stepBlendSeconds(settings.blend.manual.seconds, e.code === 'ArrowUp' ? 1 : -1)
       run('blend.set', { target: 'manual', seconds })
-      showToast(settings.blend.manual.type === 'cut' ? `Tempo da transição: ${secondsText(seconds)} (Corte seco ativo)` : blendText(), 1500)
+      showToast(settings.blend.manual.type === 'cut' ? `Tempo da transição: ${secondsText(seconds)} (Corte seco ativo)` : blendText())
     } else if (e.code === 'KeyF') {
       // F = tela cheia (como F11), por decisão do usuário; ver DIVERGENCIAS.
       run('window.fullscreen')
     } else if (e.code === 'KeyT') {
       // Modo limpo (spec 014): a confirmação sempre aparece, uma vez.
       run('overlayText.set', { clean: !settings.overlayText.clean })
-      showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', 1800, { force: true })
+      showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
     } else if (e.code === 'KeyH') {
       idle.hideNow()
     } else if (e.code === 'KeyR') {
       run('rotation.set', { enabled: !settings.rotation.enabled })
-      showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.', 1500)
-    } else if (e.key === '[' || e.key === ']') {
-      // Pelo caractere (e.key), não pela posição: no ABNT2 os colchetes ficam em outras teclas.
-      run('rotation.set', { intervalSeconds: stepInterval(settings.rotation.intervalSeconds, e.key === '[' ? -1 : 1) })
-      showToast(`Rotação a cada ${settings.rotation.intervalSeconds} s${settings.rotation.enabled ? '' : ' (desligada)'}.`, 1500)
+      showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
+    } else if (e.key === ',') {
+      // Ajustes rápidos (spec 011); `[` / `]` saíram: o intervalo da rotação mudou para lá.
+      toggleOverlay(core, 'quick')
     } else if (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') {
       // + / − = expressividade (spec 015). O ganho se adapta em segundos (ver expression.ts) e só muda nos Ajustes rápidos.
       run('expression.set', { level: settings.expression.level + (e.key === '+' || e.key === '=' ? 1 : -1) })
-      showToast(exprText(), 1500)
+      showToast(exprText())
     } else if (e.key === '0') {
       run('expression.set', { level: 0 })
-      showToast(exprText(), 1500)
+      showToast(exprText())
     } else {
       handled = false
     }

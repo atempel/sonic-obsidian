@@ -61,4 +61,7 @@ Estado de cada uma: [TASKS.md](../TASKS.md).
 | [CONTEXT.md](../CONTEXT.md) | Convenções, restrições e vocabulário. |
 | [AGENTS.md](../AGENTS.md) · [CLAUDE.md](../CLAUDE.md) | Instruções para agentes de código. |
 | [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) | Licenças das dependências (vai junto com o app). |
+| [LICENSE](../LICENSE) | MIT. |
+| [CONTRIBUTING.md](../CONTRIBUTING.md) · [SECURITY.md](../SECURITY.md) · [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | Como contribuir, como reportar falhas de segurança, código de conduta (em inglês). |
+| [`.github/`](../.github/) | CI, templates de issue (bug, ideia, crédito de preset) e de PR. |
 | [`queue/`](../queue/README.md) | Referências salvas e ainda não incorporadas. |

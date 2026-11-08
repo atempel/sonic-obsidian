@@ -7,6 +7,7 @@ Imagens usadas no README e na divulgação. Tudo aqui é captura real do app ou 
 | `banner.jpg` | Banner do README: lockup branco sobre um quadro escurecido do preset *Geiss, Flexi + Stahlregen - Thumbdrum Tokamak [crossfiring aftermath jelly mashup]* | Quadro real do Butterchurn |
 | `app-palco.jpg` | Palco com a faixa de controle. Preset: *bombyx mori - Ft Flexi - AdamFX - StahlRegen - Krash…* | Build do app em Chromium headless (SwiftShader), `window.so` e áudio simulados (sinal de teste sintetizado) |
 | `app-library.jpg` | Biblioteca aberta sobre o visual. Preset: *disco mix, lodus, geiss, ludicrous speed, flexi, aderrasi…* | Idem |
+| `social-preview.jpg` | Imagem de prévia social do repo (1280×640), para *Settings → Social preview* no GitHub | Mesmo quadro do banner |
 | `preset-*.jpg` | Quadros de presets, recorte quadrado 640 px | Butterchurn 2.6.7 + butterchurn-presets 2.4.7, faixa de teste sintetizada |
 
 ## Créditos dos presets

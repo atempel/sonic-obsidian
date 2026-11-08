@@ -16,6 +16,7 @@
   <img alt="Plataforma: Windows" src="https://img.shields.io/badge/platform-Windows-1D1D28?style=flat-square">
   <img alt="Electron" src="https://img.shields.io/badge/Electron-45-1D1D28?style=flat-square&logo=electron&logoColor=EEEEF5">
   <img alt="Butterchurn" src="https://img.shields.io/badge/engine-Butterchurn%20(WebGL%202)-1D1D28?style=flat-square">
+  <img alt="Licença: MIT" src="https://img.shields.io/badge/license-MIT-1D1D28?style=flat-square">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-1D1D28?style=flat-square&logo=typescript&logoColor=EEEEF5">
 </p>
 
@@ -41,7 +42,7 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo e privado por enquanto. A fase 2 (a interface completa) está em andamento. A ideia é abrir o código sob a licença MIT quando o projeto estiver pronto. Até lá o código é proprietário — veja [Licença](#licença).
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está em andamento. O código está sob a licença MIT. Ainda não há versão empacotada: para experimentar, compile a partir do código (veja [Desenvolvimento](#desenvolvimento)).
 
 <p align="center">
   <img alt="O Palco: o visual ocupa a janela, com a faixa de controle na parte de baixo" src="docs/media/app-palco.jpg" width="900">
@@ -97,7 +98,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 - **Persistência.** Configurações e biblioteca sobrevivem ao reinício.
 - **Diagnóstico.** `Ctrl+Shift+D` mostra um HUD de depuração (fps, memória, áudio); um arquivo de log registra travamentos e eventos da GPU.
 
-**Próximos passos** — Ajustes rápidos e a tela de Configurações completa, configuração do primeiro uso e diagnóstico, desempenho por preset, arquivos de áudio e microfone como fontes, importação e criação de presets `.milk` em um Estúdio, e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
+**Próximos passos** — a tela de Configurações completa, configuração do primeiro uso e diagnóstico, desempenho por preset, arquivos de áudio e microfone como fontes, importação e criação de presets `.milk` em um Estúdio, e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
 
 ## Teclado
 
@@ -109,7 +110,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 | `B` / `Shift+B` | Alterna o tipo de transição |
 | `↑` / `↓` | Duração da transição (0,25 s a 8 s) |
 | `R` | Liga/desliga a rotação automática |
-| `[` / `]` | Intervalo da rotação |
+| `,` | Ajustes rápidos (ganho, rotação, transições, Expressividade, texto sobre o visual) |
 | `+` / `−` / `0` | Aumenta / diminui / restaura a Expressividade |
 | `X` / `Shift+X` | Caráter / Memória da reação |
 | `/` ou `Ctrl+K` | Busca rápida |
@@ -211,7 +212,9 @@ Obrigado. Os textos de licença dessas dependências estão em [THIRD_PARTY_NOTI
 
 ## Licença
 
-Proprietária por enquanto — veja [LICENSE](LICENSE). A ideia é que o projeto se torne código aberto sob a licença MIT quando estiver pronto para o lançamento público.
+[MIT](LICENSE) © 2026 Alexandre Tempel. O Butterchurn e os presets mantêm suas próprias licenças e créditos — veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Quer ajudar? Leia o [CONTRIBUTING.md](CONTRIBUTING.md) (em inglês). Achou um problema de segurança? Veja o [SECURITY.md](SECURITY.md).
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
