@@ -16,7 +16,8 @@
 
 ## Em paralelo — Design (Claude Design, usuário)
 - [x] ~~Revisar a interface para o modelo de presets~~ — resolvido pela interface v3 ([docs/design/v3-modelo-de-navegacao.md](docs/design/v3-modelo-de-navegacao.md), DECISIONS 2026-11-08)
-- [ ] Trazer o brief visual v3 (tokens, *craft floor*) para o repo — [queue/2026-11-08-design-v3-brief-visual.md](queue/2026-11-08-design-v3-brief-visual.md)
+- [x] Trazer o brief visual v3 (tokens, *craft floor*) para o repo — espelhado em [docs/design/v3/](docs/design/v3/README.md) (PR [#14](https://github.com/atempel/sonic-obsidian/pull/14)); versão e checagem em [SYNC.md](docs/design/v3/SYNC.md), skill `sincronizar-design`
+- [ ] Frente de vídeo/VJ: decidir se entra no PRD — [queue/2026-11-08-video-vj.md](queue/2026-11-08-video-vj.md)
 - [ ] Fechar a tipografia (manter Space Grotesk ou alternativa)
 
 ## Próximo — Fase 2 (escrever specs com `planejar-feature` quando a Fase 1 fechar)
