@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sonic Obsidian — Social card</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="width: 1200px; height: 630px; box-sizing: border-box; position: relative; overflow: hidden; background: #080809; color: #EEEEF5; font-family: 'Space Grotesk', sans-serif; border: 1px solid #1E1E2A">
+
+<div aria-hidden="true" style="position: absolute; right: 64px; bottom: 0; top: 0; width: 540px; display: flex; align-items: center; justify-content: flex-end; gap: 7px">
+<sc-for list="{{ bars }}" as="b" hint-placeholder-count="40">
+<span style="{{ b.style }}"></span>
+</sc-for>
+</div>
+<div aria-hidden="true" style="position: absolute; left: 0; right: 0; top: 315px; height: 1px; background: linear-gradient(90deg, transparent, #1E1E2A 40%, #2A2A3A 70%, transparent)"></div>
+
+<div style="position: absolute; left: 72px; top: 64px; bottom: 64px; width: 600px; display: flex; flex-direction: column">
+<div style="display: flex; align-items: center; gap: 14px">
+<svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5 22.5 12 12 22.5 1.5 12Z" fill="none" stroke="#C244FF" stroke-width="1.4"></path><path d="M12 6.5 17.5 12 12 17.5 6.5 12Z" fill="#C244FF"></path></svg>
+<span style="font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; letter-spacing: 0.24em">SONIC OBSIDIAN</span>
+</div>
+<div style="flex: 1 1 auto"></div>
+<h1 style="margin: 0; font-size: 72px; line-height: 0.98; font-weight: 600; letter-spacing: -0.035em">Everything your PC plays, <span style="color: {{accent}}; text-shadow: 0 0 24px rgba(194,68,255,0.5)">turned into light.</span></h1>
+<p style="margin: 28px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 17px; color: #00E5FF; letter-spacing: 0.06em">MILKDROP FOR THE MODERN DESKTOP · WINDOWS · MIT</p>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#C244FF","options":["#C244FF","#00E5FF","#FF2D6B"]},"$preview":{"width":1200,"height":630}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var bars = [];
+    for (var i = 0; i < 40; i++) {
+      var x = i / 39;
+      var v = 0.18 + 0.55 * Math.pow(Math.sin(x * 3.1 + 0.4), 2) * (1 - x * 0.35) + 0.22 * Math.abs(Math.sin(i * 1.7)) * (0.4 + x * 0.6);
+      v = Math.min(0.96, v);
+      var h = Math.round(v * 520);
+      var col = v > 0.82 ? '#FF2D6B' : (v > 0.6 ? '#C244FF' : '#00E5FF');
+      var glow = v > 0.6 ? '0 0 14px ' + col : '0 0 6px rgba(0,229,255,0.35)';
+      bars.push({ style: 'display:block;width:3px;height:' + h + 'px;background:' + col + ';box-shadow:' + glow + ';opacity:' + (0.45 + v * 0.55).toFixed(2) });
+    }
+    return { accent: this.props.accent ?? '#C244FF', bars: bars };
+  }
+}
+</script>
+</body>
+</html>

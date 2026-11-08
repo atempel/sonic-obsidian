@@ -8,6 +8,27 @@ O projeto vai abrir para um público internacional que nunca ouviu falar dele. O
 ## Proposta
 Portar o design da landing (canvas do Claude Design, versões EN e PT-BR) para um site estático em `site/`, publicado pelo GitHub Pages em `https://atempel.github.io/sonic-obsidian/` (inglês) e `/pt/` (português). O topo roda o Butterchurn de verdade com uma faixa sintetizada no navegador, como no protótipo.
 
+## Estrutura
+```
+site/                         ← o que o GitHub Pages publica
+├── index.html                ← EN
+├── pt/index.html             ← PT-BR
+├── assets/
+│   ├── site.css              ← tokens e componentes (Design System)
+│   ├── stage.js              ← palco: Butterchurn, faixa sintetizada, espelhos, console, portão de reduced-motion
+│   ├── brand/                ← mark.svg + favicon (de docs/brand/)
+│   └── og.png                ← imagem de compartilhamento
+└── vendor/                   ← gerado por `npm run site:vendor`, no .gitignore
+    ├── butterchurn.min.js
+    ├── butterchurnPresets.min.js
+    └── fonts/*.woff2 (+ licenças OFL)
+scripts/site-vendor.mjs       ← copia de node_modules (butterchurn, butterchurn-presets, @fontsource/*)
+.github/workflows/pages.yml
+```
+- Uma página por idioma; o `stage.js` é comum e lê os textos dinâmicos (Tocar/Parar demo, Copiar, mensagens) de um `<script type="application/json" id="i18n">` em cada página.
+- **Links relativos** em tudo (`assets/…`, `../assets/…` no `/pt/`): o site mora em `/sonic-obsidian/`, não na raiz, e também precisa abrir servido localmente.
+- Sem dependência nova: o vendor usa pacotes que o app já tem.
+
 ## Escopo
 **P0**
 - `site/index.html` (EN) e `site/pt/index.html` (PT-BR): HTML, CSS e JS puros, sem framework e sem etapa de build. Portar do canvas, removendo a camada do editor (`{{ }}`, `sc-if`, `sc-for`, `DCLogic`) para DOM simples.
@@ -20,6 +41,9 @@ Portar o design da landing (canvas do Claude Design, versões EN e PT-BR) para u
 - Metadados: `<title>`, description, Open Graph/Twitter com `site/og.png` (1200×630, exportado do card social do canvas), favicon SVG do *The Core*.
 - `.github/workflows/pages.yml`: `actions/upload-pages-artifact` + `actions/deploy-pages` (versões fixadas), `on: push` em `main` com `paths: ['site/**']` e `workflow_dispatch`, e **guarda `if: ${{ !github.event.repository.private }}`** para não falhar enquanto o repo é privado.
 - Responsivo nos três cortes do protótipo (1100 / 900 / 520 px).
+- `.github/workflows/build-windows.yml`: `paths-ignore: ['site/**', 'docs/**']` nos gatilhos de `push` e `pull_request`, para mudança na landing não gastar o runner Windows.
+- `.gitignore`: `site/vendor/`.
+- Teste antes da abertura: um job no CI que roda `site:vendor` e sobe `site/` pronto como artifact (`sonic-obsidian-site-<sha>`), para o usuário abrir e testar a demo com som no Windows, igual ao ciclo do app.
 
 **P1**
 - 404 com a marca.
@@ -42,7 +66,7 @@ Domínio próprio, analytics, Cloudflare (ver DECISIONS), blog, mais idiomas.
 - Mostrar prints reais do app (de `docs/media/`) além dos espelhos ao vivo?
 
 ## Referências
-- Protótipo: canvas "Sonic Obsidian — Landing Page" — https://claude.ai/artifact/77UgsmUowPneiFTfduxF2L (pranchetas `Main.dc.html` = EN, `MainPT.dc.html` = PT-BR, `SocialCard.dc.html` = imagem de compartilhamento).
+- **Protótipo espelhado em [`docs/design/landing/`](../design/landing/README.md)** (versão `1794165992-cb8e`, ver SYNC.md): `Main.dc.html` = EN, `MainPT.dc.html` = PT-BR, `SocialCard.dc.html` = imagem de compartilhamento. Canvas original: https://claude.ai/artifact/77UgsmUowPneiFTfduxF2L.
 - Design System "Sonic Obsidian" — https://claude.ai/artifact/PsbByhFqsyarVehitA8rPZ (tokens, componentes, voz: "o áudio que você escolhe tocar").
 - `docs/brand/`, `docs/media/`, `THIRD_PARTY_NOTICES.md`.
 - DECISIONS 2026-11-08 — "Abertura: GitHub Pages e releases por tag".

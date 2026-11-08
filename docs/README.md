@@ -34,6 +34,7 @@ Estado de cada uma: [TASKS.md](../TASKS.md).
 | Onde | O que tem |
 |---|---|
 | [design/v3/](design/v3/README.md) | Espelho do protótipo v3 do Claude Design (páginas HTML, tokens, briefs). Referência de interface. Versão em [SYNC.md](design/v3/SYNC.md), conflitos em [DIVERGENCIAS.md](design/v3/DIVERGENCIAS.md). |
+| [design/landing/](design/landing/README.md) | Espelho do canvas da landing page (EN, PT-BR e imagem de compartilhamento). Referência da [spec 017](specs/017-landing-github-pages.md). Versão em [SYNC.md](design/landing/SYNC.md). |
 | [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md) | Lugares da interface (Palco, Biblioteca, Rack, Estúdio) e atalhos. |
 | [design/ui-exploration.md](design/ui-exploration.md), [design/moodboard.md](design/moodboard.md), [design/prototype/](design/prototype/) | Exploração v1/v2 (histórico). |
 | [brand/](brand/README.md) | Logo ("The Core") em SVG e PNG, regras de uso. |
