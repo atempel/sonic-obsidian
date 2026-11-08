@@ -97,7 +97,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 - **Persistence.** Settings and library survive restarts.
 - **Diagnostics.** `Ctrl+Shift+D` shows a debug HUD (fps, memory, audio); a log file records crashes and GPU events.
 
-**Coming next** — quick settings and the full Settings screen, first-run setup and diagnostics, performance per preset, audio files and microphone as sources, importing and creating `.milk` presets in a Studio, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
+**Coming next** — the full Settings screen, first-run setup and diagnostics, performance per preset, audio files and microphone as sources, importing and creating `.milk` presets in a Studio, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
 
 ## Keyboard
 
@@ -109,7 +109,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 | `B` / `Shift+B` | Cycle the transition type |
 | `↑` / `↓` | Transition duration (0.25 s to 8 s) |
 | `R` | Auto-rotation on/off |
-| `[` / `]` | Rotation interval |
+| `,` | Quick settings (gain, rotation, transitions, expressiveness, text over the visual) |
 | `+` / `−` / `0` | Expressiveness up / down / reset |
 | `X` / `Shift+X` | Character / memory of the reaction |
 | `/` or `Ctrl+K` | Quick search |

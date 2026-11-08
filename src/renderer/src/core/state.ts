@@ -5,8 +5,8 @@
  * campo inválido volta ao padrão.
  */
 
-/** Intervalos que `[` / `]` percorrem até os Ajustes rápidos (spec 011). */
-export const ROTATION_STEPS_S = [10, 15, 30, 60, 120]
+/** Intervalos da lista dos Ajustes rápidos (spec 011); as Configurações aceitam 5–120 s. */
+export const ROTATION_STEPS_S = [15, 30, 45, 90]
 export const GAIN_MIN_DB = -12
 export const GAIN_MAX_DB = 12
 export const RECENTS_MAX = 8
@@ -233,12 +233,6 @@ export function sanitizeLibrary(raw: unknown): Library {
     recents: names(raw.recents, RECENTS_MAX),
     collections
   }
-}
-
-/** Próximo valor da lista de `[` / `]` a partir de um intervalo qualquer. */
-export function stepInterval(current: number, direction: -1 | 1): number {
-  if (direction > 0) return ROTATION_STEPS_S.find((s) => s > current) ?? ROTATION_STEPS_S.at(-1)!
-  return [...ROTATION_STEPS_S].reverse().find((s) => s < current) ?? ROTATION_STEPS_S[0]!
 }
 
 /** Próximo tempo da lista de `↑` / `↓` a partir de um tempo qualquer. */

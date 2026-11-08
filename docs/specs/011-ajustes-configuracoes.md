@@ -1,6 +1,6 @@
 # 011 — Ajustes rápidos e Configurações
 
-**Fase:** 2 · **Status:** A fazer · **Issue:** [#24](https://github.com/atempel/sonic-obsidian/issues/24) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); desenha os controles das specs [013](013-transicoes.md) (transições), [014](014-texto-sobre-visual-janela.md) (texto sobre o visual) e [015](015-expressividade.md) (expressividade)
+**Fase:** 2 · **Status:** Em andamento (PR 1: Ajustes rápidos; PR 2: Configurações) · **Issue:** [#24](https://github.com/atempel/sonic-obsidian/issues/24) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); desenha os controles das specs [013](013-transicoes.md) (transições), [014](014-texto-sobre-visual-janela.md) (texto sobre o visual) e [015](015-expressividade.md) (expressividade)
 
 ## Problema
 Ganho, rotação, intervalo e blend só mudam por teclas provisórias (`+`/`−`/`0`, `[`/`]`, ver [DIVERGENCIAS](../design/v3/DIVERGENCIAS.md)), e os parâmetros do Butterchurn (malha, resolução, FXAA, limite de fps) estão fixos no código. Falta onde mexer durante a música e onde configurar o resto, com tudo salvo sozinho.
@@ -55,9 +55,14 @@ Fontes microfone, arquivo e SoundCloud; Integrações (MCP); Telas e Rack; pacot
 - **Intervalo:** Ajustes 15/30/45/90 s, Configurações 5–120 s; o código usa 10/15/30/60/120. Decidido: seguir o protótipo (o intervalo das Configurações é livre; os Ajustes mostram o valor atual mesmo fora da lista).
 - **Blend:** Ajustes até 5 s, Configurações até 10 s. Decidido: seguir o protótipo; Ajustes mostram o valor atual mesmo acima de 5 s.
 - **Limite de quadros:** decidido (8/nov, depois de uma queda do driver de vídeo): padrão **60**, como no protótipo, e "Sem limite" = taxa do monitor. O código já usa 60 (migração única de `'monitor'` na versão 2 do `settings.json`).
-- **Seção inicial:** o protótipo abre em Captura; a spec propõe Geral. Confirmar com o design.
+- **Seção inicial:** o protótipo abre em Captura. Decidido (8/nov): **Geral** (DIVERGENCIAS).
+- **Dois PRs** (decisão do usuário, 8/nov): PR 1 = Ajustes rápidos, com o link "Todas as configurações" desabilitado ("em breve"); PR 2 = Configurações.
+- **"Trocar no beat"** (design `1794175739-7509`, nos Ajustes): aparece desabilitado, com o marcador "Fase 3".
+- **Expressividade** nos Ajustes: seção própria, logo depois de Sinal.
+- **Transições nos Ajustes:** o protótipo mostra só dois sliders de 0 a 5 s (0 = corte seco). O app mostra um seletor de tipo e o tempo, como a spec 013 pede (DIVERGENCIAS).
+- **Microinterações** (DECISIONS 2026-11-08): o PR 1 traz M04, M13, M14, M15, M16 e M19; o PR 2 traz M10.
 
 ## Referências
-- Protótipo v3 `1794165177-f126` ([SYNC.md](../design/v3/SYNC.md); a spec foi escrita na `1794154301-3f85` e revista na f126 para Transições e Texto sobre o visual): `Sonic Obsidian Palco integrado.html` (painel `#sheet`) e `Sonic Obsidian Configurações.html` (sem barra de estados; seções Geral, Captura, Visual, Renderização, Desempenho, Biblioteca, Atalhos, Sobre)
+- Protótipo v3 `1794175739-7509` (Ajustes rápidos e microinterações; antes, `1794165177-f126`; [SYNC.md](../design/v3/SYNC.md); a spec foi escrita na `1794154301-3f85` e revista na f126 para Transições e Texto sobre o visual): `Sonic Obsidian Palco integrado.html` (painel `#sheet`) e `Sonic Obsidian Configurações.html` (sem barra de estados; seções Geral, Captura, Visual, Renderização, Desempenho, Biblioteca, Atalhos, Sobre)
 - [architecture.md §3](../architecture.md#3-engine-butterchurn) (Configurações → API do Butterchurn)
 - DECISIONS 2026-11-08 (spec 004, limite de fps; spec 005, ganho)
