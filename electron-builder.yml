@@ -1,0 +1,16 @@
+appId: dev.atempel.sonic-obsidian
+productName: Sonic Obsidian
+directories:
+  output: release
+  buildResources: build
+files:
+  - out/**
+  - package.json
+  - '!**/*.map'
+extraFiles:
+  - from: THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+asar: true
+win:
+  target: dir
+  signAndEditExecutable: false
