@@ -9,7 +9,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] **Incorporar o design `1794165177-f126`** (texto sobre o visual, Modo limpo `T`, controles da janela) nas specs 011 ou numa spec nova — [queue/2026-11-08-design-f126-texto-e-janela.md](queue/2026-11-08-design-f126-texto-e-janela.md)
 - [x] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
 - [ ] **Ajustes rápidos e Configurações** (tira `[`/`]`; `+`/`−`/`0` ficam, decidido na 013) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
-- [ ] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
+- [x] **Transições: tipo e tempo escolhidos pelo usuário** (manual e automática; `B`, `↑`/`↓`, Shift = corte seco) — [spec 013](docs/specs/013-transicoes.md) · issue [#31](https://github.com/atempel/sonic-obsidian/issues/31)
 - [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção

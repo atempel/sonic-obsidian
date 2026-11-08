@@ -1,6 +1,6 @@
 # 013 — Transições: tipo e tempo escolhidos pelo usuário
 
-**Fase:** 2 · **Status:** Em teste no Windows · **Issue:** [#31](https://github.com/atempel/sonic-obsidian/issues/31) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); a UI completa entra junto com a [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Feito (validado no Windows em 2026-11-08) · **Issue:** [#31](https://github.com/atempel/sonic-obsidian/issues/31) · **Depende de:** [008](008-nucleo-comandos-persistencia.md); a UI completa entra junto com a [011](011-ajustes-configuracoes.md)
 
 ## Problema
 A troca de preset é o gesto mais divertido do app: trocar na mesma música quando ela muda, mexer no ganho, brincar ao vivo. Hoje a troca manual é sempre corte seco (blend 0 s) e a automática sempre um blend de 2,7 s com um padrão de mesclagem sorteado pelo motor. O usuário não escolhe nem o tipo nem o tempo, e não consegue alternar entre cortar no beat e misturar devagar sem abrir arquivo de configuração.
