@@ -9,5 +9,6 @@ interface Window {
     settings: SoStore
     library: SoStore
     window: { toggleFullScreen(): Promise<void> }
+    system: { openSoundSettings(): Promise<void> }
   }
 }

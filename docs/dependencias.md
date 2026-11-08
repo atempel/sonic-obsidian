@@ -31,6 +31,9 @@ Toda dependência nova (ou troca de versão) passa por esta checagem **no moment
 | Data | Pacote@versão | Tipo | Publicada em | Licença | Deps diretas | Install script | Proveniência | `npm audit` | Veredito |
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-11-08 | `preact@11.0.2` | prod | 2026-10-23 | MIT | 0 (peer opcional `preact-render-to-string`, não instalado) | não | sim (SLSA v1) | 0 em produção | **ok.** A 11.2.0 (`latest`) foi descartada por ter só 2 dias; 11.1.x também tinham menos de 14 dias. |
+| 2026-11-08 | `@fontsource/space-grotesk@5.3.0` | prod (fonte) | 2026-07-19 | OFL-1.1 | 0 | não | sim (SLSA v1) | 0 em produção | **ok.** Licença de fonte que permite embutir; texto da OFL em THIRD_PARTY_NOTICES. Só os pesos 400/500/600 são importados. |
+| 2026-11-08 | `@fontsource/jetbrains-mono@5.3.0` | prod (fonte) | 2026-07-19 | OFL-1.1 | 0 | não | sim (SLSA v1) | 0 em produção | **ok.** Mesmos mantenedores do anterior; pesos 400/500. |
+| 2026-11-08 | ícones do `lucide-static@0.460.0` (copiados, não instalados) | — | 2024-11-15 | ISC | — | — | — | — | **ok.** 13 SVGs copiados para `ui/icons.tsx`; aviso ISC em THIRD_PARTY_NOTICES. Lido de um `npm pack` em pasta isolada. |
 
 ### Checagem retroativa (2026-11-08) — dependências que já estavam no projeto
 

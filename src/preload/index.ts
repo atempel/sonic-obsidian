@@ -15,5 +15,9 @@ contextBridge.exposeInMainWorld('so', {
   library: store('library'),
   window: {
     toggleFullScreen: (): Promise<void> => ipcRenderer.invoke('window:toggleFullScreen')
+  },
+  system: {
+    /** Abre Configurações › Som do Windows (URL fixa no main). */
+    openSoundSettings: (): Promise<void> => ipcRenderer.invoke('system:openSoundSettings')
   }
 })

@@ -128,3 +128,15 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** é o jeito barato de pegar os riscos mais comuns de cadeia de suprimentos (versão sequestrada, install script novo, licença incompatível) sem auditoria pesada, e deixa registrado o que foi checado. Pedido do usuário.
 - **Primeiro efeito:** o Preact entrou na 11.0.2, não na `latest` 11.2.0 (2 dias). A checagem retroativa achou `electron@45.2.3` e `vite@8.3.6` com menos de 14 dias; ficaram como estão até o usuário decidir.
 - **Limite conhecido:** `npm audit signatures` não funciona no container da nuvem (falha ao baixar as chaves); a proveniência é lida pelo `npm view`.
+
+## 2026-11-08 — Spec 009: Palco, faixa de controle e assinatura
+- **Arrasto da janela só por uma faixa de 40 px no topo** (invisível, recuada 6 px das bordas), escolha do usuário. Na spec 004 o visual inteiro era área de arrasto, mas no Windows a região `-webkit-app-region: drag` engole o `mousemove`, e a faixa de controle não conseguiria aparecer ao mexer o mouse em modo janela. A faixa no topo mantém o encaixe nativo do Windows (Aero Snap, duplo clique maximiza). **Descartado:** arrasto por JS em qualquer lugar (perde o encaixe nativo e é mais código).
+- **Cursor:** some junto com a faixa (2,5 s parado), também em modo janela, como no protótipo; o temporizador próprio de 3 s da spec 004 saiu.
+- **Fontes embutidas:** Space Grotesk e JetBrains Mono via `@fontsource` (OFL-1.1, escolha do usuário), só os pesos usados. O renderer usa `build.assetsInlineLimit: 0`, porque o Vite embutia as fontes pequenas como `data:` e a CSP (`default-src 'self'`) as bloqueava. A tipografia final continua em aberto (TASKS); trocar é mudar dois imports.
+- **Ícones:** 13 SVGs do Lucide copiados para `ui/icons.tsx` (ISC), sem pacote. **Descartado:** `lucide-preact` (dependência a mais para poucos ícones).
+- **Tokens:** `ui/theme.css` é cópia de `so-v3-base.css` (versão `1794154301-3f85`) sem a barra do protótipo; ao sincronizar o design, conferir se precisa acompanhar.
+- **Assinaturas de eventos com `useLayoutEffect`:** o primeiro preset e o resultado da captura chegam logo depois da montagem; com `useEffect` a UI perdia esses eventos (visto no teste com Chromium headless).
+- **Captura com "Tentar de novo":** a captura saiu da abertura bloqueante. O app abre, desenha e depois pede a captura; se ela for recusada (ou a track terminar), o Core passa ao estado `denied` e o Palco mostra o cartão. Sem som (aviso visível) ou sem captura, a rotação congela a contagem.
+- **HUD de depuração** escondido por padrão; `Ctrl+Shift+D` mostra e esconde. Erro fatal na abertura continua aparecendo nele.
+- **Botões das próximas specs** (Biblioteca, busca, Ajustes) e a alça da borda aparecem desabilitados, com "em breve" no `title`, até as specs 010/011.
+- **Teste visual na nuvem:** a página compilada roda no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados (oscilador ou recusa). Serve para layout e estados; áudio real e fps continuam só no Windows.
