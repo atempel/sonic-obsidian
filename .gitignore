@@ -1,48 +1,36 @@
-# Python
+# Node / Electron
+node_modules/
+out/
+dist/
+release/
+*.tsbuildinfo
+.vite/
+
+# Env
+.env
+.env.*
+
+# Python (legacy/python)
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-*.egg
-pip-wheel-metadata/
-
-# Virtual environments
 .venv/
 venv/
-env/
-ENV/
-
-# Distribution / packaging
-*.whl
-*.tar.gz
-
-# Testing & coverage
-.pytest_cache/
-.coverage
-htmlcov/
 
 # IDEs
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
 
-# Windows
+# Windows / macOS
 Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
 *.lnk
+.DS_Store
 
-# Claude Code
-.claude/
+# Claude Code — versiona skills e settings do projeto, ignora o que é local
+.claude/settings.local.json
+.claude/worktrees/
 
 # Logs
 *.log
-
-# Build artifacts
-*.spec
