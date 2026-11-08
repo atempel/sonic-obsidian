@@ -54,7 +54,7 @@ Fontes microfone, arquivo e SoundCloud; Integrações (MCP); Telas e Rack; pacot
 - **Ganho padrão:** Configurações mostra 0,5–2× (linear), Ajustes mostram dB com padrão +3. Decidido (8/nov): **dB nos dois**, −12 a +12, padrão **0 dB**.
 - **Intervalo:** Ajustes 15/30/45/90 s, Configurações 5–120 s; o código usa 10/15/30/60/120. Decidido: seguir o protótipo (o intervalo das Configurações é livre; os Ajustes mostram o valor atual mesmo fora da lista).
 - **Blend:** Ajustes até 5 s, Configurações até 10 s. Decidido: seguir o protótipo; Ajustes mostram o valor atual mesmo acima de 5 s.
-- **Limite de quadros:** protótipo tem padrão 60 e não tem "monitor"; o código tem padrão `'monitor'`. Proposta: manter "Sem limite" = taxa do monitor e padrão 60, como no protótipo.
+- **Limite de quadros:** decidido (8/nov, depois de uma queda do driver de vídeo): padrão **60**, como no protótipo, e "Sem limite" = taxa do monitor. O código já usa 60 (migração única de `'monitor'` na versão 2 do `settings.json`).
 - **Seção inicial:** o protótipo abre em Captura; a spec propõe Geral. Confirmar com o design.
 
 ## Referências

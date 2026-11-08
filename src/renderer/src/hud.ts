@@ -9,6 +9,8 @@ export interface HudState {
   level: number
   /** Spike 015: nível, curva, adaptação e bass antes → depois. */
   expression?: string
+  /** Memória JS do renderer (MB), para ver crescimento em sessões longas. */
+  heapMb?: number
   error?: string
 }
 
@@ -22,7 +24,7 @@ export class Hud {
     }
     const bars = '█'.repeat(Math.min(20, Math.round(s.level * 40))).padEnd(20, '·')
     this.el.textContent =
-      `${s.fps.toFixed(0)} fps (${s.fpsMode}) · áudio: ${s.audio} · nível ${bars}\n` +
+      `${s.fps.toFixed(0)} fps (${s.fpsMode})${s.heapMb ? ` · heap ${s.heapMb} MB` : ''} · áudio: ${s.audio} · nível ${bars}\n` +
       `${s.preset}\n` +
       `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressividade indisponível'}\n` +

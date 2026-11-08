@@ -12,6 +12,7 @@ import {
   stepBlendSeconds,
   stepInterval
 } from './core/state'
+import { hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
@@ -58,6 +59,15 @@ async function start(): Promise<void> {
 
   const viz = new PresetVisualizer(ctx, canvas)
   viz.visualizer.connectAudio(gain)
+  hookShaderCleanup(viz.visualizer)
+
+  // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
+  // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault()
+    window.so.log('contexto WebGL perdido; recarregando em 1,5 s')
+    setTimeout(() => location.reload(), 1500)
+  })
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
@@ -180,11 +190,20 @@ async function start(): Promise<void> {
   }
 
   window.addEventListener('resize', () => viz.resize())
+  // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
+  // O log mostra se isso acontece na máquina do usuário.
+  document.addEventListener('visibilitychange', () => window.so.log(`janela ${document.visibilityState === 'hidden' ? 'oculta: render pausado' : 'visível'}`))
   window.addEventListener('keydown', (e) => {
     if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
     // HUD de depuração (fps, áudio): escondido por padrão desde a 009.
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
       hudEl.hidden = !hudEl.hidden
+      e.preventDefault()
+      return
+    }
+    // Ctrl+Shift+L abre a pasta do log (diagnóstico de quedas).
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyL') {
+      void window.so.showLog()
       e.preventDefault()
       return
     }
@@ -336,6 +355,8 @@ async function start(): Promise<void> {
         const ex = settings.expression
         state.expression = `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
       }
+      const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+      if (mem) state.heapMb = Math.round(mem.usedJSHeapSize / 1048576)
       if (!hudEl.hidden) hud.show(state)
     }
   }
@@ -351,9 +372,13 @@ async function start(): Promise<void> {
     .catch((err: unknown) => console.error('[viz] falha ao carregar pacotes extras', err))
 }
 
+window.addEventListener('error', (e) => window.so.log(`erro: ${e.message} @ ${e.filename}:${e.lineno}`))
+window.addEventListener('unhandledrejection', (e) => window.so.log(`promessa rejeitada: ${String(e.reason)}`))
+
 start().catch((err: unknown) => {
   const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
   console.error('[start]', err)
+  window.so.log(`falha na abertura: ${message}`)
   hudEl.hidden = false
   hud.show({ ...state, error: message })
 })

@@ -38,6 +38,9 @@ export interface ExpressionProbe {
   bassOut: number
 }
 
+/** Limita a saída; NaN/infinito viram 1 (neutro): Math.min/max deixam NaN passar. */
+const clampOut = (v: number): number => (Number.isFinite(v) ? Math.min(OUT_MAX, Math.max(0, v)) : 1)
+
 const adjustRate = (rate: number, fps: number): number => Math.pow(rate, 30 / Math.min(144, Math.max(15, fps || 30)))
 
 export function hookExpression(visualizer: Visualizer, params: () => ExpressionParams): ExpressionProbe | null {
@@ -78,9 +81,10 @@ export function hookExpression(visualizer: Visualizer, params: () => ExpressionP
         for (let i = 0; i < 3; i++) longAvg[i] = longAvg[i]! * rate + levels.imm[i]! * (1 - rate)
       }
       for (let i = 0; i < 3; i++) {
+        if (!Number.isFinite(longAvg[i]!)) longAvg[i] = levels.imm[i]! // nunca deixa NaN se perpetuar
         const l = longAvg[i]!
-        levels.val[i] = l < 0.001 ? 1 : levels.imm[i]! / l
-        levels.att[i] = l < 0.001 ? 1 : levels.avg[i]! / l
+        levels.val[i] = l < 0.001 ? 1 : clampOut(levels.imm[i]! / l)
+        levels.att[i] = l < 0.001 ? 1 : clampOut(levels.avg[i]! / l)
       }
     }
     lastAdaptation = p.adaptation
@@ -97,8 +101,8 @@ export function hookExpression(visualizer: Visualizer, params: () => ExpressionP
         let a = levels.att[i]!
         if (nervous > 0) a = a + (v - a) * nervous * 0.5
         else if (nervous < 0) v = v + (a - v) * -nervous
-        levels.val[i] = Math.min(OUT_MAX, Math.max(0, 1 + (v - 1) * k + offset))
-        levels.att[i] = Math.min(OUT_MAX, Math.max(0, 1 + (a - 1) * k + offset))
+        levels.val[i] = clampOut(1 + (v - 1) * k + offset)
+        levels.att[i] = clampOut(1 + (a - 1) * k + offset)
       }
     }
     probe.bassOut = levels.val[0]!

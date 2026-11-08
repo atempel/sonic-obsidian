@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld('so', {
   window: {
     toggleFullScreen: (): Promise<void> => ipcRenderer.invoke('window:toggleFullScreen')
   },
+  /** Uma linha no log em arquivo (falhas e eventos raros, nunca por quadro). */
+  log: (message: string): void => ipcRenderer.send('log:write', String(message).slice(0, 2000)),
+  /** Abre a pasta do log no Explorer (Ctrl+Shift+L). */
+  showLog: (): Promise<void> => ipcRenderer.invoke('log:show'),
   system: {
     /** Abre Configurações › Som do Windows (URL fixa no main). */
     openSoundSettings: (): Promise<void> => ipcRenderer.invoke('system:openSoundSettings')

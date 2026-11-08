@@ -59,7 +59,8 @@ export type FpsLimit = 'monitor' | number
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings'
 
 export interface Settings {
-  version: 1
+  /** 2 = limite de fps padrão 60 (antes: taxa do monitor). */
+  version: 2
   gainDb: number
   rotation: {
     enabled: boolean
@@ -99,12 +100,12 @@ export interface Library {
 
 export function defaultSettings(): Settings {
   return {
-    version: 1,
+    version: 2,
     gainDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { level: 0, curve: 'b', adaptation: 'normal' },
-    fpsLimit: 'monitor',
+    fpsLimit: 60,
     startupPreset: 'last',
     lastPreset: null,
     pinControls: false
@@ -155,8 +156,12 @@ export function sanitizeSettings(raw: unknown): Settings {
   const rot = isObj(raw.rotation) ? raw.rotation : {}
   const blend = isObj(raw.blend) ? raw.blend : {}
   const expr = isObj(raw.expression) ? raw.expression : {}
+  // Até a versão 1, 'monitor' era o padrão gravado sem escolha do usuário (não havia UI):
+  // migra uma vez para 60. Depois da versão 2, 'monitor' salvo é escolha e fica.
+  const fpsLimit: FpsLimit =
+    raw.fpsLimit === 'monitor' ? (raw.version === 2 ? 'monitor' : 60) : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit
   return {
-    version: 1,
+    version: 2,
     gainDb: Math.round(num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDb)),
     rotation: {
       enabled: bool(rot.enabled, d.rotation.enabled),
@@ -173,7 +178,7 @@ export function sanitizeSettings(raw: unknown): Settings {
       curve: oneOf(expr.curve, EXPRESSION_CURVES, d.expression.curve),
       adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation)
     },
-    fpsLimit: raw.fpsLimit === 'monitor' ? 'monitor' : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit,
+    fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),
     lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null,
     pinControls: bool(raw.pinControls, d.pinControls)
