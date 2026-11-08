@@ -1,6 +1,6 @@
 # 009 — Palco: faixa de controle e assinatura na troca
 
-**Fase:** 2 · **Status:** Em verificação (código pronto; critérios aguardando o teste no Windows) · **Issue:** [#22](https://github.com/atempel/sonic-obsidian/issues/22) · **Depende de:** [008](008-nucleo-comandos-persistencia.md)
+**Fase:** 2 · **Status:** Concluído (10/10 critérios e o arrasto pelo topo verificados pelo usuário no Windows, build `2bf21fa`) · **Issue:** [#22](https://github.com/atempel/sonic-obsidian/issues/22) · **Depende de:** [008](008-nucleo-comandos-persistencia.md)
 
 ## Problema
 Hoje o app só se controla por teclas que é preciso decorar, o HUD é de depuração e o nome do preset aparece num toast provisório. O Palco v3 é a tela padrão: só o visual, com uma faixa de controle que aparece ao mexer o mouse e uma assinatura com o crédito do autor a cada troca.
