@@ -40,7 +40,7 @@ const splitLabel = (label: string): [string, string] => {
 }
 
 // ── Slider com leitura (M15) ──────────────────────────────────
-interface SliderProps {
+export interface SliderProps {
   id: string
   label: string
   value: number
@@ -51,7 +51,7 @@ interface SliderProps {
   onInput: (v: number) => void
 }
 
-function Slider({ id, label, value, min, max, step, text, onInput }: SliderProps) {
+export function Slider({ id, label, value, min, max, step, text, onInput }: SliderProps) {
   const [bubble, setBubble] = useState(false)
   const drag = useRef(false)
   const keyTimer = useRef<number | undefined>(undefined)
@@ -104,7 +104,7 @@ function Slider({ id, label, value, min, max, step, text, onInput }: SliderProps
 }
 
 // ── Peças pequenas ────────────────────────────────────────────
-function Switch({ id, label, checked, disabled, onChange, children }: { id: string; label: string; checked: boolean; disabled?: boolean; onChange?: (v: boolean) => void; children?: preact.ComponentChildren }) {
+export function Switch({ id, label, checked, disabled, onChange, children }: { id: string; label: string; checked: boolean; disabled?: boolean; onChange?: (v: boolean) => void; children?: preact.ComponentChildren }) {
   return (
     <div class="line">
       <span id={`${id}Lbl`}>
@@ -119,7 +119,7 @@ function Switch({ id, label, checked, disabled, onChange, children }: { id: stri
   )
 }
 
-function Select<T extends string | number>({ id, label, value, options, onChange }: { id: string; label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
+export function Select<T extends string | number>({ id, label, value, options, onChange }: { id: string; label: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
   return (
     <div class="line">
       <label for={id}>{label}</label>
@@ -142,7 +142,7 @@ function Select<T extends string | number>({ id, label, value, options, onChange
   )
 }
 
-function BlendControl({ core, target, label, available }: { core: Core; target: 'manual' | 'auto'; label: string; available: boolean }) {
+export function BlendControl({ core, target, label, available, max = QUICK_BLEND_MAX_S }: { core: Core; target: 'manual' | 'auto'; label: string; available: boolean; max?: number }) {
   const rule = core.state.settings.blend[target]
   const set = (args: Record<string, unknown>): void => void core.run('blend.set', { target, ...args }, 'ui')
   const engineOnly = !available && rule.type !== 'cut' && rule.type !== 'random'
@@ -155,7 +155,7 @@ function BlendControl({ core, target, label, available }: { core: Core; target: 
           label="Tempo"
           value={rule.seconds}
           min={0.1}
-          max={Math.max(QUICK_BLEND_MAX_S, Math.ceil(rule.seconds))}
+          max={Math.max(max, Math.ceil(rule.seconds))}
           step={0.1}
           text={secondsText(rule.seconds)}
           onInput={(seconds) => set({ seconds })}
@@ -277,12 +277,12 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
         </section>
 
         <section>
-          <button class="btn sheet-link" disabled title="Chega no próximo PR da spec 011">
+          <button class="btn sheet-link" onClick={() => core.run('ui.open', { overlay: 'settings' }, 'ui')}>
             <span>
               <Icon name="settings" />
               Todas as configurações
             </span>
-            <span class="soon">em breve</span>
+            <kbd>Ctrl+,</kbd>
           </button>
         </section>
       </div>

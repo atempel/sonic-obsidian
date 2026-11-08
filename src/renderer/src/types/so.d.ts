@@ -9,7 +9,12 @@ interface Window {
     settings: SoStore
     library: SoStore
     window: { toggleFullScreen(): Promise<void>; minimize(): Promise<void>; close(): Promise<void> }
-    system: { openSoundSettings(): Promise<void> }
+    system: { openSoundSettings(): Promise<void>; openNotices(): Promise<string>; openLink(url: string): Promise<void> }
+    app: { version(): Promise<string> }
+    collections: {
+      export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
+      import(): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }>
+    }
     log(message: string): void
     showLog(): Promise<void>
   }

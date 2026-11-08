@@ -7,6 +7,7 @@ import './theme.css'
 import './palco.css'
 import './biblioteca.css'
 import './ajustes.css'
+import './settings.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureState, Core } from '../core/commands'
@@ -14,6 +15,7 @@ import { Icon } from './icons'
 import { Library } from './Library'
 import { Palette } from './Palette'
 import { QuickSettings } from './QuickSettings'
+import { Settings } from './Settings'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
 import { TOAST_MS, onToast, showToast } from './toast'
@@ -37,6 +39,11 @@ export interface PalcoBridge {
   blendTypesAvailable: boolean
   /** Expressividade ligada ao motor (spec 015). */
   expressionAvailable: boolean
+  /** fps medido no último segundo. */
+  fps(): number
+  /** Dispositivo e taxa da captura (Configurações › Captura). */
+  captureInfo(): { device: string; sampleRate: number }
+  presetCount(): number
 }
 
 /**
@@ -113,7 +120,7 @@ function Credit({ core }: { core: Core }) {
 }
 
 // ── Medidor (20 segmentos, peak hold), fora do re-render ─────
-function Meter({ core }: { core: Core }) {
+export function Meter({ core }: { core: Core }) {
   const ref = useRef<HTMLSpanElement>(null)
   useLayoutEffect(() => {
     const el = ref.current!
@@ -147,6 +154,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   useCoreVersion(core)
   const line = useRef<HTMLElement>(null)
   const time = useRef<HTMLSpanElement>(null)
+  const fpsEl = useRef<HTMLSpanElement>(null)
   const { settings, current } = core.state
   const rotOn = settings.rotation.enabled
   const fav = core.isFavorite(current)
@@ -161,6 +169,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
       const left = bridge.rotationRemaining()
       if (line.current) line.current.style.width = on ? `${(1 - left / interval) * 100}%` : '0'
       if (time.current) time.current.textContent = on ? mmss(left) : 'off'
+      if (fpsEl.current) fpsEl.current.textContent = `${Math.round(bridge.fps())} fps`
     }
     tick()
     const id = window.setInterval(tick, 250)
@@ -228,6 +237,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
         <div class="tail">
           <div class="level">
             <Meter core={core} />
+            {settings.showFps && <span class="fps num" ref={fpsEl} title="fps do visual" />}
           </div>
           <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)" onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
@@ -428,7 +438,7 @@ function GlobalToast() {
 }
 
 /** Abre ou fecha um overlay pelo Core (`ui.open` / `ui.close`). */
-export function toggleOverlay(core: Core, overlay: 'library' | 'search' | 'quick'): void {
+export function toggleOverlay(core: Core, overlay: 'library' | 'search' | 'quick' | 'settings'): void {
   if (core.state.overlay === overlay) core.run('ui.close', {}, 'ui')
   else core.run('ui.open', { overlay }, 'ui')
 }
@@ -442,7 +452,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
   useLayoutEffect(() => void document.body.classList.toggle('clean', clean), [clean])
   useLayoutEffect(() => {
     // Fechar devolve o foco ao visual (as teclas globais voltam a valer).
-    if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu, .sheet')) {
+    if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu, .sheet, .settings')) {
       document.activeElement.blur()
     }
   }, [overlay])
@@ -457,6 +467,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Library core={core} presets={presets} />
       <Palette core={core} presets={presets} />
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
+      <Settings bridge={bridge} />
       <GlobalToast />
     </>
   )

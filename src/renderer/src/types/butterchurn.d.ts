@@ -7,6 +7,9 @@ declare module 'butterchurn' {
     height: number
     pixelRatio?: number
     textureRatio?: number
+    meshWidth?: number
+    meshHeight?: number
+    outputFXAA?: boolean
   }
 
   /** Preset já convertido (equações + shaders), como vem de butterchurn-presets. */
@@ -16,7 +19,10 @@ declare module 'butterchurn' {
     connectAudio(node: AudioNode): void
     disconnectAudio(node: AudioNode): void
     loadPreset(preset: Preset, blendTime: number): void
-    setRendererSize(width: number, height: number): void
+    setRendererSize(width: number, height: number, opts?: { pixelRatio?: number; textureRatio?: number; meshWidth?: number; meshHeight?: number }): void
+    setInternalMeshSize(width: number, height: number): void
+    setOutputAA(useAA: boolean): void
+    loadExtraImages(imageData: Record<string, unknown>): void
     render(opts?: { elapsedTime?: number }): void
   }
 
@@ -38,4 +44,9 @@ declare module 'butterchurn-presets/lib/*.min.js' {
   import type { Preset } from 'butterchurn'
   const pack: { getPresets(): Record<string, Preset> }
   export default pack
+}
+
+declare module 'butterchurn/lib/butterchurnExtraImages.min.js' {
+  const extraImages: { getImages(): Record<string, unknown> }
+  export default extraImages
 }

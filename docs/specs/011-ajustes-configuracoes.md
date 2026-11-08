@@ -1,6 +1,6 @@
 # 011 — Ajustes rápidos e Configurações
 
-**Fase:** 2 · **Status:** Em andamento (PR 1: Ajustes rápidos; PR 2: Configurações) · **Issue:** [#24](https://github.com/atempel/sonic-obsidian/issues/24) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); desenha os controles das specs [013](013-transicoes.md) (transições), [014](014-texto-sobre-visual-janela.md) (texto sobre o visual) e [015](015-expressividade.md) (expressividade)
+**Fase:** 2 · **Status:** Em teste (PR 1 Ajustes rápidos mergeado e validado; PR 2 Configurações em teste) · **Issue:** [#24](https://github.com/atempel/sonic-obsidian/issues/24) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); desenha os controles das specs [013](013-transicoes.md) (transições), [014](014-texto-sobre-visual-janela.md) (texto sobre o visual) e [015](015-expressividade.md) (expressividade)
 
 ## Problema
 Ganho, rotação, intervalo e blend só mudam por teclas provisórias (`+`/`−`/`0`, `[`/`]`, ver [DIVERGENCIAS](../design/v3/DIVERGENCIAS.md)), e os parâmetros do Butterchurn (malha, resolução, FXAA, limite de fps) estão fixos no código. Falta onde mexer durante a música e onde configurar o resto, com tudo salvo sozinho.
