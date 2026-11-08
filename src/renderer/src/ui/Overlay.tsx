@@ -399,6 +399,14 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
 /** Monta a interface e devolve o controle do auto-hide (para a tecla `H`). */
 export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   render(<Overlay bridge={bridge} />, el)
+  // Clique com o mouse num botão da faixa, da janela ou da alça não deixa o foco preso:
+  // senão a próxima tecla global mostra o anel de foco (a estrela parecia marcada depois
+  // de trocar de preset) e o Espaço aciona o botão em vez de sortear. Pelo teclado
+  // (Tab + Enter/Espaço, detail === 0) o foco fica, para acessibilidade.
+  el.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest?.('.strip button, .winctl button, .edge')
+    if (btn instanceof HTMLElement && e.detail > 0) btn.blur()
+  })
   const { state } = bridge.core
   return setupIdle(
     () => state.settings.pinControls || state.overlay !== null || !!document.activeElement?.closest('.strip')
