@@ -28,6 +28,8 @@ export interface Settings {
   fpsLimit: FpsLimit
   startupPreset: 'last' | 'random'
   lastPreset: string | null
+  /** Faixa de controle sempre visível (sem UI até a 011). */
+  pinControls: boolean
 }
 
 export interface Collection {
@@ -58,7 +60,8 @@ export function defaultSettings(): Settings {
     blend: { autoSeconds: 2.7, manualSeconds: 0 },
     fpsLimit: 'monitor',
     startupPreset: 'last',
-    lastPreset: null
+    lastPreset: null,
+    pinControls: false
   }
 }
 
@@ -104,7 +107,8 @@ export function sanitizeSettings(raw: unknown): Settings {
     },
     fpsLimit: raw.fpsLimit === 'monitor' ? 'monitor' : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),
-    lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null
+    lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null,
+    pinControls: bool(raw.pinControls, d.pinControls)
   }
 }
 

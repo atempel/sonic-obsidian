@@ -1,4 +1,4 @@
-import { app, BrowserWindow, desktopCapturer, ipcMain, session } from 'electron'
+import { app, BrowserWindow, desktopCapturer, ipcMain, session, shell } from 'electron'
 import { join } from 'node:path'
 import { JsonStore } from './store'
 
@@ -18,6 +18,8 @@ function registerStores(): void {
     const win = BrowserWindow.fromWebContents(e.sender)
     if (win) win.setFullScreen(!win.isFullScreen())
   })
+  // URL fixa: o renderer não escolhe o que abrir.
+  ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
 }
 
 /**

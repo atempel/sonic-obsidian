@@ -21,6 +21,8 @@ import {
  */
 
 export type Origin = 'keyboard' | 'ui' | 'rotation' | 'startup'
+/** Captura do áudio do sistema: aguardando, funcionando ou recusada. */
+export type CaptureState = 'pending' | 'ok' | 'denied'
 export type Result<T = unknown> = { ok: true; value: T } | { ok: false; error: string }
 
 export interface CoreEvents extends Record<string, unknown> {
@@ -30,6 +32,7 @@ export interface CoreEvents extends Record<string, unknown> {
   /** Nível de entrada (RMS depois do ganho), ~10×/s. Não passa pelo store. */
   levelTick: { level: number }
   silenceChanged: { resting: boolean; notice: boolean }
+  captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
   saved: { store: 'settings' | 'library' }
 }
@@ -39,6 +42,7 @@ export interface AppState {
   library: Library
   current: string
   overlay: OverlayName | null
+  capture: CaptureState
 }
 
 /** Efeitos fora do renderer (preload). */
@@ -86,7 +90,7 @@ export class Core {
     library: Library,
     private readonly effects: CoreEffects
   ) {
-    this.state = { settings, library, current: '', overlay: null }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending' }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -173,8 +177,10 @@ export class Core {
         if (a.startupPreset !== 'last' && a.startupPreset !== 'random') fail('startupPreset: last ou random')
         s.startupPreset = a.startupPreset as 'last' | 'random'
       }
+      const pin = optBool(a.pinControls, 'pinControls')
+      if (pin !== undefined) s.pinControls = pin
       this.changedSettings(origin)
-      return { fpsLimit: s.fpsLimit, startupPreset: s.startupPreset }
+      return { fpsLimit: s.fpsLimit, startupPreset: s.startupPreset, pinControls: s.pinControls }
     },
 
     // ── biblioteca ──────────────────────────────────────────
@@ -300,6 +306,13 @@ export class Core {
       if (!(err instanceof CommandError)) console.error(`[core] ${name} falhou`, err)
       return { ok: false, error: err instanceof Error ? err.message : String(err) }
     }
+  }
+
+  /** Chamado por quem cuida da captura (main.ts); não é comando de usuário. */
+  setCapture(state: CaptureState): void {
+    if (this.state.capture === state) return
+    this.state.capture = state
+    this.events.emit('captureChanged', { state })
   }
 
   get commandNames(): string[] {

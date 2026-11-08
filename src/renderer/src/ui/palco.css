@@ -1,0 +1,66 @@
+/* Palco v3 (protótipo "Palco integrado", versão 1794154301-3f85): faixa de controle,
+   assinatura da troca, alça da borda, cartões de estado e toast. */
+#ui { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
+#ui button, #ui .strip, #ui .state, #ui .edge { -webkit-app-region: no-drag; }
+[hidden] { display: none !important; }
+body.idle, body.idle * { cursor: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ── Assinatura ── */
+.credit { position: fixed; z-index: 1; left: 0; top: 0; right: 0; padding: 40px 40px 96px; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(8,8,9,0.82), rgba(8,8,9,0)); opacity: 0; transition: opacity 600ms var(--ease-out); }
+.credit.show { opacity: 1; transition-duration: 180ms; }
+.credit h1 { margin: 0; max-width: 22ch; font-size: clamp(28px, 3.2vw, 48px); line-height: 1.08; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; overflow-wrap: anywhere; }
+.credit p { margin: 10px 0 0; font-size: 15px; color: var(--text-2); }
+.credit .sweep { margin-top: 16px; width: 240px; height: 2px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+.credit .sweep i { display: block; height: 100%; width: 0; background: var(--violet); }
+
+/* ── Faixa de controle ── */
+.strip-wrap { position: fixed; z-index: 10; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; pointer-events: none;
+  transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+body.idle .strip-wrap { opacity: 0; transform: translateY(12px); }
+.strip { pointer-events: auto; position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+  padding: 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
+body.idle .strip { pointer-events: none; }
+.rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 0; }
+.now { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.now-text { min-width: 0; flex: 1 1 auto; }
+.now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ibtn.fav[aria-pressed="true"] svg { fill: var(--violet); }
+.strip-t { display: flex; align-items: center; gap: 2px; }
+.sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 8px; }
+.rot { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; }
+.rot:hover { background: var(--bg-03); color: var(--text-1); }
+.rot[aria-pressed="true"] { color: var(--text-1); }
+.rot[aria-pressed="true"] .ico { color: var(--violet); }
+.rot .num { font-size: 12px; color: var(--text-2); min-width: 4ch; white-space: nowrap; }
+.tail { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.level { display: flex; align-items: center; gap: 8px; margin-right: 8px; color: var(--text-2); font-size: 12px; }
+@media (max-width: 1100px) {
+  .strip { grid-template-columns: minmax(0, 1fr) auto; }
+  .tail { grid-column: 1 / -1; justify-content: space-between; }
+  .credit { padding: 24px 20px 72px; }
+}
+
+/* ── Cartões de estado (silêncio / captura negada) ── */
+.state { position: fixed; z-index: 8; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(420px, calc(100vw - 32px)); pointer-events: auto;
+  padding: 20px 22px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+.state h2 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+.state p { margin: 0; color: var(--text-2); }
+.state .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.state.error h2 .ico { color: var(--warn); }
+
+/* ── Alça da borda ── */
+.edge { position: fixed; z-index: 6; left: 0; top: 50%; width: 28px; height: 96px; margin-top: -48px; padding: 0; display: grid; place-items: center; pointer-events: auto;
+  background: var(--bg-01); border: 1px solid var(--line-2); border-left: 0; border-radius: 0 var(--r-3) var(--r-3) 0; color: var(--text-2); cursor: pointer;
+  opacity: 0; transform: translateX(-8px); visibility: hidden; transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out), visibility 0s linear 180ms, background var(--t-fast), color var(--t-fast); }
+.edge.on { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+.edge:hover { background: var(--bg-03); color: var(--text-1); }
+.edge:disabled { cursor: default; }
+
+/* ── Toast global ── */
+.gtoast { position: fixed; z-index: 80; left: 50%; bottom: 128px; transform: translate(-50%, -8px); max-width: min(90vw, 640px); padding: 10px 16px; font-size: 14px; pointer-events: none;
+  background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+  opacity: 0; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+.gtoast.on { opacity: 1; transform: translate(-50%, 0); }

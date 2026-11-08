@@ -14,6 +14,18 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — Palco integrado · faixa de controle (itens fora da Fase 2)
+Protótipo (`1794154301-3f85`): a faixa tem botão de fonte de áudio (`monitor-speaker`), modo compacto (`M`), chips de IA e de preset pesado, e o `title` da estrela diz "Favoritar (F)".
+Código: sem fonte de áudio, modo compacto e chip de IA (Fases 3–5); o chip de preset pesado entra na spec 012. A estrela não cita tecla (`F` é tela cheia, ver a entrada de `F`) e o botão de tela cheia diz "(F ou F11)". Biblioteca, busca e Ajustes aparecem desabilitados até as specs 010/011.
+PR/spec: docs/specs/009-palco-faixa-assinatura.md
+Status: Aberta só como registro (corte de fase, não pedido de mudança no desenho).
+
+### 2026-11-08 — Palco · área de arrasto da janela
+Protótipo (`1794154301-3f85`): não trata de arrasto (é uma página web).
+Código: a janela sem moldura arrasta por uma faixa invisível de 40 px no topo (decisão do usuário; DECISIONS, spec 009). O resto do visual recebe o mouse, para a faixa de controle aparecer.
+PR/spec: docs/specs/009-palco-faixa-assinatura.md
+Status: Aberta. Pedido ao design: avaliar se a faixa do topo merece alguma indicação visual ao passar o mouse.
+
 ### 2026-11-08 — atalhos globais · `F`
 Protótipo (`1794154301-3f85`): `F` favorita o preset atual; `F11` é tela cheia.
 Código: `F` alterna tela cheia (igual a `F11`), por decisão do usuário. Favoritar fica na estrela da faixa (spec 009) e em `Ctrl+F` na busca (spec 010), sem atalho global por enquanto.

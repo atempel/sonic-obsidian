@@ -29,6 +29,11 @@ export class AutoRotation {
     this.startedAt = now
   }
 
+  /** Congela a contagem por `ms` (silêncio ou captura recusada: a rotação espera o som). */
+  hold(ms: number): void {
+    this.startedAt += ms
+  }
+
   /** Segundos até a próxima troca (para a faixa de controle, spec 009). */
   remaining(now: number): number {
     const { intervalSeconds } = this.config()

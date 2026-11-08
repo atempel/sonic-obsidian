@@ -1,0 +1,137 @@
+/* Tokens e primitivas do protótipo v3 (docs/design/v3/prototype/so-v3-base.css, versão 1794154301-3f85),
+   copiados sem a barra "Protótipo". Ao sincronizar o design, conferir se este arquivo precisa acompanhar. */
+:root {
+  /* Obsidiana — fundos */
+  --bg-00: #080809;
+  --bg-01: #0F0F14;
+  --bg-02: #16161E;
+  --bg-03: #1D1D28;
+  --bg-04: #252533;
+  /* Bordas */
+  --line-1: #1E1E2A;
+  --line-2: #2A2A3A;
+  --line-3: #3A3A50;
+  /* Texto (todos >= 4.5:1 sobre --bg-01; --text-3 só sobre bg-00/bg-01) */
+  --text-1: #EEEEF5;
+  --text-2: #A3A3BF;
+  --text-3: #8585A3;
+  /* Luz */
+  --violet: #C244FF;
+  --violet-soft: rgba(194, 68, 255, 0.14);
+  --violet-line: rgba(194, 68, 255, 0.45);
+  --cyan: #00E5FF;
+  --beat: #FF2D6B;
+  --ok: #3DDC97;
+  --warn: #FFB547;
+  /* Tipo */
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
+  --font-num: 'JetBrains Mono', ui-monospace, monospace;
+  /* Forma */
+  --r-1: 3px;
+  --r-2: 4px;
+  --r-3: 6px;
+  /* Movimento */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-fast: 120ms;
+  --t-med: 220ms;
+  /* Sombra (com deslocamento, nunca halo) */
+  --shadow-pop: 0 12px 32px -8px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; color: var(--text-1); }
+body {
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0.005em;
+}
+::selection { background: var(--violet); color: #fff; }
+input, button, select { font: inherit; color: inherit; }
+input { caret-color: var(--violet); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* Scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--line-3) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--line-3); border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Foco visível em tudo */
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: var(--r-2); }
+
+/* Ícones Lucide */
+.ico { width: 18px; height: 18px; stroke-width: 1.75; flex: none; }
+.ico-sm { width: 15px; height: 15px; }
+
+/* Botão de ícone */
+.ibtn {
+  display: inline-grid; place-items: center;
+  width: 36px; height: 36px; padding: 0;
+  background: transparent; border: 1px solid transparent; border-radius: var(--r-2);
+  color: var(--text-2); cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.ibtn:hover { background: var(--bg-03); color: var(--text-1); }
+.ibtn:active { background: var(--bg-04); }
+.ibtn[aria-pressed="true"] { color: var(--violet); }
+.ibtn:disabled { opacity: 0.4; cursor: default; background: transparent; }
+
+/* Botões de texto */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 14px;
+  border-radius: var(--r-2); border: 1px solid var(--line-3);
+  background: var(--bg-03); color: var(--text-1);
+  font-weight: 500; cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
+}
+.btn:hover { background: var(--bg-04); border-color: #4A4A64; }
+.btn-primary { background: var(--violet); border-color: var(--violet); color: #fff; }
+.btn-primary:hover { background: #CF66FF; border-color: #CF66FF; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--text-2); }
+.btn-ghost:hover { background: var(--bg-03); color: var(--text-1); }
+
+/* Tecla */
+kbd {
+  font-family: var(--font-num); font-size: 11px; line-height: 1;
+  padding: 3px 6px; border-radius: var(--r-1);
+  background: var(--bg-03); border: 1px solid var(--line-3); border-bottom-width: 2px;
+  color: var(--text-2);
+}
+
+/* Slider */
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: transparent; cursor: pointer;
+}
+input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: linear-gradient(to right, var(--violet) var(--fill, 50%), var(--line-3) var(--fill, 50%)); }
+input[type=range]::-moz-range-track { height: 3px; border-radius: 3px; background: var(--line-3); }
+input[type=range]::-moz-range-progress { height: 3px; border-radius: 3px; background: var(--violet); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -5.5px; border-radius: 50%; background: var(--text-1); border: 3px solid var(--violet); }
+input[type=range]::-moz-range-thumb { width: 10px; height: 10px; border-radius: 50%; background: var(--text-1); border: 3px solid var(--violet); }
+input[type=range]:focus-visible { outline: none; }
+input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--bg-00), 0 0 0 5px var(--violet); }
+
+/* Switch acessível (input checkbox) */
+.switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track { width: 34px; height: 20px; border-radius: 20px; background: var(--bg-04); border: 1px solid var(--line-3); position: relative; transition: background var(--t-fast); }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: var(--text-2); transition: transform var(--t-med) var(--ease-out), background var(--t-fast); }
+.switch input:checked + .track { background: var(--violet); border-color: var(--violet); }
+.switch input:checked + .track::after { transform: translateX(14px); background: #fff; }
+.switch input:focus-visible + .track { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+/* Medidor de nível segmentado (20 segmentos, peak hold) */
+.meter { display: flex; gap: 2px; align-items: center; height: 14px; }
+.meter i { width: 3px; height: 100%; border-radius: 1px; background: var(--line-2); transition: background 40ms linear; }
+.meter i.on { background: var(--cyan); }
+.meter i.hot { background: var(--violet); }
+.meter i.clip { background: var(--beat); }
+.meter i.peak { background: var(--text-1); }
+
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
+}
