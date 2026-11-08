@@ -16,6 +16,8 @@ O menor app possível: uma janela Electron, sem UI, que ao abrir já mostra um p
 - Butterchurn com `butterchurn-presets` carregando um preset aleatório; tecla `Espaço` = próximo aleatório com blend de 2 s.
 - Canvas ocupando a janela, redimensionando com `setRendererSize`.
 - Contador de fps no console (ou num canto) para medir.
+- Workflow do GitHub Actions em `windows-latest` que, a cada push na branch, gera o app Windows portátil (pasta/zip, sem instalador, sem assinatura) e publica como artifact — é assim que o usuário testa, sem Node no host (ver DECISIONS, 2026-11-08 — Ambiente de dev).
+- Typecheck rodando no CI (e na nuvem) para pegar erro antes do build Windows.
 
 **P1**
 - `F11` alterna fullscreen.
@@ -33,7 +35,7 @@ Overlay, navegador de presets, persistência, empacotamento.
 ## Perguntas a responder (registrar respostas em DECISIONS.md)
 - O handler de display media evita mesmo o seletor de tela, ou aparece algum diálogo?
 - Qual o custo de CPU da track de vídeo enquanto ativa, e ela pode ser parada sem derrubar o áudio?
-- Ambiente de dev: Claude Code nativo no Windows ou WSL + `npm run dev` no Windows?
+- ~~Ambiente de dev~~ — respondida: nuvem + build Windows pelo CI (DECISIONS, 2026-11-08).
 - Vite + electron (qual template: `electron-vite`, Electron Forge + Vite)? Escolher o mais simples que rode.
 
 ## Referências
