@@ -22,6 +22,7 @@ Um app desktop para Windows que:
 - IA embutida ou dependência de um provedor de IA (a integração é só via MCP, com a ferramenta do usuário).
 - Baixar ou guardar faixas de serviços de streaming.
 - Distribuição pública, loja, assinatura de código.
+  - *Revisto em 2026-11-08:* distribuição pública pelo GitHub Releases e landing no GitHub Pages entram na abertura do repo (specs 016 e 017). Loja e assinatura de código continuam fora.
 
 ## Métricas de sucesso
 - Abre e reage ao som em < 3 s, sem nenhum clique.

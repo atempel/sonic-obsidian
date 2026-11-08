@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `docs/abertura-landing-releases`
+**Fez:** Planejou a abertura com `planejar-feature`. Specs **016** (releases por tag → rascunho com instalador, zip e checksums; nomes sem versão para `releases/latest/download/`; checklist MIT do dia) e **017** (landing no GitHub Pages, EN + PT-BR, portada do canvas do Claude Design; sem CDN; workflow com guarda para repo privado). Issues #40 e #41 (label novo `abertura`). DECISIONS: GitHub Pages escolhido, Cloudflare descartado com o porquê. TASKS ganhou a seção *Abertura*; PRD ganhou nota aditiva em "Fora de escopo". Fora do repo, nesta mesma conversa: o canvas da landing (EN e PT-BR, responsivo, aviso de fotossensibilidade) e o Design System "Sonic Obsidian", links nas specs.
+**Deixou em:** PR #42 → `main`, só docs; depois, espelho do canvas em `docs/design/landing/` e a estrutura de `site/` na 017. Ao mergear, resolveu conflito com o #43 (repo já público e MIT) e atualizou 016/017/TASKS para isso. Nada a verificar no app. Notion não atualizado nesta sessão.
+
 ### 2026-11-08 — Claude (chat, projeto "Audio Visualizer") — branch `chore/licenca-mit-comunidade`
 **Fez:** Revisão das configurações do repo. Licença trocada para MIT (decisão do usuário), arquivos de comunidade (CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, templates de issue e PR), imagem de prévia social, entrada em DECISIONS. Configurações do GitHub aprovadas pelo usuário; o proxy da nuvem bloqueia gravação de configurações pela API, então foram feitas pela interface do GitHub no navegador.
 **Deixou em:** PR #43 mesclado e repo **público** (pedido do usuário). Relato privado de vulnerabilidade ligado depois de abrir. A spec 016 (PR #42, de outra sessão) ainda lista essas tarefas como "no dia": ao mesclar o #42, marcar os itens de licença e comunidade como feitos. 13 branches já mescladas por squash continuam no remoto (apagar pela interface; a sessão não pode deletar refs).

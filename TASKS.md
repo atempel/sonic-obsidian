@@ -35,5 +35,9 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue [#19](https://github.com/atempel/sonic-obsidian/issues/19)
 - [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue [#20](https://github.com/atempel/sonic-obsidian/issues/20)
 
+## Abertura (repo público e MIT desde 2026-11-08, PR #43)
+- [ ] **Releases no GitHub** — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
+- [ ] **Landing page no GitHub Pages** (EN + PT-BR, portada do canvas espelhado em `docs/design/landing/`; publica assim que mergear) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
+
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))
