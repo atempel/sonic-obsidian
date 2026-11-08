@@ -19,7 +19,10 @@ Terminar um app que eu abra todo dia: janela ou tela cheia, reagindo ao áudio d
 | Código do app | `src/` (Electron: `main/` e `renderer/`) |
 | Produto, roadmap, escopo | [docs/PRD.md](docs/PRD.md) |
 | Specs por feature | `docs/specs/` |
+| Índice de toda a documentação | [docs/README.md](docs/README.md) |
 | Design (exploração, moodboard, protótipo) | `docs/design/` |
+| Marca (logo SVG/PNG, regras) | [docs/brand/](docs/brand/README.md) |
+| Imagens do README e divulgação | [docs/media/](docs/media/README.md) |
 | Pesquisa técnica e de efeitos | `docs/research/` |
 | Versão Python e o plano/PRD originais | `legacy/python/`, `docs/legacy/` |
 | Referências ainda não incorporadas | `queue/` |
