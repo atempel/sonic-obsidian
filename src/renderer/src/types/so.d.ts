@@ -8,7 +8,7 @@ interface Window {
   so: {
     settings: SoStore
     library: SoStore
-    window: { toggleFullScreen(): Promise<void> }
+    window: { toggleFullScreen(): Promise<void>; minimize(): Promise<void>; close(): Promise<void> }
     system: { openSoundSettings(): Promise<void> }
     log(message: string): void
     showLog(): Promise<void>

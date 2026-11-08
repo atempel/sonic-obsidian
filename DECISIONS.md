@@ -184,3 +184,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Limite de fps padrão = 60** (decisão do usuário), configurável: `'monitor'` gravado até a versão 1 do `settings.json` migra uma vez para 60. Antes, o padrão seguia o monitor (180 Hz na máquina principal) e mantinha a GPU no máximo o tempo todo.
 - **NaN:** a expressividade agora converte NaN e infinito em neutro (`Math.min`/`Math.max` deixam NaN passar).
 - **Descartado:** `disable-gpu-process-crash-limit` (esconderia quedas repetidas); pausar o render manualmente quando a janela perde o foco (o Chromium já pausa quando ela fica oculta, e o log vai mostrar se isso acontece).
+
+## 2026-11-08 — Spec 014 e foco dos botões da faixa
+- **Avisos e Modo limpo** ficam numa política única em `ui/toast.ts` (`setToastPolicy`), com `showToast(texto, ms, { important, force })`. *Nenhum* esconde até os importantes; a confirmação do Modo limpo usa `force`. Painéis de estado não passam por aí.
+- **Assinatura na abertura:** com "Só quando eu troco", a primeira assinatura (origem `startup`) aparece, porque só a rotação troca em silêncio.
+- **Foco depois do clique:** um clique com o mouse em botões da faixa, dos controles da janela ou da alça tira o foco (`blur` quando `click.detail > 0`). Sem isso, a próxima tecla global mostrava o anel de foco (a estrela parecia marcada no preset seguinte) e o `Espaço` acionava o botão em vez de sortear. Pelo teclado (`Tab`), o foco continua. **Descartado:** tirar o `:focus-visible` dos botões (quebra a navegação por teclado).

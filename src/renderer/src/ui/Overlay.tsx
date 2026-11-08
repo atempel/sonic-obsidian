@@ -64,11 +64,21 @@ function Credit({ core }: { core: Core }) {
   const [name, setName] = useState('')
   useLayoutEffect(() => {
     let timer: number | undefined
-    return core.events.on('presetChanged', ({ name: n, blendSeconds }) => {
+    // Modo limpo ligado no meio da assinatura: some na hora (spec 014).
+    const offState = core.events.on('stateChanged', () => {
+      if (core.state.settings.overlayText.clean) ref.current?.classList.remove('show')
+    })
+    const offPreset = core.events.on('presetChanged', ({ name: n, blendSeconds, origin }) => {
       setName(n)
       const el = ref.current
       const sw = sweep.current
       if (!el || !sw) return
+      // Texto sobre o visual (spec 014): Nunca, Só quando eu troco (a rotação troca em silêncio) e Modo limpo.
+      const { presetName, clean } = core.state.settings.overlayText
+      if (clean || presetName === 'never' || (presetName === 'manual' && origin === 'rotation')) {
+        el.classList.remove('show')
+        return
+      }
       const sigMs = blendSeconds > 0 ? blendSeconds * 1000 : 400
       sw.style.transition = 'none'
       sw.style.width = '0'
@@ -79,6 +89,10 @@ function Credit({ core }: { core: Core }) {
       window.clearTimeout(timer)
       timer = window.setTimeout(() => el.classList.remove('show'), Math.max(4000, sigMs + 1500))
     })
+    return () => {
+      offState()
+      offPreset()
+    }
   }, [core])
   const { title, author } = splitPresetName(name)
   return (
@@ -167,8 +181,15 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
             <Icon name="library" />
           </button>
           <div class="now-text">
-            <div class="now-title" title={current}>
-              {title}
+            <div class="now-row">
+              <div class="now-title" title={current}>
+                {title}
+              </div>
+              {settings.overlayText.clean && (
+                <span class="clean-ico" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)">
+                  <Icon name="eye-off" small />
+                </span>
+              )}
             </div>
             {author && <div class="now-author">por {author}</div>}
           </div>
@@ -282,6 +303,48 @@ function StateCards({ bridge }: { bridge: PalcoBridge }) {
   return null
 }
 
+// ── Controles da janela (spec 014) ───────────────────────────
+/** Zona do canto superior direito que mostra minimizar e fechar (protótipo: ~160×96 px). */
+const WIN_ZONE_W = 160
+const WIN_ZONE_H = 96
+
+function WindowControls({ core }: { core: Core }) {
+  useCoreVersion(core)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    let timer: number | undefined
+    const hideSoon = (): void => {
+      if (timer === undefined) timer = window.setTimeout(() => ((timer = undefined), setOn(false)), 220)
+    }
+    const move = (e: MouseEvent): void => {
+      if (e.clientX > window.innerWidth - WIN_ZONE_W && e.clientY < WIN_ZONE_H) {
+        window.clearTimeout(timer)
+        timer = undefined
+        setOn(true)
+      } else hideSoon()
+    }
+    window.addEventListener('mousemove', move, { passive: true })
+    document.addEventListener('mouseleave', hideSoon)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('mousemove', move)
+      document.removeEventListener('mouseleave', hideSoon)
+    }
+  }, [])
+  // Some com a Biblioteca, a busca ou outro painel aberto sobre o canto.
+  const blocked = core.state.overlay !== null
+  return (
+    <div class={`winctl${on && !blocked ? ' on' : ''}${blocked ? ' blocked' : ''}`} role="group" aria-label="Janela">
+      <button class="ibtn" aria-label="Minimizar" title="Minimizar" onClick={() => void window.so.window.minimize()}>
+        <Icon name="minus" />
+      </button>
+      <button class="ibtn" aria-label="Fechar" title="Fechar (Ctrl+W)" onClick={() => void window.so.window.close()}>
+        <Icon name="x" />
+      </button>
+    </div>
+  )
+}
+
 // ── Toast global ─────────────────────────────────────────────
 function GlobalToast() {
   const [text, setText] = useState('')
@@ -325,6 +388,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <StateCards bridge={bridge} />
       <Edge core={core} />
       <Strip bridge={bridge} />
+      <WindowControls core={core} />
       <Library core={core} presets={presets} />
       <Palette core={core} presets={presets} />
       <GlobalToast />
@@ -335,6 +399,14 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
 /** Monta a interface e devolve o controle do auto-hide (para a tecla `H`). */
 export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   render(<Overlay bridge={bridge} />, el)
+  // Clique com o mouse num botão da faixa, da janela ou da alça não deixa o foco preso:
+  // senão a próxima tecla global mostra o anel de foco (a estrela parecia marcada depois
+  // de trocar de preset) e o Espaço aciona o botão em vez de sortear. Pelo teclado
+  // (Tab + Enter/Espaço, detail === 0) o foco fica, para acessibilidade.
+  el.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement | null)?.closest?.('.strip button, .winctl button, .edge')
+    if (btn instanceof HTMLElement && e.detail > 0) btn.blur()
+  })
   const { state } = bridge.core
   return setupIdle(
     () => state.settings.pinControls || state.overlay !== null || !!document.activeElement?.closest('.strip')

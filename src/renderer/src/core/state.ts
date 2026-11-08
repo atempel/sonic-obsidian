@@ -48,6 +48,21 @@ export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> =
   locked: 'fixa — partes altas da música sempre mais fortes'
 }
 
+/** Texto sobre o visual (spec 014). */
+export const PRESET_NAME_MODES = ['always', 'manual', 'never'] as const
+export type PresetNameMode = (typeof PRESET_NAME_MODES)[number]
+export const TOAST_MODES = ['all', 'important', 'none'] as const
+export type ToastMode = (typeof TOAST_MODES)[number]
+export interface OverlayText {
+  /** Assinatura na troca: sempre, só nas trocas manuais, nunca. */
+  presetName: PresetNameMode
+  /** Título da faixa (arquivo/SoundCloud, Fase 3): só o estado por enquanto. */
+  trackTitle: boolean
+  toasts: ToastMode
+  /** Modo limpo (`T`): esconde assinatura e avisos não importantes, sem mudar o resto. */
+  clean: boolean
+}
+
 /** Regra de uma troca: tipo e tempo. Com `cut`, o tempo fica guardado para quando voltar a misturar. */
 export interface BlendRule {
   type: BlendType
@@ -71,6 +86,7 @@ export interface Settings {
   /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
   blend: { manual: BlendRule; auto: BlendRule }
   expression: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
+  overlayText: OverlayText
   fpsLimit: FpsLimit
   startupPreset: 'last' | 'random'
   lastPreset: string | null
@@ -105,6 +121,7 @@ export function defaultSettings(): Settings {
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { level: 0, curve: 'b', adaptation: 'normal' },
+    overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
     fpsLimit: 60,
     startupPreset: 'last',
     lastPreset: null,
@@ -156,6 +173,7 @@ export function sanitizeSettings(raw: unknown): Settings {
   const rot = isObj(raw.rotation) ? raw.rotation : {}
   const blend = isObj(raw.blend) ? raw.blend : {}
   const expr = isObj(raw.expression) ? raw.expression : {}
+  const text = isObj(raw.overlayText) ? raw.overlayText : {}
   // Até a versão 1, 'monitor' era o padrão gravado sem escolha do usuário (não havia UI):
   // migra uma vez para 60. Depois da versão 2, 'monitor' salvo é escolha e fica.
   const fpsLimit: FpsLimit =
@@ -177,6 +195,12 @@ export function sanitizeSettings(raw: unknown): Settings {
       level: Math.round(num(expr.level, EXPRESSION_MIN, EXPRESSION_MAX, d.expression.level)),
       curve: oneOf(expr.curve, EXPRESSION_CURVES, d.expression.curve),
       adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation)
+    },
+    overlayText: {
+      presetName: oneOf(text.presetName, PRESET_NAME_MODES, d.overlayText.presetName),
+      trackTitle: bool(text.trackTitle, d.overlayText.trackTitle),
+      toasts: oneOf(text.toasts, TOAST_MODES, d.overlayText.toasts),
+      clean: bool(text.clean, d.overlayText.clean)
     },
     fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),

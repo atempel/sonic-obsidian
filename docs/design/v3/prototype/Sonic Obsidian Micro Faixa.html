@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Microinterações: faixa e feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  html, body { height: auto; min-height: 100%; }
+  [hidden] { display: none !important; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .page { max-width: 1240px; margin: 0 auto; padding: 0 16px 64px; }
+
+  /* ── Topo ── */
+  .top { padding: 32px 0 8px; }
+  .top h1 { margin: 0; font-size: 26px; line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; }
+  .top p { margin: 8px 0 0; color: var(--text-2); max-width: 64ch; }
+  .tools { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+    padding: 12px 0; margin-bottom: 8px; background: var(--bg-00); border-bottom: 1px solid var(--line-1); }
+  .tools .count { margin: 0; color: var(--text-2); font-size: 13px; }
+  .tools .count .num { color: var(--text-1); }
+
+  /* ── Grade e cartões ── */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 12px; }
+  @media (min-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grid .span { grid-column: 1 / -1; } }
+  .card { background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .ch { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+  .ch-id { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .ch-id .num { font-size: 12px; color: var(--text-3); }
+  .ch-id h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .verdict { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--bg-00); }
+  .verdict label { position: relative; display: inline-flex; cursor: pointer; }
+  .verdict input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .verdict span { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--r-1); font-size: 12px; color: var(--text-2); transition: background var(--t-fast), color var(--t-fast); }
+  .verdict label:hover span { background: var(--bg-03); color: var(--text-1); }
+  .verdict input:checked + span { background: var(--violet-soft); color: var(--violet); font-weight: 500; }
+  .verdict input:focus-visible + span { outline: 2px solid var(--violet); outline-offset: 1px; }
+  .demo { background: var(--bg-00); border: 1px solid var(--line-1); border-radius: var(--r-2); padding: 16px; min-width: 0; }
+  .demo.center { display: grid; place-items: center; min-height: 150px; }
+  .spec { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-3); }
+  .ref { margin: 0; font-size: 12px; color: var(--text-2); }
+  .ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .ctl .btn { height: 32px; font-size: 13px; }
+  .sub { margin: 0 0 8px; font-size: 12px; color: var(--text-2); }
+  .cmp { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 560px) { .cmp { grid-template-columns: minmax(0, 1fr); } }
+  .cmp > div { background: var(--bg-01); border: 1px solid var(--line-1); border-radius: var(--r-2); padding: 12px; min-width: 0; }
+  .readout { margin: 10px 0 0; font-size: 13px; color: var(--text-2); }
+
+  /* ── Palco: faixa de controle (copiado do Palco integrado, ancorado ao palco) ── */
+  .stage { position: relative; height: 260px; overflow: hidden; border-radius: var(--r-2); border: 1px solid var(--line-1);
+    background:
+      radial-gradient(ellipse 50% 70% at 28% 38%, rgba(194,68,255,0.20), transparent 70%),
+      radial-gradient(ellipse 40% 60% at 74% 62%, rgba(0,229,255,0.12), transparent 70%),
+      var(--bg-00); }
+  .strip-wrap { position: absolute; z-index: 10; left: 0; right: 0; bottom: 0; padding: 0 12px 12px; display: flex; justify-content: center; pointer-events: none; }
+  .strip-wrap.off { visibility: hidden; }
+  .strip { pointer-events: auto; position: relative; width: min(820px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+    padding: 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
+  .strip.flex { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; width: max-content; max-width: 100%; }
+  .rot-line { position: absolute; left: 0; top: 0; height: 2px; width: 100%; background: var(--text-3); transform: scaleX(0); transform-origin: left; }
+  .now { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .now-text { min-width: 0; flex: 1 1 auto; }
+  .now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stack { display: grid; }
+  .stack > span { grid-area: 1 / 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stack > span:nth-child(2) { opacity: 0; }
+  .stack.ttl { font-weight: 500; }
+  .ibtn.fav[aria-pressed="true"] svg { fill: var(--violet); }
+  .strip-t { display: flex; align-items: center; gap: 2px; }
+  .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 8px; }
+  .rot { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); cursor: pointer; }
+  .rot:hover { background: var(--bg-03); color: var(--text-1); }
+  .rot[aria-pressed="true"] { color: var(--text-1); }
+  .rot[aria-pressed="true"] .ico { color: var(--violet); }
+  .rot .num { font-size: 12px; color: var(--text-2); min-width: 4ch; white-space: nowrap; }
+  .tail { display: flex; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+  .level { display: flex; align-items: center; gap: 8px; margin-right: 8px; color: var(--text-2); font-size: 12px; }
+  @media (max-width: 700px) {
+    .strip { grid-template-columns: minmax(0, 1fr) auto; }
+    .strip .tail { display: none; }
+    .rot span:not(.num) { display: none; }
+  }
+
+  /* cartão de crédito em miniatura (M02) */
+  .credit-mini { position: absolute; z-index: 1; left: 0; top: 0; right: 0; padding: 20px 20px 48px; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(8,8,9,0.82), rgba(8,8,9,0)); opacity: 0; transition: opacity 600ms var(--ease-out); }
+  .credit-mini.show { opacity: 1; transition-duration: 180ms; }
+  .credit-mini h3 { margin: 0; max-width: 22ch; font-size: 24px; line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit-mini p { margin: 6px 0 0; font-size: 14px; color: var(--text-2); }
+  .credit-mini .sweep { margin-top: 10px; width: 160px; height: 2px; background: var(--line-2); border-radius: 2px; overflow: hidden; }
+  .credit-mini .sweep i { display: block; height: 100%; width: 100%; background: var(--violet); transform: scaleX(0); transform-origin: left; }
+
+  /* ── M04 pressão ── */
+  .ibtn svg { overflow: visible; }
+  body.rm .tapkey.sink:active { transform: none; }
+  .m04 .ibtn { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast) var(--ease-out); }
+  .m04 .ibtn:active:not(:disabled) { transform: scale(0.97); transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform 80ms linear; }
+  body.rm .m04 .ibtn:active:not(:disabled) { transform: none; }
+
+  /* ── M06 ── */
+  .m06 .rot { transition: background var(--t-fast), color var(--t-fast); }
+  .m06 .rot .ico { transition: color var(--t-fast), transform 0s; }
+  .m06 .rot[aria-pressed="true"] .ico { transform: rotate(180deg); transition: color var(--t-fast), transform var(--t-med) var(--ease-out); }
+  body.rm .m06 .rot[aria-pressed="true"] .ico { transform: none; }
+
+  /* ── M07 ── */
+  .favp .fav-wrap { position: relative; display: grid; place-items: center; }
+  .favp .fav-wrap > svg { grid-area: 1 / 1; }
+  .favp .fav-wrap .fill { fill: var(--violet); stroke: var(--violet); opacity: 0; transform: scale(0.6); transition: opacity var(--t-fast), transform 0s; }
+  .favp[aria-pressed="true"] .fill { opacity: 1; transform: scale(1); transition: opacity var(--t-fast), transform var(--t-med) var(--ease-out); }
+  body.rm .favp .fill { transform: none; }
+  .favp .core { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px; background: var(--violet); opacity: 0; transform: translateY(-8px) rotate(45deg); pointer-events: none; }
+  .fav-row { display: flex; align-items: center; gap: 8px; }
+
+  /* ── M08 ── */
+  .meter.big { height: 64px; gap: 4px; }
+  .meter.big i { width: 12px; border-radius: 2px; }
+  .m8 { display: grid; gap: 14px; justify-items: start; }
+  .m8 .stat { font-size: 12px; color: var(--text-2); }
+
+  /* ── M09 ── */
+  .tap { display: grid; gap: 12px; }
+  .tap-row { display: flex; align-items: center; gap: 10px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line-3); flex: none; }
+  .dot.on { background: var(--beat); }
+  .bpm { display: inline-flex; align-items: baseline; gap: 8px; }
+  .bpm .unit { font-size: 12px; color: var(--text-2); }
+  .odo { display: inline-flex; height: 1.2em; overflow: hidden; font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; line-height: 1.2; font-weight: 500; color: var(--text-3); }
+  .odo.has { color: var(--cyan); }
+  .odo .col { display: block; width: 1ch; height: 1.2em; overflow: hidden; }
+  .odo .col > div { display: block; }
+  .odo .col > div > span { display: block; height: 1.2em; text-align: center; }
+  .plain { font-family: var(--font-num); font-variant-numeric: tabular-nums; font-size: 26px; line-height: 1.2; font-weight: 500; color: var(--text-3); min-width: 3ch; display: inline-block; text-align: center; }
+  .plain.has { color: var(--cyan); }
+  .tapkey { display: inline-flex; align-items: center; gap: 10px; height: 38px; padding: 0 14px; border-radius: var(--r-2); border: 1px solid var(--line-3); border-bottom-width: 2px; background: var(--bg-03); color: var(--text-1); font-weight: 500; cursor: pointer;
+    transition: background var(--t-fast), transform var(--t-fast) var(--ease-out); }
+  .tapkey:hover { background: var(--bg-04); }
+  .tapkey.sink:active { transform: translateY(2px); transition: background var(--t-fast), transform 80ms linear; }
+  .tapn { font-size: 12px; color: var(--text-3); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <h1>Microinterações: faixa e feedback</h1>
+  <p>A casca não se mexe sozinha: a interface responde ao gesto e a eventos discretos do áudio.</p>
+</header>
+
+<div class="tools">
+  <label class="switch"><input type="checkbox" id="rmSw"><span class="track"></span><span>Simular movimento reduzido</span></label>
+  <p class="count" role="status"><span class="num" id="count">0</span> de <span class="num" id="total">9</span> classificados</p>
+</div>
+
+<main class="grid" aria-label="Espécimes de microinteração">
+
+  <!-- M01 -->
+  <article class="card span" id="card-M01" aria-labelledby="t-M01">
+    <header class="ch"><div class="ch-id"><span class="num">M01</span><h2 id="t-M01">Faixa entra em degrau</h2></div><div class="verdict" data-id="M01"></div></header>
+    <div class="demo" style="padding:0"><div class="stage" id="stage1"></div></div>
+    <div class="ctl">
+      <button type="button" class="btn" id="m1Toggle" aria-expanded="true">Mostrar/esconder faixa</button>
+      <button type="button" class="btn" id="m1Swap">Trocar preset</button>
+      <button type="button" class="btn btn-ghost" id="m1Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button>
+    </div>
+    <p class="num spec">220 ms · cubic-bezier(.16,1,.3,1) · transform: translateY(6px → 0) + opacity, blocos com 20 ms de diferença · saída: 150 ms · ease-out (≈⅔ da entrada), tudo junto</p>
+    <p class="ref">Referência: <span data-ref="M01">Emil Kowalski — Great animations; Material Design 3 motion (tokens no Material Components Android)</span></p>
+  </article>
+
+  <!-- M02 -->
+  <article class="card span" id="card-M02" aria-labelledby="t-M02">
+    <header class="ch"><div class="ch-id"><span class="num">M02</span><h2 id="t-M02">Troca de título na faixa</h2></div><div class="verdict" data-id="M02"></div></header>
+    <div class="demo" style="padding:0"><div class="stage" id="stage2"></div></div>
+    <div class="ctl">
+      <button type="button" class="btn" id="m2Toggle" aria-expanded="true">Mostrar/esconder faixa</button>
+      <button type="button" class="btn" id="m2Swap">Trocar preset</button>
+      <button type="button" class="btn btn-ghost" id="m2Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button>
+    </div>
+    <p class="num spec">saída 120 ms · ease-out · translateY(0 → −4px) + opacity · entrada 220 ms · ease-out expo · translateY(4px → 0) · autor +40 ms · título entra com flash violeta de 120 ms · começa junto com o blend (linha violeta de 2 s)</p>
+    <p class="ref">Referência: <span data-ref="M02">Rauno Freiberg — Invisible details of interaction design; Emil Kowalski — 7 practical animation tips</span></p>
+  </article>
+
+  <!-- M03 -->
+  <article class="card span" id="card-M03" aria-labelledby="t-M03">
+    <header class="ch"><div class="ch-id"><span class="num">M03</span><h2 id="t-M03">Linha de rotação que esvazia</h2></div><div class="verdict" data-id="M03"></div></header>
+    <div class="demo" style="padding:0"><div class="stage" id="stage3"></div></div>
+    <div class="ctl">
+      <button type="button" class="btn" id="m3Toggle" aria-expanded="true">Mostrar/esconder faixa</button>
+      <button type="button" class="btn" id="m3Swap">Trocar preset</button>
+      <button type="button" class="btn btn-ghost" id="m3Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button>
+    </div>
+    <p class="num spec">220 ms · ease-out expo · transform: scaleX(p → 0), origem à direita; recomeça em 0 · a linha cresce sozinha (30 s do app acelerados para 10 s aqui)</p>
+    <p class="ref">Referência: <span data-ref="M03">Emil Kowalski — Great animations; Butterchurn README</span></p>
+  </article>
+
+  <!-- M04 -->
+  <article class="card" id="card-M04" aria-labelledby="t-M04">
+    <header class="ch"><div class="ch-id"><span class="num">M04</span><h2 id="t-M04">Pressão dos botões</h2></div><div class="verdict" data-id="M04"></div></header>
+    <div class="demo center m04">
+      <div class="strip flex" role="toolbar" aria-label="Botões de exemplo">
+        <button type="button" class="ibtn" id="m4Prev" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+        <button type="button" class="ibtn" id="m4Shuf" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+        <button type="button" class="ibtn" id="m4Next" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+        <span class="sep" aria-hidden="true"></span>
+        <button type="button" class="ibtn fav" id="m4Fav" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+        <button type="button" class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>
+        <button type="button" class="ibtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,)"><i data-lucide="sliders-horizontal" class="ico"></i></button>
+      </div>
+    </div>
+    <div class="ctl"><button type="button" class="btn btn-ghost" id="m4Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+    <p class="num spec">80 ms · linear · transform: scale(.97) · retorno 120 ms · ease-out · ícone anterior/próximo: translateX(±2px) e volta, 240 ms, só em clique de ponteiro (teclado não anima)</p>
+    <p class="ref">Referência: <span data-ref="M04">Emil Kowalski — 7 practical animation tips; Apple HIG — Motion</span></p>
+  </article>
+
+  <!-- M05 -->
+  <article class="card" id="card-M05" aria-labelledby="t-M05">
+    <header class="ch"><div class="ch-id"><span class="num">M05</span><h2 id="t-M05">Aleatório embaralha</h2></div><div class="verdict" data-id="M05"></div></header>
+    <div class="demo center">
+      <div>
+        <div class="strip flex" role="toolbar" aria-label="Transporte de exemplo">
+          <button type="button" class="ibtn" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+          <button type="button" class="ibtn" id="m5Shuf" aria-label="Preset aleatório" title="Aleatório (Espaço)">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <g class="shA"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/></g>
+              <g class="shB"><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></g>
+            </svg>
+          </button>
+          <button type="button" class="ibtn" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+        </div>
+        <p class="readout" id="m5Out" role="status">Sorteado: Geiss — Spiral Artifact</p>
+      </div>
+    </div>
+    <div class="ctl"><button type="button" class="btn btn-ghost" id="m5Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+    <p class="num spec">220 ms · ease-out expo · transform: translateY(±12px) e volta em cada grupo de seta (paths do Lucide shuffle); as duas trocam de lugar uma vez; movimento reduzido: sem animação</p>
+    <p class="ref">Referência: <span data-ref="M05">Emil Kowalski — Great animations; Apple HIG — Motion</span></p>
+  </article>
+
+  <!-- M06 -->
+  <article class="card" id="card-M06" aria-labelledby="t-M06">
+    <header class="ch"><div class="ch-id"><span class="num">M06</span><h2 id="t-M06">Rotação liga</h2></div><div class="verdict" data-id="M06"></div></header>
+    <div class="demo center m06">
+      <div class="strip flex">
+        <button type="button" class="rot" id="m6Rot" aria-pressed="false" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num" id="m6Time">off</span></button>
+      </div>
+    </div>
+    <div class="ctl"><button type="button" class="btn btn-ghost" id="m6Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+    <p class="num spec">220 ms · ease-out expo · transform: rotate(0 → 180°) por CSS transition, só ao ligar · ao desligar: cor em 120 ms, sem giro</p>
+    <p class="ref">Referência: <span data-ref="M06">Emil Kowalski — Building a toast component (Sonner); Apple HIG — Motion</span></p>
+  </article>
+
+  <!-- M07 -->
+  <article class="card" id="card-M07" aria-labelledby="t-M07">
+    <header class="ch"><div class="ch-id"><span class="num">M07</span><h2 id="t-M07">Favoritar com núcleo</h2></div><div class="verdict" data-id="M07"></div></header>
+    <div class="demo">
+      <div class="cmp">
+        <div>
+          <p class="sub">Hoje</p>
+          <div class="fav-row">
+            <div class="now-text"><div class="now-title">Star Ornament</div><div class="now-author">por Zylot</div></div>
+            <button type="button" class="ibtn fav" id="m7Old" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
+          </div>
+        </div>
+        <div>
+          <p class="sub">Proposto</p>
+          <div class="fav-row">
+            <div class="now-text"><div class="now-title">Star Ornament</div><div class="now-author">por Zylot</div></div>
+            <button type="button" class="ibtn favp" id="m7New" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)">
+              <span class="fav-wrap">
+                <i data-lucide="star" class="ico"></i>
+                <svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="core" aria-hidden="true"></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ctl"><button type="button" class="btn btn-ghost" id="m7Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button></div>
+    <p class="num spec">estrela: 220 ms · ease-out expo · scale(.6 → 1) a partir do centro · núcleo: 400 ms · ease-out · translateY(−6px) + opacity · desfavoritar: só esvazia, 120 ms</p>
+    <p class="ref">Referência: <span data-ref="M07">Spotify Design — Bringing the Spotify heart to life; Emil Kowalski — 7 practical animation tips</span></p>
+  </article>
+
+  <!-- M08 -->
+  <article class="card" id="card-M08" aria-labelledby="t-M08">
+    <header class="ch"><div class="ch-id"><span class="num">M08</span><h2 id="t-M08">Balística do medidor</h2></div><div class="verdict" data-id="M08"></div></header>
+    <div class="demo m8">
+      <div class="strip flex"><div class="level" style="margin:0"><span class="meter" id="m8a" aria-hidden="true"></span><span class="stat" id="m8Stat">Sinal simulado</span></div></div>
+      <span class="meter big" id="m8b" aria-hidden="true"></span>
+    </div>
+    <div class="ctl">
+      <button type="button" class="btn" id="m8Mute" aria-pressed="false">Silenciar</button>
+      <button type="button" class="btn btn-ghost" id="m8Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button>
+    </div>
+    <p class="num spec">ataque ≈10 ms · queda lenta (≈1,5 s do topo à base, como um PPM) · pico segura 1,5 s e cai devagar · silêncio: 30 ms por segmento, de cima para baixo</p>
+    <p class="ref">Referência: <span data-ref="M08">Sound On Sound — PPM vs VU; The Broadcast Bridge — Audio Levels Part 4</span></p>
+  </article>
+
+  <!-- M09 -->
+  <article class="card" id="card-M09" aria-labelledby="t-M09">
+    <header class="ch"><div class="ch-id"><span class="num">M09</span><h2 id="t-M09">Tap tempo</h2></div><div class="verdict" data-id="M09"></div></header>
+    <div class="demo">
+      <div class="cmp">
+        <div class="tap" id="tapOld">
+          <p class="sub" style="margin:0">Antes (troca seca)</p>
+          <div class="tap-row"><span class="dot" id="oDot"></span><span class="bpm"><span class="plain" id="oVal">–</span><span class="unit">BPM</span></span></div>
+          <div class="tap-row"><button type="button" class="tapkey" id="oKey">Tap tempo <kbd>B</kbd></button><span class="num tapn" id="oN">toques 0 de 4</span></div>
+        </div>
+        <div class="tap" id="tapNew">
+          <p class="sub" style="margin:0">Proposto</p>
+          <div class="tap-row"><span class="dot" id="nDot"></span><span class="bpm"><span class="odo" id="nVal" aria-hidden="true"></span><span class="unit">BPM</span></span></div>
+          <div class="tap-row"><button type="button" class="tapkey sink" id="nKey">Tap tempo <kbd>B</kbd></button><span class="num tapn" id="nN">toques 0 de 4</span></div>
+        </div>
+      </div>
+      <span class="vh" id="tapLive" role="status"></span>
+    </div>
+    <div class="ctl"><button type="button" class="btn btn-ghost" id="m9Rep"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Repetir</button><span class="num tapn">Toque quatro vezes no ritmo, com o botão ou a tecla B</span></div>
+    <p class="num spec">tecla: 80 ms · linear · translateY(2px) · odômetro: 300 ms · ease-out expo · translateY por dígito (tabulares) · indicador: 400 ms · ease-out</p>
+    <p class="ref">Referência: <span data-ref="M09">MDN — font-variant-numeric (tabular-nums); Rauno Freiberg — Invisible details of interaction design</span></p>
+  </article>
+
+</main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)', EASE_IN = EASE_OUT;
+  var IDS = ['M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08', 'M09'];
+  var mq = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  function rm() { return document.body.classList.contains('rm') || mq.matches; }
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function icons() { try { if (window.lucide) window.lucide.createIcons(); } catch (e) {} }
+  // Animação com regra de movimento reduzido: sem deslocamento/escala, fade curto (<=120 ms)
+  function A(el, frames, o) {
+    if (rm()) {
+      frames = frames.map(function (f) { var g = Object.assign({}, f); delete g.transform; return g; });
+      o = Object.assign({}, o, { duration: Math.min(o.duration || 0, 120), delay: 0 });
+    }
+    return el.animate(frames, o);
+  }
+  function fmt(s) { return Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0'); }
+  function find(full) { return (window.SO_DATA && SO_DATA.presets.filter(function (p) { return p.full === full; })[0]) || { title: full, author: '' }; }
+  var SEQ = ['Geiss - Cauldron - painterly 2 (saturation remix)', 'Zylot - Star Ornament', 'Unchained - Rewop'].map(find);
+  var inViewMap = new Map();
+  var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) { es.forEach(function (e) { var f = inViewMap.get(e.target); if (f) f(e.isIntersecting); }); }) : null;
+  function watch(el, f) { inViewMap.set(el, f); if (io) io.observe(el); else f(true); }
+
+  /* ── Veredito ── */
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) {} return null; }
+  var LABELS = [['nucleo', 'Núcleo'], ['opcional', 'Opcional'], ['fora', 'Fora']];
+  function count() {
+    var n = $$('.verdict input:checked').length;
+    $('#count').textContent = n; $('#total').textContent = IDS.length;
+  }
+  $$('.verdict').forEach(function (box) {
+    var id = box.getAttribute('data-id');
+    box.setAttribute('role', 'radiogroup'); box.setAttribute('aria-label', 'Veredito de ' + id);
+    var saved = store('so-micro-' + id);
+    box.innerHTML = LABELS.map(function (l) {
+      return '<label><input type="radio" name="v-' + id + '" value="' + l[0] + '"' + (saved === l[0] ? ' checked' : '') + '><span>' + l[1] + '</span></label>';
+    }).join('');
+    box.addEventListener('change', function (e) { store('so-micro-' + id, e.target.value); count(); });
+  });
+  count();
+
+  $('#rmSw').addEventListener('change', function (e) { document.body.classList.toggle('rm', e.target.checked); });
+
+  /* ── Faixa reduzida (M01–M03) ── */
+  function stripHTML() {
+    return '<div class="strip-wrap"><div class="strip" role="toolbar" aria-label="Controles do visual (exemplo)">' +
+      '<i class="rot-line"></i>' +
+      '<div class="now blk"><div class="now-text"><div class="stack ttl"><span></span><span aria-hidden="true"></span></div><div class="stack aut now-author"><span></span><span aria-hidden="true"></span></div></div>' +
+      '<button type="button" class="ibtn fav" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button></div>' +
+      '<div class="strip-t blk">' +
+      '<button type="button" class="ibtn" data-act="prev" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>' +
+      '<button type="button" class="ibtn" data-act="shuf" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>' +
+      '<button type="button" class="ibtn" data-act="next" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>' +
+      '<span class="sep" aria-hidden="true"></span>' +
+      '<button type="button" class="rot" aria-pressed="true" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num">0:30</span></button></div>' +
+      '<div class="tail blk"><div class="level"><span class="meter" aria-hidden="true"></span></div>' +
+      '<button type="button" class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>' +
+      '<button type="button" class="ibtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,)"><i data-lucide="sliders-horizontal" class="ico"></i></button></div>' +
+      '</div></div>';
+  }
+  var ROT_MS = 10000;
+  function MiniStrip(host, opt) {
+    var self = this; this.opt = opt; this.host = host; this.idx = 0; this.visible = true; this.rotOn = true; this.inView = false;
+    host.innerHTML = stripHTML() + (opt.credit ? '<div class="credit-mini" aria-hidden="true"><h3></h3><p></p><div class="sweep"><i></i></div></div>' : '');
+    this.wrap = $('.strip-wrap', host); this.strip = $('.strip', host); this.blocks = $$('.blk', host);
+    this.ttl = $('.ttl', host); this.aut = $('.aut', host); this.act = new Map([[this.ttl, 0], [this.aut, 0]]);
+    this.line = $('.rot-line', host); this.timeEl = $('.rot .num', host); this.rotBtn = $('.rot', host);
+    try { SOViz.meter($('.meter', host), 20)(0.55, 0.7); } catch (e) {}
+    this.setInstant(0);
+    $$('[data-act]', host).forEach(function (b) {
+      b.addEventListener('click', function () {
+        var a = b.getAttribute('data-act');
+        if (a === 'next') self.go((self.idx + 1) % SEQ.length);
+        else if (a === 'prev') self.go((self.idx + SEQ.length - 1) % SEQ.length);
+        else self.go((self.idx + 1 + Math.floor(Math.random() * (SEQ.length - 1))) % SEQ.length);
+      });
+    });
+    $('.fav', host).addEventListener('click', function (e) { var b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); });
+    this.rotBtn.addEventListener('click', function () { self.setRot(!self.rotOn); });
+    if (opt.credit) { this.credit = $('.credit-mini', host); this.sweep = $('.sweep i', host); }
+    if (opt.line) {
+      this.startLine(0);
+      setInterval(function () {
+        if (self.inView && self.rotOn && !self.drain) self.timeEl.textContent = fmt(Math.round(30 * (1 - self.progress())));
+      }, 250);
+    }
+    watch(host, function (v) { self.inView = v; if (self.lineAnim && !self.drain) { if (v && self.rotOn) self.lineAnim.play(); else self.lineAnim.pause(); } });
+  }
+  var MP = MiniStrip.prototype;
+  MP.setInstant = function (i) {
+    var p = SEQ[i], self = this;
+    [[this.ttl, p.title], [this.aut, 'por ' + p.author]].forEach(function (x) {
+      var s = x[0].children, a = self.act.get(x[0]);
+      s[a].textContent = x[1]; s[a].title = x[1];
+    });
+  };
+  MP.swapStack = function (stack, text, delay) {
+    var s = stack.children, a = this.act.get(stack), prev = s[a], next = s[1 - a];
+    [prev, next].forEach(function (el) { el.getAnimations().forEach(function (x) { x.cancel(); }); });
+    prev.style.opacity = 1; next.style.opacity = 0; next.textContent = text; next.title = text;
+    prev.removeAttribute('aria-hidden'); next.setAttribute('aria-hidden', 'true');
+    var o = A(prev, [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 120, delay: delay, easing: EASE_IN, fill: 'both' });
+    if (stack === this.ttl && this.opt.titleAnim) A(next, [{ color: '#C244FF' }, { color: '#EEEEF5' }], { duration: 120, easing: EASE_OUT });
+    var n = A(next, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, delay: delay, easing: EASE_OUT, fill: 'both' });
+    o.onfinish = function () { prev.style.opacity = 0; o.cancel(); prev.setAttribute('aria-hidden', 'true'); };
+    n.onfinish = function () { next.style.opacity = 1; n.cancel(); next.removeAttribute('aria-hidden'); };
+    this.act.set(stack, 1 - a);
+  };
+  MP.go = function (i, o) {
+    o = o || {}; this.idx = i; var p = SEQ[i];
+    if (o.silent) { this.setInstantFinal(p); return; }
+    if (this.opt.titleAnim) { this.swapStack(this.ttl, p.title, 0); this.swapStack(this.aut, 'por ' + p.author, 40); }
+    else this.setInstantFinal(p);
+    if (this.opt.line) this.drainLine();
+    if (this.opt.credit) this.showCredit(p);
+  };
+  MP.setInstantFinal = function (p) {
+    var self = this;
+    [[this.ttl, p.title], [this.aut, 'por ' + p.author]].forEach(function (x) {
+      var s = x[0].children, a = self.act.get(x[0]);
+      Array.prototype.forEach.call(s, function (el) { el.getAnimations().forEach(function (q) { q.cancel(); }); });
+      s[a].textContent = x[1]; s[a].title = x[1]; s[a].style.opacity = 1; s[1 - a].style.opacity = 0;
+    });
+  };
+  MP.showCredit = function (p) {
+    var c = this.credit; $('h3', c).textContent = p.title; $('p', c).textContent = 'por ' + p.author;
+    c.classList.add('show');
+    if (this.sweepAnim) this.sweepAnim.cancel();
+    this.sweepAnim = this.sweep.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 2000, easing: 'linear', fill: 'forwards' });
+    clearTimeout(this.credT); this.credT = setTimeout(function () { c.classList.remove('show'); }, 4000);
+  };
+  MP.startLine = function (p0) {
+    var self = this, line = this.line;
+    if (this.lineAnim) { this.lineAnim.onfinish = null; this.lineAnim.cancel(); }
+    line.style.transformOrigin = 'left'; line.style.transform = 'scaleX(' + p0 + ')';
+    this.lineBase = p0; this.lineDur = ROT_MS * (1 - p0);
+    var a = line.animate([{ transform: 'scaleX(' + p0 + ')' }, { transform: 'scaleX(1)' }], { duration: this.lineDur, easing: 'linear', fill: 'forwards' });
+    a.onfinish = function () { self.go((self.idx + 1) % SEQ.length); };
+    this.lineAnim = a;
+    if (!this.rotOn || !this.inView) a.pause();
+  };
+  MP.progress = function () {
+    var a = this.lineAnim; if (!a) return 0;
+    var t = Math.min(1, (a.currentTime || 0) / this.lineDur);
+    return this.lineBase + (1 - this.lineBase) * t;
+  };
+  MP.drainLine = function () {
+    var self = this, line = this.line;
+    var p = this.drain ? 0 : this.progress();
+    if (this.drain) { this.drain.onfinish = null; this.drain.cancel(); }
+    if (this.lineAnim) { this.lineAnim.onfinish = null; this.lineAnim.cancel(); this.lineAnim = null; }
+    line.style.transformOrigin = 'right'; line.style.transform = 'scaleX(' + p + ')';
+    var d = line.animate([{ transform: 'scaleX(' + p + ')' }, { transform: 'scaleX(0)' }], { duration: 220, easing: EASE_OUT, fill: 'forwards' });
+    this.drain = d;
+    d.onfinish = function () { d.cancel(); self.drain = null; self.startLine(0); };
+  };
+  MP.setRot = function (on) {
+    this.rotOn = on; this.rotBtn.setAttribute('aria-pressed', on);
+    if (!this.opt.line) { this.timeEl.textContent = on ? '0:30' : 'off'; return; }
+    this.timeEl.textContent = on ? fmt(Math.round(30 * (1 - this.progress()))) : 'off';
+    if (this.lineAnim && !this.drain) { if (on && this.inView) this.lineAnim.play(); else this.lineAnim.pause(); }
+  };
+  MP.show = function () {
+    var w = this.wrap; this.visible = true;
+    [w, this.strip].concat(this.blocks).forEach(function (el) { el.getAnimations().forEach(function (x) { x.cancel(); }); });
+    w.classList.remove('off'); w.removeAttribute('inert');
+    if (this.opt.degrau) {
+      A(this.strip, [{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: EASE_OUT });
+      this.blocks.forEach(function (b, i) {
+        A(b, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 220, delay: i * 20, easing: EASE_OUT, fill: 'backwards' });
+      });
+    } else A(w, [{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: EASE_OUT });
+  };
+  MP.hide = function () {
+    var w = this.wrap; this.visible = false; w.setAttribute('inert', '');
+    [w, this.strip].concat(this.blocks).forEach(function (el) { el.getAnimations().forEach(function (x) { x.cancel(); }); });
+    var a = this.opt.degrau
+      ? A(w, [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: 150, easing: EASE_IN, fill: 'forwards' })
+      : A(w, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, easing: EASE_OUT, fill: 'forwards' });
+    a.onfinish = function () { w.classList.add('off'); a.cancel(); };
+  };
+  MP.toggle = function () { if (this.visible) this.hide(); else this.show(); return this.visible; };
+
+  function wire(n, s, repeat) {
+    var t = $('#m' + n + 'Toggle');
+    t.addEventListener('click', function () { t.setAttribute('aria-expanded', s.toggle()); });
+    $('#m' + n + 'Swap').addEventListener('click', function () { if (!s.visible) { s.show(); t.setAttribute('aria-expanded', 'true'); } s.go((s.idx + 1) % SEQ.length); });
+    $('#m' + n + 'Rep').addEventListener('click', function () { repeat(); });
+  }
+  var s1 = new MiniStrip($('#stage1'), { degrau: true });
+  var s2 = new MiniStrip($('#stage2'), { titleAnim: true, credit: true });
+  var s3 = new MiniStrip($('#stage3'), { line: true });
+  wire(1, s1, function () {
+    if (!s1.visible) { s1.show(); $('#m1Toggle').setAttribute('aria-expanded', 'true'); return; }
+    s1.hide(); $('#m1Toggle').setAttribute('aria-expanded', 'false');
+    setTimeout(function () { s1.show(); $('#m1Toggle').setAttribute('aria-expanded', 'true'); }, 450);
+  });
+  wire(2, s2, function () {
+    if (!s2.visible) { s2.show(); $('#m2Toggle').setAttribute('aria-expanded', 'true'); }
+    var k = s2.idx; s2.go((k + SEQ.length - 1) % SEQ.length, { silent: true });
+    setTimeout(function () { s2.go(k); }, 200);
+  });
+  wire(3, s3, function () {
+    if (!s3.visible) { s3.show(); $('#m3Toggle').setAttribute('aria-expanded', 'true'); }
+    s3.startLine(0.7);
+    setTimeout(function () { s3.go((s3.idx + 1) % SEQ.length); }, 450);
+  });
+
+  /* ── M04 ── */
+  function pressBtn(b) {
+    if (rm()) return;
+    var a = b.animate([{ transform: 'scale(1)' }, { transform: 'scale(0.97)' }], { duration: 80, easing: 'linear', fill: 'forwards' });
+    a.onfinish = function () { a.cancel(); b.animate([{ transform: 'scale(0.97)' }, { transform: 'scale(1)' }], { duration: 120, easing: EASE_OUT }); };
+  }
+  function stepIcon(b, dir) {
+    if (rm()) return;
+    var ic = $('svg', b); if (!ic) return;
+    ic.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(' + (2 * dir) + 'px)' }, { transform: 'translateX(0)' }], { duration: 240, easing: EASE_OUT });
+  }
+  [['m4Prev', -1], ['m4Next', 1], ['m4Shuf', 0]].forEach(function (x) {
+    var b = $('#' + x[0]);
+    b.addEventListener('click', function (e) { if (x[1] && e.detail > 0) stepIcon(b, x[1]); });
+  });
+  $('#m4Fav').addEventListener('click', function (e) { var b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); });
+  $('#m4Rep').addEventListener('click', function () {
+    var p = $('#m4Prev'), n = $('#m4Next');
+    pressBtn(p); stepIcon(p, -1);
+    setTimeout(function () { pressBtn(n); stepIcon(n, 1); }, 450);
+  });
+
+  /* ── M05 ── */
+  var SHUF = ['Geiss - Spiral Artifact', 'Aderrasi - Potion of Spirits', 'martin - castle in the air', 'Flexi - mindblob [shiny mix]', 'Rovastar - Oozing Resistance'].map(find);
+  var shufI = 0;
+  function shuffle5() {
+    shufI = (shufI + 1 + Math.floor(Math.random() * (SHUF.length - 1))) % SHUF.length;
+    var p = SHUF[shufI]; $('#m5Out').textContent = 'Sorteado: ' + p.title + ' — por ' + p.author;
+    if (rm()) return;
+    [['.shA', 12], ['.shB', -12]].forEach(function (g) {
+      $(g[0], $('#m5Shuf')).animate([{ transform: 'translateY(0)' }, { transform: 'translateY(' + g[1] + 'px)' }, { transform: 'translateY(0)' }], { duration: 220, easing: EASE_OUT });
+    });
+  }
+  $('#m5Shuf').addEventListener('click', shuffle5);
+  $('#m5Rep').addEventListener('click', shuffle5);
+  $$('.shA, .shB').forEach(function (g) {  });
+  $('#m5Out').textContent = 'Sorteado: ' + SHUF[0].title + ' — por ' + SHUF[0].author;
+
+  /* ── M06 ── */
+  var rot6 = $('#m6Rot');
+  function setRot6(on, anim) {
+    rot6.setAttribute('aria-pressed', on); $('#m6Time').textContent = on ? '0:30' : 'off';
+  }
+  rot6.addEventListener('click', function () { setRot6(rot6.getAttribute('aria-pressed') !== 'true', true); });
+  $('#m6Rep').addEventListener('click', function () { setRot6(false, false); setTimeout(function () { setRot6(true, true); }, 500); });
+
+  /* ── M07 ── */
+  function setFavOld(on) { var b = $('#m7Old'); b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Desfavoritar' : 'Favoritar'); b.title = (on ? 'Desfavoritar' : 'Favoritar') + ' (F)'; }
+  function setFavNew(on, anim) {
+    var b = $('#m7New'); b.setAttribute('aria-pressed', on); b.setAttribute('aria-label', on ? 'Desfavoritar' : 'Favoritar'); b.title = (on ? 'Desfavoritar' : 'Favoritar') + ' (F)';
+    if (on && anim && !rm()) {
+      $('.core', b).animate([{ opacity: 1, transform: 'translateY(-8px) rotate(45deg)' }, { opacity: 0, transform: 'translateY(-14px) rotate(45deg)' }], { duration: 400, easing: EASE_OUT });
+    }
+  }
+  $('#m7Old').addEventListener('click', function () { setFavOld($('#m7Old').getAttribute('aria-pressed') !== 'true'); });
+  $('#m7New').addEventListener('click', function () { setFavNew($('#m7New').getAttribute('aria-pressed') !== 'true', true); });
+  $('#m7Rep').addEventListener('click', function () {
+    setFavOld(false); setFavNew(false, false);
+    setTimeout(function () { setFavOld(true); setFavNew(true, true); }, 350);
+  });
+
+  /* ── M08 ── */
+  var N = 20, segsA = $$('i', (function () { var m = $('#m8a'); m.innerHTML = new Array(N + 1).join('<i></i>'); return m; })()),
+      segsB = $$('i', (function () { var m = $('#m8b'); m.innerHTML = new Array(N + 1).join('<i></i>'); return m; })());
+  var lvl = 0, pk = 0, pkAt = 0, pv = 0, cas = N, silent = false, beat = 0, nextBeat = 0, last = performance.now(), m8view = false, cache = [];
+  watch($('#card-M08'), function (v) { m8view = v; });
+  function setMute(v) {
+    if (v === silent) return; silent = v;
+    if (v) cas = Math.round(lvl * N);
+    $('#m8Mute').setAttribute('aria-pressed', v); $('#m8Mute').textContent = v ? 'Retomar som' : 'Silenciar';
+    $('#m8Stat').textContent = v ? 'Silêncio' : 'Sinal simulado';
+  }
+  function paint(segs, on, pi) {
+    for (var i = 0; i < N; i++) {
+      var c = i < on ? (i >= N - 2 ? 'clip' : i >= N * 0.7 ? 'hot' : 'on') : (i === pi ? 'peak' : '');
+      if (segs[i].className !== c) segs[i].className = c;
+    }
+  }
+  function tick(now) {
+    requestAnimationFrame(tick);
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (!m8view) return;
+    var on;
+    if (!silent) {
+      if (now > nextBeat) { beat = 1; nextBeat = now + 440 + Math.random() * 140; }
+      beat *= Math.pow(0.86, dt * 60);
+      var target = Math.max(0, Math.min(1, 0.4 + 0.16 * Math.sin(now / 1000 * 1.3) + beat * 0.45 + (Math.random() - 0.5) * 0.08));
+      if (target >= lvl) lvl += (target - lvl) * (1 - Math.exp(-dt / 0.0045)); else lvl = Math.max(target, lvl - dt / 1.5);
+      if (lvl >= pk) { pk = lvl; pkAt = now; pv = 0; }
+      else if (now - pkAt > 1500) { pv += 0.3 * dt; pk -= (0.12 + pv) * dt; if (pk < lvl) pk = lvl; }
+      on = Math.round(lvl * N);
+    } else {
+      cas = Math.max(0, cas - dt / 0.03);
+      lvl = cas / N; pk = Math.min(pk, lvl); on = Math.ceil(cas - 1e-6);
+    }
+    var pi = Math.min(N - 1, Math.round(pk * N) - 1);
+    if (pk * N < 0.5) pi = -1;
+    paint(segsA, on, pi); paint(segsB, on, pi);
+  }
+  requestAnimationFrame(tick);
+  $('#m8Mute').addEventListener('click', function () { setMute(!silent); });
+  var m8t = 0;
+  $('#m8Rep').addEventListener('click', function () { clearTimeout(m8t); setMute(false); m8t = setTimeout(function () { setMute(true); m8t = setTimeout(function () { setMute(false); }, 1800); }, 700); });
+
+  /* ── M09 ── */
+  var ITEMS = ['–', ' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']; // 0 = traço, 1 = vazio, 2.. = dígitos
+  var odo = $('#nVal'), cols = [], cur = [0, 0, 0];
+  for (var c = 0; c < 3; c++) {
+    var col = document.createElement('span'); col.className = 'col';
+    var inner = document.createElement('div');
+    inner.innerHTML = ITEMS.map(function (t) { return '<span>' + t + '</span>'; }).join('');
+    col.appendChild(inner); odo.appendChild(col); cols.push(inner);
+  }
+  function odoSet(bpm, anim) {
+    var s = String(bpm), idx = [];
+    if (bpm == null) idx = [0, 0, 0];
+    else { s = s.padStart(3, ' '); for (var i = 0; i < 3; i++) idx.push(s[i] === ' ' ? 1 : Number(s[i]) + 2); }
+    odo.classList.toggle('has', bpm != null);
+    cols.forEach(function (inner, i) {
+      var from = 'translateY(' + (-cur[i] * 1.2) + 'em)', to = 'translateY(' + (-idx[i] * 1.2) + 'em)';
+      inner.style.transform = to;
+      if (anim && !rm() && cur[i] !== idx[i]) inner.animate([{ transform: from }, { transform: to }], { duration: 300, easing: EASE_OUT });
+      cur[i] = idx[i];
+    });
+  }
+  odoSet(null, false);
+  var taps = [], bpmNow = null, repTimers = [];
+  function flash(dot) { dot.animate([{ backgroundColor: '#FF2D6B' }, { backgroundColor: '#3A3A50' }], { duration: 400, easing: EASE_OUT }); }
+  function tapAll(viaKey) {
+    var t = performance.now();
+    if (taps.length && t - taps[taps.length - 1] > 2500) taps = [];
+    taps.push(t); if (taps.length > 8) taps.shift();
+    var n = taps.length;
+    // antes: indicador liga e desliga seco; depois: libera em 400 ms
+    var od = $('#oDot'); od.classList.add('on'); clearTimeout(od._t); od._t = setTimeout(function () { od.classList.remove('on'); }, 120);
+    flash($('#nDot'));
+    if (viaKey && !rm()) { /* tecla física: afunda a tecla do "Proposto" */ }
+    if (viaKey) sinkKey($('#nKey'));
+    $('#oN').textContent = $('#nN').textContent = 'toques ' + Math.min(n, 4) + (n >= 4 ? '+' : '') + ' de 4';
+    if (n >= 4) {
+      var span = taps[n - 1] - taps[0], bpm = Math.max(30, Math.min(300, Math.round(60000 / (span / (n - 1)))));
+      bpmNow = bpm;
+      $('#oVal').textContent = bpm; $('#oVal').classList.add('has');
+      odoSet(bpm, true);
+      $('#tapLive').textContent = bpm + ' BPM';
+    }
+  }
+  function sinkKey(b) {
+    if (rm()) return;
+    var a = b.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(2px)' }], { duration: 80, easing: 'linear', fill: 'forwards' });
+    a.onfinish = function () { a.cancel(); b.animate([{ transform: 'translateY(2px)' }, { transform: 'translateY(0)' }], { duration: 120, easing: EASE_OUT }); };
+  }
+  ['#oKey', '#nKey'].forEach(function (s) { $(s).addEventListener('click', function (e) { tapAll(e.detail === 0); }); });
+  document.addEventListener('keydown', function (e) {
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey || String(e.key).toLowerCase() !== 'b') return;
+    var tg = e.target; if (tg && (tg.tagName === 'INPUT' && tg.type !== 'radio' && tg.type !== 'checkbox' || tg.isContentEditable)) return;
+    tapAll(true);
+  });
+  function resetBpm() {
+    taps = []; bpmNow = null; $('#oVal').textContent = '–'; $('#oVal').classList.remove('has'); odoSet(null, false);
+    $('#oN').textContent = $('#nN').textContent = 'toques 0 de 4'; $('#tapLive').textContent = '';
+  }
+  $('#m9Rep').addEventListener('click', function () {
+    repTimers.forEach(clearTimeout); repTimers = []; resetBpm();
+    for (var i = 0; i < 4; i++) repTimers.push(setTimeout(function () { tapAll(true); }, 200 + i * 480));
+  });
+
+  icons();
+  window.__micro = { s1: s1, s2: s2, s3: s3 };
+})();
+</script>
+</body>
+</html>

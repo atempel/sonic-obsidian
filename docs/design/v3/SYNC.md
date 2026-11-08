@@ -5,7 +5,7 @@ Espelho **somente leitura** do artefato do Claude Design. Não edite estes arqui
 | Campo | Valor |
 |---|---|
 | Artefato | https://claude.ai/artifact/UYomSYJHhGRN9bqUPc21qF |
-| Versão sincronizada | `1794165177-f126` |
+| Versão sincronizada | `1794171149-6542` |
 | Sincronizado em | 2026-11-08 |
 | Por | Claude Code (nuvem), skill `sincronizar-design` |
 
@@ -19,6 +19,8 @@ Espelho **somente leitura** do artefato do Claude Design. Não edite estes arqui
 |---|---|
 | `docs/v3-brief-visual-e-craft.md` | `7e74bd67ab6b` |
 | `docs/v3-fontes-butterchurn-estudio-mcp.md` | `76d83b3fa8d4` |
+| `docs/v3-microinteracoes-referencias.md` | `94dc6d66c110` |
+| `docs/v3-microinteracoes.md` | `ccff829a1d4c` |
 | `docs/v3-modelo-de-navegacao.md` | `655f6588503b` |
 | `docs/v3-video-vj.md` | `d9c7a4af4a58` |
 | `prototype/Sonic Obsidian A Palco.html` | `af2a8d138f04` |
@@ -27,6 +29,8 @@ Espelho **somente leitura** do artefato do Claude Design. Não edite estes arqui
 | `prototype/Sonic Obsidian C Rack.html` | `96541cfe4d0e` |
 | `prototype/Sonic Obsidian Configurações.html` | `bfcc40220635` |
 | `prototype/Sonic Obsidian Estúdio.html` | `cf117255466f` |
+| `prototype/Sonic Obsidian Micro Faixa.html` | `1d93c3b549a1` |
+| `prototype/Sonic Obsidian Micro Navegação.html` | `3c79f9abb048` |
 | `prototype/Sonic Obsidian Modo performance.html` | `09429a96c974` |
 | `prototype/Sonic Obsidian Palco com vídeo.html` | `ae6b21687def` |
 | `prototype/Sonic Obsidian Palco integrado.html` | `46325d08c5ea` |
@@ -39,5 +43,6 @@ Espelho **somente leitura** do artefato do Claude Design. Não edite estes arqui
 | `prototype/so-v3-viz.js` | `3500382a3b40` |
 
 ## Histórico
+- `1794171149-6542` (2026-11-08, Claude Code): só acréscimos. Páginas novas `Micro Faixa` e `Micro Navegação` (laboratórios) e docs `v3-microinteracoes.md` e `v3-microinteracoes-referencias.md`: catálogo M01–M23 de microinterações, todas **Propostas** até o usuário escolher. Nenhuma página ou doc existente mudou. Efeito nas specs: [queue/2026-11-08-microinteracoes.md](../../../queue/2026-11-08-microinteracoes.md).
 - `1794165177-f126` (2026-11-08, Claude Code): mudaram `docs/v3-modelo-de-navegacao.md`, `Configurações`, `Palco integrado` e `Palco com vídeo` — texto sobre o visual (nome do preset, título da faixa, avisos, Modo limpo `T`) e controles da janela (minimizar/fechar no canto superior direito). Efeito nas specs: [queue/2026-11-08-design-f126-texto-e-janela.md](../../../queue/2026-11-08-design-f126-texto-e-janela.md).
 - `1794154301-3f85` (2026-11-08, sessão de design): primeiro espelho.

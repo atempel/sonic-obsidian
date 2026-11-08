@@ -19,7 +19,7 @@ import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
-import { showToast } from './ui/toast'
+import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { isFullScreen, setupWindowChrome } from './window'
 
@@ -78,6 +78,8 @@ async function start(): Promise<void> {
   })
   const settings = core.state.settings
   const exprProbe = hookExpression(viz.visualizer, () => settings.expression)
+  // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
+  setToastPolicy(() => settings.overlayText)
   const rotation = new AutoRotation(performance.now(), () => ({
     enabled: settings.rotation.enabled,
     intervalSeconds: core.rotationIntervalSeconds
@@ -271,6 +273,10 @@ async function start(): Promise<void> {
     } else if (e.code === 'KeyF') {
       // F = tela cheia (como F11), por decisão do usuário; ver DIVERGENCIAS.
       run('window.fullscreen')
+    } else if (e.code === 'KeyT') {
+      // Modo limpo (spec 014): a confirmação sempre aparece, uma vez.
+      run('overlayText.set', { clean: !settings.overlayText.clean })
+      showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', 1800, { force: true })
     } else if (e.code === 'KeyH') {
       idle.hideNow()
     } else if (e.code === 'KeyR') {
