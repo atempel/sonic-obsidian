@@ -1,6 +1,6 @@
 # 006 — Spike: Butterchurn 3 (WASM) e pipeline `.milk`
 
-**Fase:** 3 (fundação) · **Status:** A fazer · **Issue:** (criar ao iniciar) · **Bloqueia:** importar `.milk`, Estúdio, `create_preset` do MCP
+**Fase:** 3 (fundação) · **Status:** A fazer · **Issue:** [#19](https://github.com/atempel/sonic-obsidian/issues/19) · **Bloqueia:** importar `.milk`, Estúdio, `create_preset` do MCP
 
 ## Problema
 Presets do usuário e da IA (MCP) exigem carregar presets que não vieram do pacote oficial. No Butterchurn 2.6.7, que o app usa hoje, as equações de cada preset viram JavaScript via `new Function` dentro do renderer: quem fornece o preset executa código arbitrário no app. A versão 3.0 (beta) compila as equações EEL para WebAssembly isolado. Antes de construir qualquer coisa em cima, é preciso saber se o 3.x publicado no npm aguenta o uso real e se conseguimos produzir presets nesse formato a partir de um `.milk`.

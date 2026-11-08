@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08 — Claude Code (nuvem) — branch `claude/amazing-clarke-wbr2td`
+**Fez:** Mergeou o PR #18 (squash, com o ok do usuário). `sincronizar-design` no modo checar: artefato na versão `1794154301-3f85`, igual ao SYNC.md. Criou as issues #19 (spike 006) e #20 (spike 007) com o label `fase-3`. Planejou a Fase 2 com `planejar-feature`, extraindo os estados do protótipo (Palco integrado, Configurações, Setup) com subagentes: specs 008 (núcleo + persistência), 009 (Palco: faixa + assinatura), 010 (busca + Biblioteca), 011 (Ajustes rápidos + Configurações) e 012 (setup, diagnóstico e fps por preset), com as issues #21–#25 (label `fase-2`). Decisão do usuário: overlay em Preact (DECISIONS). Três divergências novas em DIVERGENCIAS (ganho padrão em dB, limite de quadros, texto do aviso de silêncio). TASKS e PROJECT apontando para a Fase 2.
+**Deixou em:** branch `claude/amazing-clarke-wbr2td` com PR para `main` (só docs, sem código). O Preact ainda não foi instalado: entra na execução da spec 008. Próximo: `executar-task` da 008. Nada de áudio/fps a verificar nesta sessão.
+
 ### 2026-11-08 — Claude Code (nuvem, claude.ai/code) — branches `feat/presets-navegacao`, `feat/rotacao-automatica`, `feat/janela`, `feat/sinal-entrada`
 **Fez:** Fase 1 inteira, cada spec validada pelo usuário no Windows com o build do CI:
 - 002 (395 presets, navegação, toast; corrigida a CSP que bloqueava texturas `data:` dos presets) — PR #12;

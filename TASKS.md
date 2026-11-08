@@ -2,11 +2,14 @@
 
 Índice: cada item aponta para sua spec (`docs/specs/`) e issue. O detalhe vive na spec, não aqui. Roadmap completo em [docs/PRD.md](docs/PRD.md). Referências pendentes em `queue/`; histórico em [SESSIONS.md](SESSIONS.md).
 
-## Agora — Fase 2 (escrever specs com `planejar-feature`, com `sincronizar-design` no modo "checar")
-- [ ] Planejar as specs da Fase 2 a partir do PRD, de [architecture.md](docs/architecture.md) e do protótipo v3 (`docs/design/v3/`, versão em SYNC.md)
+## Agora — Fase 2 (Interface v3, protótipo `1794154301-3f85`; UI do overlay em Preact)
+- [ ] **Núcleo de comandos e persistência** (bloqueia as demais) — [spec 008](docs/specs/008-nucleo-comandos-persistencia.md) · issue [#21](https://github.com/atempel/sonic-obsidian/issues/21)
+- [ ] **Palco: faixa de controle e assinatura** — [spec 009](docs/specs/009-palco-faixa-assinatura.md) · issue [#22](https://github.com/atempel/sonic-obsidian/issues/22)
+- [ ] **Busca rápida e Biblioteca (gaveta)** — [spec 010](docs/specs/010-busca-biblioteca.md) · issue [#23](https://github.com/atempel/sonic-obsidian/issues/23)
+- [ ] **Ajustes rápidos e Configurações** (remove `+`/`−`/`0` e `[`/`]`) — [spec 011](docs/specs/011-ajustes-configuracoes.md) · issue [#24](https://github.com/atempel/sonic-obsidian/issues/24)
+- [ ] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
-- [ ] Tirar as teclas provisórias `[`/`]` (intervalo da rotação) e `+`/`−`/`0` (ganho) quando os Ajustes rápidos existirem — [DIVERGENCIAS](docs/design/v3/DIVERGENCIAS.md)
 - [ ] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
 ## Feito
@@ -19,17 +22,9 @@
 - [ ] Frente de vídeo/VJ: decidir se entra no PRD — [queue/2026-11-08-video-vj.md](queue/2026-11-08-video-vj.md)
 - [ ] Fechar a tipografia (manter Space Grotesk ou alternativa)
 
-## Próximo — Fase 2 (itens a virar specs)
-- [ ] Núcleo de comandos + persistência ([architecture.md §1, §7](docs/architecture.md))
-- [ ] Palco + faixa de controle + assinatura de troca
-- [ ] Busca rápida
-- [ ] Biblioteca (gaveta)
-- [ ] Ajustes rápidos + Configurações
-- [ ] Setup e diagnóstico
-
 ## Spikes de risco (podem rodar em paralelo à Fase 1/2)
-- [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue: criar
-- [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue: criar
+- [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue [#19](https://github.com/atempel/sonic-obsidian/issues/19)
+- [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue [#20](https://github.com/atempel/sonic-obsidian/issues/20)
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))
