@@ -14,8 +14,22 @@
 ## Feito
 - [x] **Fase 0 — Spike Electron + Butterchurn + loopback** (build Windows pelo CI) — [spec 001](docs/specs/001-spike-electron-butterchurn.md) · issue [#4](https://github.com/atempel/sonic-obsidian/issues/4) · PR [#5](https://github.com/atempel/sonic-obsidian/pull/5). Critério 4 (fone Bluetooth/USB) não verificado.
 
-## Em paralelo — Design
-- [ ] Revisar a interface do Sonic Obsidian para o modelo de presets (ver PRD, Fase 2) — triagem em [queue/2026-11-08-revisao-ui-presets.md](queue/2026-11-08-revisao-ui-presets.md); revisão do design no Claude Design (usuário)
+## Em paralelo — Design (Claude Design, usuário)
+- [x] ~~Revisar a interface para o modelo de presets~~ — resolvido pela interface v3 ([docs/design/v3-modelo-de-navegacao.md](docs/design/v3-modelo-de-navegacao.md), DECISIONS 2026-11-08)
+- [ ] Trazer o brief visual v3 (tokens, *craft floor*) para o repo — [queue/2026-11-08-design-v3-brief-visual.md](queue/2026-11-08-design-v3-brief-visual.md)
+- [ ] Fechar a tipografia (manter Space Grotesk ou alternativa)
+
+## Próximo — Fase 2 (escrever specs com `planejar-feature` quando a Fase 1 fechar)
+- [ ] Núcleo de comandos + persistência ([architecture.md §1, §7](docs/architecture.md))
+- [ ] Palco + faixa de controle + assinatura de troca
+- [ ] Busca rápida
+- [ ] Biblioteca (gaveta)
+- [ ] Ajustes rápidos + Configurações
+- [ ] Setup e diagnóstico
+
+## Spikes de risco (podem rodar em paralelo à Fase 1/2)
+- [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue: criar
+- [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue: criar
 
 ## Depois
-- Fase 2 — Interface · Fase 3 — Diferenciais · Fase 4 — Empacotamento (ver PRD)
+- Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))
