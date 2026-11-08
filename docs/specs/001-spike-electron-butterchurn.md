@@ -1,6 +1,6 @@
 # 001 — Spike: Electron + Butterchurn + loopback
 
-**Fase:** 0 · **Status:** A fazer · **Issue:** (criar ao iniciar)
+**Fase:** 0 · **Status:** A fazer · **Issue:** [#4](https://github.com/atempel/sonic-obsidian/issues/4)
 
 ## Problema
 Toda a stack nova depende de uma suposição: que um app Electron no Windows consegue capturar o áudio do sistema por loopback e alimentar o Butterchurn a 60 fps. Se isso falhar, o plano muda. Precisa ser provado antes de qualquer interface.
