@@ -82,10 +82,8 @@ function createWindow(): void {
     } else if (input.control && !input.alt && input.key.toLowerCase() === 'w') {
       win.close()
       event.preventDefault()
-    } else if (input.key === 'Escape' && win.isFullScreen()) {
-      win.setFullScreen(false)
-      event.preventDefault()
     }
+    // Esc é tratado no renderer: fecha o que estiver aberto e, sem nada aberto, sai da tela cheia.
   })
 
   if (process.env.ELECTRON_RENDERER_URL) {

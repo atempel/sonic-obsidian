@@ -1,7 +1,13 @@
 /* Palco v3 (protótipo "Palco integrado", versão 1794154301-3f85): faixa de controle,
    assinatura da troca, alça da borda, cartões de estado e toast. */
 #ui { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
-#ui button, #ui .strip, #ui .state, #ui .edge { -webkit-app-region: no-drag; }
+#ui button, #ui .strip, #ui .state, #ui .edge, #ui .lib, #ui .palette, #ui .menu, #ui input, #ui select { -webkit-app-region: no-drag; }
+#ui .lib, #ui .palette, #ui .menu, #ui .scrim, #ui .lib-scrim { pointer-events: auto; }
+body:not(.lib-open) #ui .lib-scrim, body:not(.palette-open) #ui .scrim { pointer-events: none; }
+body.lib-open .strip-wrap { padding-left: 376px; }
+body.lib-open .credit { padding-left: 400px; }
+@media (max-width: 900px) { body.lib-open .strip-wrap { padding-left: 16px; } }
+body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
 [hidden] { display: none !important; }
 body.idle, body.idle * { cursor: none !important; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

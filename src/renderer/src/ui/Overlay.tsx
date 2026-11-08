@@ -5,10 +5,13 @@ import '@fontsource/jetbrains-mono/400.css'
 import '@fontsource/jetbrains-mono/500.css'
 import './theme.css'
 import './palco.css'
+import './biblioteca.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureState, Core } from '../core/commands'
 import { Icon } from './icons'
+import { Library } from './Library'
+import { Palette } from './Palette'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
 import { onToast, showToast } from './toast'
@@ -21,6 +24,8 @@ import { onToast, showToast } from './toast'
  */
 export interface PalcoBridge {
   core: Core
+  /** Todos os nomes de preset, em ordem alfabética (cresce quando os pacotes extras chegam). */
+  presets(): readonly string[]
   /** Segundos até a próxima troca automática. */
   rotationRemaining(): number
   retryCapture(): void
@@ -152,7 +157,13 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
       <div class="strip" role="toolbar" aria-label="Controles do visual">
         <i class="rot-line" ref={line} />
         <div class="now">
-          <button class="ibtn" aria-label="Abrir biblioteca" title="Biblioteca (L) — em breve" disabled>
+          <button
+            class="ibtn"
+            aria-label="Abrir biblioteca"
+            title="Biblioteca (L)"
+            aria-expanded={core.state.overlay === 'library'}
+            onClick={() => toggleOverlay(core, 'library')}
+          >
             <Icon name="library" />
           </button>
           <div class="now-text">
@@ -186,7 +197,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <div class="level">
             <Meter core={core} />
           </div>
-          <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K) — em breve" disabled>
+          <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)" onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
           </button>
           <button class="ibtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,) — em breve" disabled>
@@ -207,7 +218,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
 }
 
 // ── Alça da borda esquerda ────────────────────────────────────
-function Edge() {
+function Edge({ core }: { core: Core }) {
   const [on, setOn] = useState(false)
   useEffect(() => {
     const move = (e: MouseEvent): void => {
@@ -217,9 +228,8 @@ function Edge() {
     window.addEventListener('mousemove', move, { passive: true })
     return () => window.removeEventListener('mousemove', move)
   }, [])
-  // A gaveta da Biblioteca chega na spec 010; até lá a alça aparece mas não abre.
   return (
-    <button class={on ? 'edge on' : 'edge'} aria-label="Abrir biblioteca" title="Abrir biblioteca (L) — em breve" disabled>
+    <button class={on ? 'edge on' : 'edge'} aria-label="Abrir biblioteca" title="Abrir biblioteca (L)" onClick={() => core.run('ui.open', { overlay: 'library' }, 'ui')}>
       <Icon name="library" />
     </button>
   )
@@ -292,13 +302,31 @@ function GlobalToast() {
   )
 }
 
+/** Abre ou fecha um overlay pelo Core (`ui.open` / `ui.close`). */
+export function toggleOverlay(core: Core, overlay: 'library' | 'search'): void {
+  if (core.state.overlay === overlay) core.run('ui.close', {}, 'ui')
+  else core.run('ui.open', { overlay }, 'ui')
+}
+
 export function Overlay({ bridge }: { bridge: PalcoBridge }) {
+  const { core } = bridge
+  useCoreVersion(core)
+  const overlay = core.state.overlay
+  useLayoutEffect(() => {
+    // Fechar devolve o foco ao visual (as teclas globais voltam a valer).
+    if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu')) {
+      document.activeElement.blur()
+    }
+  }, [overlay])
+  const presets = bridge.presets()
   return (
     <>
-      <Credit core={bridge.core} />
+      <Credit core={core} />
       <StateCards bridge={bridge} />
-      <Edge />
+      <Edge core={core} />
       <Strip bridge={bridge} />
+      <Library core={core} presets={presets} />
+      <Palette core={core} presets={presets} />
       <GlobalToast />
     </>
   )
