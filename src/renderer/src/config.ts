@@ -8,5 +8,5 @@ export const config = {
   /** Blend da troca automática (rotação). */
   blendAutoSeconds: 2.7,
   /** Limite de quadros: 'monitor' segue a taxa da tela; número = fps máximo. */
-  fpsLimit: 60 as 'monitor' | number
+  fpsLimit: 'monitor' as 'monitor' | number
 }

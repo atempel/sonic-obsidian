@@ -1,6 +1,6 @@
 # 004 — Janela: tela cheia, sem moldura e fps
 
-**Fase:** 1 · **Status:** A fazer · **Issue:** [#8](https://github.com/atempel/sonic-obsidian/issues/8)
+**Fase:** 1 · **Status:** Concluído (critérios 1–6 verificados pelo usuário; 7 não atendido: sem ganho visível de GPU na máquina principal) · **Issue:** [#8](https://github.com/atempel/sonic-obsidian/issues/8)
 
 ## Problema
 O spike já alterna tela cheia com `F11`, mas a janela ainda tem a moldura padrão do Windows, o cursor fica visível sobre o visual e o loop segue a taxa do monitor (180 fps num monitor de 180 Hz), gastando GPU além do necessário.
