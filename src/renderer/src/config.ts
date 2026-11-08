@@ -12,6 +12,6 @@ export const config = {
   /** Ganho de entrada (dB) aplicado antes do Butterchurn; não muda o que se ouve. */
   gainDb: 0,
   gainMinDb: -12,
-  gainMaxDb: 24,
-  gainStepDb: 1.5
+  gainMaxDb: 12,
+  gainStepDb: 1
 }

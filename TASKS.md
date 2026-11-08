@@ -6,7 +6,7 @@
 - [x] **Presets: biblioteca e navegação** (inclui toast com nome e autor) — [spec 002](docs/specs/002-presets-biblioteca-navegacao.md) · issue [#6](https://github.com/atempel/sonic-obsidian/issues/6)
 - [x] **Rotação automática** (depende da 002) — [spec 003](docs/specs/003-rotacao-automatica.md) · issue [#7](https://github.com/atempel/sonic-obsidian/issues/7)
 - [x] **Janela: tela cheia, sem moldura e fps** — [spec 004](docs/specs/004-janela.md) · issue [#8](https://github.com/atempel/sonic-obsidian/issues/8)
-- [ ] **Sinal de entrada: ganho e silêncio** — [spec 005](docs/specs/005-sinal-entrada.md) · issue [#9](https://github.com/atempel/sonic-obsidian/issues/9)
+- [x] **Sinal de entrada: ganho e silêncio** — [spec 005](docs/specs/005-sinal-entrada.md) · issue [#9](https://github.com/atempel/sonic-obsidian/issues/9)
 
 ## Manutenção
 - [ ] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.

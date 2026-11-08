@@ -1,6 +1,6 @@
 # 005 — Sinal de entrada: ganho e silêncio
 
-**Fase:** 1 · **Status:** A fazer · **Issue:** [#9](https://github.com/atempel/sonic-obsidian/issues/9)
+**Fase:** 1 · **Status:** Concluído (8/8 critérios verificados pelo usuário) · **Issue:** [#9](https://github.com/atempel/sonic-obsidian/issues/9)
 
 ## Problema
 No teste do spike a barra de nível ficou quase vazia com música tocando: o loopback chega baixo e o visual reage pouco. Hoje o `GainNode` fica fixo em 1 e não há como compensar. Além disso, quando não há áudio o app não diz nada, e fica difícil saber se o visual parado é falha de captura ou só silêncio.

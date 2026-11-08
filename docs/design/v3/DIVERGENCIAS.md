@@ -16,9 +16,9 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ### 2026-11-08 — atalhos globais e Ajustes rápidos · ganho
 Protótipo (`1794154301-3f85`): o ganho é um slider nos Ajustes rápidos / faixa (Palco integrado, `#gainMini`) de −12 a +12 dB em passos de 1 dB; não há atalho de teclado para ganho.
-Código: `+`/`−` (passos de 1,5 dB) e `0` (volta a 0 dB), faixa −12 a +24 dB (spec 005), porque não há UI na Fase 1 e no teste do spike o sinal capturado chegou baixo, então pode precisar de mais de +12 dB.
+Código: faixa e passo **alinhados ao protótipo** (−12 a +12 dB, 1 dB), depois que o teste mostrou que +6 a +9 dB bastam para a barra chegar à metade. Continuam as teclas `+`/`−`/`0`, porque não há UI na Fase 1.
 PR/spec: (PR da spec 005) · docs/specs/005-sinal-entrada.md
-Status: Aberta. Proposta: medir no teste quanto ganho é preciso (critério 5); se ≤ +12 dB, alinhar a faixa ao protótipo. As teclas saem junto com `[`/`]` quando os Ajustes rápidos existirem.
+Status: Aberta só quanto às teclas. Proposta: saem junto com `[`/`]` quando os Ajustes rápidos existirem.
 
 ### 2026-11-08 — atalhos globais · `[` / `]`
 Protótipo (`1794154301-3f85`): `[`/`]` não estão nos atalhos globais; em `v3-video-vj.md` §6 eles controlam a opacidade da camada de vídeo (frente VJ, ainda pendente no PRD). O intervalo da rotação fica nos Ajustes rápidos e em Configurações › Visual.
