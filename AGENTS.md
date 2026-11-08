@@ -10,7 +10,8 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
   - `npm run dist:win` — build + pasta portátil Windows em `release/win-unpacked/` (roda até no Linux; quem testa é o Windows).
   - `npm run dev` — app com HMR; só funciona onde há janela e Electron instalado (não na nuvem, não no host sem Node).
   - Testes automatizados: ainda não há. Para ver a interface na nuvem: `npm run build`, servir `out/renderer/` e abrir no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados — serve para layout e estados, não para áudio/fps.
-  - No app: `Ctrl+Shift+D` mostra o HUD de depuração (fps, áudio, ganho).
+  - No app: `Ctrl+Shift+D` mostra o HUD de depuração (fps, memória JS, áudio, expressividade).
+  - Log em arquivo no Windows: `logs/sonic-obsidian.log` dentro do `userData` (`Ctrl+Shift+L` abre a pasta; a primeira linha de cada abertura traz o caminho) (abertura, quedas do renderer/GPU, perda do contexto WebGL, memória por processo a cada 5 min). Pedir ao usuário quando o app travar ou fechar sozinho.
 - CI: `.github/workflows/build-windows.yml` — typecheck no Ubuntu e build no `windows-latest`; o artifact `sonic-obsidian-win-<sha>` é o que o usuário baixa e testa.
 - `butterchurn` + `butterchurn-presets` (MIT) e `preact` (MIT, interface do overlay), versões fixadas. Processo main + preload (`src/preload/`, API estreita em `window.so`) + renderer; estado salvo em `settings.json`/`library.json` no `userData`.
 - `legacy/python/` é referência histórica — não editar, não rodar junto.

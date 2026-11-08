@@ -2,12 +2,18 @@ import { captureSystemAudio } from './capture'
 import { Core, type Origin } from './core/commands'
 import {
   BLEND_TYPE_LABEL,
+  EXPRESSION_ADAPTATIONS,
+  EXPRESSION_ADAPTATION_LABEL,
+  EXPRESSION_CURVES,
+  EXPRESSION_CURVE_LABEL,
   cycleBlendType,
   sanitizeLibrary,
   sanitizeSettings,
   stepBlendSeconds,
   stepInterval
 } from './core/state'
+import { hookShaderCleanup } from './engine-fixes'
+import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { SILENT_DIM, SilenceState } from './silence'
@@ -53,6 +59,15 @@ async function start(): Promise<void> {
 
   const viz = new PresetVisualizer(ctx, canvas)
   viz.visualizer.connectAudio(gain)
+  hookShaderCleanup(viz.visualizer)
+
+  // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
+  // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
+  canvas.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault()
+    window.so.log('contexto WebGL perdido; recarregando em 1,5 s')
+    setTimeout(() => location.reload(), 1500)
+  })
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
@@ -62,6 +77,7 @@ async function start(): Promise<void> {
     toggleFullScreen: () => window.so.window.toggleFullScreen()
   })
   const settings = core.state.settings
+  const exprProbe = hookExpression(viz.visualizer, () => settings.expression)
   const rotation = new AutoRotation(performance.now(), () => ({
     enabled: settings.rotation.enabled,
     intervalSeconds: core.rotationIntervalSeconds
@@ -158,8 +174,13 @@ async function start(): Promise<void> {
     if (!result.ok) console.warn(`[core] ${name}: ${result.error}`)
     return result
   }
-  const gainText = (): string => `Ganho ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb} dB`
   const secondsText = (s: number): string => `${String(s).replace('.', ',')} s`
+  const exprLevel = (): string => {
+    const l = settings.expression.level
+    return l === 0 ? 'neutra' : `${l > 0 ? '+' : '−'}${Math.abs(l)}`
+  }
+  const exprText = (): string =>
+    exprProbe ? `Expressividade ${exprLevel()}` : 'Expressividade indisponível (motor sem audioLevels)'
   /** Toast da transição manual: "Transição: Plasma, 1 s" (spec 013). */
   const blendText = (): string => {
     const { type, seconds } = settings.blend.manual
@@ -169,11 +190,20 @@ async function start(): Promise<void> {
   }
 
   window.addEventListener('resize', () => viz.resize())
+  // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
+  // O log mostra se isso acontece na máquina do usuário.
+  document.addEventListener('visibilitychange', () => window.so.log(`janela ${document.visibilityState === 'hidden' ? 'oculta: render pausado' : 'visível'}`))
   window.addEventListener('keydown', (e) => {
     if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
     // HUD de depuração (fps, áudio): escondido por padrão desde a 009.
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') {
       hudEl.hidden = !hudEl.hidden
+      e.preventDefault()
+      return
+    }
+    // Ctrl+Shift+L abre a pasta do log (diagnóstico de quedas).
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyL') {
+      void window.so.showLog()
       e.preventDefault()
       return
     }
@@ -216,6 +246,17 @@ async function start(): Promise<void> {
       run('preset.next', { cut })
     } else if (e.code === 'ArrowLeft') {
       run('preset.previous', { cut })
+    } else if (e.code === 'KeyX') {
+      // X cicla o Caráter; Shift+X a Memória (spec 015).
+      if (e.shiftKey) {
+        const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
+        run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
+        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`, 2400)
+      } else {
+        const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
+        run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
+        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`, 2400)
+      }
     } else if (e.code === 'Space') {
       run('preset.random', { cut })
     } else if (e.code === 'KeyB') {
@@ -239,15 +280,13 @@ async function start(): Promise<void> {
       // Pelo caractere (e.key), não pela posição: no ABNT2 os colchetes ficam em outras teclas.
       run('rotation.set', { intervalSeconds: stepInterval(settings.rotation.intervalSeconds, e.key === '[' ? -1 : 1) })
       showToast(`Rotação a cada ${settings.rotation.intervalSeconds} s${settings.rotation.enabled ? '' : ' (desligada)'}.`, 1500)
-    } else if (e.key === '+' || e.key === '=') {
-      run('signal.set', { gainDb: settings.gainDb + 1 })
-      showToast(gainText(), 1200)
-    } else if (e.key === '-' || e.key === '_') {
-      run('signal.set', { gainDb: settings.gainDb - 1 })
-      showToast(gainText(), 1200)
+    } else if (e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') {
+      // + / − = expressividade (spec 015). O ganho se adapta em segundos (ver expression.ts) e só muda nos Ajustes rápidos.
+      run('expression.set', { level: settings.expression.level + (e.key === '+' || e.key === '=' ? 1 : -1) })
+      showToast(exprText(), 1500)
     } else if (e.key === '0') {
-      run('signal.set', { gainDb: 0 })
-      showToast(gainText(), 1200)
+      run('expression.set', { level: 0 })
+      showToast(exprText(), 1500)
     } else {
       handled = false
     }
@@ -312,6 +351,12 @@ async function start(): Promise<void> {
       state.fps = (frames * 1000) / (now - windowStart)
       frames = 0
       windowStart = now
+      if (exprProbe) {
+        const ex = settings.expression
+        state.expression = `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
+      }
+      const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
+      if (mem) state.heapMb = Math.round(mem.usedJSHeapSize / 1048576)
       if (!hudEl.hidden) hud.show(state)
     }
   }
@@ -327,9 +372,13 @@ async function start(): Promise<void> {
     .catch((err: unknown) => console.error('[viz] falha ao carregar pacotes extras', err))
 }
 
+window.addEventListener('error', (e) => window.so.log(`erro: ${e.message} @ ${e.filename}:${e.lineno}`))
+window.addEventListener('unhandledrejection', (e) => window.so.log(`promessa rejeitada: ${String(e.reason)}`))
+
 start().catch((err: unknown) => {
   const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
   console.error('[start]', err)
+  window.so.log(`falha na abertura: ${message}`)
   hudEl.hidden = false
   hud.show({ ...state, error: message })
 })

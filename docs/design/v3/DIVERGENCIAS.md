@@ -14,9 +14,21 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-08 — Atalhos e Ajustes rápidos · expressividade
+Protótipo (`1794165177-f126`): não existe controle de expressividade. O ganho é um slider nos Ajustes rápidos, sem tecla.
+Código (spec 015): `+`/`−`/`0` mudam a **Expressividade** (−3…+3), `X` o **Caráter** (Contraste / Energia / Nervo) e `Shift+X` a **Memória** (Curta / Longa / Fixa). O ganho fica só no slider, como no protótipo. Motivo: o motor normaliza os níveis em ~4 s e o ganho só tem efeito passageiro (DECISIONS).
+PR/spec: docs/specs/015-expressividade.md · #36
+Status: Aberta. Pedido ao design: grupo "Expressividade" nos Ajustes rápidos e em Configurações › Visual (slider + dois segmentados com descrição) e as teclas na tabela de Atalhos.
+
+### 2026-11-08 — Controles da janela · arrasto
+Protótipo (`1794165177-f126`): `docs/v3-modelo-de-navegacao.md` › Controles da janela diz "Arrastar a janela: pelo visual (spec 004); a zona dos controles não arrasta".
+Código (planejado, spec 014): desde a 009 o arrasto é só pela faixa invisível de 40 px no topo (decisão do usuário: no Windows a região de arrasto engole o `mousemove`, e a faixa de controle e a zona do canto não detectariam o ponteiro). A faixa passa a terminar antes da zona dos controles (`right: 166px`).
+PR/spec: docs/specs/014-texto-sobre-visual-janela.md · #34
+Status: Aberta. Pedido ao design: trocar o texto para "pela faixa do topo, fora do canto dos controles".
+
 ### 2026-11-08 — Ajustes rápidos e atalhos · tipo de transição
 Protótipo (`1794165177-f126`): os Ajustes rápidos e Configurações › Visual têm só o tempo do blend ("Blend na troca automática", "Blend quando você troca", padrão manual 0 s); não há tipo de transição nem teclas para isso.
-Código (spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. `+`/`−`/`0` (ganho) ficam como atalhos permanentes (decisão do usuário). O tipo da troca automática não tem tecla: só Ajustes rápidos (011) e, até lá, o `settings.json`.
+Código (spec 013): cada troca (manual e automática) ganha **tipo** (Corte seco, Crossfade, Varredura, Plasma, Radial, Aleatório) e tempo; padrão manual = Aleatório 1 s. Teclas novas: `B`/`Shift+B` ciclam o tipo manual, `↑`/`↓` mudam o tempo, Shift na troca (`Shift+→`, `Shift+←`, `Shift+Espaço`) = corte seco. `+`/`−`/`0` passaram para a Expressividade (spec 015; ver a entrada acima). O tipo da troca automática não tem tecla: só Ajustes rápidos (011) e, até lá, o `settings.json`.
 PR/spec: docs/specs/013-transicoes.md · #31
 Status: Aberta. Pedido ao design: desenhar o seletor de tipo (com prévia da forma da mesclagem, P2) nos Ajustes rápidos e em Configurações › Visual, e incluir as teclas novas e as de ganho na tabela de Atalhos.
 
@@ -64,9 +76,9 @@ Status: Aberta. Pedido ao design: escolher um texto (proposta: título do Palco 
 
 ### 2026-11-08 — atalhos globais e Ajustes rápidos · ganho
 Protótipo (`1794154301-3f85`): o ganho é um slider nos Ajustes rápidos / faixa (Palco integrado, `#gainMini`) de −12 a +12 dB em passos de 1 dB; não há atalho de teclado para ganho.
-Código: faixa e passo **alinhados ao protótipo** (−12 a +12 dB, 1 dB), depois que o teste mostrou que +6 a +9 dB bastam para a barra chegar à metade. As teclas `+`/`−`/`0` ficam **permanentes**, mesmo com os Ajustes rápidos (decisão do usuário na spec 013: mexer no ganho ao vivo é parte do uso).
+Código: faixa e passo **alinhados ao protótipo** (−12 a +12 dB, 1 dB), depois que o teste mostrou que +6 a +9 dB bastam para a barra chegar à metade. As teclas `+`/`−`/`0` saíram do ganho e passaram para a Expressividade (spec 015). O ganho fica só no slider, como no protótipo.
 PR/spec: (PR da spec 005) · docs/specs/005-sinal-entrada.md
-Status: Aberta só quanto às teclas. Pedido ao design: incluir `+`/`−`/`0` na tabela de Atalhos (entrada "tipo de transição" acima).
+Status: Aceita (o código volta ao desenho: ganho sem tecla).
 
 ### 2026-11-08 — atalhos globais · `[` / `]`
 Protótipo (`1794154301-3f85`): `[`/`]` não estão nos atalhos globais; em `v3-video-vj.md` §6 eles controlam a opacidade da camada de vídeo (frente VJ, ainda pendente no PRD). O intervalo da rotação fica nos Ajustes rápidos e em Configurações › Visual.

@@ -1,5 +1,5 @@
 # Design f126: texto sobre o visual e controles da janela
-Status: Pending
+Status: Ingested (2026-11-08) → spec [014](../docs/specs/014-texto-sobre-visual-janela.md) / #34 e controles visuais na spec [011](../docs/specs/011-ajustes-configuracoes.md)
 Fonte: docs/design/v3/docs/v3-modelo-de-navegacao.md (seções "Texto sobre o visual" e "Controles da janela"), páginas `Palco integrado`, `Configurações` e `Palco com vídeo` — versão `1794165177-f126`
 Resumo: (1) **Texto sobre o visual:** em Configurações › Visual e nos Ajustes rápidos, "Nome do preset" (Sempre / Só quando eu troco / Nunca), "Título da faixa" (switch) e "Avisos" (Todos / Só importantes / Nenhum); **Modo limpo** na tecla `T` esconde tudo isso de uma vez, com ícone `eye-off` ao lado do nome na faixa. Painéis de estado nunca somem; o crédito continua na faixa e na Biblioteca. (2) **Controles da janela:** minimizar e fechar (`minus`, `x`) no canto superior direito, aparecem só quando o ponteiro entra numa zona de ~160×96 px ou com foco; somem com Biblioteca/Ajustes/diálogo abertos; fechar sem confirmação.
 Destino provável:

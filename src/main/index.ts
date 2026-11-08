@@ -1,5 +1,6 @@
 import { app, BrowserWindow, desktopCapturer, ipcMain, session, shell } from 'electron'
 import { join } from 'node:path'
+import { log, logMetrics, logPath } from './log'
 import { JsonStore } from './store'
 
 const stores = new Map<string, JsonStore>()
@@ -18,6 +19,12 @@ function registerStores(): void {
     const win = BrowserWindow.fromWebContents(e.sender)
     if (win) win.setFullScreen(!win.isFullScreen())
   })
+  // Log do renderer: só texto curto, sem escolher arquivo nem nível arbitrário.
+  ipcMain.on('log:write', (_e, message: unknown) => {
+    if (typeof message === 'string') log('renderer', message)
+  })
+  // Mostra o arquivo de log no Explorer (caminho fixo, definido aqui).
+  ipcMain.handle('log:show', () => shell.showItemInFolder(logPath()))
   // URL fixa: o renderer não escolhe o que abrir.
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
 }
@@ -71,6 +78,15 @@ function createWindow(): void {
     }
   })
 
+  // Queda do renderer (WebGL, memória): registra e recarrega, em vez de ficar uma janela preta.
+  win.webContents.on('render-process-gone', (_e, details) => {
+    log('main', `renderer caiu: ${details.reason} (exit ${details.exitCode})`)
+    logMetrics()
+    if (details.reason !== 'clean-exit' && !win.isDestroyed()) setTimeout(() => !win.isDestroyed() && win.reload(), 1000)
+  })
+  win.webContents.on('unresponsive', () => log('main', 'renderer sem responder'))
+  win.webContents.on('responsive', () => log('main', 'renderer voltou a responder'))
+
   win.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown') return
     if (input.key === 'F11') {
@@ -93,7 +109,17 @@ function createWindow(): void {
   }
 }
 
+// Processo da GPU ou utilitário caiu (ex.: o Windows reiniciou o driver de vídeo).
+app.on('child-process-gone', (_e, details) => {
+  log('main', `processo ${details.type}${details.name ? ` (${details.name})` : ''} caiu: ${details.reason} (exit ${details.exitCode})`)
+  logMetrics()
+})
+
 app.whenReady().then(() => {
+  log('main', `abriu ${app.getVersion()} · Electron ${process.versions.electron} · log em ${logPath()}`)
+  logMetrics()
+  // Memória a cada 5 min: mostra se algum processo (GPU, renderer) cresce sem parar.
+  setInterval(logMetrics, 5 * 60 * 1000).unref()
   registerStores()
   registerLoopbackCapture()
   createWindow()

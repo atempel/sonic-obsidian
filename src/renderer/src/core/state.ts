@@ -26,6 +26,28 @@ export const BLEND_TYPE_LABEL: Record<BlendType, string> = {
 export const BLEND_STEPS_S = [0.25, 0.5, 1, 2, 4, 8]
 export const BLEND_MIN_S = 0.1
 export const BLEND_MAX_S = 10
+/**
+ * Expressividade (spec 015): `+`/`−` de −3 a +3. Caráter (`X`) = como o nível age;
+ * Memória (`Shift+X`) = quanto tempo o visual leva para se acostumar ao volume.
+ * Nos dados, `curve` e `adaptation` (nomes do spike).
+ */
+export const EXPRESSION_MIN = -3
+export const EXPRESSION_MAX = 3
+export const EXPRESSION_CURVES = ['a', 'b', 'c'] as const
+export type ExpressionCurve = (typeof EXPRESSION_CURVES)[number]
+export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked'] as const
+export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
+export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
+  a: 'Contraste — picos mais altos, vales mais fundos',
+  b: 'Energia — contraste e a base mais agitada',
+  c: 'Nervo — energia e reação seca (+) ou suave (−)'
+}
+export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> = {
+  normal: 'curta — se acostuma ao volume em ~4 s',
+  slow: 'longa — o volume pesa por ~30 s',
+  locked: 'fixa — partes altas da música sempre mais fortes'
+}
+
 /** Regra de uma troca: tipo e tempo. Com `cut`, o tempo fica guardado para quando voltar a misturar. */
 export interface BlendRule {
   type: BlendType
@@ -37,7 +59,8 @@ export type FpsLimit = 'monitor' | number
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings'
 
 export interface Settings {
-  version: 1
+  /** 2 = limite de fps padrão 60 (antes: taxa do monitor). */
+  version: 2
   gainDb: number
   rotation: {
     enabled: boolean
@@ -47,6 +70,7 @@ export interface Settings {
   }
   /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
   blend: { manual: BlendRule; auto: BlendRule }
+  expression: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
   fpsLimit: FpsLimit
   startupPreset: 'last' | 'random'
   lastPreset: string | null
@@ -76,11 +100,12 @@ export interface Library {
 
 export function defaultSettings(): Settings {
   return {
-    version: 1,
+    version: 2,
     gainDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
-    fpsLimit: 'monitor',
+    expression: { level: 0, curve: 'b', adaptation: 'normal' },
+    fpsLimit: 60,
     startupPreset: 'last',
     lastPreset: null,
     pinControls: false
@@ -130,8 +155,13 @@ export function sanitizeSettings(raw: unknown): Settings {
   if (!isObj(raw)) return d
   const rot = isObj(raw.rotation) ? raw.rotation : {}
   const blend = isObj(raw.blend) ? raw.blend : {}
+  const expr = isObj(raw.expression) ? raw.expression : {}
+  // Até a versão 1, 'monitor' era o padrão gravado sem escolha do usuário (não havia UI):
+  // migra uma vez para 60. Depois da versão 2, 'monitor' salvo é escolha e fica.
+  const fpsLimit: FpsLimit =
+    raw.fpsLimit === 'monitor' ? (raw.version === 2 ? 'monitor' : 60) : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit
   return {
-    version: 1,
+    version: 2,
     gainDb: Math.round(num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDb)),
     rotation: {
       enabled: bool(rot.enabled, d.rotation.enabled),
@@ -143,7 +173,12 @@ export function sanitizeSettings(raw: unknown): Settings {
       manual: sanitizeBlendRule(blend.manual, blend.manualSeconds, d.blend.manual),
       auto: sanitizeBlendRule(blend.auto, blend.autoSeconds, d.blend.auto)
     },
-    fpsLimit: raw.fpsLimit === 'monitor' ? 'monitor' : num(raw.fpsLimit, 15, 360, 0) || d.fpsLimit,
+    expression: {
+      level: Math.round(num(expr.level, EXPRESSION_MIN, EXPRESSION_MAX, d.expression.level)),
+      curve: oneOf(expr.curve, EXPRESSION_CURVES, d.expression.curve),
+      adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation)
+    },
+    fpsLimit,
     startupPreset: oneOf(raw.startupPreset, ['last', 'random'], d.startupPreset),
     lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null,
     pinControls: bool(raw.pinControls, d.pinControls)
