@@ -84,3 +84,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por que reabre a entrada "Uso do Butterchurn" (que descartou o 3.0 por ser beta):** o escopo novo (presets do usuário e MCP) torna a execução de JS de terceiros o maior risco do projeto, e o 3.x é a saída sem fork. A master do Butterchurn está ativa (abr/2026), mas o beta não é promovido a estável desde jul/2025.
 - **Riscos a validar no spike [006](docs/specs/006-spike-butterchurn3-milk.md):** o pacote publicado (não a master) carrega os presets 3.x só com WASM; desempenho igual ou melhor; o canvas de saída no 3.x usa contexto 2D (o WebGL vai num `OffscreenCanvas`), o que muda o `visualizer.ts`; o conversor `.milk` (dormente desde 2021) gera presets no formato 3.x.
 - **Se o spike falhar:** presets externos ficam fora até haver sandbox equivalente; o MCP sobe só com ferramentas de controle (sem `create_preset`).
+
+## 2026-11-08 — Spec 003: rotação automática e atalhos v3 no código
+- **Decisão:** a rotação não tem timer próprio. O loop de render pergunta `rotation.due(now)` a cada quadro, e qualquer troca reinicia a contagem. Assim troca e render ficam no mesmo relógio, e com a janela minimizada o render e a rotação param juntos.
+- **Atalhos v3 implementados:** `Espaço` aleatório, `←`/`→`, `R` liga e desliga a rotação, `[`/`]` mudam o intervalo (10/15/30/60/120 s). Os colchetes são lidos por `e.key` (caractere), não por `e.code` (posição física), porque no ABNT2 eles ficam em outras teclas. As letras usam `e.code`.
+- **Blend em `src/renderer/src/config.ts`:** manual 0 s, automático 2,7 s, como constantes para os ajustes rápidos da Fase 2. As teclas `1`/`2`/`3` e o `R` aleatório da spec 002 saíram.
