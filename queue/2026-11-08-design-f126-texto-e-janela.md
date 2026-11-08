@@ -1,0 +1,8 @@
+# Design f126: texto sobre o visual e controles da janela
+Status: Pending
+Fonte: docs/design/v3/docs/v3-modelo-de-navegacao.md (seções "Texto sobre o visual" e "Controles da janela"), páginas `Palco integrado`, `Configurações` e `Palco com vídeo` — versão `1794165177-f126`
+Resumo: (1) **Texto sobre o visual:** em Configurações › Visual e nos Ajustes rápidos, "Nome do preset" (Sempre / Só quando eu troco / Nunca), "Título da faixa" (switch) e "Avisos" (Todos / Só importantes / Nenhum); **Modo limpo** na tecla `T` esconde tudo isso de uma vez, com ícone `eye-off` ao lado do nome na faixa. Painéis de estado nunca somem; o crédito continua na faixa e na Biblioteca. (2) **Controles da janela:** minimizar e fechar (`minus`, `x`) no canto superior direito, aparecem só quando o ponteiro entra numa zona de ~160×96 px ou com foco; somem com Biblioteca/Ajustes/diálogo abertos; fechar sem confirmação.
+Destino provável:
+- Spec **011** (Ajustes rápidos + Configurações): incluir o grupo "Texto sobre o visual" nos dois lugares e o atalho `T` na tabela de Atalhos. Ajustar critérios de aceite.
+- Spec **009** já mergeada → spec nova pequena ou P0 extra da 011: Modo limpo (`T` + ícone na faixa), "Nome do preset" afetando a assinatura, toasts por importância, e os controles da janela (minimizar via IPC `win.minimize`, fechar = `Ctrl+W`).
+- Conflito a registrar em DIVERGENCIAS: o doc diz "Arrastar a janela: pelo visual (spec 004)", mas desde a 009 o arrasto é só pela faixa de 40 px no topo (decisão do usuário). Os controles ficam dentro dessa faixa: precisam de `no-drag`.

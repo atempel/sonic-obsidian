@@ -15,7 +15,7 @@
   body.is-rack { overflow: auto; }
   [hidden] { display: none !important; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .proto { left: auto; right: 12px; }
+  .proto { left: 12px; right: auto; top: auto; bottom: 136px; }
   .proto .grp { display: inline-flex; align-items: center; gap: 2px; }
   .proto .grp span { color: var(--text-3); }
   a.btn { text-decoration: none; }
@@ -124,6 +124,17 @@
   .note { font-size: 12px; color: var(--text-3); margin-top: 2px; }
   .line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--text-2); font-size: 13px; }
   select.sel { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); color-scheme: dark; font-size: 13px; }
+  .now-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .now-row .now-title { min-width: 0; }
+  .clean-ico { flex: none; display: inline-grid; place-items: center; color: var(--text-2); }
+  .sheet .line kbd { margin-left: 6px; }
+  .winctl { position: fixed; top: 16px; right: 16px; z-index: 20; display: flex; gap: 2px; padding: 4px; background: rgba(15,15,20,0.94); border: 1px solid var(--line-2); border-radius: var(--r-3);
+    opacity: 0; pointer-events: none; transition: opacity var(--t-fast) linear; }
+  .winctl.on, .winctl:focus-within { opacity: 1; pointer-events: auto; }
+  .winctl .ibtn:hover { background: var(--bg-04); color: var(--text-1); }
+  body.lib-open .winctl, body.sheet-open .winctl, body.palette-open .winctl, body.dlg-open .winctl { opacity: 0; pointer-events: none; visibility: hidden; }
+  .closed-screen { position: fixed; z-index: 1000; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg-00); color: var(--text-2); }
+  .closed-screen p { margin: 0; font-size: 16px; }
   .sheet-link { width: 100%; justify-content: space-between; height: 38px; }
   .sheet-link span { display: inline-flex; align-items: center; gap: 8px; }
 
@@ -400,7 +411,7 @@
   .bigtext.show { opacity: 1; transform: translate(-50%, -50%); transition-duration: 250ms; }
   .bigtext strong { display: block; font-size: clamp(36px, 7vw, 96px); line-height: 1.05; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
   .bigtext span { display: block; margin-top: 12px; font-size: clamp(16px, 2vw, 24px); color: var(--text-2); }
-  .sc-dialog { position: fixed; z-index: 12; left: 50%; bottom: 96px; transform: translateX(-50%); width: min(420px, calc(100vw - 32px)); padding: 14px 16px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .sc-dialog { position: fixed; z-index: 25; left: 50%; bottom: 96px; transform: translateX(-50%); width: min(420px, calc(100vw - 32px)); padding: 14px 16px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
   .sc-dialog h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 15px; font-weight: 600; }
   .sc-dialog p { margin: 0 0 12px; font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sc-dialog .actions { display: flex; gap: 8px; justify-content: flex-end; }
@@ -447,7 +458,7 @@
     <div class="now">
       <button class="ibtn" id="libBtn" aria-label="Abrir biblioteca" title="Biblioteca (L)" aria-expanded="false" aria-controls="lib"><i data-lucide="library" class="ico"></i></button>
       <div class="now-text">
-        <div class="now-title" id="nowTitle"></div>
+        <div class="now-row"><div class="now-title" id="nowTitle"></div><span class="clean-ico" id="cleanIco" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)" hidden><i data-lucide="eye-off" class="ico ico-sm"></i></span></div>
         <div class="now-author" id="nowAuthor"></div>
       </div>
       <button class="ibtn fav" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><i data-lucide="star" class="ico"></i></button>
@@ -479,6 +490,11 @@
       <button class="ibtn" id="tBack" aria-label="Voltar ao áudio do sistema" title="Voltar ao áudio do sistema"><i data-lucide="x" class="ico"></i></button>
     </div>
   </div>
+</div>
+
+<div class="winctl" id="winctl" role="group" aria-label="Janela">
+  <button type="button" class="ibtn" id="winMin" aria-label="Minimizar" title="Minimizar"><i data-lucide="minus" class="ico"></i></button>
+  <button type="button" class="ibtn" id="winClose" aria-label="Fechar" title="Fechar (Ctrl+W)"><i data-lucide="x" class="ico"></i></button>
 </div>
 
 <!-- Biblioteca: gaveta oculta à esquerda -->
@@ -544,6 +560,18 @@
         <div class="field-top"><label for="blendM">Blend quando você troca</label><span class="val num" id="blendMVal">0,0 s</span></div>
         <input type="range" id="blendM" min="0" max="5" step="0.1" value="0">
       </div>
+    </section>
+    <section>
+      <h3>Texto sobre o visual</h3>
+      <div class="line"><label for="otPreset">Nome do preset</label>
+        <select class="sel" id="otPreset"><option value="always" selected>Sempre</option><option value="manual">Só quando eu troco</option><option value="never">Nunca</option></select></div>
+      <div class="line"><span id="otTrackLbl">Título da faixa</span>
+        <label class="switch"><input type="checkbox" id="otTrack" checked aria-labelledby="otTrackLbl"><span class="track"></span></label></div>
+      <div class="line"><label for="otToasts">Avisos</label>
+        <select class="sel" id="otToasts"><option value="all" selected>Todos</option><option value="important">Só importantes</option><option value="none">Nenhum</option></select></div>
+      <div class="line"><span id="otCleanLbl">Modo limpo <kbd>T</kbd></span>
+        <label class="switch"><input type="checkbox" id="otClean" aria-labelledby="otCleanLbl"><span class="track"></span></label></div>
+      <p class="note">O crédito do autor continua na faixa de controle e na Biblioteca.</p>
     </section>
     <section>
       <a class="btn sheet-link" id="settingsLink" href="Sonic Obsidian Configurações.html"><span><i data-lucide="settings" class="ico"></i>Todas as configurações</span><kbd>Ctrl+,</kbd></a>
@@ -702,6 +730,8 @@
 </div>
 <div class="gtoast" id="gtoast" role="status" aria-live="polite"></div>
 
+<div class="closed-screen" id="closedScreen" hidden role="dialog" aria-label="App fechado"><p>App fechado (protótipo)</p><button type="button" class="btn btn-ghost" id="reopenApp">Abrir de novo</button></div>
+
 <div class="proto" role="group" aria-label="Estados do protótipo">
   <b>Protótipo</b>
   <button data-state="normal" aria-pressed="true">Normal</button>
@@ -713,6 +743,7 @@
   <button data-state="ai" aria-pressed="false">IA conectada</button>
   <button id="importBtn">Importar .milk</button>
   <button id="pinUi" aria-pressed="false">Fixar controles</button>
+  <button id="protoClean" aria-pressed="false">Modo limpo</button>
   <span class="grp" role="group" aria-label="Telas"><b>Telas:</b><button data-screens="1" aria-pressed="false">1</button><span aria-hidden="true">·</span><button data-screens="2" aria-pressed="true">2</button></span>
 </div>
 
@@ -743,6 +774,9 @@
   const hidden = new Set();
   let cur = P[0], hist = [0], hi = 0, blendA = 2700, blendM = 0, baseInterval = 30, interval = 30, left = 30, rotOn = true;
   let src = 'system', track = null, pop = null, aiOn = false, aiPaused = false, uiState = 'normal';
+  const overlayText = { preset: 'always', track: true, toasts: 'all' };
+  let cleanMode = false;
+  const cardAllowed = auto => !cleanMode && (overlayText.preset === 'always' || (overlayText.preset === 'manual' && !auto));
   let activeColl = null, state = 'normal', pinned = false, mode = 'stage', screens = 2, upq = [];
   const isSilent = () => state === 'silence' || state === 'denied';
 
@@ -782,11 +816,15 @@
     const sigMs = ms > 0 ? ms : 400;
     $('creditTitle').textContent = p.title; $('creditAuthor').textContent = 'por ' + p.author;
     const c = $('credit'), sw = $('sweep');
-    c.classList.add('show');
-    sw.style.transition = 'none'; sw.style.width = '0'; void sw.offsetWidth;
-    sw.style.transition = `width ${sigMs}ms linear`; sw.style.width = '100%';
-    clearTimeout(creditTimer); creditTimer = setTimeout(() => c.classList.remove('show'), Math.max(4000, sigMs + 1500));
-    if (mode === 'rack') { renderRack(true); sigRack(p, sigMs); }
+    const showCard = cardAllowed(!!o.auto);
+    clearTimeout(creditTimer);
+    if (showCard) {
+      c.classList.add('show');
+      sw.style.transition = 'none'; sw.style.width = '0'; void sw.offsetWidth;
+      sw.style.transition = `width ${sigMs}ms linear`; sw.style.width = '100%';
+      creditTimer = setTimeout(() => c.classList.remove('show'), Math.max(4000, sigMs + 1500));
+    } else c.classList.remove('show');
+    if (mode === 'rack') { renderRack(true); sigRack(p, sigMs, showCard); }
     if (lOpen) renderLib();
     if (pOpen) { renderTabs(); renderList(); }
   }
@@ -1136,7 +1174,10 @@
   let toastT;
   function libToast(msg) { libToastEl.textContent = msg; libToastEl.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => libToastEl.classList.remove('on'), 2600); }
   let gT;
-  function gToast(msg) { const g = $('gtoast'); g.textContent = msg; g.classList.add('on'); clearTimeout(gT); gT = setTimeout(() => g.classList.remove('on'), 3200); }
+  function gToast(msg, o) {
+    o = o || {};
+    if (!o.force && (overlayText.toasts === 'none' || ((overlayText.toasts === 'important' || cleanMode) && !o.important))) return;
+    const g = $('gtoast'); g.textContent = msg; g.classList.add('on'); clearTimeout(gT); gT = setTimeout(() => g.classList.remove('on'), 3200); }
 
   libList.addEventListener('click', e => {
     const b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT') return;
@@ -1322,12 +1363,13 @@
     if (animate) restart($('nameWipe'), 'wipe');
     measureMarquee(); renderRMeta(); renderQueue(); renderWarn(); renderCollSel(); syncFavBtns();
   }
-  function sigRack(p, ms) {
+  function sigRack(p, ms, showCard) {
     $('sigTitle').textContent = p.title; $('sigAuthor').textContent = 'por ' + p.author;
     const sig = $('sig'), els = [$('sigLine'), $('visorLine')];
     els.forEach(el => { el.style.setProperty('--blend', ms + 'ms'); el.classList.remove('run'); });
-    void sig.offsetWidth; sig.classList.add('show'); els.forEach(el => el.classList.add('run'));
-    clearTimeout(rSigTimer); rSigTimer = setTimeout(() => sig.classList.remove('show'), Math.max(4000, ms + 1500));
+    void sig.offsetWidth; els.forEach(el => el.classList.add('run'));
+    clearTimeout(rSigTimer);
+    if (showCard) { sig.classList.add('show'); rSigTimer = setTimeout(() => sig.classList.remove('show'), Math.max(4000, ms + 1500)); } else sig.classList.remove('show');
   }
   const drawer = $('drawer'), rDrawerBtn = $('rDrawerBtn');
   function setDrawer(open) {
@@ -1419,6 +1461,7 @@
   function applySilent() { const sil = state === 'silence' || state === 'denied' || (track && !track.playing); vizs.forEach(v => v.setSilent(!!sil)); }
   let bigT = 0;
   function showBigText(main, sub) {
+    if (!overlayText.track || cleanMode) return;
     $('bigMain').textContent = main; $('bigSub').textContent = sub || ''; $('bigSub').hidden = !sub;
     const b = $('bigtext'); b.classList.add('show'); clearTimeout(bigT); bigT = setTimeout(() => b.classList.remove('show'), 3000);
   }
@@ -1495,8 +1538,8 @@
 
   // Colar URL do SoundCloud
   let scPending = null;
-  function openScDialog(u) { scPending = u; $('scDlgUrl').textContent = u; $('scDialog').hidden = false; $('scYes').focus(); }
-  function closeScDialog() { if ($('scDialog').hidden) return; $('scDialog').hidden = true; scPending = null; }
+  function openScDialog(u) { document.body.classList.add('dlg-open'); scPending = u; $('scDlgUrl').textContent = u; $('scDialog').hidden = false; $('scYes').focus(); }
+  function closeScDialog() { if ($('scDialog').hidden) return; document.body.classList.remove('dlg-open'); $('scDialog').hidden = true; scPending = null; }
   addEventListener('paste', e => {
     const t = e.target; if (t && /^(INPUT|TEXTAREA)$/.test(t.tagName)) return;
     const txt = ((e.clipboardData && e.clipboardData.getData('text')) || '').trim();
@@ -1536,12 +1579,22 @@
     if (aiPaused) return; aiN++;
     if (aiN === 2) { showBigText('olá, Alexandre'); aiAdd('show_text', '“olá, Alexandre”'); return; }
     const p = randomPick(); if (!p) return;
-    play(p, { auto: true }); aiAdd('play_preset', p.title); gToast('Claude Desktop tocou ' + p.title);
+    play(p, { auto: true }); aiAdd('play_preset', p.title); gToast('Claude Desktop tocou ' + p.title, { important: true });
   }
   function toggleAiPause() {
     if (!aiOn) return; aiPaused = !aiPaused; renderAiChip(); gToast(aiPaused ? 'Controle por IA pausado.' : 'Controle por IA retomado.');
     if (pop === 'ai') renderAiPop();
   }
+  function setClean(v, announce) {
+    cleanMode = v; $('otClean').checked = v; $('protoClean').setAttribute('aria-pressed', v); $('cleanIco').hidden = !v;
+    if (v) { $('credit').classList.remove('show'); $('sig').classList.remove('show'); $('bigtext').classList.remove('show'); $('gtoast').classList.remove('on'); }
+    if (announce) gToast(v ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true });
+  }
+  $('otClean').onchange = e => setClean(e.target.checked, true);
+  $('protoClean').onclick = () => setClean(!cleanMode, true);
+  $('otPreset').onchange = e => { overlayText.preset = e.target.value; if (e.target.value === 'never') { $('credit').classList.remove('show'); $('sig').classList.remove('show'); } };
+  $('otTrack').onchange = e => { overlayText.track = e.target.checked; if (!e.target.checked) $('bigtext').classList.remove('show'); };
+  $('otToasts').onchange = e => { overlayText.toasts = e.target.value; };
   function skipHeavy() { hidden.add(cur.id); setState('normal'); random(); }
   $('skipHeavy').onclick = skipHeavy;
 
@@ -1588,7 +1641,29 @@
     if (sOpen) { setSheet(false); return; }
     if (mode === 'rack' && drawer.classList.contains('open')) setDrawer(false);
   }
+  // ── Controles da janela (protótipo) ──
+  const winCtl = $('winctl'); let winT = 0, appClosed = false, closeFocus = null;
+  const winAllowed = () => mode === 'stage' && !lOpen && !sOpen && !pOpen && $('scDialog').hidden && !appClosed;
+  addEventListener('mousemove', e => {
+    if (e.clientX > innerWidth - 160 && e.clientY < 96 && winAllowed()) { clearTimeout(winT); winT = 0; winCtl.classList.add('on'); }
+    else if (winCtl.classList.contains('on') && !winT) winT = setTimeout(() => { winCtl.classList.remove('on'); winT = 0; }, 220);
+  });
+  document.addEventListener('mouseleave', () => { if (!winT) winT = setTimeout(() => { winCtl.classList.remove('on'); winT = 0; }, 220); });
+  const lockEls = () => [$('palco'), $('rackScene'), document.querySelector('.proto'), $('palette')];
+  function closeApp() {
+    if (appClosed) return; appClosed = true; closeFocus = document.activeElement; winCtl.classList.remove('on');
+    lockEls().forEach(el => { el.inert = true; }); $('closedScreen').hidden = false; $('reopenApp').focus();
+  }
+  function reopenApp() {
+    appClosed = false; lockEls().forEach(el => { el.inert = false; }); $('closedScreen').hidden = true;
+    if (closeFocus && document.body.contains(closeFocus) && closeFocus.focus) closeFocus.focus();
+  }
+  $('winClose').onclick = closeApp; $('reopenApp').onclick = reopenApp;
+  $('winMin').onclick = () => gToast('Minimizado (protótipo)', { important: true });
+
   addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'w') { e.preventDefault(); closeApp(); return; }
+    if (appClosed) return;
     const ae = document.activeElement, tag = ae ? ae.tagName : '', type = ae ? ae.type : '';
     const typing = /^(INPUT|SELECT|TEXTAREA)$/.test(tag) && type !== 'range' && type !== 'checkbox' && type !== 'radio';
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); toggleAiPause(); return; }
@@ -1618,6 +1693,7 @@
     }
     else if (k === 'f') toggleFav();
     else if (k === 'r') setRot(!rotOn);
+    else if (k === 't') setClean(!cleanMode, true);
     else if (k === 'e') { location.href = STUDIO_URL + '?copiar=' + cur.id; }
     else if (k === 'm') setMode(mode === 'rack' ? 'stage' : 'rack');
     else if (mode === 'stage') {
