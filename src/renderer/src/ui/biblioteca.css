@@ -125,3 +125,8 @@ body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
 /* Cabeçalho, abas e rodapé não encolhem quando a lista é longa (só a lista rola). */
 .p-search, .p-tabs, .p-foot { flex: none; }
 .p-list { min-height: 0; }
+
+/* M12 · gaveta em degrau: as 8 primeiras linhas entram com 15 ms entre elas, só na abertura. */
+@keyframes rowin { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+.lib.enter .rows > li:nth-child(-n+8), .lib.enter .collist > li:nth-child(-n+8), .lib.enter .corder > li:nth-child(-n+8) { animation: rowin 220ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 15ms); }
+@media (prefers-reduced-motion: reduce) { .lib.enter .rows > li, .lib.enter .collist > li, .lib.enter .corder > li { animation: none; } }

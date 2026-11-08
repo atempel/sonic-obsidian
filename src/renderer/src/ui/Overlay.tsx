@@ -18,6 +18,7 @@ import { QuickSettings } from './QuickSettings'
 import { Settings } from './Settings'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
+import { TextStack, coreRise, drainLine, nudgeIcon, shuffleIcon } from './motion'
 import { TOAST_MS, onToast, showToast } from './toast'
 
 /**
@@ -119,26 +120,58 @@ function Credit({ core }: { core: Core }) {
   )
 }
 
-// ── Medidor (20 segmentos, peak hold), fora do re-render ─────
+// ── Medidor (20 segmentos), fora do re-render ──────────────
+/**
+ * M08: balística de PPM. Ataque ~10 ms, queda linear de ~1,5 s do topo ao fundo, pico
+ * retido 1,5 s e depois caindo; no silêncio os segmentos se apagam um a um, 30 ms cada.
+ */
 export function Meter({ core }: { core: Core }) {
   const ref = useRef<HTMLSpanElement>(null)
   useLayoutEffect(() => {
     const el = ref.current!
     const n = 20
     const segs = Array.from({ length: n }, () => el.appendChild(document.createElement('i')))
-    let peak = 0
-    let last = ''
+    let lvl = 0
+    let pk = 0
+    let pkAt = 0
+    let pkVel = 0
+    let cascade = n
+    let silent = false
+    let last = performance.now()
     const off = core.events.on('levelTick', ({ level: rms }) => {
-      const level = Math.min(1, rms * 2)
-      peak = Math.max(level, peak - 0.012)
-      const on = Math.round(level * n)
-      const pk = Math.min(n - 1, Math.round(peak * n) - 1)
-      const key = `${on}:${pk}`
-      if (key === last) return
-      last = key
-      segs.forEach((s, i) => {
-        s.className = i < on ? (i >= n - 2 ? 'clip' : i >= n * 0.7 ? 'hot' : 'on') : i === pk ? 'peak' : ''
-      })
+      const now = performance.now()
+      const dt = Math.min(0.1, Math.max(0, (now - last) / 1000))
+      last = now
+      const target = Math.min(1, rms * 2)
+      let on: number
+      if (target > 0.004) {
+        silent = false
+        if (target >= lvl) lvl += (target - lvl) * (1 - Math.exp(-dt / 0.0045))
+        else lvl = Math.max(target, lvl - dt / 1.5)
+        if (lvl >= pk) {
+          pk = lvl
+          pkAt = now
+          pkVel = 0
+        } else if (now - pkAt > 1500) {
+          pkVel += 0.3 * dt
+          pk = Math.max(lvl, pk - (0.12 + pkVel) * dt)
+        }
+        on = Math.round(lvl * n)
+      } else {
+        if (!silent) {
+          silent = true
+          cascade = Math.round(lvl * n)
+        }
+        cascade = Math.max(0, cascade - dt / 0.03)
+        lvl = cascade / n
+        pk = Math.min(pk, lvl)
+        on = Math.ceil(cascade - 1e-6)
+      }
+      const pi = pk * n < 0.5 ? -1 : Math.min(n - 1, Math.round(pk * n) - 1)
+      for (let i = 0; i < n; i++) {
+        const c = i < on ? (i >= n - 2 ? 'clip' : i >= n * 0.7 ? 'hot' : 'on') : i === pi ? 'peak' : ''
+        if (segs[i]!.className !== c) segs[i]!.className = c
+      }
     })
     return () => {
       off()
@@ -153,12 +186,14 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   const { core } = bridge
   useCoreVersion(core)
   const line = useRef<HTMLElement>(null)
+  const lineP = useRef(0)
+  const titleEl = useRef<HTMLDivElement>(null)
+  const authorEl = useRef<HTMLDivElement>(null)
   const time = useRef<HTMLSpanElement>(null)
   const fpsEl = useRef<HTMLSpanElement>(null)
   const { settings, current } = core.state
   const rotOn = settings.rotation.enabled
   const fav = core.isFavorite(current)
-  const { title, author } = splitPresetName(current)
   const fullscreen = bridge.isFullScreen()
 
   // Progresso da rotação: DOM direto, ~4×/s basta para m:ss e a linha.
@@ -167,7 +202,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
       const on = core.state.settings.rotation.enabled
       const interval = core.rotationIntervalSeconds
       const left = bridge.rotationRemaining()
-      if (line.current) line.current.style.width = on ? `${(1 - left / interval) * 100}%` : '0'
+      lineP.current = on ? Math.min(1, Math.max(0, 1 - left / interval)) : 0
+      if (line.current) line.current.style.transform = `scaleX(${lineP.current})`
       if (time.current) time.current.textContent = on ? mmss(left) : 'off'
       if (fpsEl.current) fpsEl.current.textContent = `${Math.round(bridge.fps())} fps`
     }
@@ -176,9 +212,31 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
     return () => window.clearInterval(id)
   }, [bridge, core])
 
-  const toggleFav = (): void => {
+  // M02 (título e autor trocam em pilha) e M03 (a linha esvazia) na troca de preset.
+  useLayoutEffect(() => {
+    if (!titleEl.current || !authorEl.current) return
+    const t = new TextStack(titleEl.current)
+    const a = new TextStack(authorEl.current)
+    const set = (name: string): void => {
+      const p = splitPresetName(name)
+      t.set(p.title)
+      a.set(p.author ? `por ${p.author}` : '')
+    }
+    set(core.state.current)
+    return core.events.on('presetChanged', ({ name, origin }) => {
+      if (origin === 'startup') return set(name)
+      const p = splitPresetName(name)
+      t.swap(p.title, 0, true)
+      a.swap(p.author ? `por ${p.author}` : '', 40)
+      if (line.current && core.state.settings.rotation.enabled) drainLine(line.current, lineP.current)
+    })
+  }, [core])
+
+  const toggleFav = (btn: HTMLElement): void => {
     const r = core.run<boolean>('library.favorite', {}, 'ui')
-    if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+    if (!r.ok) return
+    if (r.value) coreRise(btn)
+    showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
   }
 
   return (
@@ -197,9 +255,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           </button>
           <div class="now-text">
             <div class="now-row">
-              <div class="now-title" title={current}>
-                {title}
-              </div>
+              <div class="now-title" title={current} ref={titleEl} />
               {/* M19: o ícone entra em 120 ms (por isso fica no DOM, só escondido). */}
               <span
                 class={settings.overlayText.clean ? 'clean-ico on' : 'clean-ico'}
@@ -211,20 +267,55 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
                 <Icon name="eye-off" small />
               </span>
             </div>
-            {author && <div class="now-author">por {author}</div>}
+            <div class="now-author" ref={authorEl} />
           </div>
-          <button class="ibtn fav" aria-pressed={fav} aria-label={fav ? 'Desfavoritar' : 'Favoritar'} title={fav ? 'Desfavoritar' : 'Favoritar'} onClick={toggleFav}>
-            <Icon name="star" />
+          <button
+            class="ibtn fav favp"
+            aria-pressed={fav}
+            aria-label={fav ? 'Desfavoritar' : 'Favoritar'}
+            title={fav ? 'Desfavoritar' : 'Favoritar'}
+            onClick={(e) => toggleFav(e.currentTarget)}
+          >
+            {/* M07: contorno + estrela cheia que cresce do centro + núcleo que sobe. */}
+            <span class="fav-wrap">
+              <Icon name="star" />
+              <Icon name="star" fill />
+              <span class="core" aria-hidden="true" />
+            </span>
           </button>
         </div>
         <div class="strip-t">
-          <button class="ibtn" aria-label="Preset anterior" title="Anterior (←)" onClick={() => core.run('preset.previous', {}, 'ui')}>
+          <button
+            class="ibtn"
+            aria-label="Preset anterior"
+            title="Anterior (←)"
+            onClick={(e) => {
+              if (e.detail > 0) nudgeIcon(e.currentTarget, -2)
+              core.run('preset.previous', {}, 'ui')
+            }}
+          >
             <Icon name="skip-back" />
           </button>
-          <button class="ibtn" aria-label="Preset aleatório" title="Aleatório (Espaço)" onClick={() => core.run('preset.random', {}, 'ui')}>
+          <button
+            class="ibtn"
+            aria-label="Preset aleatório"
+            title="Aleatório (Espaço)"
+            onClick={(e) => {
+              if (e.detail > 0) shuffleIcon(e.currentTarget)
+              core.run('preset.random', {}, 'ui')
+            }}
+          >
             <Icon name="shuffle" />
           </button>
-          <button class="ibtn" aria-label="Próximo preset" title="Próximo (→)" onClick={() => core.run('preset.next', {}, 'ui')}>
+          <button
+            class="ibtn"
+            aria-label="Próximo preset"
+            title="Próximo (→)"
+            onClick={(e) => {
+              if (e.detail > 0) nudgeIcon(e.currentTarget, 2)
+              core.run('preset.next', {}, 'ui')
+            }}
+          >
             <Icon name="skip-forward" />
           </button>
           <span class="sep" aria-hidden="true" />
