@@ -17,7 +17,8 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
-- [ ] **Passagem de performance, segurança e otimização** (pedido do usuário, no fim desta frente). Inclui: a abertura do app ficou mais lenta há algumas builds (não é a edição do `.exe`; o renderer abre igual nos builds do PR 1 e do #44, ~0,5 s no headless, então medir o main e o carregamento no Windows, com tempos no log).
+- [ ] **Passagem de performance, segurança e otimização** (pedido do usuário). Feito no PR #56: tempos da abertura no log, CI uma vez por PR, registros de dependências e segurança. **Falta:** o usuário mandar o log com as linhas `abertura (ms desde o processo)` de 2 ou 3 aberturas (build `7f8a59f`+) → corrigir a etapa que estiver lenta.
+- [ ] Refazer a checagem de `electron@45.2.3` e `vite@8.3.6` depois de 19/11 (14 dias) — [docs/dependencias.md](docs/dependencias.md)
 - [x] Decidir sobre `electron@45.2.3` e `vite@8.3.6`: mantidos; refazer a checagem depois de 19/11 — [docs/dependencias.md](docs/dependencias.md)
 - [x] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder`: aceitas (só empacotamento); rever quando o electron-builder atualizar
 - [ ] Confirmar numa sessão longa (horas) que a memória da GPU fica estável depois da correção do vazamento de shaders — pedir o `sonic-obsidian.log` (`Ctrl+Shift+L`); ver DECISIONS 2026-11-08 "Queda do driver de vídeo"

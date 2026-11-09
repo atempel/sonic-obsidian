@@ -4,6 +4,24 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `claude/clever-faraday-72vlrd`
+**Fez:**
+- Design checado: `0fd0`, sem mudança.
+- **Spec 020, Painel de atalhos `?` e busca com comandos** (issue #51, PR #53, mergeado com o ok do usuário). Planejada com três perguntas respondidas: F continua tela cheia, Diagnóstico entra sem F12, comandos só na aba Todos. Teste headless com 23 verificações. A spec nasceu como 019 e foi renumerada, porque outra sessão usou a 019 para a landing (#54/#55).
+- **Passagem de manutenção (PR #56, mergeado):**
+  - linha `abertura (ms desde o processo): …` no log, com cada etapa;
+  - CI com `push` só no `main`;
+  - `electron`/`vite` mantidos até 14 dias e `minimatch` aceito;
+  - segurança da janela conferida;
+  - **bug das Configurações** relatado pelo usuário, corrigido: o `.panel` global do `setup.css` (spec 012) deslocava as seções para fora da área de conteúdo.
+**Deixou em:** `main` com #53 e #56; o branch da sessão está alinhado com `merge -s ours`. Com a 020, a Fase 2 (Interface v3) fica completa.
+- **Pendente (precisa do usuário no Windows):**
+  - o `sonic-obsidian.log` com as linhas `abertura` de 2 ou 3 aberturas do build `7f8a59f` ou mais novo, para achar a etapa lenta e corrigi-la;
+  - uma sessão de horas para a memória da GPU.
+  O log antigo (até 02:55 de 09/11) só tinha o `app ready` e sessões de até ~15 min, com GPU entre 147 e 183 MB, sem crescer.
+- **A refazer:** checagem de `electron@45.2.3`/`vite@8.3.6` depois de 19/11.
+- **Verificação no Windows:** o painel 020 e a correção das Configurações foram aprovados pelo usuário para merge. Teclado ABNT2 (`?`) e o fps com o painel aberto não foram confirmados explicitamente.
+
 ### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `docs/landing-refino`
 **Fez:** Spec 019 e issue #52 (refino de movimento da landing). Implementou no `site/` o movimento da v3 (M02 troca de título, M03 linha de rotação, M04 pressão, M05 aleatório, M06 AUTO, M08 balística do medidor, M10 sublinhado da navegação, M12 Biblioteca em degrau, entrada das seções ao rolar, fade nas Perguntas, teclado no console) com o movimento reduzido do doc, e a demo com as duas músicas do Uppbeat, criptografadas em `site-media/` e decifradas pelo `site:vendor` com `SITE_AUDIO_KEY`. Verificado no Chromium headless: as animações só usam transform/opacity, com movimento reduzido sobram só fades, a música toca, o crédito aparece, a batida acende a marca, sem erros e sem domínio externo novo.
 **Deixou em:** PR `docs/landing-refino` → `main`. O usuário criou o segredo `SITE_AUDIO_KEY` e mandou o código de licença de 'Space Dancers'; PR #54 mergeado e publicado; o usuário validou no Windows e a issue #52 foi fechada.
