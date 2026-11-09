@@ -1,6 +1,6 @@
 # 019 — Painel de atalhos (`?`) e busca rápida com comandos
 
-**Fase:** 2 · **Status:** Em andamento · **Issue:** [#51](https://github.com/atempel/sonic-obsidian/issues/51) · **Depende de:** [010](010-busca-biblioteca.md), [011](011-ajustes-configuracoes.md), [012](012-setup-diagnostico-desempenho.md)
+**Fase:** 2 · **Status:** Feito (PR #53) · **Issue:** [#51](https://github.com/atempel/sonic-obsidian/issues/51) · **Depende de:** [010](010-busca-biblioteca.md), [011](011-ajustes-configuracoes.md), [012](012-setup-diagnostico-desempenho.md)
 
 ## Problema
 Os atalhos só aparecem na tabela de Configurações › Atalhos e em três linhas do cartão de boas-vindas. Para lembrar uma tecla é preciso abrir as Configurações. A busca rápida só acha presets e coleções, e quem procura uma ação ("modo limpo") não encontra nada. Além disso, a lista de atalhos é escrita à mão em vários lugares (tabela das Configurações, dicas da busca, HUD), e uma tecla nova pode ficar fora de algum deles.
