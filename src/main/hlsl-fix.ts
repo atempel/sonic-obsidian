@@ -275,3 +275,39 @@ export function parenthesizeHlsl(src: string): string {
   if (!src.trim()) return src
   return new Parser(tokenize(src)).program()
 }
+
+/**
+ * Pós-processamento do GLSL que sai do conversor (formato "não otimizado" do
+ * milkdrop-preset-utils), para o Butterchurn 3 compilar:
+ * - o corpo do shader vem numa função `main_shader_sentinel(uv)` chamada de dentro do
+ *   `shader_body`; ali dentro, `rad`, `ang`, `uv_orig` e `hue_shader` (que o motor declara no
+ *   próprio `main`) não existem. O corpo volta para dentro do `shader_body`, como na conversão
+ *   oficial;
+ * - texturas do usuário (`sampler2D sampler_x;`) precisam ser `uniform` (é também o que o motor
+ *   procura para ligar as texturas).
+ */
+export function fixConvertedGlsl(glsl: string): string {
+  let s = glsl.replace(/^(\s*)sampler2D\s+(\w+)\s*;/gm, '$1uniform sampler2D $2;')
+  const sig = /vec4\s+main_shader_sentinel\s*\(\s*vec2\s+uv\s*\)\s*\{/.exec(s)
+  const call = /shader_body\s*\{\s*vec4\s+result\s*=\s*main_shader_sentinel\s*\(\s*uv\s*\)\s*;\s*ret\s*=\s*result\.rgb\s*;\s*\}/.exec(s)
+  if (!sig || !call) return s
+  // Corpo da função: casar as chaves a partir da assinatura.
+  let depth = 0
+  let end = -1
+  for (let k = sig.index + sig[0].length - 1; k < s.length; k++) {
+    if (s[k] === '{') depth++
+    else if (s[k] === '}' && --depth === 0) {
+      end = k
+      break
+    }
+  }
+  if (end < 0) return s
+  let body = s.slice(sig.index + sig[0].length, end)
+  // `ret` já existe no main do motor; o retorno vira só o valor de `ret`.
+  body = body.replace(/^\s*vec3\s+ret\s*;\s*$/m, '').replace(/return\s+vec4\s*\(\s*ret\s*,\s*1(?:\.0*)?\s*\)\s*;/g, '')
+  const before = s.slice(0, sig.index)
+  const between = s.slice(end + 1, call.index)
+  const after = s.slice(call.index + call[0].length)
+  s = `${before}${between}shader_body {\n${body}\n}${after}`
+  return s
+}
