@@ -3,7 +3,9 @@ name: build-windows
 on:
   push:
     branches: [main, 'feat/**', 'fix/**']
+    paths-ignore: ['site/**', 'docs/**']
   pull_request:
+    paths-ignore: ['site/**', 'docs/**']
   workflow_dispatch:
 
 concurrency:
