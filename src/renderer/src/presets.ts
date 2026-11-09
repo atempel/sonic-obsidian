@@ -1,7 +1,4 @@
 import type { Preset } from 'butterchurn'
-import butterchurnPresets from 'butterchurn-presets'
-
-type PresetPack = { getPresets(): Record<string, Preset> }
 
 /**
  * Biblioteca de presets: lista única ordenada por nome (o nome carrega o autor
@@ -15,34 +12,21 @@ export class PresetLibrary {
   /** Presets que next/random pulam (ocultos). Definido pelo Core. */
   isSkipped: (name: string) => boolean = () => false
 
-  constructor(private readonly engine: 'v2' | 'v3' = 'v2') {
-    if (engine === 'v2') this.addPack(butterchurnPresets)
-  }
-
-  /** Spike 006: pacote base do butterchurn-presets 3.x (presets com equações `*_eel`). */
-  async loadBasePack3(): Promise<number> {
-    const mod = await import('butterchurn-presets3/dist/base.min.js')
+  /** Pacote base do butterchurn-presets 3.x, antes do primeiro preset. */
+  async loadBasePack(): Promise<number> {
+    const mod = await import('butterchurn-presets/dist/base.min.js')
     this.addPresets(mod.default)
     return this.count
   }
 
   /** Pacotes extras do mesmo butterchurn-presets, carregados depois do primeiro quadro. */
   async loadExtraPacks(): Promise<number> {
-    if (this.engine === 'v3') {
-      const packs3 = await Promise.all([
-        import('butterchurn-presets3/dist/extra.min.js'),
-        import('butterchurn-presets3/dist/md1.min.js'),
-        import('butterchurn-presets3/dist/image.min.js')
-      ])
-      for (const mod of packs3) this.addPresets(mod.default)
-      return this.count
-    }
     const packs = await Promise.all([
-      import('butterchurn-presets/lib/butterchurnPresetsExtra.min.js'),
-      import('butterchurn-presets/lib/butterchurnPresetsExtra2.min.js'),
-      import('butterchurn-presets/lib/butterchurnPresetsMD1.min.js')
+      import('butterchurn-presets/dist/extra.min.js'),
+      import('butterchurn-presets/dist/md1.min.js'),
+      import('butterchurn-presets/dist/image.min.js')
     ])
-    for (const mod of packs) this.addPack(mod.default)
+    for (const mod of packs) this.addPresets(mod.default)
     return this.count
   }
 
@@ -102,11 +86,7 @@ export class PresetLibrary {
     return name
   }
 
-  private addPack(pack: PresetPack): void {
-    this.addPresets(pack.getPresets())
-  }
-
-  /** Acrescenta presets (o 3.x exporta o mapa direto, sem getPresets). Público para o spike 006. */
+  /** Acrescenta presets (o pacote 3.x exporta o mapa nome → preset). */
   addPresets(map: Record<string, Preset>): void {
     for (const [name, preset] of Object.entries(map)) {
       if (!this.presets.has(name)) this.presets.set(name, preset)

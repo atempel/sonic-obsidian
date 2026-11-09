@@ -34,10 +34,12 @@ Toda dependência nova (ou troca de versão) passa por esta checagem **no moment
 | 2026-11-08 | `@fontsource/space-grotesk@5.3.0` | prod (fonte) | 2026-07-19 | OFL-1.1 | 0 | não | sim (SLSA v1) | 0 em produção | **ok.** Licença de fonte que permite embutir; texto da OFL em THIRD_PARTY_NOTICES. Só os pesos 400/500/600 são importados. |
 | 2026-11-08 | `@fontsource/jetbrains-mono@5.3.0` | prod (fonte) | 2026-07-19 | OFL-1.1 | 0 | não | sim (SLSA v1) | 0 em produção | **ok.** Mesmos mantenedores do anterior; pesos 400/500. |
 | 2026-11-08 | ícones do `lucide-static@0.460.0` (copiados, não instalados) | — | 2024-11-15 | ISC | — | — | — | — | **ok.** 13 SVGs copiados para `ui/icons.tsx`; aviso ISC em THIRD_PARTY_NOTICES. Lido de um `npm pack` em pasta isolada. |
-| 2026-11-09 | `butterchurn@3.0.0-beta.5` (alias `butterchurn3`) | prod (spike 006) | 2025-07-13 | MIT | 3 (`@assemblyscript/loader`, `ecma-proposal-math-extensions`, `eel-wasm`) | não | não | 0 | **ok para o spike** (aprovado pelo usuário). Beta desde 2021; mesmo mantenedor do 2.6.7. |
-| 2026-11-09 | `butterchurn-presets@3.0.0-beta.4` (alias `butterchurn-presets3`) | prod (spike 006) | 2021-06-01 | MIT | 1 (`@babel/runtime`) | não | não | 0 | **ok para o spike.** 18 MB no node_modules; o app só importa `dist/*.min.js` sob demanda. |
-| 2026-11-09 | `milkdrop-preset-utils@0.2.1` | prod (spike 006) | 2021-01-24 | MIT | 0 | não | não | 0 | **ok para o spike.** Separa as seções do `.milk`. |
-| 2026-11-09 | `hlslparser-js@0.1.1` | prod (spike 006) | 2018-09-16 | MIT | 0 | não | não | 0 | **ok para o spike.** HLSL → GLSL (Emscripten). |
+| 2026-11-09 | `butterchurn@3.0.0-beta.5`  | prod | 2025-07-13 | MIT | 3 (`@assemblyscript/loader`, `ecma-proposal-math-extensions`, `eel-wasm`) | não | não | 0 | **ok** (aprovado pelo usuário; motor do app desde a spec 021). Beta desde 2021; mesmo mantenedor do 2.6.7. |
+| 2026-11-09 | `butterchurn-presets@3.0.0-beta.4`  | prod | 2021-06-01 | MIT | 1 (`@babel/runtime`) | não | não | 0 | **ok** (spec 021). 18 MB no node_modules; o app só importa `dist/*.min.js` sob demanda. |
+| 2026-11-09 | `milkdrop-preset-utils@0.2.1` | prod | 2021-01-24 | MIT | 0 | não | não | 0 | **ok** (conversor no main). Separa as seções do `.milk`. |
+| 2026-11-09 | `hlslparser-js@0.1.1` | prod | 2018-09-16 | MIT | 0 | não | não | 0 | **ok** (conversor no main). HLSL → GLSL (Emscripten). |
+
+| 2026-11-09 | `butterchurn@2.6.7` e `butterchurn-presets@2.4.7` com os aliases `butterchurn-v2-site`/`butterchurn-presets-v2-site` | dev (só a landing) | 2019/2018 | MIT | — | não (core-js já registrado) | não | igual ao de antes | **ok.** Saíram do app na spec 021; a landing (`site:vendor`) continua no 2.6.7 até ser migrada. |
 
 Checagem do spike 006, feita em pasta isolada: 12 pacotes no total, licenças MIT e Apache-2.0, `npm audit` sem vulnerabilidades. O único install script é o `core-js`, que já existia via `butterchurn-presets` 2.x. `eel-wasm@0.0.17` (MIT, captbaritone) entra como dependência indireta do motor 3.
 

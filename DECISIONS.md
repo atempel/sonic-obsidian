@@ -311,3 +311,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - ficar no 2.6.7 e bloquear presets externos (travaria importar `.milk`, o Estúdio e o MCP);
   - converter no renderer (exigiria `'unsafe-eval'`);
   - recompilar o `hlslparser` em C++ para WASM (exige toolchain Emscripten; os contornos chegaram a 92%).
+
+## 2026-11-09 — Spec 021: migração para o Butterchurn 3
+- **Preset que trava:** o render tem `try/catch`. Três erros em 1 s pulam o preset até o app fechar: ele sai do "próximo" e do "aleatório", com um toast e uma linha no log, e nada é gravado. **Descartado:** ocultar de vez como em "Ocultos por desempenho". Uma falha pode depender do áudio ou do driver, e esconder para sempre um preset bom seria pior do que tentar de novo na próxima abertura.
+- **Carregar preset é assíncrono no 3.x:** os pedidos entram numa fila, e um pedido já superado por outro mais novo é descartado antes de compilar. Sem isso, um preset lento terminaria depois de um mais novo e tomaria a tela.
+- **Landing continua no 2.6.7** (aliases `butterchurn-v2-site` e `butterchurn-presets-v2-site`, só como dependência de desenvolvimento). Ela só toca os presets embutidos, não carrega preset de fora. Migrar a landing para o 3.x fica para outra tarefa (a API do 3.x é assíncrona e a saída usa um canvas 2D).

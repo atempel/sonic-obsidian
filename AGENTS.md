@@ -13,10 +13,10 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
   - `npm run dev` — app com HMR; só funciona onde há janela e Electron instalado (não na nuvem, não no host sem Node).
   - Testes automatizados: ainda não há. Para ver a interface na nuvem: `npm run build`, servir `out/renderer/` e abrir no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados — serve para layout e estados, não para áudio/fps.
   - No app: `?` abre o painel com todos os atalhos (a lista única fica em `src/renderer/src/ui/shortcuts.ts`; tecla nova entra lá). `Ctrl+Shift+D` mostra o HUD de depuração (fps, memória JS, áudio, expressividade).
-  - Simular falhas no Windows (spec 012): `test-flags.json` na pasta de dados do app (acima de `logs/`) com `{"captureFail": true}` e/ou `{"noWebgl2": true}`; apagar o arquivo volta ao normal. Spike 006: `{"engine3": true}` liga o Butterchurn 3 e `{"spike006": true}` roda a bateria de checagens (resultados no log).
+  - Simular falhas no Windows (spec 012): `test-flags.json` na pasta de dados do app (acima de `logs/`) com `{"captureFail": true}` e/ou `{"noWebgl2": true}`; apagar o arquivo volta ao normal.
   - Log em arquivo no Windows: `logs/sonic-obsidian.log` dentro do `userData` (`Ctrl+Shift+L` abre a pasta; a primeira linha de cada abertura traz o caminho) (abertura, quedas do renderer/GPU, perda do contexto WebGL, memória por processo a cada 5 min). Pedir ao usuário quando o app travar ou fechar sozinho.
 - CI: `.github/workflows/build-windows.yml` — typecheck no Ubuntu e build no `windows-latest`; o artifact `sonic-obsidian-win-<sha>` é o que o usuário baixa e testa.
-- `butterchurn` + `butterchurn-presets` (MIT) e `preact` (MIT, interface do overlay), versões fixadas. Processo main + preload (`src/preload/`, API estreita em `window.so`) + renderer; estado salvo em `settings.json`/`library.json` no `userData`.
+- `butterchurn` 3 (WASM, `onlyUseWASM`; CSP sem `'unsafe-eval'`) + `butterchurn-presets` 3 (MIT) e `preact` (MIT, interface do overlay), versões fixadas. Conversor `.milk` no main: `milkdrop-preset-utils` + `hlslparser-js`, com os contornos de `src/main/hlsl-fix.ts`. Processo main + preload (`src/preload/`, API estreita em `window.so`) + renderer; estado salvo em `settings.json`/`library.json` no `userData`.
 - `legacy/python/` é referência histórica — não editar, não rodar junto.
 - **Onde roda:** desenvolvimento na nuvem (Linux, sem áudio/janela); validação no Windows com o build do GitHub Actions. Ver [CONTEXT.md](CONTEXT.md#ambiente-de-desenvolvimento).
 

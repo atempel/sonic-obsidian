@@ -15,7 +15,7 @@ interface Window {
       openLink(url: string): Promise<void>
       copyText(text: string): Promise<void>
       gpuInfo(): Promise<{ driver: string; ids: string }>
-      testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean; engine3: boolean; spike006: boolean }>
+      testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
     }
     app: { version(): Promise<string> }
     presets: { convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }> }

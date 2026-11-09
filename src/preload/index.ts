@@ -36,10 +36,10 @@ contextBridge.exposeInMainWorld('so', {
     /** Driver e ids da GPU (diagnóstico de WebGL 2). */
     gpuInfo: (): Promise<{ driver: string; ids: string }> => ipcRenderer.invoke('system:gpuInfo'),
     /** Flags de teste lidas de test-flags.json (spec 012). */
-    testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean; engine3: boolean; spike006: boolean }> => ipcRenderer.invoke('system:testFlags')
+    testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean }> => ipcRenderer.invoke('system:testFlags')
   },
   app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
-  /** Spike 006: .milk (texto) → preset do Butterchurn 3, convertido no main. */
+  /** .milk (texto) → preset do Butterchurn 3, convertido no main (spec 022). */
   presets: {
     convertMilk: (text: string): Promise<{ preset: Record<string, unknown>; ms: number }> => ipcRenderer.invoke('presets:convertMilk', String(text))
   },

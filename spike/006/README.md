@@ -6,4 +6,4 @@ Os nomes dos arquivos são os títulos dos presets e trazem os créditos dos aut
 
 Dois deles (`Fumbling_Foo + En D & Martin - Mandelverse` e `martin - castle in the air`) usam `round`/`fwidth` nos shaders, funções que o conversor HLSL não reconhece: são os casos de falha esperada.
 
-Rodar no app: `test-flags.json` com `{"engine3": true, "spike006": true}` (ver AGENTS.md). Os resultados saem no `sonic-obsidian.log`, em linhas `spike006: …`.
+A bateria do spike (flags `engine3`/`spike006`) saiu com a migração (spec 021). Estes arquivos continuam como casos de teste da importação (spec 022) e da futura suíte de testes. Resultado no Windows: 8/10 tocam (as falhas são `Fumbling_Foo + En D & Martin - Mandelverse` e `martin - castle in the air`).

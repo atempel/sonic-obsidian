@@ -64,7 +64,7 @@ function registerStores(): void {
     }
   })
   ipcMain.handle('system:testFlags', () => readTestFlags())
-  // Spike 006: conversão .milk → preset 3.x fora do renderer (o conversor HLSL precisa de eval).
+  // .milk → preset 3.x fora do renderer (o conversor HLSL precisa de eval); usado pela spec 022.
   ipcMain.handle('presets:convertMilk', async (_e, text: unknown) => {
     const t = performance.now()
     const preset = await milkToPreset3(text)
@@ -77,21 +77,15 @@ function registerStores(): void {
  * do log, ao lado). Simula a captura recusada e a falta de WebGL 2 sem linha de comando.
  * Só estas chaves, só booleanos; arquivo ausente ou inválido = nenhuma flag.
  */
-type TestFlags = { captureFail: boolean; noWebgl2: boolean; engine3: boolean; spike006: boolean }
+type TestFlags = { captureFail: boolean; noWebgl2: boolean }
 async function readTestFlags(): Promise<TestFlags> {
   try {
     const raw = JSON.parse(await readFile(join(app.getPath('userData'), 'test-flags.json'), 'utf8')) as Record<string, unknown>
-    // Spike 006: engine3 = Butterchurn 3 (WASM, sem 'unsafe-eval'); spike006 = bateria de checagens no log.
-    const flags = {
-      captureFail: raw.captureFail === true,
-      noWebgl2: raw.noWebgl2 === true,
-      engine3: raw.engine3 === true,
-      spike006: raw.spike006 === true
-    }
-    if (Object.values(flags).some(Boolean)) log('main', `flags de teste: ${JSON.stringify(flags)}`)
+    const flags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }
+    if (flags.captureFail || flags.noWebgl2) log('main', `flags de teste: ${JSON.stringify(flags)}`)
     return flags
   } catch {
-    return { captureFail: false, noWebgl2: false, engine3: false, spike006: false }
+    return { captureFail: false, noWebgl2: false }
   }
 }
 
