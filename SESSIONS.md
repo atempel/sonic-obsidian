@@ -4,6 +4,17 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-08/09 — Claude Code (nuvem, claude.ai/code) — branch `claude/dazzling-rubin-orl47m`
+**Fez:** Design sincronizado duas vezes: `7509` (as 23 microinterações aprovadas) e `0fd0` (Painel de atalhos `?` e busca com comandos, que foram para a queue). Escolha das microinterações registrada em DECISIONS (M18 continua com 10 s). Specs entregues e validadas pelo usuário no Windows, todas mergeadas em squash com o ok dele:
+- **011, em dois PRs:** Ajustes rápidos com M04, M13–M16 e M19 (#39); Configurações com M10 e o ícone do app, com o `.exe` editado (#44).
+- **018:** microinterações da faixa e da gaveta (planejada nesta sessão, issue #45, PR #46).
+- **012:** boas-vindas, diagnósticos de captura e WebGL 2, aviso de silêncio e desempenho por preset (#47), com `test-flags.json` para simular falhas.
+Teste headless (Playwright) em todos os PRs. Três conflitos só no `DECISIONS.md` (PRs do README, da licença e da landing, feitos por outros agentes) foram resolvidos com merge.
+**Deixou em:** `main` com 011, 012 e 018; o branch da sessão está alinhado com `merge -s ours`. A Fase 2 só não tem o **Painel de atalhos** (`queue/2026-11-08-painel-atalhos.md`, falta a spec).
+- **Pendente em TASKS › Manutenção:** a passagem de performance, segurança e otimização pedida pelo usuário. Inclui a abertura lenta há algumas builds: o renderer abre igual nos builds do PR 1 e do #44, então falta medir o main e o carregamento no Windows. Também: a sessão longa para a memória da GPU, `electron`/`vite` recentes, `minimatch` e o CI duplicado.
+- **Não verificado:** a cópia do diagnóstico em outra máquina e o comportamento de "Pular presets lentos" numa máquina fraca de verdade.
+- **Mudança de comportamento:** o ganho dos Ajustes volta ao Ganho padrão a cada abertura.
+
 ### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `claude/trusting-gates-peo7zy`
 **Fez:** Spec 017 (P0): landing em `site/` (EN + `/pt/`), portada do canvas `1794165992-cb8e`; `site/assets/stage.js` (Butterchurn + faixa sintetizada + espelhos + medidor + reduced-motion), `site.css` com fontes locais, favicon/marca, `og.png`; `scripts/site-vendor.mjs` (`npm run site:vendor`); `.github/workflows/pages.yml` (artifact `sonic-obsidian-site-<sha>` em PR, deploy em `main`); `build-windows.yml` ignora `site/**` e `docs/**`. Verificado no Chromium headless (SwiftShader): presets carregam, demo/próximo funcionam, só `api.github.com` sai do site, sem rolagem horizontal a 390 px, links EN↔PT, portão de reduced-motion.
 **Deixou em:** PR #48 mergeado; workflow `pages` publicou em https://atempel.github.io/sonic-obsidian/ (deploy ok no Actions; a nuvem não alcança `github.io`, então a página no ar não foi aberta daqui). Não verificado: som da demo e fps (precisa navegador real com áudio — testar o artifact ou a página no ar no Windows); download (não há release publicada até a spec 016). P1 (404, notas da versão) pendente. Próximo da abertura: spec 016 (releases), que destrava os downloads da landing.

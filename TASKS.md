@@ -14,7 +14,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
 - [x] **Microinterações da faixa e da gaveta** (M01–M03, M05–M08, M12, M22) — [spec 018](docs/specs/018-microinteracoes-faixa.md) · issue [#45](https://github.com/atempel/sonic-obsidian/issues/45)
 - [ ] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — planejar: [queue/2026-11-08-painel-atalhos.md](queue/2026-11-08-painel-atalhos.md)
-- [ ] **Setup, diagnóstico e desempenho por preset** (em teste) — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
+- [x] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
 - [ ] **Passagem de performance, segurança e otimização** (pedido do usuário, no fim desta frente). Inclui: a abertura do app ficou mais lenta há algumas builds (não é a edição do `.exe`; o renderer abre igual nos builds do PR 1 e do #44, ~0,5 s no headless, então medir o main e o carregamento no Windows, com tempos no log).

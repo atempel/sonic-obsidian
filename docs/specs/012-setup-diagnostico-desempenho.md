@@ -1,6 +1,6 @@
 # 012 — Setup, diagnóstico e desempenho
 
-**Fase:** 2 · **Status:** Em teste (um PR só, decisão do usuário) · **Issue:** [#25](https://github.com/atempel/sonic-obsidian/issues/25) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); P2 depende da [011](011-ajustes-configuracoes.md)
+**Fase:** 2 · **Status:** Feito (PR #47, validado no Windows) · **Issue:** [#25](https://github.com/atempel/sonic-obsidian/issues/25) · **Depende de:** [008](008-nucleo-comandos-persistencia.md), [009](009-palco-faixa-assinatura.md); P2 depende da [011](011-ajustes-configuracoes.md)
 
 ## Problema
 Quando algo dá errado (captura recusada, sem WebGL 2, nenhum som chegando) o app fica preto ou parado sem dizer por quê, e na primeira abertura ninguém sabe os atalhos. Alguns presets derrubam o fps e não há como identificá-los nem pular.
