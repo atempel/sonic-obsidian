@@ -1,5 +1,5 @@
 /**
- * Lista única de atalhos e comandos (spec 019). A tabela das Configurações, o painel `?` e o
+ * Lista única de atalhos e comandos (spec 020). A tabela das Configurações, o painel `?` e o
  * grupo "Comandos" da busca rápida leem daqui. Só teclas que existem no app: tecla nova no
  * `keydown` de `main.ts` entra também nesta lista.
  */

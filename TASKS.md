@@ -13,7 +13,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Expressividade em `+`/`−`** (Caráter `X`, Memória `Shift+X`; ganho só nos Ajustes) — [spec 015](docs/specs/015-expressividade.md) · issue [#36](https://github.com/atempel/sonic-obsidian/issues/36) · spike no PR #35
 - [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
 - [x] **Microinterações da faixa e da gaveta** (M01–M03, M05–M08, M12, M22) — [spec 018](docs/specs/018-microinteracoes-faixa.md) · issue [#45](https://github.com/atempel/sonic-obsidian/issues/45)
-- [x] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — [spec 019](docs/specs/019-painel-atalhos-comandos.md) · issue [#51](https://github.com/atempel/sonic-obsidian/issues/51)
+- [x] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — [spec 020](docs/specs/020-painel-atalhos-comandos.md) · issue [#51](https://github.com/atempel/sonic-obsidian/issues/51)
 - [x] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
@@ -40,6 +40,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 ## Abertura (repo público e MIT desde 2026-11-08, PR #43)
 - [ ] **Releases no GitHub** (destrava os downloads da landing, que dão 404 até a primeira release) — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
 - [x] **Landing page no GitHub Pages** (P0 no ar em atempel.github.io/sonic-obsidian, PR #48; P1 = 404 e notas da versão) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
+- [x] **Landing: refino de movimento e microinterações** (sistema de movimento da v3 no `site/` + músicas do Uppbeat criptografadas na demo) — [spec 019](docs/specs/019-landing-refino-movimento.md) · issue [#52](https://github.com/atempel/sonic-obsidian/issues/52)
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))

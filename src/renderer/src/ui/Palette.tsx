@@ -35,7 +35,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
 
   const items = tab === 'collections' ? [] : listFor(core, presets, allSet, tab, q.trim()).slice(0, MAX_RESULTS)
   const cols = tab === 'collections' ? lib.collections.filter((c) => c.name.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase())) : []
-  // Comandos (spec 019): só na aba Todos e com texto, abaixo dos presets; Enter executa.
+  // Comandos (spec 020): só na aba Todos e com texto, abaixo dos presets; Enter executa.
   const cmds = tab === 'all' ? matchCommands(q) : []
   const count = tab === 'collections' ? cols.length : items.length + cmds.length
   const counts: Record<Tab, number> = {

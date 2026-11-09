@@ -115,7 +115,7 @@ Protótipo `1794178325-0fd0` (Setup, Palco integrado, Configurações › Desemp
 - **Preset pesado:** o aviso fica logo acima da faixa, alinhado à direita, e não dentro da cauda (com busca, ajustes e tela cheia, não cabe sem cobrir a Rotação). "Pular presets lentos" avisa e não oculta sozinho (DECISIONS).
 **Status:** aberta.
 
-### 2026-11-09 — Painel de atalhos e comandos da busca · diferenças da spec 019
+### 2026-11-09 — Painel de atalhos e comandos da busca · diferenças da spec 020
 Protótipo `1794178325-0fd0`, página Palco integrado (`#kPanel`, `kbdBtn`, comandos da paleta). **No app:**
 - **F é tela cheia** (como F11), não "Favoritar" (decisão do usuário). Na busca, "Favoritar preset atual" aparece sem tecla.
 - **Grupos:** só as teclas que existem. Saem Vídeo, IA, Modo Rack (M) e Estúdio (E), que são das Fases 3–5. Entram **Expressividade** (+/−/0, X, Shift+X), as teclas da transição (B, ↑/↓, corte seco com Shift) e **Diagnóstico** (Ctrl+Shift+D, Ctrl+Shift+L). F12 fica de fora.

@@ -4,7 +4,7 @@ import { Icon } from './icons'
 import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, keysText, norm, type Keys } from './shortcuts'
 
 /**
- * Painel de atalhos `?` (spec 019) — protótipo "Palco integrado" (`#kPanel`), versão 1794178325-0fd0.
+ * Painel de atalhos `?` (spec 020) — protótipo "Palco integrado" (`#kPanel`), versão 1794178325-0fd0.
  * Fica fora do `core.state.overlay` para poder abrir por cima da Biblioteca sem fechá-la.
  * Abre e fecha sem animação.
  */

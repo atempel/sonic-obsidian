@@ -312,7 +312,7 @@ async function start(): Promise<void> {
   // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
   // O log mostra se isso acontece na máquina do usuário.
   document.addEventListener('visibilitychange', () => window.so.log(`janela ${document.visibilityState === 'hidden' ? 'oculta: render pausado' : 'visível'}`))
-  // Ações com nome (spec 019): as mesmas das teclas, com os mesmos toasts; a busca rápida executa por aqui.
+  // Ações com nome (spec 020): as mesmas das teclas, com os mesmos toasts; a busca rápida executa por aqui.
   const toggleClean = (): void => {
     run('overlayText.set', { clean: !settings.overlayText.clean })
     showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
@@ -367,7 +367,7 @@ async function start(): Promise<void> {
       return
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return
-    // Painel de atalhos aberto (spec 019): só `?` e Esc, que o fecham; as teclas do Palco ficam atrás dele.
+    // Painel de atalhos aberto (spec 020): só `?` e Esc, que o fecham; as teclas do Palco ficam atrás dele.
     if (isShortcutsOpen()) {
       if (e.key === 'Escape' || e.key === '?') {
         e.preventDefault()
@@ -395,7 +395,7 @@ async function start(): Promise<void> {
     }
     // Com as Configurações abertas, as teclas do Palco não valem (só Esc e os atalhos com Ctrl).
     if (core.state.overlay === 'settings') return
-    // `?` abre o painel de atalhos no Palco e por cima da Biblioteca (spec 019).
+    // `?` abre o painel de atalhos no Palco e por cima da Biblioteca (spec 020).
     if (e.key === '?') {
       e.preventDefault()
       toggleShortcuts(core)

@@ -1,4 +1,4 @@
-# 019 — Painel de atalhos (`?`) e busca rápida com comandos
+# 020 — Painel de atalhos (`?`) e busca rápida com comandos
 
 **Fase:** 2 · **Status:** Feito (PR #53) · **Issue:** [#51](https://github.com/atempel/sonic-obsidian/issues/51) · **Depende de:** [010](010-busca-biblioteca.md), [011](011-ajustes-configuracoes.md), [012](012-setup-diagnostico-desempenho.md)
 

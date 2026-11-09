@@ -131,7 +131,7 @@ body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
 .lib.enter .rows > li:nth-child(-n+8), .lib.enter .collist > li:nth-child(-n+8), .lib.enter .corder > li:nth-child(-n+8) { animation: rowin 220ms var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 15ms); }
 @media (prefers-reduced-motion: reduce) { .lib.enter .rows > li, .lib.enter .collist > li, .lib.enter .corder > li { animation: none; } }
 
-/* ═══════════ Painel de atalhos (?) e comandos da busca — spec 019, protótipo 0fd0: sem animação ═══════════ */
+/* ═══════════ Painel de atalhos (?) e comandos da busca — spec 020, protótipo 0fd0: sem animação ═══════════ */
 body.kbd-open #ui .scrim.k { z-index: 44; opacity: 1; pointer-events: auto; transition: none; }
 #ui .kpanel { pointer-events: auto; }
 .kpanel { position: fixed; z-index: 45; left: 50%; top: 8vh; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); max-height: 80vh; display: flex; flex-direction: column;
