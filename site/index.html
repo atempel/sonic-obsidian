@@ -26,7 +26,7 @@
 <meta name="twitter:image" content="https://atempel.github.io/sonic-obsidian/assets/og.png">
 <link rel="preload" href="vendor/fonts/space-grotesk-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/site.css">
-<script type="application/json" id="i18n">{"demoOn":"Stop demo","demoOff":"Play demo","micOn":"Stop mic","micOff":"Microphone","muted":"MUTED","sound":"SOUND","srcDemo":"DEMO · 122 BPM","srcMic":"MIC · LIVE","srcIdle":"IDLE · PRESS PLAY","community":"Community","loading":"The engine is still loading. Try again in a second.","noMic":"No microphone access in this view. The demo signal still works.","micBlocked":"Microphone blocked. Use the demo signal, or allow the microphone and play music near it.","latest":"Latest release","locale":"en-US"}</script>
+<script type="application/json" id="i18n">{"demoOn": "Stop demo", "demoOff": "Play demo", "micOn": "Stop mic", "micOff": "Microphone", "muted": "MUTED", "sound": "SOUND", "srcDemo": "DEMO · 122 BPM", "srcMic": "MIC · LIVE", "srcIdle": "IDLE · PRESS PLAY", "community": "Community", "loading": "The engine is still loading. Try again in a second.", "noMic": "No microphone access in this view. The demo signal still works.", "micBlocked": "Microphone blocked. Use the demo signal, or allow the microphone and play music near it.", "latest": "Latest release", "locale": "en-US", "creditBy": " by ", "creditOn": " on Uppbeat"}</script>
 <script src="assets/stage.js" defer></script>
 </head>
 <body>
@@ -45,6 +45,7 @@
 <span class="so-mono so-wm" style="font-size: 13px; font-weight: 600; letter-spacing: 0.22em">SONIC OBSIDIAN</span>
 </a>
 <div class="so-navlinks" style="display: flex; align-items: center; gap: 28px; font-size: 14px">
+<span class="so-navbar" data-ref="navbar" aria-hidden="true"></span>
 <a href="#how" style="color: #C9C9D8; text-decoration: none">How it works</a>
 <a href="#modes" style="color: #C9C9D8; text-decoration: none">Modes</a>
 <a href="#presets" style="color: #C9C9D8; text-decoration: none">Presets</a>
@@ -97,8 +98,9 @@ Download for Windows
 <p style="margin: 0; font-size: 13px; line-height: 1.45; color: #FF8FB0"><span data-text="msg"></span></p>
 </div>
 <div style="border-top: 1px solid #1E1E2A; padding-top: 14px; display: flex; flex-direction: column; gap: 4px; min-width: 0">
-<span class="so-mono" style="font-size: 11px; color: #8080A0">PRESET <span data-text="curPos"></span> · <span data-text="curAuthor"></span></span>
+<span class="so-mono" style="font-size: 11px; color: #8080A0">PRESET <span class="so-flashnum" data-ref="pos"><span data-text="curPos"></span></span> · <span data-text="curAuthor"></span></span>
 <span style="font-size: 17px; font-weight: 500; line-height: 1.3; color: #EEEEF5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><span data-text="curTitle"></span></span>
+<div class="so-rot" aria-hidden="true"><i data-ref="rot"></i></div>
 </div>
 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
 <button class="so-btn so-icon" type="button" data-act="prev" aria-label="Previous preset" title="Previous preset"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" x2="5" y1="19" y2="5"></line></svg></button>
@@ -111,6 +113,7 @@ Download for Windows
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8080A0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></svg>
 <canvas data-ref="meter" width="320" height="14" aria-hidden="true" style="flex: 1 1 auto; min-width: 0; height: 10px; display: block"></canvas>
 </div>
+<p class="so-credit" data-if="hasTrack" hidden style="margin: 0">Music: <a data-ref="trackLink" href="https://uppbeat.io/" rel="noopener"><span data-text="trackCredit"></span></a></p>
 <div data-if="engineFailed" hidden style="display:contents">
 <p style="margin: 0; font-size: 13px; color: #FF8FB0">This browser could not start WebGL 2, so the stage stays dark here. The desktop app does not depend on your browser.</p>
 </div>
@@ -381,6 +384,7 @@ Download for Windows
 <div style="border-top: 1px solid #3A3A50; padding-top: 20px"><p class="so-mono" style="margin: 0 0 10px; font-size: 12px; color: #00E5FF">BUTTERCHURN</p><p style="margin: 0; font-size: 17px; line-height: 1.55; color: #C9C9D8">Jordan Berg and contributors, MIT. The engine rendering every frame.</p></div>
 <div style="border-top: 1px solid #3A3A50; padding-top: 20px"><p class="so-mono" style="margin: 0 0 10px; font-size: 12px; color: #00E5FF">PRESET ARTISTS</p><p style="margin: 0; font-size: 17px; line-height: 1.55; color: #C9C9D8">The MilkDrop community, credited by name on every preset. Want yours credited differently or removed? Open an issue.</p></div>
 </div>
+<div class="so-mono" style="margin: 40px 0 0; font-size: 12px; line-height: 1.7; color: #8080A0"><p style="margin: 0 0 6px; letter-spacing: 0.18em">MUSIC IN THE DEMO</p><p style="margin: 0">Music: <span style="color: #C9C9D8">‘24 Hrs In Tokyo’ by Yawnathan on #Uppbeat</span> · <a href="https://uppbeat.io/c/yawnathan" rel="noopener">uppbeat.io/c/yawnathan</a> · License code: JRWREVSGEWOWW0HZ</p><p style="margin: 0">Music: <span style="color: #C9C9D8">‘Space Dancers’ by 2050 on #Uppbeat</span> · <a href="https://uppbeat.io/music/tracks/2050-music/space-dancers" rel="noopener">uppbeat.io/music/tracks/2050-music/space-dancers</a> · License code: [CÓDIGO]</p></div>
 
 <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 48px">
 <a class="so-btn" href="https://github.com/atempel/sonic-obsidian/issues"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 2 1.88 1.88"></path><path d="M14.12 3.88 16 2"></path><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path><path d="M12 20v-9"></path><path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path><path d="M6 13H2"></path><path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path><path d="M22 13h-4"></path><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path></svg>Report a bug</a>

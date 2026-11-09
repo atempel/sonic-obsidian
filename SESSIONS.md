@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `docs/landing-refino`
+**Fez:** Spec 019 e issue #52 (refino de movimento da landing). Implementou no `site/` o movimento da v3 (M02 troca de título, M03 linha de rotação, M04 pressão, M05 aleatório, M06 AUTO, M08 balística do medidor, M10 sublinhado da navegação, M12 Biblioteca em degrau, entrada das seções ao rolar, fade nas Perguntas, teclado no console) com o movimento reduzido do doc, e a demo com as duas músicas do Uppbeat, criptografadas em `site-media/` e decifradas pelo `site:vendor` com `SITE_AUDIO_KEY`. Verificado no Chromium headless: as animações só usam transform/opacity, com movimento reduzido sobram só fades, a música toca, o crédito aparece, a batida acende a marca, sem erros e sem domínio externo novo.
+**Deixou em:** PR `docs/landing-refino` → `main`. Antes do merge: o usuário cria o segredo `SITE_AUDIO_KEY` no repo e manda o código de licença de 'Space Dancers' (o crédito ainda tem `[CÓDIGO]`). Não verificado: som e fps num navegador real (testar no Windows depois do deploy).
+
 ### 2026-11-08/09 — Claude Code (nuvem, claude.ai/code) — branch `claude/dazzling-rubin-orl47m`
 **Fez:** Design sincronizado duas vezes: `7509` (as 23 microinterações aprovadas) e `0fd0` (Painel de atalhos `?` e busca com comandos, que foram para a queue). Escolha das microinterações registrada em DECISIONS (M18 continua com 10 s). Specs entregues e validadas pelo usuário no Windows, todas mergeadas em squash com o ok dele:
 - **011, em dois PRs:** Ajustes rápidos com M04, M13–M16 e M19 (#39); Configurações com M10 e o ícone do app, com o `.exe` editado (#44).

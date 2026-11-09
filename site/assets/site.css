@@ -77,3 +77,41 @@ a{color:#00E5FF}a:hover{color:#7FF3FF}
 .so-wm{letter-spacing:.14em!important;font-size:12px!important}
 .so-tl{grid-template-columns:minmax(0,1fr)!important}
 }
+
+/* ---------- Movimento (spec 019) — tokens e regras de docs/design/v3/docs/v3-microinteracoes.md ---------- */
+:root{--ease-out:cubic-bezier(0.16,1,0.3,1);--t-fast:120ms;--t-med:220ms}
+/* M04 pressão */
+.so-btn{transition:background .1s ease-out,border-color .1s ease-out,box-shadow .15s ease-out,filter .1s ease-out,transform var(--t-fast) var(--ease-out)}
+.so-btn:active{transform:scale(.97);transition-duration:80ms}
+.so-card{transition:border-color .1s ease-out,background .1s ease-out,box-shadow .15s ease-out,transform var(--t-fast) var(--ease-out)}
+.so-card:active{transform:scale(.97);transition-duration:80ms}
+.so-btn svg{transition:transform var(--t-med) var(--ease-out),opacity var(--t-fast) var(--ease-out)}
+/* M05 aleatório: as setas trocam de lugar */
+[data-act="shuffle"].sw svg{transform:scaleY(-1)}
+/* M06 AUTO: desligado só esmaece */
+[data-act="auto"][aria-pressed="false"] svg{opacity:.55}
+/* M03 linha de rotação */
+.so-rot{position:relative;height:1px;margin-top:6px;background:#1D1D28;overflow:hidden;opacity:1;transition:opacity var(--t-med) var(--ease-out)}
+.so-rot.off{opacity:0}
+.so-rot i{position:absolute;inset:0;background:#C244FF;box-shadow:0 0 6px rgba(194,68,255,.6);transform-origin:left center;transform:scaleX(0)}
+/* M02 flash do número */
+.so-flashnum{transition:color var(--t-med) var(--ease-out)}
+.so-flashnum.on{color:#C244FF;transition:none}
+/* M10 sublinhado da navegação */
+.so-navlinks{position:relative}
+.so-navlinks a{transition:color var(--t-fast) var(--ease-out)}
+.so-navlinks a.cur{color:#EEEEF5!important}
+.so-navbar{position:absolute;left:0;bottom:-6px;width:1px;height:1px;background:#C244FF;box-shadow:0 0 6px rgba(194,68,255,.7);transform-origin:left center;opacity:0;pointer-events:none;transition:transform var(--t-med) var(--ease-out),opacity var(--t-med) var(--ease-out)}
+@media (max-width:900px){.so-navbar{bottom:6px}}
+/* Entrada das seções (regra da M01: uma vez, 6 px, degrau de 20 ms) */
+.so-rv{opacity:0;transform:translateY(6px)}
+.so-rv.in{opacity:1;transform:none;transition:opacity var(--t-med) var(--ease-out),transform var(--t-med) var(--ease-out);transition-delay:var(--d,0ms)}
+/* Crédito da música */
+.so-credit{font-size:11px;line-height:1.45;color:#8080A0}
+.so-credit a{color:#A6A6BE}
+@media (prefers-reduced-motion:reduce){
+.so-btn:active,.so-card:active{transform:none}
+.so-btn svg,[data-act="shuffle"].sw svg{transform:none!important;transition:opacity var(--t-fast) linear}
+.so-navbar{transition:opacity var(--t-fast) linear}
+.so-rv{opacity:1;transform:none}
+}

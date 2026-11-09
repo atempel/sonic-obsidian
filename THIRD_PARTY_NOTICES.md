@@ -166,5 +166,10 @@ FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
 ```
 
+## Músicas da demo da landing (`site-media/`)
+Usadas só na demo da landing page (`site/`), sob a licença do [Uppbeat](https://uppbeat.io/user-agreement). **Não fazem parte da licença MIT deste repositório** e não podem ser redistribuídas como arquivos avulsos; por isso o repo guarda só versões criptografadas (`site-media/*.enc`), que o deploy do GitHub Pages decifra com o segredo `SITE_AUDIO_KEY`.
+- Music: '24 Hrs In Tokyo' by Yawnathan on #Uppbeat — https://uppbeat.io/c/yawnathan — License code: JRWREVSGEWOWW0HZ
+- Music: 'Space Dancers' by 2050 on #Uppbeat — https://uppbeat.io/music/tracks/2050-music/space-dancers — License code: [CÓDIGO]
+
 ## Electron
 O app roda no [Electron](https://www.electronjs.org/) (MIT) e no Chromium; as licenças deles são incluídas pelo próprio Electron na pasta do app (`LICENSE.electron.txt`, `LICENSES.chromium.html`).
