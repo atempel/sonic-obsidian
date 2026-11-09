@@ -39,10 +39,16 @@ function shadersOk(v: Visualizer): boolean | null {
   if (!gl) return null
   for (const h of [r?.warpShader, r?.compShader]) {
     const p = h?.shaderProgram
-    if (!p || !gl.getProgramParameter(p, gl.LINK_STATUS)) return false
+    if (!p || !gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      // Primeira linha do erro do compilador GLSL (o motor não reporta).
+      const info = p ? (gl.getAttachedShaders(p) ?? []).map((sh) => gl.getShaderInfoLog(sh) ?? '').join(' ') || gl.getProgramInfoLog(p) : ''
+      lastShaderError = (info ?? '').replace(/\s+/g, ' ').trim().slice(0, 200)
+      return false
+    }
   }
   return true
 }
+let lastShaderError = ''
 
 /** Carrega com corte seco, espera 3 quadros e confere os shaders. */
 async function tryLoad(viz: PresetVisualizer, preset: Preset): Promise<string | null> {
@@ -61,7 +67,7 @@ async function tryLoad(viz: PresetVisualizer, preset: Preset): Promise<string | 
     console.warn = warn
   }
   if (warns.some((w) => /preset|WASM/i.test(w))) return `aviso: ${warns.join(' | ').slice(0, 160)}`
-  if (shadersOk(viz.visualizer) === false) return 'shader não linkou'
+  if (shadersOk(viz.visualizer) === false) return `shader não linkou: ${lastShaderError}`
   return null
 }
 
