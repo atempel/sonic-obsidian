@@ -1,0 +1,70 @@
+name: release
+
+# Spec 016: uma tag vX.Y.Z gera instalador, zip e checksums e cria a release como RASCUNHO.
+# O usuário testa e publica à mão (Publish) no GitHub.
+# Em PR que mexe no empacotamento, só builda e sobe os arquivos como artifact (ensaio).
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths: ['electron-builder.yml', '.github/workflows/release.yml', '.github/release-notes.md', 'package.json']
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Tag igual à versão do package.json
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$version" ]; then
+            echo "::error::A tag v$tag não bate com a versão do package.json ($version). Ajuste o package.json ou a tag."
+            exit 1
+          fi
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run dist:release
+      - name: Checksums
+        shell: bash
+        working-directory: release
+        run: |
+          ls -la
+          sha256sum SonicObsidian-Setup.exe SonicObsidian-win-x64.zip > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Rascunho da release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" --draft $pre \
+            --title "Sonic Obsidian $GITHUB_REF_NAME" \
+            --notes-file .github/release-notes.md \
+            release/SonicObsidian-Setup.exe release/SonicObsidian-win-x64.zip release/SHA256SUMS.txt
+      - name: Artifact do ensaio
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-obsidian-release-${{ github.sha }}
+          path: |
+            release/SonicObsidian-Setup.exe
+            release/SonicObsidian-win-x64.zip
+            release/SHA256SUMS.txt
+          retention-days: 7
+          if-no-files-found: error
