@@ -21,6 +21,7 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
   O log antigo (até 02:55 de 09/11) só tinha o `app ready` e sessões de até ~15 min, com GPU entre 147 e 183 MB, sem crescer.
 - **A refazer:** checagem de `electron@45.2.3`/`vite@8.3.6` depois de 19/11.
 - **Não verificado no Windows:** o usuário aprovou o merge do #53 e do #56 sem testar os builds. O painel 020 (critérios 1–9, incluindo `?` no ABNT2 e o fps), a correção das Configurações e a linha `abertura` no log foram verificados só no headless. A sessão longa também não foi feita.
+- **Release v0.5.0 (spec 016):** pipeline de release (PRs #58 e #59). Como a nuvem não envia tags, o `release.yml` foi disparado manualmente com `version=0.5.0`. O rascunho foi publicado pelo usuário às 03:56 UTC, e o README ganhou os links de download. Versão calculada pelo roadmap (DECISIONS). Não verificado daqui: o download via `releases/latest/download` (o proxy da nuvem responde 401) e os critérios 2–5 da 016 no Windows.
 - **Pedido do usuário:** depois das tarefas abertas, criar uma suíte de testes automatizados de performance que não dependa da máquina dele: [queue/2026-11-09-suite-testes-performance.md](queue/2026-11-09-suite-testes-performance.md).
 
 ### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `docs/landing-refino`
