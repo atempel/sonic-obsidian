@@ -237,3 +237,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Arquivos de coleções** pelo diálogo nativo no main (`collections:export`/`collections:import`, limite de 2 MB); o renderer só passa texto. Importar substitui coleções de mesmo id e acrescenta as novas.
 - **Links do Sobre** abrem no navegador por `system:openLink` (só `https://`), e toda janela nova é negada (`setWindowOpenHandler`).
 - **Fora deste PR:** regravar teclas (P1), Telas e Integrações (Fases 3–5) e as opções de desempenho da spec 012.
+
+## 2026-11-09 — Landing (spec 017): porte e desvios do protótipo
+- **Porte:** `site/` gerado uma vez a partir de `docs/design/landing/prototype/Main(PT).dc.html` (versão `1794165992-cb8e`): marcação do canvas mantida, `{{ }}`/`sc-if`/`sc-for`/`ref` viraram atributos `data-text`/`data-if`/`data-ref`/`data-act` e um `<template>` para a Biblioteca; a classe `Component` virou `site/assets/stage.js` (mesmo palco, faixa sintetizada, espelhos, portão de reduced-motion). Sem build; `site/vendor/` vem de `npm run site:vendor`. `og.png` renderizado do `SocialCard.dc.html`.
+- **Desvios de texto (de propósito, para a página pública não prometer o que o app ainda não faz):** cartão do instalador sem "abrir com o Windows" e "atualizações automáticas" (são P1 da spec 016); portátil sem "configurações junto do executável" (o app grava no `userData`); cartão do winget marcado "SOON / EM BREVE", sem botão Copiar (publicação no winget é P1 da 016). Quando essas coisas existirem, voltar ao texto do canvas.
+- **Release:** versão, data e tamanhos vêm de `api.github.com/.../releases/latest`; sem release publicada (hoje) mostram "Latest release"/"—" e os botões de download dão 404 até a spec 016 publicar a primeira.
+- **CI:** `build-windows.yml` ignora `site/**` e `docs/**`. Se algum dia esse check virar obrigatório na proteção de branch, PR só de docs/site ficará esperando — trocar por filtro dentro do job.
+

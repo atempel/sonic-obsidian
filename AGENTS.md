@@ -8,6 +8,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
   - `npm run typecheck` — checa tipos de main e renderer (rodar antes de todo commit; o CI roda também).
   - `npm run build` — compila para `out/` (roda na nuvem).
   - `npm run dist:win` — build + pasta portátil Windows em `release/win-unpacked/` (roda até no Linux; quem testa é o Windows).
+  - `npm run site:vendor` — copia motor, presets e fontes para `site/vendor/` (fora do git); depois `npx serve site` (ou `python3 -m http.server -d site`) abre a landing localmente. Publicação: `.github/workflows/pages.yml` (push em `main` com mudança em `site/**`); PR gera o artifact `sonic-obsidian-site-<sha>`.
   - `npm run dev` — app com HMR; só funciona onde há janela e Electron instalado (não na nuvem, não no host sem Node).
   - Testes automatizados: ainda não há. Para ver a interface na nuvem: `npm run build`, servir `out/renderer/` e abrir no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados — serve para layout e estados, não para áudio/fps.
   - No app: `Ctrl+Shift+D` mostra o HUD de depuração (fps, memória JS, áudio, expressividade).

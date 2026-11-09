@@ -34,3 +34,6 @@ $RECYCLE.BIN/
 
 # Logs
 *.log
+
+# Landing (gerado por npm run site:vendor)
+site/vendor/

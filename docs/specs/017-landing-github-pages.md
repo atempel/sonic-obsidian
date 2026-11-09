@@ -1,6 +1,6 @@
 # 017 — Landing page no GitHub Pages
 
-**Fase:** Abertura · **Status:** A fazer — o repo já é público (#43), então o site vai ao ar assim que for mergeado; a guarda de repo privado fica só como proteção · **Issue:** [#41](https://github.com/atempel/sonic-obsidian/issues/41) · **Depende de:** [016](016-releases-abertura.md) para os links de download
+**Fase:** Abertura · **Status:** Feito (P0) — `site/` + `.github/workflows/pages.yml`; vai ao ar no merge, depois de ligar Settings › Pages › Source = GitHub Actions. P1 (404, notas da versão) pendente. Desvios de texto do protótipo em DECISIONS 2026-11-09 · **Issue:** [#41](https://github.com/atempel/sonic-obsidian/issues/41) · **Depende de:** [016](016-releases-abertura.md) para os links de download
 
 ## Problema
 O projeto vai abrir para um público internacional que nunca ouviu falar dele. O README explica, mas não mostra: o produto é visual e precisa ser visto funcionando, com um botão de download que sempre aponta para a versão certa.

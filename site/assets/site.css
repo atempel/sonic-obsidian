@@ -1,0 +1,79 @@
+/* Sonic Obsidian — landing. Porte do canvas (docs/design/landing, versão 1794165992-cb8e). */
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url(../vendor/fonts/space-grotesk-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url(../vendor/fonts/space-grotesk-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url(../vendor/fonts/space-grotesk-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url(../vendor/fonts/space-grotesk-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:url(../vendor/fonts/jetbrains-mono-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url(../vendor/fonts/jetbrains-mono-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:600;font-display:swap;src:url(../vendor/fonts/jetbrains-mono-latin-600-normal.woff2) format('woff2')}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;color-scheme:dark}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:#080809}
+a{color:#00E5FF}a:hover{color:#7FF3FF}
+.so *{box-sizing:border-box}
+.so ::selection{background:#C244FF;color:#080809}
+.so-mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.so-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:4px;border:1px solid #2A2A3A;background:rgba(15,15,20,.62);color:#EEEEF5;font:500 14px/1 'Space Grotesk',sans-serif;cursor:pointer;text-decoration:none;transition:background .1s ease-out,border-color .1s ease-out,box-shadow .15s ease-out,filter .1s ease-out;white-space:nowrap}
+.so-btn:hover{border-color:#3A3A50;background:rgba(29,29,40,.9);color:#fff}
+.so-btn[aria-pressed="true"]{border-color:#C244FF;color:#fff;box-shadow:0 0 10px rgba(194,68,255,.5),0 0 2px #C244FF}
+.so-btn:focus-visible,.so a:focus-visible,.so summary:focus-visible,.so-card:focus-visible{outline:2px solid #00E5FF;outline-offset:2px}
+.so-icon{width:44px;padding:0}
+.so-primary{border-color:transparent;color:#0A0010;font-weight:600}
+.so-primary:hover{filter:brightness(1.15);border-color:transparent;color:#0A0010;background-image:none}
+.so-big{min-height:52px;padding:0 22px;font-size:16px}
+.so-glass{background:rgba(12,12,17,.78);-webkit-backdrop-filter:blur(20px) saturate(1.4);backdrop-filter:blur(20px) saturate(1.4);border:1px solid #2A2A3A;border-radius:6px}
+.so-beat{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3A3A55;transition:background .4s ease-out,box-shadow .4s ease-out}
+.so-beat.on{background:#FF2D6B;box-shadow:0 0 16px rgba(255,45,107,.9);transition:none}
+.so-card{display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;min-height:150px;padding:18px;border-radius:4px;border:1px solid #1E1E2A;background:#0F0F14;color:#EEEEF5;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:border-color .1s ease-out,background .1s ease-out,box-shadow .15s ease-out}
+.so-card:hover{border-color:#3A3A50;background:#16161E}
+.so-card[aria-pressed="true"]{border-color:#C244FF;box-shadow:0 0 12px rgba(194,68,255,.35),inset 0 0 0 1px rgba(194,68,255,.4)}
+.so-sep{height:1px;background:linear-gradient(90deg,transparent,#2A2A3A 20%,#2A2A3A 80%,transparent)}
+.so details{border-top:1px solid #1E1E2A}
+.so details:last-child{border-bottom:1px solid #1E1E2A}
+.so summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 0;font:500 19px/1.35 'Space Grotesk',sans-serif;color:#EEEEF5}
+.so summary::-webkit-details-marker{display:none}
+.so summary .so-plus{font-family:'JetBrains Mono',monospace;color:#00E5FF;transition:transform .15s ease-out}
+.so details[open] summary .so-plus{transform:rotate(45deg)}
+.so-flag{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:4px;opacity:.5;filter:saturate(.6);transition:opacity .12s ease-out,filter .12s ease-out}
+.so-flag:hover{opacity:1;filter:none}
+.so-flag svg{box-shadow:0 0 0 1px rgba(238,238,245,.18)}
+.so-flag[aria-current="true"]{opacity:1;filter:none}
+.so-flag[aria-current="true"] svg{box-shadow:0 0 0 1px #080809,0 0 0 2px #C244FF,0 0 10px rgba(194,68,255,.5)}
+.so-mark .so-core{transform-box:view-box;transform-origin:12px 12px;transition:transform .45s ease-out,fill .45s ease-out}
+.so-mark.on .so-core{transform:scale(1.32);fill:#FF2D6B;transition:none}
+.so-heart{display:inline-flex;transition:transform .4s ease-out,filter .4s ease-out}
+.so-heart.on{transform:scale(1.35);filter:drop-shadow(0 0 6px rgba(255,45,107,.9));transition:none}
+.so svg{flex:none}
+.so-kbd{font-family:'JetBrains Mono',monospace;font-size:12px;color:#EEEEF5;border:1px solid #2A2A3A;border-bottom-width:2px;border-radius:3px;padding:2px 6px;background:#16161E}
+@media (max-width:1100px){
+.so-tl{grid-template-columns:repeat(4,minmax(0,1fr))!important;row-gap:40px!important}
+.so-tlline{display:none!important}
+.so-h1{font-size:72px!important}
+}
+@media (max-width:900px){
+.so-nav{flex-wrap:wrap!important;row-gap:4px!important}
+.so-navlinks{order:3;width:100%;overflow-x:auto;gap:4px!important;scrollbar-width:none}
+.so-navlinks::-webkit-scrollbar{display:none}
+.so-navlinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 10px;white-space:nowrap}
+.so-herocontent{min-height:700px!important;padding:16px 20px 24px!important}
+.so-h1{font-size:46px!important}
+.so-lead{font-size:17px!important}
+.so-g3{grid-template-columns:minmax(0,1fr)!important}
+.so-g4{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.so-tl{grid-template-columns:repeat(2,minmax(0,1fr))!important;row-gap:36px!important}
+.so-sec{padding-top:80px!important;padding-bottom:80px!important;padding-left:20px!important;padding-right:20px!important}
+.so-h2{font-size:34px!important}
+.so-console{flex-basis:100%!important}
+.so-ticker{padding:14px 20px!important}
+.so-footer{padding:28px 20px 36px!important}
+}
+@media (max-width:520px){
+.so-h1{font-size:40px!important}
+.so-h2{font-size:30px!important}
+.so-g4{grid-template-columns:minmax(0,1fr)!important}
+.so-card{min-height:0!important}
+.so-hidesm{display:none!important}
+.so-wm{letter-spacing:.14em!important;font-size:12px!important}
+.so-tl{grid-template-columns:minmax(0,1fr)!important}
+}
