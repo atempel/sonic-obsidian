@@ -10,7 +10,7 @@ Terminar um app que eu abra todo dia: janela ou tela cheia, reagindo ao áudio d
 
 ## Estado atual (nov/2026)
 - **Retomada com mudança de stack:** o motor visual passa a ser o [Butterchurn](https://github.com/jberg/butterchurn) (MilkDrop em WebGL 2, MIT) dentro de um app **Electron**. O Python (Fase 1 de mar/2026) foi encostado em `legacy/python/` — ver [DECISIONS.md](DECISIONS.md).
-- **Fases 0 e 1 concluídas.** **Fase 2 — Interface v3 quase completa:** 008–015, 011 (Ajustes rápidos e Configurações), 012 (setup, diagnóstico e desempenho) e 018 (microinterações) feitas e validadas no Windows. **Falta:** o Painel de atalhos (`?`, design `0fd0`), depois uma passagem de performance, segurança e otimização. Ver [TASKS.md](TASKS.md).
+- **Fases 0 e 1 concluídas.** **Fase 2 — Interface v3 quase completa:** 008–015, 011 (Ajustes rápidos e Configurações), 012 (setup, diagnóstico e desempenho) e 018 (microinterações) feitas e validadas no Windows. 020 (Painel de atalhos `?`) também feita. **Falta:** uma passagem de performance, segurança e otimização. Ver [TASKS.md](TASKS.md).
 - Tarefas ativas: [TASKS.md](TASKS.md). Histórico de sessões: [SESSIONS.md](SESSIONS.md).
 
 ## Onde está cada coisa

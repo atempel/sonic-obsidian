@@ -1,5 +1,7 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
+import { KeyCaps, takeSettingsSection } from './ShortcutsPanel'
+import { SHORTCUT_GROUPS, keysText } from './shortcuts'
 import type { Core } from '../core/commands'
 import {
   BLEND_MAX_S,
@@ -42,28 +44,6 @@ const SECTIONS: { id: SectionId; label: string; icon: IconName; lead: string }[]
   { id: 'biblioteca', label: 'Biblioteca', icon: 'library', lead: 'Pacotes de presets, presets ocultos e coleções.' },
   { id: 'atalhos', label: 'Atalhos', icon: 'keyboard', lead: 'Teclas globais do app.' },
   { id: 'sobre', label: 'Sobre', icon: 'info', lead: 'Versão, créditos e links.' }
-]
-
-/** Atalhos da Fase 2 (spec 011 › Atalhos). Regravar uma tecla é P1. */
-const SHORTCUTS: [string, string[]][] = [
-  ['Preset aleatório', ['Espaço']],
-  ['Preset anterior', ['←']],
-  ['Próximo preset', ['→']],
-  ['Trocar sem transição (corte seco)', ['Shift + troca']],
-  ['Tipo da transição', ['B', 'Shift+B']],
-  ['Tempo da transição', ['↑', '↓']],
-  ['Rotação automática', ['R']],
-  ['Expressividade', ['+', '−', '0']],
-  ['Caráter da reação', ['X']],
-  ['Memória da reação', ['Shift+X']],
-  ['Esconder controles', ['H']],
-  ['Busca rápida', ['/', 'Ctrl+K']],
-  ['Biblioteca', ['L']],
-  ['Ajustes rápidos', [',']],
-  ['Configurações', ['Ctrl+,']],
-  ['Tela cheia', ['F', 'F11']],
-  ['Modo limpo', ['T']],
-  ['Fechar o que estiver aberto', ['Esc']]
 ]
 
 /** Sem acento e minúsculo, para a busca. */
@@ -647,16 +627,11 @@ function Atalhos() {
             </tr>
           </thead>
           <tbody>
-            {SHORTCUTS.map(([action, keys]) => (
-              <tr key={action} data-search={`${action} ${keys.join(' ')}`}>
-                <th scope="row">{action}</th>
+            {SHORTCUT_GROUPS.flatMap((g) => g.rows).map((r) => (
+              <tr key={r.label} data-search={`${r.label} ${keysText(r.keys)}`}>
+                <th scope="row">{r.label}</th>
                 <td>
-                  {keys.map((k, i) => (
-                    <>
-                      {i > 0 && <span class="or">ou</span>}
-                      <kbd>{k}</kbd>
-                    </>
-                  ))}
+                  <KeyCaps keys={r.keys} />
                 </td>
               </tr>
             ))}
@@ -761,11 +736,11 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
   const saved = useSavedIndicator(core, open)
   const run: Run = (name, args) => void core.run(name, args, 'ui')
 
-  // Abre sempre em Geral, sem busca; foco no item do menu.
+  // Abre em Geral (ou na seção pedida, como Atalhos pelo painel `?`), sem busca; foco no item do menu.
   useLayoutEffect(() => {
     document.body.classList.toggle('settings-open', open)
     if (!open) return
-    setSection('geral')
+    setSection((takeSettingsSection() as SectionId | null) ?? 'geral')
     setQuery('')
     window.setTimeout(() => {
       const target = window.innerWidth >= 900 ? nav.current?.querySelector<HTMLElement>('[aria-current="page"]') : search.current

@@ -19,6 +19,8 @@ import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
 import { dismissFloat, mountWebglError } from './ui/Diagnostics'
+import { closeShortcuts, isShortcutsOpen, toggleShortcuts } from './ui/ShortcutsPanel'
+import { setActionRunner, type ActionId } from './ui/shortcuts'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { isFullScreen, setupWindowChrome } from './window'
@@ -310,6 +312,34 @@ async function start(): Promise<void> {
   // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
   // O log mostra se isso acontece na máquina do usuário.
   document.addEventListener('visibilitychange', () => window.so.log(`janela ${document.visibilityState === 'hidden' ? 'oculta: render pausado' : 'visível'}`))
+  // Ações com nome (spec 020): as mesmas das teclas, com os mesmos toasts; a busca rápida executa por aqui.
+  const toggleClean = (): void => {
+    run('overlayText.set', { clean: !settings.overlayText.clean })
+    showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
+  }
+  const toggleRotation = (): void => {
+    run('rotation.set', { enabled: !settings.rotation.enabled })
+    showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
+  }
+  const actions: Record<ActionId, () => void> = {
+    clean: toggleClean,
+    rotation: toggleRotation,
+    library: () => toggleOverlay(core, 'library'),
+    quick: () => toggleOverlay(core, 'quick'),
+    settings: () => toggleOverlay(core, 'settings'),
+    shortcuts: () => toggleShortcuts(core),
+    fullscreen: () => run('window.fullscreen', {}, 'ui'),
+    random: () => run('preset.random', { cut: false }, 'ui'),
+    next: () => run('preset.next', { cut: false }, 'ui'),
+    previous: () => run('preset.previous', { cut: false }, 'ui'),
+    hide: () => idle.hideNow(),
+    favorite: () => {
+      const r = core.run<boolean>('library.favorite', {}, 'ui')
+      if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+    }
+  }
+  setActionRunner((id) => actions[id]())
+
   window.addEventListener('keydown', (e) => {
     if (e.repeat && e.code !== 'ArrowRight' && e.code !== 'ArrowLeft') return
     // HUD de depuração (fps, áudio): escondido por padrão desde a 009.
@@ -337,6 +367,14 @@ async function start(): Promise<void> {
       return
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return
+    // Painel de atalhos aberto (spec 020): só `?` e Esc, que o fecham; as teclas do Palco ficam atrás dele.
+    if (isShortcutsOpen()) {
+      if (e.key === 'Escape' || e.key === '?') {
+        e.preventDefault()
+        closeShortcuts()
+      }
+      return
+    }
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
     const t = e.target as HTMLElement | null
     // Nos Ajustes rápidos, Esc fecha o painel mesmo com o foco num slider ou seletor.
@@ -357,6 +395,12 @@ async function start(): Promise<void> {
     }
     // Com as Configurações abertas, as teclas do Palco não valem (só Esc e os atalhos com Ctrl).
     if (core.state.overlay === 'settings') return
+    // `?` abre o painel de atalhos no Palco e por cima da Biblioteca (spec 020).
+    if (e.key === '?') {
+      e.preventDefault()
+      toggleShortcuts(core)
+      return
+    }
     if (e.code === 'KeyL') {
       e.preventDefault()
       toggleOverlay(core, 'library')
@@ -406,13 +450,11 @@ async function start(): Promise<void> {
       run('window.fullscreen')
     } else if (e.code === 'KeyT') {
       // Modo limpo (spec 014): a confirmação sempre aparece, uma vez.
-      run('overlayText.set', { clean: !settings.overlayText.clean })
-      showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
+      toggleClean()
     } else if (e.code === 'KeyH') {
       idle.hideNow()
     } else if (e.code === 'KeyR') {
-      run('rotation.set', { enabled: !settings.rotation.enabled })
-      showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
+      toggleRotation()
     } else if (e.key === ',') {
       // Ajustes rápidos (spec 011); `[` / `]` saíram: o intervalo da rotação mudou para lá.
       toggleOverlay(core, 'quick')

@@ -4,6 +4,7 @@ import { Highlight } from './Highlight'
 import { Icon } from './icons'
 import { TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
+import { matchCommands, runAction, type Command } from './shortcuts'
 import { showToast } from './toast'
 
 const MAX_RESULTS = 50
@@ -34,7 +35,9 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
 
   const items = tab === 'collections' ? [] : listFor(core, presets, allSet, tab, q.trim()).slice(0, MAX_RESULTS)
   const cols = tab === 'collections' ? lib.collections.filter((c) => c.name.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase())) : []
-  const count = tab === 'collections' ? cols.length : items.length
+  // Comandos (spec 020): só na aba Todos e com texto, abaixo dos presets; Enter executa.
+  const cmds = tab === 'all' ? matchCommands(q) : []
+  const count = tab === 'collections' ? cols.length : items.length + cmds.length
   const counts: Record<Tab, number> = {
     all: presets.filter((n) => !core.isHidden(n)).length,
     favorites: listFor(core, presets, allSet, 'favorites', '').length,
@@ -57,6 +60,10 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
     else showToast('Esta coleção está vazia.')
     close()
   }
+  const runCmd = (c: Command): void => {
+    close()
+    runAction(c.id)
+  }
   const fav = (name: string): void => {
     const r = core.run<boolean>('library.favorite', { name }, 'ui')
     if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
@@ -78,6 +85,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
         const c = cols[active]
         if (c) playCollection(c.id, c.name)
       } else if (items[active]) play(items[active]!)
+      else if (cmds[active - items.length]) runCmd(cmds[active - items.length]!)
     } else if (e.key === 'Tab') {
       e.preventDefault()
       e.stopPropagation()
@@ -172,6 +180,32 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                   </div>
                 )
               })}
+          {cmds.length > 0 && (
+            <div class="p-grp" role="presentation">
+              Comandos
+            </div>
+          )}
+          {cmds.map((c, j) => {
+            const i = items.length + j
+            return (
+              <div key={c.id} class={`prow cmd${i === active ? ' active' : ''}`} role="option" aria-selected={i === active} onMouseMove={() => i !== active && setActive(i)}>
+                <button class="r-btn" tabIndex={-1} onClick={() => runCmd(c)}>
+                  <span class="cmd-ico">
+                    <Icon name={c.icon} />
+                  </span>
+                  <span class="r-title">
+                    <Highlight text={c.label} q={q.trim()} />
+                  </span>
+                </button>
+                <span class="r-hint">Enter executar</span>
+                <span class="k-keys">
+                  {c.keys.map((k) => (
+                    <kbd key={k}>{k}</kbd>
+                  ))}
+                </span>
+              </div>
+            )
+          })}
           {count === 0 && <PaletteEmpty tab={tab} q={q.trim()} />}
         </div>
         <div class="p-foot">
