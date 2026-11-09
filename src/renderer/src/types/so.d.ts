@@ -23,6 +23,7 @@ interface Window {
       import(): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }>
     }
     log(message: string): void
+    mark(name: string): void
     showLog(): Promise<void>
   }
 }

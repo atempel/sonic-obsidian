@@ -37,10 +37,13 @@ const STARTUP_EXTRAS_WAIT_MS = 1000
 const LEVEL_TICK_MS = 33
 
 async function start(): Promise<void> {
+  // Tempos da abertura no log (passagem de performance): ver src/main/startup.ts.
+  window.so.mark('renderer')
   const [rawSettings, rawLibrary] = await Promise.all([
     window.so.settings.load().catch(() => null),
     window.so.library.load().catch(() => null)
   ])
+  window.so.mark('ajustes lidos')
 
   const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
   // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
@@ -71,6 +74,7 @@ async function start(): Promise<void> {
   const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
   viz.visualizer.connectAudio(gain)
   hookShaderCleanup(viz.visualizer)
+  window.so.mark('motor')
 
   // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
   // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
@@ -151,7 +155,9 @@ async function start(): Promise<void> {
           throw new DOMException('simulada por test-flags.json', 'NotAllowedError')
         }
         cap = await captureSystemAudio()
+        window.so.mark('captura') // só a primeira vez conta (o main ignora repetidas)
       } catch (err) {
+        window.so.mark('captura')
         console.error('[capture] captura recusada ou indisponível', err)
         window.so.log(`captura recusada: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
         setCheck(1, { state: 'fail', detail: 'Recusada pelo Windows', help: PERMISSION_HELP })
@@ -284,6 +290,7 @@ async function start(): Promise<void> {
   }
   const first = last && library.has(last) && !core.isHidden(last) ? core.run('preset.play', { name: last }, 'startup') : null
   if (!first?.ok) core.run('preset.random', {}, 'startup')
+  window.so.mark('primeiro preset')
   console.log(`[startup] primeiro preset em ${(performance.now() - t0).toFixed(0)} ms (${first?.ok ? 'último usado' : 'aleatório'})`)
   state.presetCount = library.count
   void connectCapture()
@@ -485,6 +492,7 @@ async function start(): Promise<void> {
   let lastLoop = performance.now()
   let frames = 0
   let windowStart = performance.now()
+  let firstFrame = false
   const loop = (now: number): void => {
     requestAnimationFrame(loop)
     const frameInterval = settings.fpsLimit === 'monitor' ? 0 : 1000 / settings.fpsLimit
@@ -524,6 +532,10 @@ async function start(): Promise<void> {
     dim.style.opacity = String(((1 - speed) / (1 - 0.15)) * SILENT_DIM)
     if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
     viz.render(dt * speed)
+    if (!firstFrame) {
+      firstFrame = true
+      window.so.mark('primeiro quadro')
+    }
     probeFrame(now)
     frames++
     if (now - windowStart >= 1000) {
@@ -545,6 +557,7 @@ async function start(): Promise<void> {
   extras
     .then((count) => {
       state.presetCount = count
+      window.so.mark('pacotes extras')
       core.events.emit('stateChanged', { origin: 'startup' }) // Biblioteca e busca veem os presets novos
       console.log(`[viz] ${count} presets após os pacotes extras (${(performance.now() - t0).toFixed(0)} ms)`)
     })

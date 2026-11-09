@@ -53,3 +53,7 @@ Pacotes com `hasInstallScript` no lockfile: `core-js@2.6.12` (via `butterchurn-p
 Observações da checagem de 2026-11-08:
 - `npm audit signatures` falha neste ambiente de nuvem com "Failed to download" (o proxy não entrega as chaves de assinatura do registro). A proveniência foi conferida pelo `dist.attestations` do `npm view`.
 - O `npm audit` completo mostra 6 vulnerabilidades *moderate* só em devDependencies (`minimatch` via `electron-builder`/`@electron/universal`), que já existiam antes desta checagem e não entram no app empacotado.
+
+### Decisões da passagem de manutenção (2026-11-09)
+- **`electron@45.2.3` e `vite@8.3.6`: mantidos.** Continuam sendo as versões mais recentes (`npm view`), e voltar uma versão traz mais risco que esperar. Completam 14 dias em 2026-11-18 e 2026-11-19; na primeira sessão depois disso, refazer a checagem e tirar o ⚠️ (ou trocar de versão, se surgir aviso).
+- **`minimatch` (6 *moderate*): aceito.** O pacote entra só no empacotamento (`electron-builder` → `@electron/universal`), não no app que roda. A correção do `npm audit fix --force` rebaixa o `electron-builder` de versão principal. Rever quando o `electron-builder` publicar uma versão com o `minimatch` corrigido.
