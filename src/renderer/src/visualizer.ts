@@ -1,4 +1,5 @@
 import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
+import butterchurn3 from 'butterchurn3'
 import type { BlendType, RenderSettings } from './core/state'
 
 /**
@@ -29,12 +30,16 @@ export class PresetVisualizer {
   private render_: RenderSettings
   private extraImagesLoaded = false
 
-  constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement, render: RenderSettings) {
+  /** Spike 006: 'v3' = Butterchurn 3 com `onlyUseWASM` (equações em WASM, nada de `new Function`). */
+  readonly engine: 'v2' | 'v3'
+
+  constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement, render: RenderSettings, engine: 'v2' | 'v3' = 'v2') {
     this.render_ = { ...render }
+    this.engine = engine
     const { width, height } = this.size()
     canvas.width = width
     canvas.height = height
-    this.visualizer = butterchurn.createVisualizer(ctx, canvas, {
+    const opts = {
       width,
       height,
       pixelRatio: this.pixelRatio(),
@@ -42,7 +47,13 @@ export class PresetVisualizer {
       meshWidth: render.meshWidth,
       meshHeight: render.meshHeight,
       outputFXAA: render.fxaa
-    })
+    }
+    // O 3.x tem a mesma API pública (loadPreset vira assíncrono); as partes internas que os
+    // ganchos usam são procuradas pela forma, então cada gancho desliga sozinho se faltar algo.
+    this.visualizer =
+      engine === 'v3'
+        ? (butterchurn3.createVisualizer(ctx, canvas, { ...opts, onlyUseWASM: true }) as unknown as Visualizer)
+        : butterchurn.createVisualizer(ctx, canvas, opts)
     this.blendTypesAvailable = this.hookBlendPattern()
     if (render.extraImages) void this.loadExtraImages()
   }
@@ -81,9 +92,11 @@ export class PresetVisualizer {
   }
 
   /** Corte seco = blend 0; os demais tipos usam o tempo pedido. */
-  load(preset: Preset, type: BlendType, blendSeconds: number): void {
+  load(preset: Preset, type: BlendType, blendSeconds: number): Promise<void> {
     this.pendingType = type
-    this.visualizer.loadPreset(preset, type === 'cut' ? 0 : blendSeconds)
+    // No 3.x o loadPreset devolve uma Promise (compilação WASM); no 2.6.7, undefined.
+    const r = this.visualizer.loadPreset(preset, type === 'cut' ? 0 : blendSeconds) as unknown
+    return r instanceof Promise ? r : Promise.resolve()
   }
 
   resize(): void {

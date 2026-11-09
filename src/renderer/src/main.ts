@@ -36,6 +36,9 @@ const STARTUP_EXTRAS_WAIT_MS = 1000
 /** Cadência do medidor de nível da faixa (~30×/s). */
 const LEVEL_TICK_MS = 33
 
+/** Spike 006 rodando: a rotação automática espera. */
+let spikeBusy = false
+
 async function start(): Promise<void> {
   // Tempos da abertura no log (passagem de performance): ver src/main/startup.ts.
   window.so.mark('renderer')
@@ -45,12 +48,23 @@ async function start(): Promise<void> {
   ])
   window.so.mark('ajustes lidos')
 
-  const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
+  const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false, engine3: false, spike006: false }))
   // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
   if (testFlags.noWebgl2 || !document.createElement('canvas').getContext('webgl2')) {
     window.so.log(`WebGL 2 indisponível${testFlags.noWebgl2 ? ' (simulado por test-flags.json)' : ''}`)
     mountWebglError(document.getElementById('ui') as HTMLElement)
     return
+  }
+
+  // Spike 006: motor 3 (WASM). A CSP desta página passa a proibir `eval`/`new Function`
+  // (só 'wasm-unsafe-eval'): uma segunda política só pode restringir, nunca abrir.
+  const engine: 'v2' | 'v3' = testFlags.engine3 ? 'v3' : 'v2'
+  if (engine === 'v3') {
+    const csp = document.createElement('meta')
+    csp.httpEquiv = 'Content-Security-Policy'
+    csp.content = "script-src 'self' 'wasm-unsafe-eval'"
+    document.head.appendChild(csp)
+    window.so.log("motor: Butterchurn 3 (onlyUseWASM, CSP sem 'unsafe-eval')")
   }
 
   const ctx = new AudioContext()
@@ -71,7 +85,7 @@ async function start(): Promise<void> {
   const samples = new Float32Array(meter.fftSize)
 
   const initialSettings = sanitizeSettings(rawSettings)
-  const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
+  const viz = new PresetVisualizer(ctx, canvas, initialSettings.render, engine)
   viz.visualizer.connectAudio(gain)
   hookShaderCleanup(viz.visualizer)
   window.so.mark('motor')
@@ -85,7 +99,8 @@ async function start(): Promise<void> {
   })
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
-  const library = new PresetLibrary()
+  const library = new PresetLibrary(engine)
+  if (engine === 'v3') await library.loadBasePack3()
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
@@ -263,7 +278,10 @@ async function start(): Promise<void> {
   core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
     core.events.emit('slowPreset', null)
     probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0, last: 0 }
-    viz.load(library.get(name), blendType, blendSeconds)
+    viz.load(library.get(name), blendType, blendSeconds).catch((err: unknown) => {
+      // Motor 3: preset que não compila para WASM. Registra; o anterior continua na tela.
+      window.so.log(`preset não carregou: ${name}: ${err instanceof Error ? err.message : String(err)}`)
+    })
     rotation.restart(performance.now())
     state.preset = name
     console.log(`[viz] preset: ${name} (${blendType}, ${blendSeconds} s)`)
@@ -538,7 +556,7 @@ async function start(): Promise<void> {
     lastRender = now
     const speed = silence.step(dt)
     dim.style.opacity = String(((1 - speed) / (1 - 0.15)) * SILENT_DIM)
-    if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
+    if (!spikeBusy && rotation.due(now)) run('rotation.advance', {}, 'rotation')
     viz.render(dt * speed)
     if (!firstFrame) {
       firstFrame = true
@@ -560,6 +578,15 @@ async function start(): Promise<void> {
     }
   }
   requestAnimationFrame(loop)
+
+  // Spike 006: bateria de checagens no log (test-flags.json com "spike006": true). A rotação pausa.
+  if (testFlags.spike006) {
+    spikeBusy = true
+    void import('./spike006')
+      .then((m) => m.runSpike006(viz, library, extras))
+      .catch((err: unknown) => window.so.log(`spike006: erro: ${err instanceof Error ? err.message : String(err)}`))
+      .finally(() => (spikeBusy = false))
+  }
 
   // Pacotes extras (já pedidos na abertura) entram quando chegarem.
   extras
