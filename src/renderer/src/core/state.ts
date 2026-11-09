@@ -126,6 +126,10 @@ export interface Settings {
   /** Mostrar fps na faixa (Configurações › Desempenho). */
   showFps: boolean
   render: RenderSettings
+  /** Cartão de boas-vindas já visto (spec 012). */
+  welcomeSeen: boolean
+  /** Desempenho por preset (spec 012, P2): mostrar o aviso de preset pesado abaixo de `minFps`. */
+  perf: { skipSlow: boolean; minFps: number }
 }
 
 export interface Collection {
@@ -146,6 +150,8 @@ export interface Library {
   /** Mais recente primeiro. */
   recents: string[]
   collections: Collection[]
+  /** fps médio medido de cada preset depois do blend (spec 012, P2). */
+  presetFps: Record<string, number>
 }
 
 export function defaultSettings(): Settings {
@@ -164,7 +170,9 @@ export function defaultSettings(): Settings {
     lastPreset: null,
     pinControls: false,
     showFps: false,
-    render: defaultRender()
+    render: defaultRender(),
+    welcomeSeen: false,
+    perf: { skipSlow: true, minFps: 30 }
   }
 }
 
@@ -188,7 +196,7 @@ export function sanitizeRender(raw: unknown, base: RenderSettings = defaultRende
 }
 
 export function defaultLibrary(): Library {
-  return { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], collections: [] }
+  return { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], collections: [], presetFps: {} }
 }
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -270,7 +278,12 @@ export function sanitizeSettings(raw: unknown): Settings {
     lastPreset: typeof raw.lastPreset === 'string' && raw.lastPreset ? raw.lastPreset : null,
     pinControls: bool(raw.pinControls, d.pinControls),
     showFps: bool(raw.showFps, d.showFps),
-    render: sanitizeRender(raw.render)
+    render: sanitizeRender(raw.render),
+    welcomeSeen: bool(raw.welcomeSeen, d.welcomeSeen),
+    perf: {
+      skipSlow: bool(isObj(raw.perf) ? raw.perf.skipSlow : undefined, d.perf.skipSlow),
+      minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5
+    }
   }
 }
 
@@ -296,7 +309,8 @@ export function sanitizeLibrary(raw: unknown): Library {
     hidden: names(raw.hidden),
     hiddenPerf: names(raw.hiddenPerf),
     recents: names(raw.recents, RECENTS_MAX),
-    collections
+    collections,
+    presetFps: sanitizeFps(raw.presetFps)
   }
 }
 
@@ -310,4 +324,21 @@ export function stepBlendSeconds(current: number, direction: -1 | 1): number {
 export function cycleBlendType(current: BlendType, direction: -1 | 1): BlendType {
   const i = BLEND_TYPES.indexOf(current)
   return BLEND_TYPES[(i + direction + BLEND_TYPES.length) % BLEND_TYPES.length]!
+}
+
+/** Máximo de presets com fps guardado (o pacote tem ~400; folga para os extras). */
+export const PRESET_FPS_MAX = 4000
+
+function sanitizeFps(v: unknown): Record<string, number> {
+  const out: Record<string, number> = {}
+  if (!isObj(v)) return out
+  let n = 0
+  for (const [k, f] of Object.entries(v)) {
+    if (n >= PRESET_FPS_MAX) break
+    if (k && typeof f === 'number' && Number.isFinite(f) && f > 0) {
+      out[k] = Math.round(Math.min(f, 1000))
+      n++
+    }
+  }
+  return out
 }

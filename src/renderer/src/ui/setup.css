@@ -1,0 +1,75 @@
+/* Setup e diagnóstico (spec 012; protótipo "Setup", design 1794178325-0fd0). */
+:root { --strip-h: 58px; --float-bottom: calc(16px + var(--strip-h) + 12px); }
+#ui .float { pointer-events: auto; }
+body.nogl #canvas, body.nogl .strip-wrap, body.nogl .credit { display: none; }
+body.nogl { background: var(--bg-00); }
+
+.float { position: fixed; z-index: 25; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop);
+  opacity: 0; transform: translateY(8px); transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+.float.in { opacity: 1; transform: none; }
+.float h2 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.3; }
+.float p { margin: 0; color: var(--text-2); }
+
+.card { left: 16px; bottom: var(--float-bottom); width: 360px; max-width: calc(100vw - 32px); padding: 18px; }
+.card .head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 6px; }
+.card .body-text { margin-bottom: 14px; }
+.shortcuts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.shortcuts li { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
+.shortcuts kbd { justify-self: start; }
+.card .actions { display: flex; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line-1); }
+
+/* M18 (fade de 220 ms na entrada e na saída) com o texto do Setup; aparece aos 10 s (DIVERGENCIAS). */
+.notice { left: 50%; bottom: var(--float-bottom); width: min(600px, calc(100vw - 32px)); margin-left: calc(min(600px, 100vw - 32px) / -2);
+  display: flex; align-items: center; gap: 14px; padding: 12px 12px 12px 16px; }
+.notice > .ico { color: var(--text-2); }
+.notice .txt { flex: 1; min-width: 0; }
+.notice .t { font-weight: 500; color: var(--text-1); }
+.notice .d { font-size: 13px; color: var(--text-2); }
+.notice .testing { display: flex; align-items: center; gap: 10px; color: var(--text-2); font-size: 12px; padding-right: 8px; white-space: nowrap; }
+
+.panel { left: 50%; top: 50%; width: min(520px, calc(100vw - 32px)); margin-left: calc(min(520px, 100vw - 32px) / -2);
+  translate: 0 -50%; padding: 22px; max-height: calc(100vh - 32px); overflow-y: auto; z-index: 26; }
+.panel .head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.panel .head .ico { color: var(--warn); }
+.checks { list-style: none; margin: 0; padding: 0; }
+.checks li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line-1); }
+.checks li:last-child { border-bottom: 1px solid var(--line-1); }
+.checks .st { display: grid; place-items: start center; padding-top: 1px; }
+.checks .st[data-s="ok"] { color: var(--ok); }
+.checks .st[data-s="fail"] { color: var(--warn); }
+.checks .st[data-s="busy"], .checks .st[data-s="pending"] { color: var(--text-2); }
+.checks .st[data-s="busy"] svg { animation: so-spin 1s linear infinite; }
+@keyframes so-spin { to { transform: rotate(360deg); } }
+.checks .lbl { font-weight: 500; }
+.checks .det { font-size: 13px; color: var(--text-2); }
+.checks .help { margin-top: 4px; font-size: 13px; color: var(--text-1); }
+.panel .actions { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.okline { display: inline-flex; align-items: center; gap: 8px; color: var(--ok); font-weight: 500; }
+.float .btn:disabled { opacity: 0.5; cursor: default; }
+
+.gl .big { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--r-3); background: var(--bg-02); border: 1px solid var(--line-2); color: var(--text-2); margin-bottom: 14px; }
+.gl .big .ico { width: 24px; height: 24px; }
+.gl details { margin-top: 16px; border-top: 1px solid var(--line-1); padding-top: 10px; }
+.gl summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; list-style: none; color: var(--text-2); font-size: 13px; padding: 4px 6px; margin-left: -6px; border-radius: var(--r-2); }
+.gl summary::-webkit-details-marker { display: none; }
+.gl summary:hover { color: var(--text-1); background: var(--bg-03); }
+.gl summary .ico { width: 15px; height: 15px; transition: transform var(--t-fast) var(--ease-out); }
+.gl details[open] summary .ico { transform: rotate(90deg); }
+dl.tech { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 10px 0 0; font-size: 13px; }
+dl.tech dt { color: var(--text-2); }
+dl.tech dd { margin: 0; color: var(--text-1); overflow-wrap: anywhere; }
+dl.tech dd.bad { color: var(--warn); }
+
+/* Preset pesado (P2): logo acima da faixa, alinhado à direita (na cauda não cabe; ver DIVERGENCIAS). */
+.strip-wrap > .chip { position: absolute; right: max(16px, calc((100% - 1120px) / 2)); bottom: calc(16px + var(--strip-h) + 8px); pointer-events: auto; background: rgba(28, 22, 12, 0.94); box-shadow: var(--shadow-pop); }
+body.idle .strip-wrap > .chip { pointer-events: none; }
+body:has(.float.notice) .strip-wrap > .chip { bottom: calc(var(--float-bottom) + 92px); }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px 0 10px; border-radius: var(--r-2); font-size: 12px;
+  background: rgba(255,181,71,0.10); color: var(--warn); border: 1px solid rgba(255,181,71,0.35); white-space: nowrap; }
+.chip .btn { height: 22px; padding: 0 8px; font-size: 12px; color: var(--text-1); }
+
+@media (max-width: 900px) { .notice { flex-wrap: wrap; } }
+@media (prefers-reduced-motion: reduce) {
+  .float, .float.in { transform: none; transition: opacity 120ms linear; }
+  .checks .st[data-s="busy"] svg { animation: none; }
+}

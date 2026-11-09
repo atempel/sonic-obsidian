@@ -1,4 +1,4 @@
-import { app, BrowserWindow, desktopCapturer, dialog, ipcMain, session, shell } from 'electron'
+import { app, BrowserWindow, clipboard, desktopCapturer, dialog, ipcMain, session, shell } from 'electron'
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
@@ -42,6 +42,36 @@ function registerStores(): void {
     return undefined
   })
   registerCollectionFiles()
+  // Diagnóstico (spec 012): texto curto para a área de transferência, GPU e flags de teste.
+  ipcMain.handle('system:copyText', (_e, text: unknown) => {
+    if (typeof text === 'string' && text.length <= 20_000) clipboard.writeText(text)
+  })
+  ipcMain.handle('system:gpuInfo', async () => {
+    try {
+      const info = (await app.getGPUInfo('basic')) as { gpuDevice?: { active?: boolean; driverVersion?: string; vendorId?: number; deviceId?: number }[] }
+      const dev = info.gpuDevice?.find((d) => d.active) ?? info.gpuDevice?.[0]
+      return { driver: dev?.driverVersion ?? '', ids: dev ? `${(dev.vendorId ?? 0).toString(16)}:${(dev.deviceId ?? 0).toString(16)}` : '' }
+    } catch {
+      return { driver: '', ids: '' }
+    }
+  })
+  ipcMain.handle('system:testFlags', () => readTestFlags())
+}
+
+/**
+ * Flags de teste (spec 012): `test-flags.json` na pasta de dados (Ctrl+Shift+L abre a pasta
+ * do log, ao lado). Simula a captura recusada e a falta de WebGL 2 sem linha de comando.
+ * Só estas duas chaves, só booleanos; arquivo ausente ou inválido = nenhuma flag.
+ */
+async function readTestFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }> {
+  try {
+    const raw = JSON.parse(await readFile(join(app.getPath('userData'), 'test-flags.json'), 'utf8')) as Record<string, unknown>
+    const flags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }
+    if (flags.captureFail || flags.noWebgl2) log('main', `flags de teste: ${JSON.stringify(flags)}`)
+    return flags
+  } catch {
+    return { captureFail: false, noWebgl2: false }
+  }
 }
 
 /**

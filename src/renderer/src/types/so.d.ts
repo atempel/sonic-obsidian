@@ -9,7 +9,14 @@ interface Window {
     settings: SoStore
     library: SoStore
     window: { toggleFullScreen(): Promise<void>; minimize(): Promise<void>; close(): Promise<void> }
-    system: { openSoundSettings(): Promise<void>; openNotices(): Promise<string>; openLink(url: string): Promise<void> }
+    system: {
+      openSoundSettings(): Promise<void>
+      openNotices(): Promise<string>
+      openLink(url: string): Promise<void>
+      copyText(text: string): Promise<void>
+      gpuInfo(): Promise<{ driver: string; ids: string }>
+      testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
+    }
     app: { version(): Promise<string> }
     collections: {
       export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
