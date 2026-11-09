@@ -45,17 +45,23 @@ Como rodar: `test-flags.json` com `{"engine3": true, "spike006": true}` (sem `en
 | 1. Motor 3 com `onlyUseWASM` e CSP sem `'unsafe-eval'` | O app abre e toca; a página confirma que `new Function` está bloqueado | **Passa no headless.** Falta o Windows com áudio real |
 | 2. ≥ 90% dos presets do pacote 3.x | **472/472 (100%)** compilam (equações e shaders). Dois presets disparam `RuntimeError: float unrepresentable in integer range` dentro do WASM durante o render | **Passa.** A migração precisa de `try/catch` no `render` e de um jeito de pular preset que trava |
 | 3. Preset malicioso | Com `*_eel` + `*_str` + `useJS`: nada executa. Só com `*_str`: o motor recusa ("doesn't support WASM") | **Passa** |
-| 4. ≥ 8 de 10 `.milk` convertem e tocam | **1/10.** As equações EEL batem 100% com o pacote oficial nas 504 fontes. Os shaders não linkam | **Reprova** (ver abaixo) |
+| 4. ≥ 8 de 10 `.milk` convertem e tocam | **8/10** fixtures; **463/504 (91,9%)** das fontes do pacote oficial linkam no WebGL 2, contra ~10% sem os contornos | **Passa no headless.** Falta a comparação visual no Windows |
 | 5. fps do 3.x ±10% do 2.6.7 | Só dá para medir no Windows (o headless usa GPU por software) | **Pendente** |
 
-**Por que o `.milk` reprova:**
-- O `hlslparser-js` (0.1.0 e 0.1.1, as únicas versões que funcionam) troca o segundo operador de qualquer cadeia de três operandos por `&&`. Exemplos: `a*b*c` → `bool(a*b) && bool(c)`; o mesmo vale para `+`, `-` e `/`. Isso é muito comum nos shaders do MilkDrop.
-- Parênteses explícitos (`(a*b)*c`) saem certos.
-- Dois fixtures falham por outro motivo: usam `round`/`fwidth`, funções que o conversor não conhece.
-- O conversor também usa `new Function` ao inicializar. Por isso a conversão roda no processo main (`src/main/milk.ts`), recebendo e devolvendo só texto, e não no renderer.
+**Como o `.milk` passou (contornos em `src/main/hlsl-fix.ts`, todos texto → texto):**
+1. **Parênteses explícitos no HLSL antes de converter,** inclusive nas macros do `prepareShader` (`GetBlur1` = `a*b + c`). O `hlslparser-js` 0.1.x troca o segundo operador de qualquer cadeia de três operandos (`a*b*c`, `a+b-c`, `x/2/3`) por `&&`; com os parênteses, a tradução sai certa. Também troca `round`/`fwidth` por equivalentes. Resultado: 504/504 shaders sem `&&` espúrio; 10% → 52% linkando.
+2. **Corpo de volta para o `shader_body`:** o conversor põe o corpo numa função, onde `rad`, `ang`, `uv_orig` e `hue_shader` (declarados no `main` do motor) não existem. Texturas do autor do preset viram `uniform sampler2D`. Resultado: 52% → 68%.
+3. **Cópias locais de `uv`, `texsize` e dos `q`** (no HLSL eram graváveis; no motor são entrada/uniform) e **inicializadores globais não constantes movidos para o corpo.** Resultado: 68% → **91,9%**.
+
+**O que ainda falha (41 de 504):**
+- 12 o conversor não consegue ler, entre eles os dois fixtures com `round`/`fwidth`;
+- os demais são casos isolados: variáveis declaradas dentro de `if`, tipos misturados em `==` e `/`.
+- O app precisa mostrar o erro e manter o preset anterior (P1 da spec).
+
+**O conversor usa `new Function` ao inicializar.** Por isso a conversão roda no processo main (`src/main/milk.ts`), recebendo e devolvendo só texto, e não no renderer.
 
 **Respostas parciais às perguntas:**
-- **Conversor:** no renderer não roda (CSP). No main, converte em 30–60 ms por preset.
+- **Conversor:** no renderer não roda (CSP). No main, com os contornos, converte em 30–60 ms por preset.
 - **Bundle:** `hlslparser-js` tem 320 KB; o motor 3 acrescenta ~440 KB ao renderer; os pacotes de presets 3.x carregam sob demanda.
 - **Licenças:** `eel-wasm` (MIT), `hlslparser-js` (MIT), `milkdrop-preset-utils` (MIT).
 
