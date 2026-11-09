@@ -2,6 +2,9 @@ import { app, BrowserWindow, clipboard, desktopCapturer, dialog, ipcMain, sessio
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
+import { mark } from './startup'
+
+mark('main.js')
 import { JsonStore } from './store'
 
 const stores = new Map<string, JsonStore>()
@@ -26,6 +29,10 @@ function registerStores(): void {
   // Log do renderer: só texto curto, sem escolher arquivo nem nível arbitrário.
   ipcMain.on('log:write', (_e, message: unknown) => {
     if (typeof message === 'string') log('renderer', message)
+  })
+  // Etapas da abertura vindas do renderer (só nomes conhecidos; ver startup.ts).
+  ipcMain.on('startup:mark', (_e, name: unknown) => {
+    if (typeof name === 'string') mark(name)
   })
   // Mostra o arquivo de log no Explorer (caminho fixo, definido aqui).
   ipcMain.handle('log:show', () => shell.showItemInFolder(logPath()))
@@ -156,6 +163,9 @@ function createWindow(): void {
     }
   })
 
+  mark('janela')
+  win.webContents.once('did-finish-load', () => mark('página carregada'))
+
   // Queda do renderer (WebGL, memória): registra e recarrega, em vez de ficar uma janela preta.
   win.webContents.on('render-process-gone', (_e, details) => {
     log('main', `renderer caiu: ${details.reason} (exit ${details.exitCode})`)
@@ -203,6 +213,7 @@ app.on('child-process-gone', (_e, details) => {
 if (process.platform === 'win32') app.setAppUserModelId('dev.atempel.sonic-obsidian')
 
 app.whenReady().then(() => {
+  mark('pronto')
   log('main', `abriu ${app.getVersion()} · Electron ${process.versions.electron} · log em ${logPath()}`)
   logMetrics()
   // Memória a cada 5 min: mostra se algum processo (GPU, renderer) cresce sem parar.

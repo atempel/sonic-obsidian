@@ -1,8 +1,10 @@
 name: build-windows
 
 on:
+  # Branches de trabalho buildam pelo PR (pull_request); push só no main.
+  # Antes, feat/** e fix/** rodavam duas vezes com PR aberto (push + pull_request).
   push:
-    branches: [main, 'feat/**', 'fix/**']
+    branches: [main]
     paths-ignore: ['site/**', 'docs/**']
   pull_request:
     paths-ignore: ['site/**', 'docs/**']

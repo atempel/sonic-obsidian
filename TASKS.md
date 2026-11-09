@@ -18,10 +18,10 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 
 ## Manutenção
 - [ ] **Passagem de performance, segurança e otimização** (pedido do usuário, no fim desta frente). Inclui: a abertura do app ficou mais lenta há algumas builds (não é a edição do `.exe`; o renderer abre igual nos builds do PR 1 e do #44, ~0,5 s no headless, então medir o main e o carregamento no Windows, com tempos no log).
-- [ ] Decidir sobre `electron@45.2.3` e `vite@8.3.6`, que tinham menos de 14 dias na checagem retroativa de dependências — [docs/dependencias.md](docs/dependencias.md)
-- [ ] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder` (só dev; o fix sugerido é downgrade de major)
+- [x] Decidir sobre `electron@45.2.3` e `vite@8.3.6`: mantidos; refazer a checagem depois de 19/11 — [docs/dependencias.md](docs/dependencias.md)
+- [x] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder`: aceitas (só empacotamento); rever quando o electron-builder atualizar
 - [ ] Confirmar numa sessão longa (horas) que a memória da GPU fica estável depois da correção do vazamento de shaders — pedir o `sonic-obsidian.log` (`Ctrl+Shift+L`); ver DECISIONS 2026-11-08 "Queda do driver de vídeo"
-- [ ] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
+- [x] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
 ## Feito
 - [x] **Fase 1 — Núcleo** — specs 002–005, issues #6–#9, PRs [#12](https://github.com/atempel/sonic-obsidian/pull/12), [#13](https://github.com/atempel/sonic-obsidian/pull/13), [#15](https://github.com/atempel/sonic-obsidian/pull/15), [#17](https://github.com/atempel/sonic-obsidian/pull/17). Spec 004 critério 7 (economia de GPU com limite de fps) não atendido; ver DECISIONS.
