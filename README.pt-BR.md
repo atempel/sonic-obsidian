@@ -42,7 +42,9 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está em andamento. O código está sob a licença MIT. Ainda não há versão empacotada: para experimentar, compile a partir do código (veja [Desenvolvimento](#desenvolvimento)).
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está pronta; a versão atual é a **v0.5.0**. O código está sob a licença MIT.
+>
+> **Download (Windows 10/11, x64):** [instalador](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (por usuário, sem pedir admin) · [zip portátil](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [todas as versões](https://github.com/atempel/sonic-obsidian/releases). O app não tem assinatura de código: se o SmartScreen avisar, clique em **Mais informações → Executar assim mesmo**.
 
 <p align="center">
   <img alt="O Palco: o visual ocupa a janela, com a faixa de controle na parte de baixo" src="docs/media/app-palco.jpg" width="900">
@@ -120,6 +122,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 | `T` | Modo limpo (sem texto sobre o visual) |
 | `H` | Esconde a interface agora |
 | `Esc` | Fecha o que estiver aberto, ou sai da tela cheia |
+| `?` | Todos os atalhos (com filtro) |
 | `Ctrl+Shift+D` | HUD de depuração |
 | `Ctrl+Shift+L` | Abre a pasta de logs |
 
@@ -194,7 +197,7 @@ Cada feature começa como uma spec em [`docs/specs/`](docs/specs/), vira uma ent
 |---|---|---|
 | 0 — Spike | Provar loopback + Butterchurn no Electron | Concluída |
 | 1 — Núcleo | Presets pelo teclado, rotação, janela, sinal de entrada | Concluída |
-| 2 — Interface v3 | Palco, Biblioteca, busca, transições, configurações, setup | Em andamento |
+| 2 — Interface v3 | Palco, Biblioteca, busca, transições, configurações, setup, atalhos | Feita (v0.5.0) |
 | 3 — Fontes e presets | Microfone, arquivos de áudio, importação de `.milk`, Estúdio de presets | Planejada |
 | 4 — MCP | Controle ao vivo e criação de presets pela sua ferramenta de IA | Planejada |
 | 5 — Extras | Rack multi-monitor, beat/BPM, instalador, iniciar com o Windows | Planejada |

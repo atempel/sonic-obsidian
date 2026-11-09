@@ -1,6 +1,6 @@
 # 016 — Releases no GitHub e abertura do repositório (MIT)
 
-**Fase:** Abertura · **Status:** Em andamento — pipeline de release (P0) no PR da sessão de 2026-11-09; primeira versão v0.5.0 (DECISIONS 2026-11-09). O repo já é **público e MIT** desde 2026-11-08 ([#43](https://github.com/atempel/sonic-obsidian/pull/43)) · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
+**Fase:** Abertura · **Status:** Feito (P0) — pipeline nos PRs #58 e #59; **v0.5.0 publicada em 2026-11-09** pelo usuário (DECISIONS 2026-11-09). P1 (atualização automática, winget) pendente. O repo já é **público e MIT** desde 2026-11-08 ([#43](https://github.com/atempel/sonic-obsidian/pull/43)) · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
 
 ## Problema
 Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, exige login no GitHub, pasta sem instalador). Para abrir o projeto, uma pessoa qualquer precisa de um link estável que sempre entregue a versão mais nova, e o repo precisa estar pronto para ser público (licença, créditos, como contribuir).
@@ -21,7 +21,7 @@ Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, e
 
 **P0 — abertura** *(feita no #43, exceto o que está marcado como pendente)*
 - ~~`LICENSE` → texto MIT, `Copyright (c) 2026 Alexandre Tempel`.~~ Feito (#43).
-- ~~README EN/pt-BR: seção "License" para MIT.~~ Feito (#43). **Pendente:** depois da primeira release, trocar "compile a partir do código" pelo link de download.
+- ~~README EN/pt-BR: seção "License" para MIT.~~ Feito (#43). Download no README feito depois da v0.5.0.
 - ~~`CONTRIBUTING.md` e templates de issue e de PR.~~ Feito (#43, com SECURITY e CODE_OF_CONDUCT).
 - Conferir `THIRD_PARTY_NOTICES.md` (Butterchurn, presets, Preact, Electron) e os créditos dos autores de preset.
 - ~~Tornar o repo público.~~ Feito (2026-11-08). **Pendente:** habilitar GitHub Pages (spec 017).
