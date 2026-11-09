@@ -296,3 +296,18 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - Browser estável em ~140 MB.
   - **Conclusão:** o vazamento de shaders (DECISIONS 2026-11-08) não voltou.
 - **Bug achado no mesmo log:** "preset pesado: Flexi - predator-prey-spirals a 6.7 fps" saiu 2 ms depois de a janela voltar a ficar visível. Com a janela oculta, o `requestAnimationFrame` para, então a medida de 5 s contava o tempo parado como quadros lentos. **Correção:** a medida é descartada quando a janela fica oculta ou quando passam mais de 500 ms entre dois quadros. Uma medida errada já gravada some ao restaurar o preset, ou é sobrescrita na próxima medição.
+
+## 2026-11-09 — Spike 006 aprovado: o app migra para o Butterchurn 3
+- **Decisão (do usuário):** o app passa para o Butterchurn `3.0.0-beta.5` com `onlyUseWASM` e uma CSP sem `'unsafe-eval'`. Fecha a "Proposta" de 2026-11-08. Duas specs, um PR cada: [021](docs/specs/021-migracao-butterchurn3.md) (migração) e [022](docs/specs/022-importar-milk.md) (importar `.milk`).
+- **Por quê (medido no Windows):**
+  - No 2.6.7, um preset com `*_str` malicioso executou JavaScript no app (o título virou "pwned"). No 3.x, nada executa e a página bloqueia `new Function`.
+  - O fps é o mesmo (177–180 contra 178–180, no teto do monitor).
+  - 472/472 presets carregam. Os 395 atuais estão todos no pacote novo, que traz 77 a mais, então favoritos e coleções não perdem nada.
+- **Conversor `.milk`:** roda no processo main (`src/main/milk.ts`), porque o `hlslparser-js` usa `new Function`. Entra texto e sai texto.
+  - O `hlslparser-js` troca `a*b*c` por `&&`. Contornos em `src/main/hlsl-fix.ts`: parênteses explícitos no HLSL e nas macros, corpo de volta para o `shader_body`, cópias locais de `uv`/`q`/`texsize`, inicializadores globais movidos para o corpo.
+  - Resultado: 463/504 das fontes oficiais linkam (91,9%) e 8/10 fixtures tocam no Windows.
+- **A tratar na migração:** um preset trava dentro do WASM ("float unrepresentable") e, em seguida, uma transição falha (`reading 'time'`); o render precisa de `try/catch` e de pular o preset que falha. Seis presets novos têm nome só numérico ("27", "269"), sem crédito do autor no nome.
+- **Descartado:**
+  - ficar no 2.6.7 e bloquear presets externos (travaria importar `.milk`, o Estúdio e o MCP);
+  - converter no renderer (exigiria `'unsafe-eval'`);
+  - recompilar o `hlslparser` em C++ para WASM (exige toolchain Emscripten; os contornos chegaram a 92%).

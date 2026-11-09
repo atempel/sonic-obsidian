@@ -1,6 +1,6 @@
 # 006 — Spike: Butterchurn 3 (WASM) e pipeline `.milk`
 
-**Fase:** 3 (fundação) · **Status:** Em andamento (PR em rascunho; resultados parciais abaixo) · **Issue:** [#19](https://github.com/atempel/sonic-obsidian/issues/19) · **Bloqueia:** importar `.milk`, Estúdio, `create_preset` do MCP
+**Fase:** 3 (fundação) · **Status:** Feito — aprovado (validado no Windows em 2026-11-09). Migração: [spec 021](021-migracao-butterchurn3.md); importar `.milk`: [spec 022](022-importar-milk.md) · **Issue:** [#19](https://github.com/atempel/sonic-obsidian/issues/19) · **Bloqueia:** importar `.milk`, Estúdio, `create_preset` do MCP
 
 ## Problema
 Presets do usuário e da IA (MCP) exigem carregar presets que não vieram do pacote oficial. No Butterchurn 2.6.7, que o app usa hoje, as equações de cada preset viram JavaScript via `new Function` dentro do renderer: quem fornece o preset executa código arbitrário no app. A versão 3.0 (beta) compila as equações EEL para WebAssembly isolado. Antes de construir qualquer coisa em cima, é preciso saber se o 3.x publicado no npm aguenta o uso real e se conseguimos produzir presets nesse formato a partir de um `.milk`.
@@ -37,16 +37,16 @@ Interface de importação, Estúdio, armazenamento, MCP.
 - Qual o tamanho do bundle com `hlslparser-js` (Emscripten)?
 - Licença e créditos dos pacotes novos (`eel-wasm`, `hlslparser-js`, `milkdrop-preset-utils`) — atualizar `THIRD_PARTY_NOTICES.md`.
 
-## Resultados parciais (2026-11-09, headless + conversão em Node)
+## Resultados (2026-11-09: headless, conversão em Node e Windows do usuário)
 Como rodar: `test-flags.json` com `{"engine3": true, "spike006": true}` (sem `engine3`, a mesma bateria roda no motor 2.6.7). Os resultados saem no log, em linhas `spike006: …`.
 
 | Critério | Resultado | Situação |
 |---|---|---|
-| 1. Motor 3 com `onlyUseWASM` e CSP sem `'unsafe-eval'` | O app abre e toca; a página confirma que `new Function` está bloqueado | **Passa no headless.** Falta o Windows com áudio real |
-| 2. ≥ 90% dos presets do pacote 3.x | **472/472 (100%)** compilam (equações e shaders). Dois presets disparam `RuntimeError: float unrepresentable in integer range` dentro do WASM durante o render | **Passa.** A migração precisa de `try/catch` no `render` e de um jeito de pular preset que trava |
-| 3. Preset malicioso | Com `*_eel` + `*_str` + `useJS`: nada executa. Só com `*_str`: o motor recusa ("doesn't support WASM") | **Passa** |
-| 4. ≥ 8 de 10 `.milk` convertem e tocam | **8/10** fixtures; **463/504 (91,9%)** das fontes do pacote oficial linkam no WebGL 2, contra ~10% sem os contornos | **Passa no headless.** Falta a comparação visual no Windows |
-| 5. fps do 3.x ±10% do 2.6.7 | Só dá para medir no Windows (o headless usa GPU por software) | **Pendente** |
+| 1. Motor 3 com `onlyUseWASM` e CSP sem `'unsafe-eval'` | O app abre e toca com áudio real; a página confirma que `new Function` está bloqueado; o usuário viu o visual normal | **Passa (Windows)** |
+| 2. ≥ 90% dos presets do pacote 3.x | **472/472 (100%)** compilam (equações e shaders). Dois presets disparam `RuntimeError: float unrepresentable in integer range` dentro do WASM durante o render | **Passa (Windows: 472/472 em 14 s).** No Windows apareceram também `reading 'time'` numa transição logo depois de um preset que travou. A migração precisa de `try/catch` no `render` e de um jeito de pular preset que trava |
+| 3. Preset malicioso | Motor 3, com `*_eel` + `*_str` + `useJS`: nada executa. Só com `*_str`: o motor recusa ("doesn't support WASM"). **No 2.6.7, os dois casos executaram** (título virou "pwned") | **Passa (Windows)** |
+| 4. ≥ 8 de 10 `.milk` convertem e tocam | **8/10** fixtures; **463/504 (91,9%)** das fontes do pacote oficial linkam no WebGL 2, contra ~10% sem os contornos | **Passa (Windows: 8/10)** |
+| 5. fps do 3.x ±10% do 2.6.7 | Windows, 4 presets pesados: 2.6.7 = 178–180 fps, 3.x = 177–180 fps (ambos no teto do monitor, ~180 Hz) | **Passa** |
 
 **Como o `.milk` passou (contornos em `src/main/hlsl-fix.ts`, todos texto → texto):**
 1. **Parênteses explícitos no HLSL antes de converter,** inclusive nas macros do `prepareShader` (`GetBlur1` = `a*b + c`). O `hlslparser-js` 0.1.x troca o segundo operador de qualquer cadeia de três operandos (`a*b*c`, `a+b-c`, `x/2/3`) por `&&`; com os parênteses, a tradução sai certa. Também troca `round`/`fwidth` por equivalentes. Resultado: 504/504 shaders sem `&&` espúrio; 10% → 52% linkando.
