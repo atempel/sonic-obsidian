@@ -87,10 +87,14 @@ export async function runSpike006(viz: PresetVisualizer, library: PresetLibrary,
   await frames(30)
   log(`início · motor ${viz.engine} · ${library.count} presets`)
 
+  // Só no teste headless: todas as 504 fontes .milk e pular as etapas lentas.
+  const test = window as unknown as { __spikeMilkAll?: () => Promise<Record<string, string>>; __spikeOnlyMilk?: boolean }
+  const only = test.__spikeOnlyMilk === true
+
   // 1. Todos os presets.
   const t0 = performance.now()
   const fails: string[] = []
-  for (const name of library.all()) {
+  for (const name of only ? [] : library.all()) {
     const err = await tryLoad(viz, library.get(name))
     if (err) fails.push(`${name} → ${err}`)
   }
@@ -124,7 +128,8 @@ export async function runSpike006(viz: PresetVisualizer, library: PresetLibrary,
   // 3. Conversão .milk → 3.x.
   if (viz.engine === 'v3') {
     let ok = 0
-    for (const [path, text] of Object.entries(MILK)) {
+    const milk = test.__spikeMilkAll ? await test.__spikeMilkAll() : MILK
+    for (const [path, text] of Object.entries(milk)) {
       const name = path.split('/').pop()!.replace(/\.milk$/, '')
       try {
         const { preset, ms } = await window.so.presets.convertMilk(text)
@@ -135,13 +140,13 @@ export async function runSpike006(viz: PresetVisualizer, library: PresetLibrary,
         log(`.milk FALHOU: ${name} → conversão: ${errText(e)}`)
       }
     }
-    log(`.milk: ${ok}/${Object.keys(MILK).length} converteram e tocaram`)
+    log(`.milk: ${ok}/${Object.keys(milk).length} converteram e tocaram`)
   } else {
     log('.milk: pulado (só no motor 3)')
   }
 
   // 4. fps dos pesados (janela visível; 1 s de folga e 5 s de medida).
-  for (const name of HEAVY) {
+  for (const name of only ? [] : HEAVY) {
     if (!library.has(name)) {
       log(`fps: ${name} não está nesta biblioteca`)
       continue

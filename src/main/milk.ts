@@ -1,5 +1,6 @@
 import { prepareShader, processUnOptimizedShader, splitPreset } from 'milkdrop-preset-utils'
 import { convertHLSLShader } from 'hlslparser-js'
+import { fixPreparedHeader, parenthesizeHlsl } from './hlsl-fix'
 
 /**
  * `.milk` → preset do Butterchurn 3 (spike 006), no processo main.
@@ -13,7 +14,8 @@ const MAX_BYTES = 256 * 1024
 
 async function convertShader(src: string): Promise<string> {
   if (!src) return ''
-  const full = prepareShader(src).replace('float4 shader_body (', 'float4 main_shader_sentinel (')
+  // Parênteses explícitos antes do conversor: contorno do bug de a*b*c → && (hlsl-fix.ts).
+  const full = fixPreparedHeader(prepareShader(parenthesizeHlsl(src))).replace('float4 shader_body (', 'float4 main_shader_sentinel (')
   const out = await convertHLSLShader(full, 'main_shader_sentinel', 'fs')
   if (!out) throw new Error('o conversor HLSL não gerou o shader')
   return processUnOptimizedShader(out)

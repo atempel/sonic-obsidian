@@ -1,0 +1,277 @@
+/**
+ * Contorno para o `hlslparser-js` 0.1.x (spike 006): numa cadeia de três ou mais operandos
+ * (`a*b*c`, `a+b-c`, `x/2.0*3.0`), ele traduz o segundo operador como `&&` lógico. Com
+ * parênteses explícitos (`(a*b)*c`), a tradução sai certa. Este módulo relê o HLSL do `.milk`
+ * e reescreve cada expressão com toda operação binária entre parênteses, sem mudar a ordem
+ * de avaliação (respeita precedência e associatividade à esquerda).
+ *
+ * Também troca funções que o conversor não conhece por equivalentes:
+ * `round(x)` → `floor((x)+0.5)` e `fwidth(x)` → `(abs(ddx(x))+abs(ddy(x)))`.
+ *
+ * Só texto entra e sai; nada é executado. O que não for reconhecido passa adiante intacto.
+ */
+
+type Tok = { t: 'id' | 'num' | 'op' | 'raw'; v: string }
+
+const OPS = ['<<=', '>>=', '++', '--', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '==', '!=', '<=', '>=', '&&', '||', '<<', '>>']
+
+function tokenize(src: string): Tok[] {
+  const out: Tok[] = []
+  let i = 0
+  while (i < src.length) {
+    const c = src[i]!
+    if (/\s/.test(c)) {
+      i++
+      continue
+    }
+    if (c === '/' && src[i + 1] === '/') {
+      while (i < src.length && src[i] !== '\n') i++
+      continue
+    }
+    if (c === '/' && src[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2)
+      i = end < 0 ? src.length : end + 2
+      continue
+    }
+    if (c === '#') {
+      // Diretiva do pré-processador: a linha inteira. O corpo de um #define também vira
+      // expressão com parênteses (a macro é expandida antes do conversor ver o operador).
+      let j = src.indexOf('\n', i)
+      if (j < 0) j = src.length
+      out.push({ t: 'raw', v: fixDefine(src.slice(i, j)) + '\n' })
+      i = j
+      continue
+    }
+    const num = /^(?:\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?)[fFhH]?/.exec(src.slice(i, i + 40))
+    if (num && (/\d/.test(c) || (c === '.' && /\d/.test(src[i + 1] ?? '')))) {
+      out.push({ t: 'num', v: num[0] })
+      i += num[0].length
+      continue
+    }
+    const id = /^[A-Za-z_]\w*/.exec(src.slice(i, i + 200))
+    if (id) {
+      out.push({ t: 'id', v: id[0] })
+      i += id[0].length
+      continue
+    }
+    const op = OPS.find((o) => src.startsWith(o, i))
+    if (op) {
+      out.push({ t: 'op', v: op })
+      i += op.length
+      continue
+    }
+    out.push({ t: 'op', v: c })
+    i++
+  }
+  return out
+}
+
+const BIN: Record<string, number> = {
+  '||': 1,
+  '&&': 2,
+  '|': 3,
+  '^': 4,
+  '&': 5,
+  '==': 6,
+  '!=': 6,
+  '<': 7,
+  '>': 7,
+  '<=': 7,
+  '>=': 7,
+  '<<': 8,
+  '>>': 8,
+  '+': 9,
+  '-': 9,
+  '*': 10,
+  '/': 10,
+  '%': 10
+}
+const ASSIGN = new Set(['=', '+=', '-=', '*=', '/=', '%=', '&=', '|=', '^=', '<<=', '>>='])
+const TYPES = /^(?:float|half|int|uint|bool|double)(?:[1-4](?:x[1-4])?)?$|^(?:sampler|sampler2D|sampler3D|texture)$/
+
+class Parser {
+  i = 0
+  constructor(private readonly toks: Tok[]) {}
+
+  private peek(k = 0): Tok | undefined {
+    return this.toks[this.i + k]
+  }
+  private is(v: string, k = 0): boolean {
+    return this.peek(k)?.v === v
+  }
+  private take(): Tok {
+    return this.toks[this.i++]!
+  }
+
+  /** Expressão com precedência mínima `min`; ternário e atribuição incluídos. */
+  expr(min = 0): string {
+    let left = this.unary()
+    for (;;) {
+      const t = this.peek()
+      if (!t || t.t !== 'op') break
+      if (t.v === '?' && min <= 0) {
+        this.take()
+        const a = this.expr(0)
+        if (this.is(':')) this.take()
+        const b = this.expr(0)
+        left = `(${left} ? ${a} : ${b})`
+        continue
+      }
+      if (ASSIGN.has(t.v) && min <= 0) {
+        this.take()
+        left = `${left} ${t.v} ${this.expr(0)}`
+        continue
+      }
+      const p = BIN[t.v]
+      if (p === undefined || p <= min) break
+      this.take()
+      const right = this.expr(p)
+      left = `(${left} ${t.v} ${right})`
+    }
+    return left
+  }
+
+  private unary(): string {
+    const t = this.peek()
+    if (t && t.t === 'op' && ['-', '+', '!', '~', '++', '--'].includes(t.v)) {
+      this.take()
+      return `(${t.v}${this.unary()})`
+    }
+    return this.postfix(this.primary())
+  }
+
+  private args(): string[] {
+    // Já consumiu "(".
+    const list: string[] = []
+    while (this.peek() && !this.is(')')) {
+      list.push(this.expr(0))
+      if (this.is(',')) this.take()
+      else break
+    }
+    if (this.is(')')) this.take()
+    return list
+  }
+
+  private primary(): string {
+    const t = this.take()
+    if (!t) return ''
+    if (t.v === '(') {
+      // Conversão de tipo: (float3) x
+      if (this.peek()?.t === 'id' && TYPES.test(this.peek()!.v) && this.is(')', 1)) {
+        const ty = this.take().v
+        this.take()
+        return `((${ty})${this.unary()})`
+      }
+      const inner = this.expr(0)
+      if (this.is(')')) this.take()
+      return `(${inner})`
+    }
+    if (t.t === 'id' && this.is('(')) {
+      this.take()
+      const a = this.args()
+      if (t.v === 'round' && a.length === 1) return `floor((${a[0]})+0.5)`
+      if (t.v === 'fwidth' && a.length === 1) return `(abs(ddx(${a[0]}))+abs(ddy(${a[0]})))`
+      return `${t.v}(${a.join(', ')})`
+    }
+    return t.v
+  }
+
+  private postfix(base: string): string {
+    let s = base
+    for (;;) {
+      if (this.is('.') && this.peek(1)?.t === 'id') {
+        this.take()
+        s += '.' + this.take().v
+      } else if (this.is('[')) {
+        this.take()
+        const ix = this.expr(0)
+        if (this.is(']')) this.take()
+        s += `[${ix}]`
+      } else if (this.is('++') || this.is('--')) {
+        s += this.take().v
+      } else return s
+    }
+  }
+
+  /**
+   * Percorre o texto todo. Expressões começam depois de `=`/atribuição composta, de `return`
+   * e dentro de `if (…)`/`while (…)`/`for (…;…;…)`; o resto (declarações, chaves, assinaturas
+   * de função) passa adiante como está.
+   */
+  program(): string {
+    const out: string[] = []
+    while (this.peek()) {
+      const t = this.peek()!
+      if (t.t === 'raw') {
+        out.push('\n' + this.take().v)
+        continue
+      }
+      if (t.t === 'op' && ASSIGN.has(t.v)) {
+        this.take()
+        out.push(t.v, this.expr(0))
+        continue
+      }
+      if (t.v === 'return') {
+        this.take()
+        out.push('return')
+        if (!this.is(';')) out.push(this.expr(0))
+        continue
+      }
+      if ((t.v === 'if' || t.v === 'while') && this.is('(', 1)) {
+        this.take()
+        this.take()
+        const c = this.expr(0)
+        if (this.is(')')) this.take()
+        out.push(`${t.v} (${c})`)
+        continue
+      }
+      if (t.v === 'for' && this.is('(', 1)) {
+        this.take()
+        this.take()
+        const parts: string[] = []
+        for (let k = 0; k < 3; k++) {
+          // Inicialização pode ser declaração: "int i = 0".
+          const head: string[] = []
+          while (this.peek()?.t === 'id' && this.peek(1)?.t === 'id') head.push(this.take().v)
+          parts.push([...head, this.is(';') || this.is(')') ? '' : this.expr(0)].join(' ').trim())
+          if (this.is(';')) this.take()
+        }
+        if (this.is(')')) this.take()
+        out.push(`for (${parts.join('; ')})`)
+        continue
+      }
+      out.push(this.take().v)
+    }
+    // Espaços entre tokens; ";", "{" e "}" quebram linha (só legibilidade do GLSL gerado).
+    return out
+      .join(' ')
+      .replace(/ ?([;{}]) ?/g, '$1\n')
+      .replace(/\n\s*\n/g, '\n')
+  }
+}
+
+/** `#define NOME(a,b) corpo` → corpo com parênteses; se o corpo não for uma expressão inteira, fica como está. */
+function fixDefine(line: string): string {
+  const m = /^(#\s*define\s+\w+(?:\([^)]*\))?)\s+(.+)$/.exec(line.trim())
+  if (!m) return line
+  const toks = tokenize(m[2]!)
+  // Um nome ou número só (#define tex2d tex2D) fica como está: "(tex2D)(x)" não compila.
+  if (toks.length < 2 || toks.some((t) => t.t === 'raw')) return line
+  const p = new Parser(toks)
+  const body = p.expr(0)
+  return p.i === toks.length ? `${m[1]} (${body})` : line
+}
+
+/**
+ * Macros que o `prepareShader` do milkdrop-preset-utils injeta no cabeçalho, já com parênteses
+ * (`GetBlur1(uv)` expande para `a*b + c`, que cairia no mesmo bug).
+ */
+export function fixPreparedHeader(prepared: string): string {
+  return prepared.replace(/^(\s*)(#define\s+\w+(?:\([^)]*\))?\s+.+)$/gm, (_all, ind: string, def: string) => ind + fixDefine(def))
+}
+
+/** Reescreve o HLSL de um shader do `.milk` com parênteses explícitos em toda operação binária. */
+export function parenthesizeHlsl(src: string): string {
+  if (!src.trim()) return src
+  return new Parser(tokenize(src)).program()
+}
