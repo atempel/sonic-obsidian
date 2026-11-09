@@ -1,6 +1,6 @@
 # 016 — Releases no GitHub e abertura do repositório (MIT)
 
-**Fase:** Abertura · **Status:** A fazer — o repo já é **público e MIT** desde 2026-11-08 ([#43](https://github.com/atempel/sonic-obsidian/pull/43)); falta o pipeline de release · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
+**Fase:** Abertura · **Status:** Em andamento — pipeline de release (P0) no PR da sessão de 2026-11-09; primeira versão v0.5.0 (DECISIONS 2026-11-09). O repo já é **público e MIT** desde 2026-11-08 ([#43](https://github.com/atempel/sonic-obsidian/pull/43)) · **Issue:** [#40](https://github.com/atempel/sonic-obsidian/issues/40) · **Relacionada:** [017 — Landing page](017-landing-github-pages.md)
 
 ## Problema
 Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, exige login no GitHub, pasta sem instalador). Para abrir o projeto, uma pessoa qualquer precisa de um link estável que sempre entregue a versão mais nova, e o repo precisa estar pronto para ser público (licença, créditos, como contribuir).

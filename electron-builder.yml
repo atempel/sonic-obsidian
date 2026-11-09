@@ -13,7 +13,25 @@ extraFiles:
     to: THIRD_PARTY_NOTICES.md
 asar: true
 win:
-  target: dir
+  # Release (spec 016): instalador + zip, x64. O CI de teste usa `--dir` (dist:win), que ignora esta lista.
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: zip
+      arch: [x64]
+  # Nomes sem versão, para o link fixo releases/latest/download/<arquivo> (a versão fica no título da release).
+  artifactName: SonicObsidian-win-${arch}.${ext}
   icon: resources/icon.ico
   # Edita o .exe (rcedit) para pôr o ícone e os metadados; sem certificado, não assina.
   signAndEditExecutable: true
+nsis:
+  # Instalador por usuário, sem pedir admin; atalho no menu Iniciar.
+  oneClick: true
+  perMachine: false
+  allowElevation: false
+  createStartMenuShortcut: true
+  createDesktopShortcut: false
+  shortcutName: Sonic Obsidian
+  # Desinstalar mantém settings.json, library.json e o log no userData.
+  deleteAppDataOnUninstall: false
+  artifactName: SonicObsidian-Setup.${ext}

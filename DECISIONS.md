@@ -267,3 +267,17 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **CI:** o `push` do `build-windows.yml` passa a valer só para o `main`. Branches de trabalho buildam pelo PR, uma vez só.
 - **Dependências:** `electron`/`vite` mantidos até completarem 14 dias; `minimatch` aceito por ser só de empacotamento (detalhes em `docs/dependencias.md`).
 - **Segurança da janela, conferida sem mudanças:** `contextIsolation`, `sandbox` e `nodeIntegration: false`, preload com API estreita, CSP `default-src 'self'`, janelas novas negadas. O `'unsafe-eval'` da CSP continua necessário, porque os presets do `butterchurn-presets` são JS (o caminho WASM é o spike 006).
+
+## 2026-11-09 — Primeira release: v0.5.0 e versão pelo roadmap
+- **Regra (pedido do usuário):** a 1.0 é o app com tudo o que o PRD planeja hoje (Fases 0–5 e abertura). A versão sai da fração do roadmap entregue, com peso por prioridade (P0 = 3, P1 = 2, P2 = 1):
+  - Fase 1 (4 × P0): 12 de 12.
+  - Fase 2 (5 P0, 2 P1, 1 P2): 20 de 20.
+  - Fase 3: 0 de 15.
+  - Fase 4: 0 de 14.
+  - Fase 5: ~0,7 de 7 (ícone e instalador, da linha "Iniciar com o Windows, instalador, ícone").
+  - Abertura (landing e releases, 2 × P0): 6 de 6.
+  - Total: ≈ 39 de 74, cerca de 52%, logo **0.5.0**. Contar só as fases dá o mesmo (0, 1 e 2 de 0–5 = 3/6).
+- **Daqui para frente:** cada fase concluída sobe o *minor* conforme a mesma conta. Correções sobem o *patch*. *Pre-release* (`-beta.N`) só quando o usuário pedir.
+- **Release como rascunho:** a tag cria o rascunho, e o usuário testa o instalador e o zip antes do *Publish*. Isso cobre o fato de os builds de #53 e #56 ainda não terem sido testados no Windows.
+- **Ensaio em PR:** o `release.yml` também roda em PR que mexe no empacotamento. Nesse caso só builda e sobe os três arquivos como artifact, para testar o instalador antes de existir tag.
+- **Descartado:** 0.1.0 (não reflete o que já existe); `0.x-beta` (o link `releases/latest/download` ignora pré-releases e a landing continuaria dando 404).
