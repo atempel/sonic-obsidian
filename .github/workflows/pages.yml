@@ -6,9 +6,9 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'scripts/site-vendor.mjs', '.github/workflows/pages.yml']
+    paths: ['site/**', 'site-media/**', 'scripts/site-vendor.mjs', '.github/workflows/pages.yml']
   pull_request:
-    paths: ['site/**', 'scripts/site-vendor.mjs', '.github/workflows/pages.yml']
+    paths: ['site/**', 'site-media/**', 'scripts/site-vendor.mjs', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -40,6 +40,13 @@ jobs:
           name: sonic-obsidian-site-${{ steps.meta.outputs.short }}
           path: site/
           retention-days: 14
+      # A música da demo (spec 019) só é decifrada para o Pages, nunca no artifact de teste:
+      # o arquivo não pode ser oferecido como download avulso. Sem o segredo, fica a faixa sintetizada.
+      - name: Música da demo
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && !github.event.repository.private
+        env:
+          SITE_AUDIO_KEY: ${{ secrets.SITE_AUDIO_KEY }}
+        run: npm run site:vendor
       - name: Artifact do Pages
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && !github.event.repository.private
         uses: actions/upload-pages-artifact@v3

@@ -37,3 +37,4 @@ $RECYCLE.BIN/
 
 # Landing (gerado por npm run site:vendor)
 site/vendor/
+site/assets/audio/
