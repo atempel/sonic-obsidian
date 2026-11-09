@@ -73,3 +73,7 @@ body:has(.float.notice) .strip-wrap > .chip { bottom: calc(var(--float-bottom) +
   .float, .float.in { transform: none; transition: opacity 120ms linear; }
   .checks .st[data-s="busy"] svg { animation: none; }
 }
+/* Linha "Aperte ? para ver todos os atalhos" (spec 019). */
+.card .k-hint { all: unset; display: block; margin: 0 0 14px; font-size: 13px; color: var(--text-2); cursor: pointer; border-radius: var(--r-1); }
+.card .k-hint:hover { color: var(--text-1); }
+.card .k-hint:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }

@@ -16,6 +16,7 @@ import { Library } from './Library'
 import { Palette } from './Palette'
 import { QuickSettings } from './QuickSettings'
 import { Settings } from './Settings'
+import { ShortcutsPanel, isShortcutsOpen, toggleShortcuts } from './ShortcutsPanel'
 import { CaptureDiag, SilenceNotice, SlowChip, WelcomeCard } from './Diagnostics'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
@@ -337,6 +338,9 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)" onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
           </button>
+          <button class="ibtn" aria-label="Atalhos" title="Atalhos (?)" aria-haspopup="dialog" onClick={() => toggleShortcuts(core)}>
+            <Icon name="keyboard" />
+          </button>
           <button
             class="ibtn"
             aria-label="Ajustes rápidos"
@@ -518,6 +522,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <Settings bridge={bridge} />
       <WelcomeCard core={core} />
+      <ShortcutsPanel core={core} />
       <GlobalToast />
     </>
   )
@@ -565,6 +570,6 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   setupPress()
   const { state } = bridge.core
   return setupIdle(
-    () => state.settings.pinControls || state.overlay !== null || !!document.activeElement?.closest('.strip')
+    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip')
   )
 }

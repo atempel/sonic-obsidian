@@ -3,6 +3,7 @@ import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureCheck, CaptureState, Core } from '../core/commands'
 import { Icon } from './icons'
+import { openShortcuts } from './ShortcutsPanel'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 
@@ -105,6 +106,9 @@ export function WelcomeCard({ core }: { core: Core }) {
           <span>Biblioteca</span>
         </li>
       </ul>
+      <button type="button" class="k-hint" onClick={() => openShortcuts(core)}>
+        Aperte <kbd>?</kbd> para ver todos os atalhos
+      </button>
       <div class="actions">
         <button class="btn btn-primary" onClick={close}>
           Entendi

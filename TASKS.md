@@ -13,7 +13,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Expressividade em `+`/`−`** (Caráter `X`, Memória `Shift+X`; ganho só nos Ajustes) — [spec 015](docs/specs/015-expressividade.md) · issue [#36](https://github.com/atempel/sonic-obsidian/issues/36) · spike no PR #35
 - [x] **Escolher as microinterações** (design `7509`, M01–M23 aprovadas): na 011 M04/M13–M16/M19 e M10 — DECISIONS 2026-11-08
 - [x] **Microinterações da faixa e da gaveta** (M01–M03, M05–M08, M12, M22) — [spec 018](docs/specs/018-microinteracoes-faixa.md) · issue [#45](https://github.com/atempel/sonic-obsidian/issues/45)
-- [ ] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — planejar: [queue/2026-11-08-painel-atalhos.md](queue/2026-11-08-painel-atalhos.md)
+- [ ] **Painel de atalhos (`?`) e busca com comandos** (design `0fd0`) — [spec 019](docs/specs/019-painel-atalhos-comandos.md) · issue [#51](https://github.com/atempel/sonic-obsidian/issues/51)
 - [x] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção

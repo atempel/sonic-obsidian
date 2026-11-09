@@ -11,7 +11,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
   - `npm run site:vendor` — copia motor, presets e fontes para `site/vendor/` (fora do git); depois `npx serve site` (ou `python3 -m http.server -d site`) abre a landing localmente. Publicação: `.github/workflows/pages.yml` (push em `main` com mudança em `site/**`); PR gera o artifact `sonic-obsidian-site-<sha>`.
   - `npm run dev` — app com HMR; só funciona onde há janela e Electron instalado (não na nuvem, não no host sem Node).
   - Testes automatizados: ainda não há. Para ver a interface na nuvem: `npm run build`, servir `out/renderer/` e abrir no Chromium headless (Playwright) com `window.so` e `getDisplayMedia` simulados — serve para layout e estados, não para áudio/fps.
-  - No app: `Ctrl+Shift+D` mostra o HUD de depuração (fps, memória JS, áudio, expressividade).
+  - No app: `?` abre o painel com todos os atalhos (a lista única fica em `src/renderer/src/ui/shortcuts.ts`; tecla nova entra lá). `Ctrl+Shift+D` mostra o HUD de depuração (fps, memória JS, áudio, expressividade).
   - Simular falhas no Windows (spec 012): `test-flags.json` na pasta de dados do app (acima de `logs/`) com `{"captureFail": true}` e/ou `{"noWebgl2": true}`; apagar o arquivo volta ao normal.
   - Log em arquivo no Windows: `logs/sonic-obsidian.log` dentro do `userData` (`Ctrl+Shift+L` abre a pasta; a primeira linha de cada abertura traz o caminho) (abertura, quedas do renderer/GPU, perda do contexto WebGL, memória por processo a cada 5 min). Pedir ao usuário quando o app travar ou fechar sozinho.
 - CI: `.github/workflows/build-windows.yml` — typecheck no Ubuntu e build no `windows-latest`; o artifact `sonic-obsidian-win-<sha>` é o que o usuário baixa e testa.
