@@ -46,13 +46,13 @@ function useFloat(visible: boolean): { mounted: boolean; cls: string } {
 }
 
 /** "Copiar diagnóstico" → "Copiado" por 2 s. */
-function CopyButton({ text }: { text: () => Promise<string> }) {
+function CopyButton({ text, ghost = true }: { text: () => Promise<string>; ghost?: boolean }) {
   const [label, setLabel] = useState('Copiar diagnóstico')
   const timer = useRef(0)
   useEffect(() => () => window.clearTimeout(timer.current), [])
   return (
     <button
-      class="btn btn-ghost"
+      class={ghost ? 'btn btn-ghost' : 'btn'}
       onClick={async () => {
         try {
           await window.so.system.copyText(await text())
@@ -241,10 +241,11 @@ export function CaptureDiag({ bridge }: { bridge: PalcoBridge }) {
           <Icon name="rotate-cw" small />
           <span>Tentar de novo</span>
         </button>
-        <button class="btn btn-ghost" onClick={() => bridge.openSoundSettings()}>
+        {/* Botões com borda: quando quebram linha, ficam alinhados pela caixa (o ghost parecia recuado). */}
+        <CopyButton text={diagText} ghost={false} />
+        <button class="btn" onClick={() => bridge.openSoundSettings()}>
           Abrir configurações de som do Windows
         </button>
-        <CopyButton text={diagText} />
         {okLine && (
           <span class="okline" role="status">
             <Icon name="check" />
