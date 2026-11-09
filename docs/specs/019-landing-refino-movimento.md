@@ -1,6 +1,6 @@
 # 019 — Landing: refino de movimento e microinterações
 
-**Fase:** Abertura · **Status:** Em andamento · **Issue:** [#52](https://github.com/atempel/sonic-obsidian/issues/52) · **Depende de:** [017](017-landing-github-pages.md) (no ar)
+**Fase:** Abertura · **Status:** Feito (PR #54) — validado pelo usuário no Windows em 2026-11-09 (som, crédito, batida, troca de faixa, fps, movimento reduzido) · **Issue:** [#52](https://github.com/atempel/sonic-obsidian/issues/52) · **Depende de:** [017](017-landing-github-pages.md) (no ar)
 
 ## Problema
 A landing (spec 017) é um porte fiel do canvas `1794165992-cb8e`, feito antes de o app ganhar o sistema de movimento da v3 (M01–M23, aprovado em 08/11). Hoje a página tem só os estados de hover do canvas: troca de preset, botões, medidor e Biblioteca mudam "a seco". A página deveria mostrar o mesmo cuidado do app, porque é a primeira impressão dele.
