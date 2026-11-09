@@ -231,14 +231,22 @@ async function start(): Promise<void> {
   core.events.on('stateChanged', applyState)
   // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
   // Só mede com a janela visível; o limite de fps vira teto do mínimo.
-  let probe: { name: string; from: number; start: number; frames: number } | null = null
+  let probe: { name: string; from: number; start: number; frames: number; last: number } | null = null
   const PROBE_MS = 5000
+  // Um intervalo maior que isso entre quadros é pausa (janela oculta/minimizada: o rAF para), não lentidão.
+  const PROBE_GAP_MS = 500
+  // Oculta, o rAF para e o probeFrame nem roda: descarta a medida aqui, senão a volta da janela
+  // contava os segundos parados como quadros lentos (ex.: "preset pesado … a 6,7 fps" no log).
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) probe = null
+  })
   const probeFrame = (now: number): void => {
     if (!probe || now < probe.from) return
-    if (document.hidden) {
+    if (document.hidden || (probe.last > 0 && now - probe.last > PROBE_GAP_MS)) {
       probe = null
       return
     }
+    probe.last = now
     if (probe.start === 0) probe.start = now
     probe.frames++
     if (now - probe.start < PROBE_MS) return
@@ -254,7 +262,7 @@ async function start(): Promise<void> {
   }
   core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
     core.events.emit('slowPreset', null)
-    probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0 }
+    probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0, last: 0 }
     viz.load(library.get(name), blendType, blendSeconds)
     rotation.restart(performance.now())
     state.preset = name

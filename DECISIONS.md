@@ -282,3 +282,17 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Ensaio em PR:** o `release.yml` também roda em PR que mexe no empacotamento. Nesse caso só builda e sobe os três arquivos como artifact, para testar o instalador antes de existir tag.
 - **Descartado:** 0.1.0 (não reflete o que já existe); `0.x-beta` (o link `releases/latest/download` ignora pré-releases e a landing continuaria dando 404).
 - **Atualização (mesmo dia):** a sessão na nuvem não consegue enviar tags (o push de `v0.5.0` foi recusado). O `release.yml` ganhou um disparo manual com `version`: ele faz a mesma checagem e o mesmo build e cria o rascunho apontando para o commit disparado (`--target`). A tag nasce quando o usuário publica. O push de tag continua valendo para quem tiver git local.
+
+## 2026-11-09 — Abertura lenta e memória da GPU: o que o log da v0.5.0 mostrou
+- **Abertura:** são duas aberturas da v0.5.0 no Windows do usuário.
+  - **Primeira** (logo depois de instalar): `main.js` só começou a rodar 8,3 s depois de o processo nascer. Do `main.js` em diante, o app levou o mesmo ~1 s de sempre.
+  - **Segunda:** `main.js` aos 69 ms, janela aos 535 ms, primeiro quadro aos **1,09 s**. A captura fica pronta aos 2,7 s, sem bloquear o visual.
+  - **Conclusão:** a lentidão vem de antes do código do app. É o Windows (Defender/SmartScreen) examinando um `.exe` novo e sem assinatura na primeira execução. Como o usuário sempre testa um build novo, todo teste caía na primeira abertura, o que explica "ficou mais lenta há algumas builds".
+  - **Fica assim:** nada a otimizar no código por ora. Assinar o código continua fora de escopo (spec 016).
+  - **A conferir:** se a terceira abertura também ficar em ~1 s, o item fecha. A suíte de performance no CI deve medir a abertura "quente" e a "fria" separadamente.
+- **Memória da GPU:** sessão de ~40 min com o app visível (16:47–17:27), memória a cada 5 min.
+  - GPU oscilou entre 158 e 200 MB, sem tendência de alta.
+  - Página oscilou entre 310 e 444 MB e cai quando o GC age.
+  - Browser estável em ~140 MB.
+  - **Conclusão:** o vazamento de shaders (DECISIONS 2026-11-08) não voltou.
+- **Bug achado no mesmo log:** "preset pesado: Flexi - predator-prey-spirals a 6.7 fps" saiu 2 ms depois de a janela voltar a ficar visível. Com a janela oculta, o `requestAnimationFrame` para, então a medida de 5 s contava o tempo parado como quadros lentos. **Correção:** a medida é descartada quando a janela fica oculta ou quando passam mais de 500 ms entre dois quadros. Uma medida errada já gravada some ao restaurar o preset, ou é sobrescrita na próxima medição.
