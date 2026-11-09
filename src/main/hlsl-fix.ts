@@ -305,9 +305,36 @@ export function fixConvertedGlsl(glsl: string): string {
   let body = s.slice(sig.index + sig[0].length, end)
   // `ret` já existe no main do motor; o retorno vira só o valor de `ret`.
   body = body.replace(/^\s*vec3\s+ret\s*;\s*$/m, '').replace(/return\s+vec4\s*\(\s*ret\s*,\s*1(?:\.0*)?\s*\)\s*;/g, '')
-  const before = s.slice(0, sig.index)
-  const between = s.slice(end + 1, call.index)
+  const { header, inits } = hoistGlobalInits(s.slice(0, sig.index) + s.slice(end + 1, call.index))
   const after = s.slice(call.index + call[0].length)
-  s = `${before}${between}shader_body {\n${body}\n}${after}`
+  // No HLSL, `uv` e os `q` eram graváveis (parâmetro da função); no motor são entrada e uniform.
+  // Cópias locais num bloco interno (em GLSL, `vec2 uv = uv;` lê o de fora). `ret` fica de fora.
+  const copies = ['vec2 uv = uv;', 'vec4 texsize = texsize;', ...'abcdefgh'.split('').map((c) => `vec4 _q${c} = _q${c};`)].join(' ')
+  s = `${header}shader_body {\n{ ${copies}\n${inits}${body}\n}\n}${after}`
   return s
+}
+
+/**
+ * Variáveis globais com inicializador não constante (`float2 c = uv*2;` fora de função) não
+ * compilam em GLSL. A declaração fica no cabeçalho e a atribuição vai para o começo do corpo.
+ */
+function hoistGlobalInits(header: string): { header: string; inits: string } {
+  const lines = header.split('\n')
+  const inits: string[] = []
+  let depth = 0
+  for (let k = 0; k < lines.length; k++) {
+    const line = lines[k]!
+    if (depth === 0) {
+      const m = /^(\s*)((?:const\s+)?(?:float|int|bool|[biu]?vec[234]|mat[234]))\s+(\w+)\s*=\s*(.+);\s*$/.exec(line)
+      if (m && !/^\s*[-+]?[\d.]+\s*$/.test(m[4]!)) {
+        lines[k] = `${m[1]}${m[2]!.replace(/^const\s+/, '')} ${m[3]};`
+        inits.push(`${m[3]} = ${m[4]};`)
+      }
+    }
+    for (const ch of line) {
+      if (ch === '{') depth++
+      else if (ch === '}') depth--
+    }
+  }
+  return { header: lines.join('\n'), inits: inits.length ? inits.join('\n') + '\n' : '' }
 }
