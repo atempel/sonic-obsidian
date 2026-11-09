@@ -58,7 +58,6 @@ Na página servida localmente (`npm run site:vendor` + `npx serve site`) e no ar
 10. O fps do palco não cai com as animações (HUD do navegador ou Performance, num PC com Windows).
 
 ## Perguntas em aberto
-- Código de licença do Uppbeat de 'Space Dancers' (falta; o crédito ainda tem `[CÓDIGO]`).
 - O canvas da landing deveria ganhar essas animações (sessão de design), ou a spec basta como referência? Se o site se afastar do canvas, o desvio fica registrado no PR (regra da 017).
 
 ## Referências

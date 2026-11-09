@@ -77,7 +77,7 @@
   // sem elas, a demo usa a faixa sintetizada. Tocam em sequência.
   var TRACKS = [
     { file: 'demo-1.m4a', title: '24 Hrs In Tokyo', artist: 'Yawnathan', url: 'https://uppbeat.io/c/yawnathan' },
-    { file: 'demo-2.m4a', title: 'Space Dancers', artist: '2050', url: 'https://uppbeat.io/music/tracks/2050-music/space-dancers' }
+    { file: 'demo-2.m4a', title: 'Space Dancers', artist: '2050', url: 'https://uppbeat.io/c/2050-music' }
   ];
   var track = null, trackSrc = null, trackIdx = 0, hasTrack = false, usingTrack = false;
   var fbuf = null, bassAvg = 0, lastBeat = 0;
