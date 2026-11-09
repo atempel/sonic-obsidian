@@ -20,7 +20,8 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
   - uma sessão de horas para a memória da GPU.
   O log antigo (até 02:55 de 09/11) só tinha o `app ready` e sessões de até ~15 min, com GPU entre 147 e 183 MB, sem crescer.
 - **A refazer:** checagem de `electron@45.2.3`/`vite@8.3.6` depois de 19/11.
-- **Verificação no Windows:** o painel 020 e a correção das Configurações foram aprovados pelo usuário para merge. Teclado ABNT2 (`?`) e o fps com o painel aberto não foram confirmados explicitamente.
+- **Não verificado no Windows:** o usuário aprovou o merge do #53 e do #56 sem testar os builds. O painel 020 (critérios 1–9, incluindo `?` no ABNT2 e o fps), a correção das Configurações e a linha `abertura` no log foram verificados só no headless. A sessão longa também não foi feita.
+- **Pedido do usuário:** depois das tarefas abertas, criar uma suíte de testes automatizados de performance que não dependa da máquina dele: [queue/2026-11-09-suite-testes-performance.md](queue/2026-11-09-suite-testes-performance.md).
 
 ### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `docs/landing-refino`
 **Fez:** Spec 019 e issue #52 (refino de movimento da landing). Implementou no `site/` o movimento da v3 (M02 troca de título, M03 linha de rotação, M04 pressão, M05 aleatório, M06 AUTO, M08 balística do medidor, M10 sublinhado da navegação, M12 Biblioteca em degrau, entrada das seções ao rolar, fade nas Perguntas, teclado no console) com o movimento reduzido do doc, e a demo com as duas músicas do Uppbeat, criptografadas em `site-media/` e decifradas pelo `site:vendor` com `SITE_AUDIO_KEY`. Verificado no Chromium headless: as animações só usam transform/opacity, com movimento reduzido sobram só fades, a música toca, o crédito aparece, a batida acende a marca, sem erros e sem domínio externo novo.
