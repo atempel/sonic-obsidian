@@ -4,6 +4,26 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-10 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6` (continuação)
+**Fez:**
+- **PR #76 mergeado**, com o ok do usuário para o Playwright no CI: suíte headless (025 P0) e specs do Estúdio 026/027.
+- **024, revisões 2 e 3 (PR #77, mergeado).** Partiram do teste do usuário e de dois logs:
+  - o simulador de batida (`tests/sim/beat-sim.cjs`) reproduziu os erros;
+  - detecção refeita;
+  - andamento travado, que só muda com outro BPM confirmado e só solta em silêncio;
+  - "Adiantar o visual" (70 ms);
+  - troca automática de no máximo 1 batida;
+  - `Enter` só com `:focus-visible`;
+  - **Respiro (`Shift+Enter`)**, pedido do usuário;
+  - compassos 1/2/4/8/16, com padrão 4.
+- **Validada no Windows pelo usuário:** "o beat ficou estável".
+**Deixou em:**
+- `main` com a 024 completa. Nada aberto deste branch.
+- **Próximo:** Estúdio P0 (spec 026, #74). Falta o usuário responder às perguntas em aberto da spec.
+- **Não verificado:** hip-hop com swing e breakbeat no simulador (erram o andamento); tap tempo (P1) se a trava pegar BPM errado.
+- **Uma vez no log:** queda do processo "Video Capture" do Chromium ao reabrir o app (17:16), sem efeito na captura. Só observar.
+- **A refazer:** checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-10 (madrugada) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6`
 **Fez:**
 - **Design:** o protótipo mudou de `0fd0` para `42d3`, e o espelho foi sincronizado no PR #72 (só docs, **mergeado**). Entram a página Modos, EQ de 16 bandas e respostas às divergências. Stub em `queue/2026-11-10-design-42d3-modos-feedback-eq.md`. A 024 não muda.
