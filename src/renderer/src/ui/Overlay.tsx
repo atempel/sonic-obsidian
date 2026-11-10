@@ -13,6 +13,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureCheck, Core } from '../core/commands'
 import type { ImportResult, MilkInput } from '../importer'
 import { Icon } from './icons'
+import { CollectButton } from './CollectPop'
 import { DropZone } from './DropZone'
 import { Library } from './Library'
 import { Palette } from './Palette'
@@ -295,6 +296,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               <span class="core" aria-hidden="true" />
             </span>
           </button>
+          <CollectButton core={core} />
         </div>
         <div class="strip-t">
           <button

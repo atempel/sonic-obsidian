@@ -4,6 +4,23 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-09/10 — Claude Code (nuvem, claude.ai/code) — branch `claude/clever-faraday-72vlrd` (continuação)
+**Fez:**
+- Log da v0.5.0 analisado: a abertura lenta é a 1ª execução de cada `.exe` novo, e o app abre em ~1,1 s; memória da GPU estável em ~40 min. Corrigido o falso "preset pesado" ao voltar de janela oculta (#61).
+- **Spike 006 aprovado** (validado no Windows):
+  - no 2.6.7, um preset malicioso executou JS; no 3.x, nada executa;
+  - 472/472 presets, mesmo fps;
+  - `.milk`: 8/10 fixtures e 463/504 fontes, com os contornos do `hlslparser-js` em `src/main/hlsl-fix.ts`.
+- **Spec 021, migração para o Butterchurn 3:** mergeada no #62 com o ok do usuário, ainda **sem teste do usuário no Windows**.
+- **Spec 022, importar `.milk`:** PR #65 aberto, headless 8/8.
+- **Spec 023, coleções pelo Palco** (pedido do usuário): spec, issue #66 e código no mesmo branch, entrando no PR #65.
+**Deixou em:**
+- **PR #65** (022 + 023) aberto e **não mergear ainda**. O teste headless da 023 parou no meio: o mock antigo não tinha `window.so.presets`; depois de corrigido, a 1ª verificação passou e o resto não chegou a rodar. O script está em `/tmp/.../scratchpad/t/col.cjs` (some com o container), e o roteiro está na spec 023.
+- **Falta o teste do usuário no Windows** de 021, 022 e 023.
+- **Landing ainda no Butterchurn 2.6.7** (aliases só de dev).
+- **Suíte de testes de performance:** na fila.
+- **Checagem de electron/vite:** depois de 19/11.
+
 ### 2026-11-09 — Claude Code (nuvem, claude.ai/code) — branch `claude/clever-faraday-72vlrd`
 **Fez:**
 - Design checado: `0fd0`, sem mudança.

@@ -131,3 +131,11 @@ Protótipo `1794178325-0fd0` (Palco integrado: `#dropzone`, rótulo "Importado",
 - **Remover importado:** fica no menu "…" da linha. O protótipo não desenha remoção.
 - **Contagem:** "Base" mostra só os presets que vêm com o app; os importados aparecem na linha de importar ("N importados").
 **Status:** aberta.
+
+### 2026-11-10 — Coleções pelo Palco (spec 023, sem desenho)
+Protótipo `1794178325-0fd0` não tem esta tela. **No app:**
+- um botão `folder-plus` ao lado da estrela, na faixa;
+- um painel no estilo do menu "…" da Biblioteca, com uma linha marcável por coleção (`menuitemcheckbox`) e "Nova coleção" com campo de nome;
+- sem atalho de teclado (decisão do usuário).
+A sessão de design pode propor o desenho definitivo.
+**Status:** aberta.
