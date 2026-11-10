@@ -47,7 +47,10 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 ## Agora — Fase 3 (Fontes e presets)
 - [x] **Migração para o Butterchurn 3** — mergeada no #62 (falta o teste do usuário no Windows)
 - [ ] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65 (falta o teste no Windows)
-- [ ] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · código no PR #65, teste headless pela metade
+- [ ] **Estúdio de presets** (próximo; planejando) — specs a criar
+- [ ] Fonte microfone (P1, depois do Estúdio)
+- ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)
+- [ ] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, headless 30/30 (falta o teste no Windows)
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))

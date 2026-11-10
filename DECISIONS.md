@@ -325,3 +325,15 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 
 ## 2026-11-10 — Spec 023: coleções pelo Palco
 - **Do usuário:** o botão fica só na faixa, ao lado da estrela, sem atalho. O painel é uma lista com marcação: clicar põe ou tira o preset e o painel continua aberto; "Nova coleção" cria uma com nome, já com o preset. Implementado sem desenho, no estilo do menu "…" da Biblioteca e registrado em DIVERGENCIAS. **Descartado:** só adicionar e fechar (tirar continuaria exigindo a Biblioteca); esperar a sessão de design.
+
+## 2026-11-10 — Fonte "arquivo de áudio" adiada; o próximo passo da Fase 3 é o Estúdio
+- **Decisão (do usuário):** o player de arquivo de áudio (escolher/arrastar, com transporte) sai da Fase 3. Volta quando houver uma história que precise dele. A primeira candidata é a **performance sincronizada**: presets programados sobre uma faixa de áudio ([queue/2026-11-10-performance-sincronizada.md](queue/2026-11-10-performance-sincronizada.md)).
+- **Por quê:**
+  - Nada do que está planejado agora depende de um player. O Estúdio faz a prévia com o áudio do sistema, e a suíte de testes simula o áudio no headless.
+  - O player traz peso (decodificação, transporte, troca de fonte, título da faixa) sem um uso concreto.
+  - A performance sincronizada vai pedir tempo exato da faixa e marcadores. É melhor desenhar o player para ela do que fazer um mínimo agora e refazer depois.
+- **Ordem da Fase 3:** Estúdio agora; microfone (pequeno) depois; SoundCloud continua condicionado ao spike 007.
+- **Descartado:**
+  - seguir o PRD (arquivo como P0) só porque estava no plano;
+  - fazer o microfone antes do Estúdio.
+- **Protótipo:** `#srcMenu`, `#trackRow` e a área de soltar que fala de áudio continuam no desenho. No app, a área de soltar segue só com `.milk` (já em DIVERGENCIAS, spec 022).
