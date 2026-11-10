@@ -43,6 +43,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Releases no GitHub** (v0.5.0 publicada em 2026-11-09; PRs #58/#59; P1 = atualização automática e winget) — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
 - [x] **Landing page no GitHub Pages** (P0 no ar em atempel.github.io/sonic-obsidian, PR #48; P1 = 404 e notas da versão) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
 - [x] **Landing: refino de movimento e microinterações** (sistema de movimento da v3 no `site/` + músicas do Uppbeat criptografadas na demo) — [spec 019](docs/specs/019-landing-refino-movimento.md) · issue [#52](https://github.com/atempel/sonic-obsidian/issues/52)
+- [ ] **Atualização automática pelo GitHub Releases** (`electron-updater`; checagem diária, download em segundo plano, um clique reinicia e atualiza; portátil só avisa) — [spec 029](docs/specs/029-atualizacao-automatica.md) · issue [#69](https://github.com/atempel/sonic-obsidian/issues/69)
 
 ## Agora — Fase 3 (Fontes e presets)
 - [x] **Migração para o Butterchurn 3** — #62, validada no Windows em 2026-11-10

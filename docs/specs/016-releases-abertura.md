@@ -28,7 +28,7 @@ Hoje o único jeito de ter o app é baixar o artifact do CI (expira em 7 dias, e
 - PRD: "Distribuição pública" sai de "Fora de escopo" (loja e assinatura de código continuam fora).
 
 **P1**
-- Atualização automática com `electron-updater` lendo o GitHub Releases (só no instalador; o portátil avisa que há versão nova e abre a página).
+- Atualização automática com `electron-updater` lendo o GitHub Releases (só no instalador; o portátil avisa que há versão nova e abre a página). → detalhada na [spec 029](029-atualizacao-automatica.md).
 - Publicar no winget (`atempel.SonicObsidian`) depois da primeira release estável.
 - Corrigir o CI de teste rodando duas vezes em PR (item de Manutenção do TASKS) antes de abrir, para não gastar runner à toa.
 

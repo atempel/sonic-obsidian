@@ -457,3 +457,13 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Padrão visível (pedido do usuário):** "· padrão" nas opções, "(padrão)" no toast, "Restaurar padrão" e o aviso "sem efeito no nível 0" no Caráter. Entra no P0, sem desenho (DIVERGENCIAS).
 - **Leitura do HUD (build atual):** Nervo + Fixa + Nível 0, `bass` antes = depois, entre 0,5 e 1,9. O Caráter inerte no Nível 0 está confirmado; a trava em 1,00 não apareceu nesta abertura e falta reproduzir abrindo em silêncio.
 - **Nível padrão (2026-11-13, do usuário):** continua 0, o motor puro. Com Nível 0, o Caráter avisa "sem efeito no nível 0" (P0, padrão visível). **Descartado:** abrir em +1, que mudaria a reação de todos os presets sem o usuário pedir.
+
+## 2026-11-10 — Spec 029 (antes 024): atualização automática
+- **Decisão:** `electron-updater` com o provedor GitHub (`atempel/sonic-obsidian`), só no instalador NSIS. Checa uma vez por dia (30 s depois do primeiro quadro e a cada 24 h com o app aberto), baixa em segundo plano e mostra um aviso persistente; um clique roda `quitAndInstall` silencioso e reabre o app. O rascunho de release continua sendo o portão: o atualizador só vê releases publicadas, e pre-releases não são oferecidas.
+- **Do usuário:**
+  - checagem **ligada por padrão**, com chave nas Configurações; o README deixa de dizer "no network calls of its own" e passa a citar a checagem diária no GitHub como a única chamada de rede;
+  - **download em silêncio** antes do aviso (o clique só reinicia), com `autoInstallOnAppQuit: false`: sem o clique, nada é instalado;
+  - **zip portátil** só avisa e abre a página da release.
+- **Release:** o `electron-builder.yml` ganha o bloco `publish` (gera `app-update.yml` e `latest.yml`), mas o workflow segue com `--publish never` e anexa `latest.yml` + `.blockmap` pelo `gh`.
+- **Descartado:** baixar só depois do clique (mais espera para o usuário); atualizador próprio para o zip (troca de pasta, mais risco); assinatura de código (continua fora, spec 016).
+- **Consequência:** quem está na v0.5.0 precisa instalar a primeira versão com atualizador à mão uma vez; as notas da release dizem isso.
