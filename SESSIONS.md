@@ -4,6 +4,25 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-10 (noite) — Claude Code (nuvem, claude.ai/code) — branch `claude/vibrant-pascal-rqir88`
+**Fez:**
+- **Design checado:** `1794281099-42d3`, sem mudança.
+- **Respostas da 026 coletadas** (camada em tela cheia; nome perguntado no 1º salvar + campo em Configurações; `bas_att` na 027; laço testado num Worker). Spec atualizada.
+- **Estúdio P0 (spec 026, #74), no PR #79:**
+  - editor das três equações com compilação ao vivo, erro com bloco e linha, e a última versão válida tocando;
+  - Worker com `eel-wasm` e teto de 1 s;
+  - salvar em `presets/mine/<id>/`, com crédito "baseado em";
+  - filtro "Meus" e "Remover meu preset" na Biblioteca;
+  - rotação parada.
+- **Teste headless** `026-estudio.test.cjs`: 48/48; a suíte passa 7/7. O mock comum ganhou `listMine/saveMine/removeMine`.
+**Deixou em:**
+- **PR #79** aberto, aguardando o CI, o teste no Windows e o ok do usuário para mergear.
+- **Não verificado no Windows:**
+  - fps e GPU com o Estúdio aberto (critério 9);
+  - o Worker em blob no Electron empacotado (CSP `worker-src blob:`);
+  - áudio real nos medidores.
+- **A refazer:** checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-10 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6` (continuação)
 **Fez:**
 - **PR #76 mergeado**, com o ok do usuário para o Playwright no CI: suíte headless (025 P0) e specs do Estúdio 026/027.
