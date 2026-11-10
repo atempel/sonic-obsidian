@@ -1,6 +1,6 @@
 # 026 — Estúdio de presets (P0): editar equações com prévia ao vivo
 
-**Fase:** 3 · **Status:** Implementada; aguarda o teste no Windows · **Issue:** [#74](https://github.com/atempel/sonic-obsidian/issues/74) · **Personas:** Criador de Presets, Nostálgico do Winamp (mexer num clássico) ([personas](../research/mercado/personas.md)) · **Depende de:** [021](021-migracao-butterchurn3.md), [022](022-importar-milk.md) · **Segue em:** [027](027-estudio-presets-p1.md)
+**Fase:** 3 · **Status:** Feita (PR #79), validada no Windows em 2026-11-10 · **Issue:** [#74](https://github.com/atempel/sonic-obsidian/issues/74) · **Personas:** Criador de Presets, Nostálgico do Winamp (mexer num clássico) ([personas](../research/mercado/personas.md)) · **Depende de:** [021](021-migracao-butterchurn3.md), [022](022-importar-milk.md) · **Segue em:** [027](027-estudio-presets-p1.md)
 
 ## Problema
 O app já toca e importa presets, mas ninguém consegue mudar um. O Criador de Presets quer "criar e ajustar vendo o resultado na hora" ([personas](../research/mercado/personas.md), §6). A sintaxe do MilkDrop é obscura, e hoje errar uma equação só aparece como tela preta, sem explicação.

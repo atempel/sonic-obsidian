@@ -16,11 +16,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
   - rotação parada.
 - **Teste headless** `026-estudio.test.cjs`: 48/48; a suíte passa 7/7. O mock comum ganhou `listMine/saveMine/removeMine`.
 **Deixou em:**
-- **PR #79** aberto, aguardando o CI, o teste no Windows e o ok do usuário para mergear.
-- **Não verificado no Windows:**
-  - fps e GPU com o Estúdio aberto (critério 9);
-  - o Worker em blob no Electron empacotado (CSP `worker-src blob:`);
-  - áudio real nos medidores.
+- **PR #79 mergeado** com o ok do usuário, depois de 2 rodadas de teste no Windows. Na 1ª, o laço infinito não congelou. Vieram dois relatos: a seleção de texto na interface (agora só campos, shaders e erros) e o efeito que travou. Para o travamento, o Worker passou a recusar valores NaN/infinito. Na 2ª: "funcionou".
+- **Novo pedido:** o beat às vezes trava em outro instrumento, e não na batida principal. Stub em `queue/2026-11-10-beat-batida-principal.md` e item no TASKS.
+- **Próximo:** Estúdio P1 (spec 027, #75), revisar a spec e trazer as perguntas; ou planejar o beat na batida principal.
+- **Não medido à parte:** fps e GPU numa sessão longa com o Estúdio aberto (critério 9). O usuário validou o uso geral.
 - **A refazer:** checagem de `electron`/`vite` depois de 19/11.
 
 ### 2026-11-10 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6` (continuação)
