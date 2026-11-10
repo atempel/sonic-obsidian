@@ -372,3 +372,34 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Segurança:** o Estúdio usa a mesma barreira da 022: só `*_eel` (sem `*_str`/`useJS`), 256 KB, `onlyUseWASM`, `<id>` gerado no main, validação no visualizador de teste 64×64 antes de carregar no principal. Dúvida técnica registrada: laço infinito em `while`/`loop` no WASM pode congelar o renderer (spec 026, critério 4).
 - **Erros:** vêm do motor, não de um verificador próprio. Em EEL todo nome é variável válida, então `bas_att` não é erro de compilação; o "Você quis dizer?" do protótipo vira aviso na 027.
 - **Descartado:** editar presets do pacote no lugar (viola "Remix de …"); usar o `.milk` como fonte para tudo (exigiria conversão reversa de shader); mostrar dois visuais ao mesmo tempo no P0 (custo de GPU; comparação fica na 027).
+
+## 2026-11-10 — Spec 024, revisão 2: detecção recalibrada, adiantamento, Respiro
+- **Contexto:** no primeiro teste no Windows, a batida quase não travava e o BPM variava. No log, a trava caía a cada 1–2 s. Um simulador com músicas sintéticas reproduziu o problema:
+  - a energia em dB fazia o baixo saindo do sidechain parecer ataque;
+  - medir uma nota grave longa em blocos de 10 ms criava uma ondulação periódica, que dava uma trava falsa a 150 BPM no ambiente.
+- **Decisão:**
+  - energia suavizada (15 Hz), `log1p` e seguidor de pico;
+  - checagens de pente ≥ 2,8 e de agudeza ≥ 5;
+  - perda depois de 2,5 s;
+  - o simulador vira teste no CI (`tests/headless/024-beat-sim.test.cjs`).
+  - **Descartado:** biblioteca de beat tracking (dependência e custo) e um `AudioWorklet` (não resolveria a curva de onsets).
+- **Sincronia (do usuário):**
+  - adiantar 70 ms por padrão, ajustável de 0 a 200 ms;
+  - no modo beat, a troca automática mistura no máximo 1 batida.
+  - **Descartado:** medir a latência automaticamente, porque não há como saber quando a imagem chega à tela.
+- **`Enter` só fica com o controle focado pelo teclado** (`:focus-visible`). Depois de um clique, o foco ficava no botão e o `Enter` repetia o clique, em vez de segurar.
+- **Respiro (`Shift+Enter`, do usuário):** "fazer como se não tivesse áudio chegando, pra dar um respiro no visual e depois voltar com o áudio". É feito no ganho que alimenta o Butterchurn; a batida e o silêncio continuam medidos antes dele.
+  - **Descartado:** congelar o quadro, porque o usuário quer o preset animando sem áudio.
+  - **Descartado:** as teclas `A`, `S`, `D` e `F`, reservadas aos efeitos de vídeo do protótipo.
+
+## 2026-11-10 — Spec 024, revisão 3: o andamento trava e só muda quando outro se confirma
+- **Do usuário:** "ao invés de tentar identificar e alterar o valor o tempo inteiro, [...] identificar o BPM e depois deixá-lo seguir. Apenas se em algum momento for detectado um bpm diferente que possa ser atualizado." No log, a confiança caía em viradas e trechos calmos e, a cada nova trava, o BPM saía diferente.
+- **Decisão:**
+  - travar o andamento e seguir com o volante;
+  - corrigir só a fase (e ±3 % de ajuste fino) quando as batidas confirmam;
+  - trocar de andamento só depois de ~4 s de outro BPM confirmado, sem contar dobro, metade, 3/2 ou 2/3;
+  - soltar só em silêncio (3 s) ou depois de 30 s sem batida.
+  - Compassos passam a 1/2/4/8/16, com padrão 4: 16 e 32 eram longos demais (pedido do usuário).
+- **Troca no critério 3 da spec:** ambiente depois de uma faixa com batida não volta mais aos segundos. Para o DJ, manter o andamento no break é o comportamento certo.
+- **Descartado:** soltar por falta de confiança (era a causa das quedas); tap tempo agora (fica para o P1, se a detecção ainda errar o BPM).
+

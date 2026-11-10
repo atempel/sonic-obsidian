@@ -28,7 +28,8 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { label: 'Tipo da transição', keys: [['B'], ['Shift', 'B']] },
       { label: 'Tempo da transição', keys: [['↑'], ['↓']] },
       { label: 'Rotação automática', keys: [['R']] },
-      { label: 'Segurar visual', keys: [['Enter']] }
+      { label: 'Segurar visual', keys: [['Enter']] },
+      { label: 'Respiro (visual sem áudio)', keys: [['Shift', 'Enter']] }
     ]
   },
   {
@@ -110,6 +111,7 @@ export type ActionId =
   | 'previous'
   | 'hide'
   | 'hold'
+  | 'breath'
 
 export interface Command {
   id: ActionId
@@ -128,6 +130,7 @@ export const COMMANDS: Command[] = [
   { id: 'fullscreen', label: 'Tela cheia', keys: ['F'], icon: 'maximize' },
   { id: 'rotation', label: 'Rotação automática', keys: ['R'], icon: 'repeat' },
   { id: 'hold', label: 'Segurar visual', keys: ['Enter'], icon: 'lock' },
+  { id: 'breath', label: 'Respiro (visual sem áudio)', keys: ['Shift', 'Enter'], icon: 'volume-x' },
   { id: 'random', label: 'Preset aleatório', keys: ['Espaço'], icon: 'shuffle' },
   { id: 'next', label: 'Próximo preset', keys: ['→'], icon: 'skip-forward' },
   { id: 'previous', label: 'Preset anterior', keys: ['←'], icon: 'skip-back' },

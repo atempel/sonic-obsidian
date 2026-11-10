@@ -136,3 +136,5 @@ body.clean .credit { transition-duration: 400ms; }
 @media (prefers-reduced-motion: reduce) {
   .bdot:not(.on) { transition: background 400ms var(--ease-out) !important; }
 }
+/* Respiro (Shift+Enter): o visual sem o áudio. */
+.breath-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 11px; color: var(--violet); }

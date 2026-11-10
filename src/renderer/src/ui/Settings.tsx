@@ -359,8 +359,11 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         <Row id="st-beat" label="Trocar no beat" help="Muda de preset quando detectar uma batida forte." kw="bpm compasso batida segurar">
           <Sw id="st-beat" label="Trocar no beat" checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
         </Row>
+        <Row id="st-lead" label="Adiantar o visual" help="Compensa o atraso da captura e do desenho: a troca e o ponto de beat saem um pouco antes da batida detectada.">
+          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${rot.beatLeadMs} ms`} disabled={!rot.onBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
+        </Row>
         <Row id="st-bars" label="Compassos" help="Com batida estável, troca a cada tantos compassos de 4 batidas. Sem batida, vale o intervalo em segundos.">
-          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compassos`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
+          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compasso${b > 1 ? 's' : ''}`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
       </Grp>
       <Grp title="Texto sobre o visual">

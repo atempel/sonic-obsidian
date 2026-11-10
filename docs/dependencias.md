@@ -65,3 +65,5 @@ Observações da checagem de 2026-11-08:
 ### Decisões da passagem de manutenção (2026-11-09)
 - **`electron@45.2.3` e `vite@8.3.6`: mantidos.** Continuam sendo as versões mais recentes (`npm view`), e voltar uma versão traz mais risco que esperar. Completam 14 dias em 2026-11-18 e 2026-11-19; na primeira sessão depois disso, refazer a checagem e tirar o ⚠️ (ou trocar de versão, se surgir aviso).
 - **`minimatch` (6 *moderate*): aceito.** O pacote entra só no empacotamento (`electron-builder` → `@electron/universal`), não no app que roda. A correção do `npm audit fix --force` rebaixa o `electron-builder` de versão principal. Rever quando o `electron-builder` publicar uma versão com o `minimatch` corrigido.
+| 2026-11-10 | `playwright@1.63.0` | só no CI (`npm install --no-save` no job `typecheck`; não está no `package.json`) | 2026-09-04 | Apache-2.0 | 1 (`playwright-core`) | não (o Chromium vem de `npx playwright install`) | sim (SLSA v1) | — (não entra no app) | **ok, aprovado pelo usuário em 2026-11-10** (spec 025). Mesma versão do ambiente da nuvem. |
+

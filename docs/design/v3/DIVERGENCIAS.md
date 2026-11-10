@@ -148,3 +148,10 @@ Protótipo `1794281099-42d3`, página Palco integrado (`#beatSwitch`, `.bdot`, `
 - **Configurações › Transição:** além do switch "Trocar no beat", uma linha "Compassos" com o mesmo seletor.
 - **M23:** um segundo pedido durante a espera substitui o primeiro (spec 024); no protótipo, repetir a mesma tecla cancela.
 **Status:** Aberta (aguarda a sessão de design).
+
+### 2026-11-10 — Troca no beat, revisão 2 (spec 024): Respiro e adiantamento
+Sem desenho no protótipo `1794281099-42d3`. **No app:**
+- **Respiro (`Shift+Enter`):** o visual fica sem o áudio. A faixa mostra a etiqueta "Respiro" (ícone `volume-x`, em violeta) abaixo do autor, e um toast confirma.
+- **Configurações › Transição:** a linha "Adiantar o visual" (0–200 ms, padrão 70) fica abaixo de "Trocar no beat".
+**Status:** Aberta (aguarda a sessão de design).
+

@@ -15,6 +15,7 @@ import {
   PRESET_FPS_MAX,
   RECENTS_MAX,
   BEAT_BARS,
+  BEAT_LEAD_MAX_MS,
   type BeatBars,
   num,
   sanitizeRender,
@@ -86,6 +87,8 @@ export interface AppState {
   capture: CaptureState
   /** Visual segurado (`Enter`, spec 024): a rotação não troca. Não é persistido. */
   held: boolean
+  /** Respiro (`Shift+Enter`): o visual deixa de receber o áudio, como se nada tocasse. Não é persistido. */
+  breath: boolean
 }
 
 /** Efeitos fora do renderer (preload). */
@@ -133,7 +136,7 @@ export class Core {
     library: Library,
     private readonly effects: CoreEffects
   ) {
-    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -168,13 +171,15 @@ export class Core {
     },
     'preset.random': (a, origin) => this.show(this.presets.random(), origin, true, optBool(a.cut, 'cut')),
     /** Troca da rotação: aleatório ou o próximo da coleção. */
-    'rotation.advance': (_a, origin) => {
+    /** `maxBlendSeconds`: no modo beat, a troca automática mistura no máximo 1 batida (spec 024). */
+    'rotation.advance': (a, origin) => {
+      const maxBlend = optNum(a.maxBlendSeconds, 'maxBlendSeconds', 0, BLEND_MAX_S)
       const rot = this.state.settings.rotation
       const col = rot.order === 'collection' ? this.collection(rot.collectionId) : undefined
       const playable = col?.presets.filter((n) => this.presets.has(n) && !this.isHidden(n)) ?? []
-      if (playable.length === 0) return this.show(this.presets.random(), origin)
+      if (playable.length === 0) return this.show(this.presets.random(), origin, true, false, maxBlend)
       this.collectionCursor = (this.collectionCursor + 1) % playable.length
-      return this.show(this.presets.go(playable[this.collectionCursor]!), origin)
+      return this.show(this.presets.go(playable[this.collectionCursor]!), origin, true, false, maxBlend)
     },
 
     // ── rotação, sinal, blend ───────────────────────────────
@@ -184,6 +189,8 @@ export class Core {
       const interval = optNum(a.intervalSeconds, 'intervalSeconds', 5, 600)
       if (enabled !== undefined) rot.enabled = enabled
       if (interval !== undefined) rot.intervalSeconds = interval
+      const lead = optNum(a.beatLeadMs, 'beatLeadMs', 0, BEAT_LEAD_MAX_MS)
+      if (lead !== undefined) rot.beatLeadMs = Math.round(lead / 10) * 10
       const onBeat = optBool(a.onBeat, 'onBeat')
       if (onBeat !== undefined) rot.onBeat = onBeat
       if (a.bars !== undefined) {
@@ -208,6 +215,13 @@ export class Core {
       this.state.held = v ?? !this.state.held
       this.events.emit('stateChanged', { origin })
       return this.state.held
+    },
+    /** Respiro: alterna, ou `{ value }`. A detecção de batida continua ouvindo (vem antes do ganho). */
+    'audio.breath': (a, origin) => {
+      const v = optBool(a.value, 'value')
+      this.state.breath = v ?? !this.state.breath
+      this.events.emit('stateChanged', { origin })
+      return this.state.breath
     },
     'signal.set': (a, origin) => {
       const gain = optNum(a.gainDb, 'gainDb', GAIN_MIN_DB, GAIN_MAX_DB)
@@ -483,12 +497,12 @@ export class Core {
   }
 
   // ── internos ──────────────────────────────────────────────
-  private show(name: string, origin: Origin, track = true, cut = false): string {
+  private show(name: string, origin: Origin, track = true, cut = false, maxBlend?: number): string {
     if (!name) return this.state.current
     // Rotação usa a regra automática; o resto (teclado, UI) a manual. Abertura e Shift = corte seco.
     const rule = origin === 'rotation' ? this.state.settings.blend.auto : this.state.settings.blend.manual
     const blendType: BlendType = origin === 'startup' || cut ? 'cut' : rule.type
-    const blendSeconds = blendType === 'cut' ? 0 : rule.seconds
+    const blendSeconds = blendType === 'cut' ? 0 : Math.min(rule.seconds, maxBlend ?? Infinity)
     this.state.current = name
     this.state.settings.lastPreset = name
     if (track) {

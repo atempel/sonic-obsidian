@@ -312,6 +312,11 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               </span>
             </div>
             <div class="now-author" ref={authorEl} />
+            {core.state.breath && (
+              <div class="breath-tag" role="status" title="Respiro: o visual está sem o áudio (Shift+Enter volta)">
+                <Icon name="volume-x" small /> Respiro
+              </div>
+            )}
           </div>
           <button
             class="ibtn fav favp"

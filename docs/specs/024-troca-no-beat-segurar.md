@@ -1,6 +1,6 @@
 # 024 — Troca no beat a cada N compassos e segurar visual
 
-**Fase:** 3 · **Status:** Implementada (falta validar no Windows) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
+**Fase:** 3 · **Status:** Implementada; revisão 3 depois do segundo teste no Windows (falta validar) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
 
 ## Problema
 A rotação troca o preset a cada N segundos, fora do tempo da música. Para quem toca ou transmite um set, isso parece aleatório: o visual muda no meio de uma frase musical e não acompanha o drop.
@@ -80,6 +80,39 @@ Detecção de batida e BPM própria, no renderer, a partir do áudio que já che
 - Quando a batida trava pela primeira vez, a contagem em compassos começa **na troca seguinte** (como a spec pede para a volta da batida); até lá, segundos.
 - Sem batida estável: `RECENT_BEATS` (1,5 batida sem onset) + `LOST_AFTER_MS` (1 s) → ~2–3,5 s até perder.
 - Teste headless: `tests/headless/024-beat.test.cjs` (bumbo sintético a 124 BPM, ambiente e silêncio), 32/32.
+
+## Revisão 2 (2026-11-10, depois do primeiro teste no Windows)
+O usuário testou: a batida quase não travava (o ponto raramente aparecia), as trocas não pareciam no tempo e o `Enter` não teve efeito visível. No log, a batida travava e caía a cada 1–2 s, com o BPM pulando entre 96, 107 e 128.
+- **Detecção refeita, calibrada com um simulador** (`tests/sim/beat-sim.cjs`, com house, techno, hip-hop, breakbeat, ambiente e silêncio):
+  - energia dos graves suavizada (15 Hz) e comprimida (`log1p`), com um seguidor de pico: assim, o baixo com sidechain e notas graves longas não viram "batidas";
+  - nova checagem de "pico agudo";
+  - perda só depois de 2,5 s sem confiança.
+  - Resultado no simulador: house e techno travam em ~2 s com o BPM a ±1 e não caem; ambiente e silêncio nunca travam.
+  - Limites: hip-hop com swing e breakbeat ainda erram o andamento (o breakbeat sai na metade).
+  - O teste `tests/headless/024-beat-sim.test.cjs` guarda esses limites no CI.
+- **Sincronia (do usuário):**
+  - a batida mostrada e as trocas saem 70 ms antes da batida detectada, para compensar captura e desenho. O valor fica em Configurações › Transição › "Adiantar o visual", de 0 a 200 ms;
+  - no modo beat, a troca automática mistura no máximo 1 batida.
+- **`Enter`:** um botão clicado com o mouse não fica mais com o `Enter`; só um controle focado pelo teclado (`:focus-visible`). Antes, depois de clicar num botão da faixa, o `Enter` repetia o clique.
+- **Respiro (`Shift+Enter`, pedido do usuário):** o visual deixa de receber o áudio, como se nada tocasse, e depois o recebe de volta. O áudio cai em ~1 s e volta rápido. A detecção de batida continua ouvindo, porque vem antes do ganho. Não é persistido. A faixa mostra a etiqueta "Respiro".
+
+## Revisão 3 (2026-11-10, segundo teste no Windows)
+O usuário viu a trava melhor, mas ela ainda caía quando a música mudava, ficava mais calma ou tinha uma virada. No log, o BPM mudava a cada trava (76, 87, 94, 100, 111, 127, 143). Pedido do usuário: identificar o BPM uma vez e deixá-lo seguir; atualizar só se outro BPM for detectado.
+- **Andamento travado:**
+  - trava quando o mesmo BPM se confirma por ~2 s;
+  - travado, o andamento fica e o volante segue as batidas sozinho;
+  - a fase só é corrigida quando as batidas aparecem onde ele prevê, com ajuste fino de no máximo ±3 %;
+  - viradas, breaks, trechos calmos e até música ambiente **não soltam a trava**;
+  - outro andamento só substitui o travado se confirmado por ~4 s; dobro, metade, 3/2 e 2/3 contam como o mesmo;
+  - a trava só solta com silêncio de verdade (3 s, o mesmo critério do aviso de silêncio) ou depois de 30 s sem nenhuma batida no lugar previsto.
+- **O critério 3 muda:** com música ambiente depois de uma faixa com batida, o andamento continua. Só em silêncio ou depois de 30 s sem batida o ponto some e a rotação volta aos segundos.
+- **Compassos (do usuário):** 1, 2, 4, 8 ou 16; padrão 4 (~8 s a 124 BPM). Quem tinha 32 salvo passa a 16.
+- **Simulador:**
+  - BPM exato (124,0) e trava em ~3 s;
+  - um break de 8 s sem bumbo não solta;
+  - o silêncio solta em 3 s;
+  - 124 → 140 BPM troca em ~5 s;
+  - o ambiente sozinho nunca trava.
 
 ## Perguntas em aberto
 - O `B` (tipo de transição, 013) conflita com o tap tempo do modo performance do protótipo. Decidir na P1.

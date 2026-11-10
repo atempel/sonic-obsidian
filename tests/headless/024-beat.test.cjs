@@ -4,6 +4,10 @@
 // que pode virar música ambiente (sem ataques) ou silêncio por `window.__audio(modo)`.
 // Vale para estados, interface e o algoritmo com áudio limpo; com música real, só no Windows.
 const H = require('./harness.cjs')
+// A rotação roda numa coleção de presets leves: um preset pesado sorteado pode travar o SwiftShader
+// do runner por segundos (o rAF para), e isso não é o que este teste mede (PR #76).
+const LIGHT_LIB = { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [
+  { id: 'leves', name: 'Leves', intervalSeconds: 30, presets: ['Rovastar - Oozing Resistance', 'Aderrasi - Potion of Spirits', 'Cope - The Neverending Explosion of Red Liquid Fire'] }] }
 const path = require('path'), os = require('os')
 const srv = H.serve(5200)
 const R = H.createResults('024-beat'); const ok = R.ok
@@ -12,7 +16,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   const b = await H.launch()
   const page = await b.newPage({ viewport: { width: 1280, height: 800 } }); R.attach(page)
   const errs = []; page.on('pageerror', e => errs.push(String(e))); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
-  await H.mockSo(page, { saveSettings: true, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4 }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
+  await H.mockSo(page, { saveSettings: true, library: LIGHT_LIB, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4, order: 'collection', collectionId: 'leves' }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
   await H.mockAudio(page, { bpm: BPM })
   // Trocas de preset com o tempo (performance.now) em que aconteceram.
   await page.addInitScript(() => {
@@ -88,6 +92,19 @@ const BPM = 124, BEAT_S = 60 / BPM
   ok('5f R não solta (só liga/desliga a rotação)', (await rotText()).includes('Segurado'))
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5g Enter de novo solta e a contagem recomeça', !(await rotText()).includes('Segurado') && /(4|3) c$/.test((await rotText()).trim()), await rotText())
+  // Depois de um clique, o foco fica no botão, mas o Enter volta a ser do Palco (só :focus-visible fica com ele).
+  await page.mouse.move(640, 700); await page.click('button[aria-label="Preset anterior"]'); await page.waitForTimeout(900)
+  await page.keyboard.press('Enter'); await page.waitForTimeout(300)
+  ok('5h Enter depois de clicar num botão segura (não repete o clique)', (await rotText()).includes('Segurado'), await rotText())
+  await page.keyboard.press('Enter'); await page.waitForTimeout(300)
+  // Respiro (Shift+Enter): o visual perde o áudio; a batida continua travada (a detecção vem antes do ganho).
+  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(1500)
+  ok('9a Respiro: etiqueta na faixa e toast', await page.isVisible('.breath-tag') && (await page.evaluate(() => document.body.innerText)).includes('Respiro'))
+  const lvl = await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)
+  ok('9b Respiro: medidor da faixa vazio (o visual não recebe áudio)', lvl === 0, `${lvl} segmentos acesos`)
+  ok('9c Respiro: a batida continua travada', await page.isVisible('.strip .bdot'))
+  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(800)
+  ok('9d Shift+Enter de novo devolve o áudio', !(await page.isVisible('.breath-tag')) && (await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)) > 0)
 
   // 6. Enter num botão aciona o botão.
   await page.mouse.move(640, 700)
@@ -102,13 +119,14 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.keyboard.press('Comma'); await page.waitForTimeout(400)
   ok('8b Ajustes rápidos: switch habilitado e ligado', await page.$eval('#beatSwitch', e => !e.disabled && e.checked))
   const opts = await page.$$eval('#interval option', es => es.map(e => e.textContent))
-  ok('8c "Trocar a cada" lista compassos', JSON.stringify(opts) === JSON.stringify(['4 compassos', '8 compassos', '16 compassos', '32 compassos']), JSON.stringify(opts))
+  ok('8c "Trocar a cada" lista compassos', JSON.stringify(opts) === JSON.stringify(['1 compasso', '2 compassos', '4 compassos', '8 compassos', '16 compassos']), JSON.stringify(opts))
   await page.screenshot({ path: path.join(os.tmpdir(), '024-quick.png') })
   await page.selectOption('#interval', '8'); await page.waitForTimeout(300)
   ok('8d escolher 8 compassos salva', (await page.evaluate(() => window.__saves.at(-1).rotation.bars)) === 8)
   await page.keyboard.press('Escape'); await page.waitForTimeout(300)
   await page.keyboard.press('Control+Comma'); await page.waitForTimeout(500)
   ok('8e Configurações: "Trocar no beat" habilitado', await page.$eval('#st-beat', e => !e.disabled && e.checked))
+  ok('8f Configurações: "Adiantar o visual" em 70 ms', await page.$eval('#st-lead', e => !e.disabled && Number(e.value) === 70))
   await page.keyboard.press('Escape'); await page.waitForTimeout(300)
 
   // 2c. Em 8 compassos, metade da frequência.
@@ -118,26 +136,26 @@ const BPM = 124, BEAT_S = 60 / BPM
   const gaps8 = ch8.slice(1).map((c, i) => (c.at - ch8[i].at) / 1000)
   ok('2c em 8 compassos, ≈ 15,5 s entre trocas', ch8.length >= 2 && gaps8.every(g => Math.abs(g - 32 * BEAT_S) < 0.6), JSON.stringify({ n: ch8.length, gaps: gaps8.map(g => g.toFixed(2)) }))
 
-  // 3. Ambiente: o ponto some em até 4 s e volta aos segundos; → troca na hora.
-  const tAmb = await page.evaluate(() => { window.__audio('ambient'); return performance.now() })
+  // 3. Andamento travado (revisão 3): ambiente/virada não soltam; silêncio de verdade solta.
+  await page.evaluate(() => window.__audio('ambient')); await page.waitForTimeout(5000)
+  ok('3a ambiente por 5 s: continua travado no mesmo andamento', (await page.isVisible('.strip .bdot')) && Math.abs((bpmOf(await hud()) ?? 0) - BPM) <= 2, (await hud()).split('\n').find(l => l.startsWith('beat')))
+  const tSil = await page.evaluate(() => { window.__audio('silence'); return performance.now() })
   const ta = Date.now(); let gone = -1
-  while (Date.now() - ta < 8000) { if (!(await page.isVisible('.strip .bdot'))) { gone = Date.now() - ta; break } await page.waitForTimeout(200) }
-  const lostAt = await page.evaluate((t) => (window.__logT.find(([at, m]) => at > t && m.startsWith('beat: perdido')) || [NaN])[0] - t, tAmb)
-  ok('3a ambiente: ponto some em até 4 s', gone >= 0 && gone <= 4200, `${gone} ms na faixa · ${lostAt.toFixed(0)} ms até o log "perdido"`)
+  while (Date.now() - ta < 9000) { if (!(await page.isVisible('.strip .bdot'))) { gone = Date.now() - ta; break } await page.waitForTimeout(200) }
+  const lostAt = await page.evaluate((t) => (window.__logT.find(([at, m]) => at > t && m.startsWith('beat: perdido')) || [NaN])[0] - t, tSil)
+  ok('3b silêncio: solta em até ~4,5 s (3 s até contar como silêncio)', gone >= 0 && gone <= 5000, `${gone} ms na faixa · ${lostAt.toFixed(0)} ms até o log "perdido"`)
   await page.waitForTimeout(500)
-  ok('3b volta a contar em segundos (m:ss)', /\d:\d\d$/.test((await rotText()).trim()), await rotText())
-  ok('3c log: "beat: perdido, voltando a segundos"', (await page.evaluate(() => window.__logs)).includes('beat: perdido, voltando a segundos'))
-  await page.waitForTimeout(6000)
-  ok('3d ambiente não volta a travar (6 s)', !(await page.isVisible('.strip .bdot')) && bpmOf(await hud()) === null, (await hud()).split('\n').find(l => l.startsWith('beat')))
+  ok('3c volta a contar em segundos (m:ss)', /\d:\d\d$/.test((await rotText()).trim()), await rotText())
+  ok('3d log: "beat: perdido, voltando a segundos"', (await page.evaluate(() => window.__logs)).includes('beat: perdido, voltando a segundos'))
   const r3 = await page.evaluate(() => new Promise((res) => {
     const t = performance.now()
     document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', key: 'ArrowRight', bubbles: true }))
     const id = setInterval(() => { const n = window.__changes.at(-1); if (n && n.at >= t) { clearInterval(id); res(n.at - t) } if (performance.now() - t > 2000) { clearInterval(id); res(-1) } }, 2)
   }))
-  ok('3e sem batida, → troca na hora (< 300 ms no headless lento)', r3 >= 0 && r3 < 300, `${r3.toFixed?.(0)} ms`)
+  ok('3e sem batida travada, → troca na hora (< 300 ms no headless lento)', r3 >= 0 && r3 < 300, `${r3.toFixed?.(0)} ms`)
   // silêncio também perde a batida
   await page.evaluate(() => window.__audio('beat')); await page.waitForTimeout(6000)
-  ok('3f a batida volta', await page.isVisible('.strip .bdot'))
+  ok('3f com o bumbo de volta, trava de novo', await page.isVisible('.strip .bdot'))
   const logs = await page.evaluate(() => window.__logs.filter(l => l.startsWith('beat')))
   ok('7b log só com mudanças de estado', logs.length <= 4, JSON.stringify(logs))
   await page.screenshot({ path: path.join(os.tmpdir(), '024-strip.png') })
