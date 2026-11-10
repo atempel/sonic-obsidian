@@ -403,3 +403,16 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Troca no critério 3 da spec:** ambiente depois de uma faixa com batida não volta mais aos segundos. Para o DJ, manter o andamento no break é o comportamento certo.
 - **Descartado:** soltar por falta de confiança (era a causa das quedas); tap tempo agora (fica para o P1, se a detecção ainda errar o BPM).
 
+## 2026-11-10 — Spec 026: Estúdio P0 (respostas do usuário e implementação)
+- **Do usuário:**
+  - o Estúdio é uma **camada em tela cheia** sobre o Palco, com o visual principal na prévia;
+  - o nome do autor é **perguntado no primeiro salvamento** e também fica em Configurações › Geral;
+  - `bas_att` e afins viram aviso na 027;
+  - laço infinito: **teste num Worker com teto de tempo**.
+- **Proposta de 2026-11-10 aprovada:** os meus presets guardam o JSON do Butterchurn 3 (`mine/<id>/preset.json` + `meta.json`), não o `.milk`. O architecture.md §5 foi atualizado.
+- **Worker:** o `eel-wasm` (o mesmo compilador do motor, agora dependência declarada) compila cada bloco e roda um quadro, com `per_pixel` em cada ponto da malha. Teto de 1 s; um quadro de mais de 250 ms também é recusado. O Worker vem embutido como blob (`?worker&inline` do Vite), e a CSP ganhou `worker-src blob:`. Um arquivo de Worker separado em `file://` foi descartado, porque o Chromium trata a origem como opaca e o comportamento no Electron empacotado seria incerto.
+  - **Por quê:** `while` para em ~1 milhão de voltas por chamada, mas `loop(n, …)` não tem teto, e `per_pixel` multiplica pelos pontos da malha. Rodar direto no visualizador principal (ou no de teste, na mesma thread) congelaria a interface sem como interromper.
+  - **Descartado:** checagem estática do texto (pega menos casos); instrumentar o WASM gerado (mexe por dentro do motor).
+- **Só salva o que compilou.** Ao sair sem salvar, volta o preset de origem; salvo, o meu preset vira o atual (a faixa mostra "baseado em").
+- **Crédito:** `splitPresetName` reconhece os meus presets e devolve "<você> · baseado em <título>, por <autor>". Assim a faixa, a Biblioteca, a busca e as Configurações mostram o crédito sem mudar cada tela.
+- **Rotação parada no Estúdio:** o loop segura a contagem (como no silêncio) e ignora as batidas, sem mexer no `settings.json`. Um travamento do motor no Estúdio volta ao preset de origem em vez de pular o preset.

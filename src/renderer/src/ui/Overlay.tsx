@@ -65,6 +65,10 @@ export interface PalcoBridge {
   isImported(name: string): boolean
   importedCount(): number
   removeImported(name: string): Promise<void>
+  /** Meus presets e Estúdio (spec 026). */
+  isMine(name: string): boolean
+  removeMine(name: string): Promise<void>
+  openStudio(name?: string): void
 }
 
 /**
@@ -571,7 +575,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Edge core={core} />
       <Strip bridge={bridge} />
       <WindowControls core={core} />
-      <Library core={core} presets={presets} imports={{ is: bridge.isImported, count: bridge.importedCount, remove: bridge.removeImported }} />
+      <Library core={core} presets={presets} imports={{ is: bridge.isImported, count: bridge.importedCount, remove: bridge.removeImported, isMine: bridge.isMine, removeMine: bridge.removeMine, edit: bridge.openStudio }} />
       <Palette core={core} presets={presets} />
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <Settings bridge={bridge} />

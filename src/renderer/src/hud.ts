@@ -13,6 +13,8 @@ export interface HudState {
   heapMb?: number
   /** Spec 024: BPM, confiança, compassos e custo da detecção. */
   beat?: string
+  /** Spec 026: custo da última compilação do Estúdio. */
+  studio?: string
   error?: string
 }
 
@@ -31,6 +33,7 @@ export class Hud {
       `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressividade indisponível'}\n` +
       `${s.beat ?? 'beat: aguardando'}\n` +
+      (s.studio ? `${s.studio}\n` : '') +
       `→ ← presets · + − 0 expressividade · X caráter · Shift+X memória · B ↑↓ transição · T modo limpo · Espaço aleatório · Enter segurar`
   }
 }

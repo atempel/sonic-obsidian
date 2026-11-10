@@ -1,12 +1,12 @@
 # 026 — Estúdio de presets (P0): editar equações com prévia ao vivo
 
-**Fase:** 3 · **Status:** Planejada · **Issue:** [#74](https://github.com/atempel/sonic-obsidian/issues/74) · **Personas:** Criador de Presets, Nostálgico do Winamp (mexer num clássico) ([personas](../research/mercado/personas.md)) · **Depende de:** [021](021-migracao-butterchurn3.md), [022](022-importar-milk.md) · **Segue em:** [027](027-estudio-presets-p1.md)
+**Fase:** 3 · **Status:** Implementada; aguarda o teste no Windows · **Issue:** [#74](https://github.com/atempel/sonic-obsidian/issues/74) · **Personas:** Criador de Presets, Nostálgico do Winamp (mexer num clássico) ([personas](../research/mercado/personas.md)) · **Depende de:** [021](021-migracao-butterchurn3.md), [022](022-importar-milk.md) · **Segue em:** [027](027-estudio-presets-p1.md)
 
 ## Problema
 O app já toca e importa presets, mas ninguém consegue mudar um. O Criador de Presets quer "criar e ajustar vendo o resultado na hora" ([personas](../research/mercado/personas.md), §6). A sintaxe do MilkDrop é obscura, e hoje errar uma equação só aparece como tela preta, sem explicação.
 
 ## Proposta
-Uma tela cheia, o **Estúdio**, por cima do Palco (como as Configurações). À esquerda, a prévia: o mesmo motor, com o áudio do sistema. À direita, as equações do preset em edição. A cada pausa de 400 ms na digitação, o app compila. Se compila, o visual troca na hora. Se não, mostra o erro e **continua tocando a última versão válida**.
+Uma camada em tela cheia, o **Estúdio**, por cima do Palco (como as Configurações). À esquerda, a prévia: o próprio visual principal, com o áudio do sistema, visto por uma moldura. À direita, as equações do preset em edição. A cada pausa de 400 ms na digitação, o app compila. Se compila, o visual troca na hora. Se não, mostra o erro e **continua tocando a última versão válida**.
 
 Salvar cria sempre um preset **novo** em "Meus", com o crédito do original ("baseado em"). Preset do pacote e importado nunca é sobrescrito.
 
@@ -17,7 +17,8 @@ Salvar cria sempre um preset **novo** em "Meus", com o crédito do original ("ba
 - **Editor** (campo de texto com números de linha, `Tab` = 2 espaços, `Esc` sai do campo): três blocos, `per_frame_init`, `per_frame`, `per_pixel`, com a legenda do protótipo ("Executa uma vez ao carregar o preset" etc.). Nota fixa: "Variáveis disponíveis: bass mid treb bass_att mid_att treb_att time frame fps".
 - **Compilação ao vivo:**
   - debounce de 400 ms; `Ctrl+Enter` compila agora;
-  - a validação usa o visualizador de teste da 022 (64×64, fora da tela, `onlyUseWASM`), criado ao abrir o Estúdio e descartado ao fechar (`WEBGL_lose_context`);
+  - antes, um **Worker** com o `eel-wasm` (o compilador do motor) compila cada bloco, com bloco e linha do erro, e roda um quadro (init, per_frame e per_pixel em cada ponto da malha). Passou de 1 s, o Worker é encerrado e a versão é recusada ("Laço sem fim ou longo demais"). Um quadro de mais de 250 ms também é recusado ("Lento demais");
+  - a validação usa o visualizador de teste da 022 (64×64, fora da tela, `onlyUseWASM`), criado na primeira compilação e descartado ao fechar (`WEBGL_lose_context`);
   - só o que passa é carregado no visualizador principal, com blend curto. Pedidos em fila: vale o último (021);
   - status no topo: "Compilado" / "Compilando…" / "N erros"; rodapé "Compilado às hh:mm:ss".
 - **Erros legíveis:** painel "Problemas" (recolhível) com o bloco, a linha quando o motor informar, a mensagem e "Ir para a linha". Com erro, aparece o selo "Mostrando a última versão válida" e a linha fica marcada no editor.
@@ -26,6 +27,8 @@ Salvar cria sempre um preset **novo** em "Meus", com o crédito do original ("ba
 - **Salvar** (`Ctrl+S` e botão "Salvar na biblioteca"):
   - grava `userData/presets/mine/<id>/preset.json` e `meta.json` (`title`, `author`, `basedOn: {name, author}`, `createdAt`);
   - o título começa como "Remix de <nome>", e o crédito mostra "por <você> · baseado em <nome>, por <autor>". O autor original sempre fica preservado;
+  - **nome do autor:** no primeiro salvamento, se nunca foi perguntado, um balão pede "Seu nome nos presets" (vazio = "Eu"). Depois, o campo fica em Configurações › Geral › Meus presets (`authorName` no `settings.json`);
+  - só salva o que compilou: com erro, o toast pede para corrigir antes;
   - o preset entra na Biblioteca com o rótulo "Meu preset" e o filtro "Meus"; pode ser favoritado e posto em coleções;
   - salvar de novo um "meu" preset sobrescreve o dele e guarda a versão anterior em `preset.prev.json` (histórico completo na 027);
   - nome já existente na biblioteca vira "<nome> (2)". O nome não muda depois do primeiro salvamento (renomear na 027).
@@ -51,12 +54,12 @@ Edição de shaders, sliders de parâmetros, ondas e formas, versões, exportar 
 9. 15 min editando e tocando: fps igual ao de antes (HUD), memória da GPU sem alta, log só com linhas de evento. Fechar o Estúdio libera o visualizador de teste.
 10. O painel `?` lista "Abrir o Estúdio · E".
 
-## Perguntas em aberto
-- **Erro por linha:** o `eel-wasm` informa a linha do erro de sintaxe? Se só devolver a mensagem, o P0 mostra o bloco sem a linha, e a 027 traz um verificador próprio. Descobrir no começo da implementação.
-- **Laço infinito:** o `eel-wasm` limita `loop`/`while`? Se não, a validação precisa de teto de tempo (por exemplo, rodar um quadro num Worker) antes de carregar no visualizador principal.
-- **Nome do autor:** de onde vem o "por Alexandre"? Sugestão: campo em Configurações › Geral; vazio = "Eu".
-- **Variável com erro de digitação** (`bas_att`): no EEL qualquer nome é variável válida (vale 0), então não é erro de compilação. O protótipo a mostra como erro com "Você quis dizer?"; aqui vira aviso na 027. Confirmar.
-- **Estúdio como página ou camada:** o protótipo é uma página com topo próprio. Sugestão: camada em tela cheia (como Configurações), com o visual principal na prévia. Dois visuais ao mesmo tempo (original e remix) custam GPU, por isso a comparação é P1.
+## Respostas (2026-11-10)
+- **Erro por linha:** sim. O `eel-wasm` 0.0.16 devolve `loc.first_line` no erro de compilação (a mensagem em si não traz a linha). O painel mostra bloco e linha; erros sem linha (shader, quadro lento) mostram só o bloco.
+- **Laço infinito (do usuário: teste num Worker com teto):** o `while` do `eel-wasm` para em 1.048.576 voltas por chamada, mas `loop(n, …)` não tem teto, e um `while(1)` em `per_pixel` roda uma vez por ponto da malha (~1.800 × 1 milhão). Antes de chegar ao visual, cada versão roda um quadro num Worker; passou de 1 s, ele é encerrado e recriado, e a versão é recusada com mensagem.
+- **Nome do autor (do usuário):** perguntar no primeiro salvamento **e** ter o campo em Configurações › Geral. Vazio = "Eu".
+- **Variável com erro de digitação (do usuário):** confirmado, vira aviso na 027.
+- **Página ou camada (do usuário):** camada em tela cheia, com o visual principal na prévia. Comparar fica na 027.
 
 ## Referências
 - Protótipo `1794281099-42d3` (`docs/design/v3/SYNC.md`), página `Sonic Obsidian Estúdio.html`. Barra "Protótipo":

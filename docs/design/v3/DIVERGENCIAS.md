@@ -155,3 +155,12 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Configurações › Transição:** a linha "Adiantar o visual" (0–200 ms, padrão 70) fica abaixo de "Trocar no beat".
 **Status:** Aberta (aguarda a sessão de design).
 
+### 2026-11-10 — Estúdio P0 (spec 026), protótipo `1794281099-42d3`, página `Sonic Obsidian Estúdio.html`
+**No app:**
+- **Camada em tela cheia** sobre o Palco (decisão do usuário), não uma página. A prévia é o próprio visual principal, visto pela coluna da esquerda (moldura com "Seu remix"), e não um canvas 16:9 à parte. Sem "Comparar com o original", "Testar troca", "Capturar quadro", "Versões" e "Exportar .milk" (027).
+- **Só a aba "Código"**, com os três blocos de equações. Shaders aparecem num bloco recolhível só de leitura. As abas Básico/Ondas/Formas/Shaders são da 027.
+- **Medidores de "Áudio agora"** em barra contínua, não em segmentos.
+- **Nome do autor:** no primeiro salvamento, um balão abaixo de "Salvar na biblioteca" pergunta "Seu nome nos presets" (decisão do usuário). Depois, o campo fica em Configurações › Geral › Meus presets.
+- **Erros vêm do motor**, com bloco e linha. `bas_att` não é erro (avisos na 027). Um laço longo vira o erro "Laço sem fim ou longo demais" ou "Lento demais: N ms por quadro".
+- **Biblioteca:** rótulo "Meu preset", filtro "Meus" ao lado de "Importados", e no menu "…" os itens "Editar uma cópia no Estúdio" (ou "Editar no Estúdio", se for meu) e "Remover meu preset".
+**Status:** Aberta (aguarda a sessão de design).

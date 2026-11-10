@@ -4,6 +4,19 @@ interface SoStore {
   save(data: unknown): Promise<void>
 }
 
+/** Meus presets (Estúdio, spec 026). */
+interface SoMineMeta {
+  title: string
+  author: string
+  basedOn: { name: string; author: string } | null
+  createdAt: string
+}
+interface SoMineEntry {
+  id: string
+  meta: SoMineMeta
+  preset: Record<string, unknown>
+}
+
 interface Window {
   so: {
     settings: SoStore
@@ -24,6 +37,9 @@ interface Window {
       saveImported(file: { name: string; text: string }): Promise<void>
       removeImported(name: string): Promise<void>
       pickMilk(): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }>
+      listMine(): Promise<SoMineEntry[]>
+      saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: SoMineMeta }>
+      removeMine(id: string): Promise<void>
     }
     collections: {
       export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>

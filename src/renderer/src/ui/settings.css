@@ -61,6 +61,8 @@ body.settings-open .settings .win { opacity: 1; transform: translate(-50%, -50%)
 .settings .val { color: var(--cyan); font-size: 13px; min-width: 6ch; text-align: right; }
 .settings .rng { display: flex; align-items: center; gap: 12px; width: 240px; }
 .settings .sel-w { max-width: 260px; }
+.settings .sel.txt { cursor: text; padding: 0 12px; }
+.settings .sel.txt:focus { outline: none; border-color: var(--violet-line); }
 .settings .btn.sm { height: 28px; padding: 0 10px; font-size: 13px; }
 .settings .btn:disabled { opacity: 0.45; cursor: default; background: var(--bg-03); border-color: var(--line-3); }
 .settings .btn-ghost:disabled { background: transparent; border-color: transparent; }

@@ -101,7 +101,7 @@ export interface RenderSettings {
   extraImages: boolean
 }
 export type FpsLimit = 'monitor' | number
-export type OverlayName = 'library' | 'search' | 'quick' | 'settings'
+export type OverlayName = 'library' | 'search' | 'quick' | 'settings' | 'studio'
 
 export interface Settings {
   /** 2 = limite de fps padrão 60 (antes: taxa do monitor). */
@@ -138,6 +138,8 @@ export interface Settings {
   render: RenderSettings
   /** Cartão de boas-vindas já visto (spec 012). */
   welcomeSeen: boolean
+  /** Nome no crédito dos meus presets (spec 026). `null` = ainda não perguntado; vazio = "Eu". */
+  authorName: string | null
   /** Desempenho por preset (spec 012, P2): mostrar o aviso de preset pesado abaixo de `minFps`. */
   perf: { skipSlow: boolean; minFps: number }
 }
@@ -182,6 +184,7 @@ export function defaultSettings(): Settings {
     showFps: false,
     render: defaultRender(),
     welcomeSeen: false,
+    authorName: null,
     perf: { skipSlow: true, minFps: 30 }
   }
 }
@@ -243,6 +246,12 @@ function sanitizeBlendRule(rule: unknown, legacySeconds: unknown, d: BlendRule):
   return { ...d }
 }
 
+/** Nome do autor (spec 026): sem caracteres de controle, até 60. */
+export function cleanAuthor(v: string): string {
+  // eslint-disable-next-line no-control-regex
+  return v.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 60)
+}
+
 export function sanitizeSettings(raw: unknown): Settings {
   const d = defaultSettings()
   if (!isObj(raw)) return d
@@ -293,6 +302,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     showFps: bool(raw.showFps, d.showFps),
     render: sanitizeRender(raw.render),
     welcomeSeen: bool(raw.welcomeSeen, d.welcomeSeen),
+    authorName: typeof raw.authorName === 'string' ? cleanAuthor(raw.authorName) : null,
     perf: {
       skipSlow: bool(isObj(raw.perf) ? raw.perf.skipSlow : undefined, d.perf.skipSlow),
       minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5

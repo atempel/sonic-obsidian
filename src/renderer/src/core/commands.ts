@@ -1,6 +1,7 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
 import {
+  cleanAuthor,
   BLEND_MAX_S,
   BLEND_MIN_S,
   BLEND_TYPES,
@@ -123,7 +124,7 @@ const toggleIn = (list: string[], name: string, value?: boolean): boolean => {
   return want
 }
 
-const OVERLAYS: readonly OverlayName[] = ['library', 'search', 'quick', 'settings']
+const OVERLAYS: readonly OverlayName[] = ['library', 'search', 'quick', 'settings', 'studio']
 
 export class Core {
   readonly events = new Emitter<CoreEvents>()
@@ -290,6 +291,11 @@ export class Core {
       if (a.startupFavorite !== undefined) s.startupFavorite = a.startupFavorite === null ? null : str(a.startupFavorite, 'startupFavorite')
       const gainDefault = optNum(a.gainDefaultDb, 'gainDefaultDb', GAIN_MIN_DB, GAIN_MAX_DB)
       if (gainDefault !== undefined) s.gainDefaultDb = Math.round(gainDefault)
+      // Nome no crédito dos meus presets (spec 026); vazio = "Eu".
+      if (a.authorName !== undefined) {
+        if (typeof a.authorName !== 'string') fail('authorName: texto')
+        s.authorName = cleanAuthor(a.authorName as string)
+      }
       for (const key of ['pinControls', 'startFullscreen', 'showFps', 'welcomeSeen'] as const) {
         const v = optBool(a[key], key)
         if (v !== undefined) s[key] = v
