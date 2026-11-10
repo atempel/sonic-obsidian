@@ -126,3 +126,13 @@ body.clean .credit { transition-duration: 400ms; }
 .menu.collect .newname { padding: 4px; }
 .menu.collect .newname input { width: 100%; height: 30px; padding: 0 8px; background: var(--bg-01); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font: inherit; }
 .menu.collect .newname input:focus-visible { outline: none; border-color: var(--violet); }
+
+/* ── Troca no beat e segurar (spec 024; protótipo .bdot e .ibtn.wait, M23) ── */
+.ibtn.wait { border-style: dashed; border-color: var(--violet-line); background: var(--violet-soft); color: var(--text-1); }
+.bdot { width: 6px; height: 6px; border-radius: 50%; background: var(--line-3); display: inline-block; flex: none; transition: background 400ms var(--ease-out); }
+.bdot.on { background: var(--beat); transition-duration: 0ms; } /* liberação de beat: 400 ms */
+.rot.held { color: var(--text-1); }
+.rot.held .ico { color: var(--violet); transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .bdot:not(.on) { transition: background 400ms var(--ease-out) !important; }
+}

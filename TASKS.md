@@ -47,7 +47,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 ## Agora — Fase 3 (Fontes e presets)
 - [x] **Migração para o Butterchurn 3** — #62, validada no Windows em 2026-11-10
 - [x] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65, validada no Windows
-- [ ] **Troca no beat a cada N compassos + segurar visual** (próximo; prioridade da pesquisa de mercado) — [spec 024](docs/specs/024-troca-no-beat-segurar.md) · issue [#67](https://github.com/atempel/sonic-obsidian/issues/67)
+- [ ] **Troca no beat a cada N compassos + segurar visual** (implementada; falta o teste no Windows) — [spec 024](docs/specs/024-troca-no-beat-segurar.md) · issue [#67](https://github.com/atempel/sonic-obsidian/issues/67)
 - [ ] **Estúdio de presets** (depois da 024) — specs a criar
 - [ ] Fonte microfone (P1, depois do Estúdio)
 - ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)

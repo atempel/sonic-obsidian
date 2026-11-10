@@ -14,6 +14,8 @@ import {
   GAIN_MIN_DB,
   PRESET_FPS_MAX,
   RECENTS_MAX,
+  BEAT_BARS,
+  type BeatBars,
   num,
   sanitizeRender,
   type BlendType,
@@ -49,6 +51,12 @@ export interface CoreEvents extends Record<string, unknown> {
   stateChanged: { origin: Origin }
   /** Nível de entrada (RMS depois do ganho), ~10×/s. Não passa pelo store. */
   levelTick: { level: number }
+  /** Uma batida prevista caiu agora (spec 024). Não passa pelo store: a faixa pisca o ponto direto. */
+  beatTick: Record<string, never>
+  /** Batida travada ou perdida (spec 024): o ponto aparece ou some, a contagem muda de unidade. */
+  beatState: { locked: boolean; bpm: number }
+  /** Troca manual esperando a próxima batida (M23); `null` = nada esperando. */
+  beatWait: { key: WaitKey | null }
   silenceChanged: { resting: boolean; notice: boolean }
   captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
@@ -58,6 +66,9 @@ export interface CoreEvents extends Record<string, unknown> {
   /** Preset abaixo do mínimo de fps (spec 012, P2); `null` limpa o aviso. */
   slowPreset: { name: string; fps: number } | null
 }
+
+/** Trocas manuais que esperam a batida (M23). */
+export type WaitKey = 'next' | 'previous' | 'random'
 
 export type CheckState = 'ok' | 'fail' | 'busy' | 'pending'
 export interface CaptureCheck {
@@ -73,6 +84,8 @@ export interface AppState {
   current: string
   overlay: OverlayName | null
   capture: CaptureState
+  /** Visual segurado (`Enter`, spec 024): a rotação não troca. Não é persistido. */
+  held: boolean
 }
 
 /** Efeitos fora do renderer (preload). */
@@ -120,7 +133,7 @@ export class Core {
     library: Library,
     private readonly effects: CoreEffects
   ) {
-    this.state = { settings, library, current: '', overlay: null, capture: 'pending' }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -171,6 +184,12 @@ export class Core {
       const interval = optNum(a.intervalSeconds, 'intervalSeconds', 5, 600)
       if (enabled !== undefined) rot.enabled = enabled
       if (interval !== undefined) rot.intervalSeconds = interval
+      const onBeat = optBool(a.onBeat, 'onBeat')
+      if (onBeat !== undefined) rot.onBeat = onBeat
+      if (a.bars !== undefined) {
+        if (!BEAT_BARS.includes(a.bars as BeatBars)) fail(`bars: ${BEAT_BARS.join(', ')}`)
+        rot.bars = a.bars as BeatBars
+      }
       if (a.order !== undefined) {
         if (a.order !== 'random' && a.order !== 'collection') fail('order: random ou collection')
         rot.order = a.order as RotationOrder
@@ -182,6 +201,13 @@ export class Core {
       }
       this.changedSettings(origin)
       return { ...rot }
+    },
+    /** Segurar o visual (spec 024): alterna, ou `{ value }`. Trocas manuais continuam valendo. */
+    'preset.hold': (a, origin) => {
+      const v = optBool(a.value, 'value')
+      this.state.held = v ?? !this.state.held
+      this.events.emit('stateChanged', { origin })
+      return this.state.held
     },
     'signal.set': (a, origin) => {
       const gain = optNum(a.gainDb, 'gainDb', GAIN_MIN_DB, GAIN_MAX_DB)

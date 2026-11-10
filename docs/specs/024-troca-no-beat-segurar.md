@@ -1,6 +1,6 @@
 # 024 — Troca no beat a cada N compassos e segurar visual
 
-**Fase:** 3 · **Status:** Planejada · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
+**Fase:** 3 · **Status:** Implementada (falta validar no Windows) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
 
 ## Problema
 A rotação troca o preset a cada N segundos, fora do tempo da música. Para quem toca ou transmite um set, isso parece aleatório: o visual muda no meio de uma frase musical e não acompanha o drop.
@@ -74,6 +74,12 @@ Detecção de batida e BPM própria, no renderer, a partir do áudio que já che
 6. Com o foco num botão da faixa, `Enter` aciona o botão e não segura. O painel `?` lista "Segurar visual · Enter".
 7. Com tudo ligado por 30 min, o fps fica igual ao de antes (HUD) e o custo da detecção fica < 0,5 ms por quadro. O log só tem linhas de mudança de estado.
 8. Reabrir o app mantém "Trocar no beat" e o número de compassos. "Segurado" não volta.
+
+## Implementação (2026-11-10)
+- `src/renderer/src/beat.ts`: um `AnalyserNode` próprio (`fftSize` 32768 ≈ 0,7 s) no mesmo ramo do medidor de silêncio, antes do ganho, lido **pelo relógio do áudio** (só as amostras novas a cada quadro). Passa-baixas de 2 polos, energia em células de 10 ms, onset = subida da energia em dB. Autocorrelação a cada 250 ms; fase por pente. Todos os limiares em `BEAT`. Ver DECISIONS 2026-11-10 ("Detecção de batida pelo relógio do áudio").
+- Quando a batida trava pela primeira vez, a contagem em compassos começa **na troca seguinte** (como a spec pede para a volta da batida); até lá, segundos.
+- Sem batida estável: `RECENT_BEATS` (1,5 batida sem onset) + `LOST_AFTER_MS` (1 s) → ~2–3,5 s até perder.
+- Teste headless: `tests/headless/024-beat.cjs` (bumbo sintético a 124 BPM, ambiente e silêncio), 32/32.
 
 ## Perguntas em aberto
 - O `B` (tipo de transição, 013) conflita com o tap tempo do modo performance do protótipo. Decidir na P1.

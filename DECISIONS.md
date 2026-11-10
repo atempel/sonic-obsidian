@@ -357,3 +357,12 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - intervalo em segundos quantizado ao beat (não acompanha a frase musical);
   - `R` como "segurar" (o usuário preferiu separar segurar de desligar a rotação);
   - detectar o primeiro tempo do compasso (downbeat), Ableton Link e MIDI clock, que ficam para quando houver usuários VJ.
+
+## 2026-11-10 — Spec 024: detecção de batida pelo relógio do áudio
+- **Problema:** a primeira versão media o fluxo espectral no `AnalyserNode` do silêncio (1024 amostras) a cada quadro. No teste headless (~5 fps) ela errava o BPM (136 em vez de 124): cada quadro só vê os últimos ~21 ms de áudio, e o que cai entre quadros se perde. No Windows isso aconteceria com presets pesados, limite de 30 fps ou quadros longos na troca de preset.
+- **Decisão:** um `AnalyserNode` só da detecção, ligado depois do medidor de silêncio (mesmo sinal antes do ganho), com buffer de 32768 amostras (~0,7 s). Cada quadro lê só as amostras novas, pela diferença de `ctx.currentTime`; passa-baixas de 2 polos, energia em células de 10 ms, onset = subida em dB. A rotação e as trocas que esperam a batida contam no relógio do áudio, e um quadro lento pode cruzar mais de uma batida (todas contam). Custo medido: ~0,04–0,1 ms por quadro a 60 fps.
+- **Afasta-se da spec** ("sobre o `AnalyserNode` existente"): é um nó a mais do mesmo tipo, sem dependência nova nem mudança no caminho do som.
+- **Descartado:** `AudioWorklet` (arquivo de módulo à parte, CSP, mais um caminho de áudio para manter) e aumentar o `fftSize` do medidor de silêncio (mudaria a medida do RMS).
+- **Primeira trava:** a contagem em compassos começa na troca seguinte, como a spec já pede para a volta da batida. Assim, a troca nunca muda de unidade no meio de uma contagem.
+- **Perda:** sem um onset nas últimas 1,5 batida, a confiança cai; depois de 1 s assim, a batida é dada como perdida (~2–3,5 s no total; critério 3 pede ≤ 4 s). Valores iniciais em `BEAT`, a ajustar com músicas reais.
+

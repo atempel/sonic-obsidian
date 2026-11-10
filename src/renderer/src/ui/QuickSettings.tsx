@@ -12,6 +12,8 @@ import {
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   ROTATION_STEPS_S,
+  BEAT_BARS,
+  type BeatBars,
   type BlendType,
   type PresetNameMode,
   type ToastMode
@@ -232,11 +234,14 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
         <section>
           <h3>Rotação</h3>
           <Switch id="rotSwitch" label="Rotação automática" checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
-          <Select<number> id="interval" label="Trocar a cada" value={rot.intervalSeconds} options={intervals.map((s) => [s, `${s} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
-          {rot.order === 'collection' && <p class="note">Tocando uma coleção: vale o intervalo dela.</p>}
-          <Switch id="beatSwitch" label="Trocar no beat" checked={false} disabled>
-            <span class="phase">Fase 3</span>
-          </Switch>
+          {rot.onBeat ? (
+            <Select<BeatBars> id="interval" label="Trocar a cada" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compassos`])} onChange={(bars) => run('rotation.set', { bars })} />
+          ) : (
+            <Select<number> id="interval" label="Trocar a cada" value={rot.intervalSeconds} options={intervals.map((s) => [s, `${s} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
+          )}
+          {rot.order === 'collection' && <p class="note">Tocando uma coleção: {rot.onBeat ? 'em compassos; sem batida, vale o intervalo dela.' : 'vale o intervalo dela.'}</p>}
+          <Switch id="beatSwitch" label="Trocar no beat" checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+          {rot.onBeat && <p class="note hint">Sem batida estável, troca a cada {core.rotationIntervalSeconds} s. Enter segura o visual.</p>}
         </section>
 
         <section>
