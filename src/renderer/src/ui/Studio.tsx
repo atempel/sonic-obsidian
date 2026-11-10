@@ -373,7 +373,7 @@ function Studio({ api }: { api: StudioApi }) {
                 {shaders.map(([k, v]) => (
                   <div key={k}>
                     <h3 class="num">{k}</h3>
-                    <pre class="num">{v}</pre>
+                    <pre class="num selectable">{v}</pre>
                   </div>
                 ))}
               </details>
@@ -395,7 +395,7 @@ function Studio({ api }: { api: StudioApi }) {
                     {errors.map((e) => (
                       <li class="perr" key={errKey(e)}>
                         <Icon name="triangle-alert" small />
-                        <p>
+                        <p class="selectable">
                           <code>{BLOCK_TITLE[e.block]}</code>
                           {e.line ? `, linha ${e.line}` : ''}: {e.message}
                         </p>

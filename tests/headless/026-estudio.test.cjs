@@ -106,6 +106,13 @@ function mainChecks() {
   ok('4a interface responde durante o teste do laço', rt < 300, `${rt} ms`)
   ok('4b laço recusado com mensagem', await waitStatus(/^1 erro$/, 3000), await status())
   ok('4c mensagem fala do laço', /Laço sem fim|Lento demais/.test(await page.$eval('.perr p', e => e.textContent).catch(() => '')), await page.$eval('.perr p', e => e.textContent).catch(() => ''))
+  // 4e. valor inválido (NaN/infinito) é recusado antes de chegar à imagem
+  await page.fill(ta(2), 'zoom = log(0);')
+  ok('4e per_pixel com log(0) (infinito) é recusado', await waitStatus(/^1 erro$/, 3000), await status())
+  ok('4f mensagem fala do valor inválido', /zoom inválido/.test(await page.$eval('.perr p', e => e.textContent).catch(() => '')), await page.$eval('.perr p', e => e.textContent).catch(() => ''))
+  // seleção de texto só no que vale copiar
+  const sel = await page.evaluate(() => ['.st-credit', '.ed-label h3', '.studio .ed-ta', '.perr p'].map(s => getComputedStyle(document.querySelector(s)).userSelect))
+  ok('4g texto da interface não seleciona; campo e erro sim', sel[0] === 'none' && sel[1] === 'none' && sel[2] === 'text' && sel[3] === 'text', JSON.stringify(sel))
   await page.fill(ta(2), '')
   ok('4d volta a compilar depois (Worker recriado)', await waitStatus(/^Compilado$/, 3000), await status())
 

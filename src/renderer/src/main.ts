@@ -419,7 +419,7 @@ async function start(): Promise<void> {
     if (!src || !library.has(src)) return
     if (src !== core.state.current) run('preset.play', { name: src }, 'ui')
     const { default: EelWorker } = await import('./studio/eel-worker?worker&inline')
-    const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => (settings.render.meshWidth + 1) * (settings.render.meshHeight + 1))
+    const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => ({ w: settings.render.meshWidth, h: settings.render.meshHeight }))
     const s: { compiler: StudioCompiler; source: string; applied: boolean } = { compiler, source: src, applied: false }
     studio = s
     probe = null

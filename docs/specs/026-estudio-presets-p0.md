@@ -18,6 +18,7 @@ Salvar cria sempre um preset **novo** em "Meus", com o crédito do original ("ba
 - **Compilação ao vivo:**
   - debounce de 400 ms; `Ctrl+Enter` compila agora;
   - antes, um **Worker** com o `eel-wasm` (o compilador do motor) compila cada bloco, com bloco e linha do erro, e roda um quadro (init, per_frame e per_pixel em cada ponto da malha). Passou de 1 s, o Worker é encerrado e a versão é recusada ("Laço sem fim ou longo demais"). Um quadro de mais de 250 ms também é recusado ("Lento demais");
+  - o mesmo Worker roda com as variáveis do preset (valores-base, q, x/y por ponto) e recusa a versão que deixa `zoom`, `rot`, `dx`… em NaN ou infinito (um desses quadros com o áudio em 0): esse valor apagaria a imagem de vez (teste no Windows, 2026-11-10);
   - a validação usa o visualizador de teste da 022 (64×64, fora da tela, `onlyUseWASM`), criado na primeira compilação e descartado ao fechar (`WEBGL_lose_context`);
   - só o que passa é carregado no visualizador principal, com blend curto. Pedidos em fila: vale o último (021);
   - status no topo: "Compilado" / "Compilando…" / "N erros"; rodapé "Compilado às hh:mm:ss".

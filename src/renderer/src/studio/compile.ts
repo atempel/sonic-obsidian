@@ -42,7 +42,7 @@ export class StudioCompiler {
   constructor(
     private readonly ctx: AudioContext,
     private readonly makeWorker: WorkerFactory,
-    private readonly meshPoints: () => number
+    private readonly mesh: () => { w: number; h: number }
   ) {}
 
   /** Compila `preset` (já com as equações editadas). Resolve com o resultado ou `superseded`. */
@@ -54,8 +54,10 @@ export class StudioCompiler {
       frame: String(preset.frame_eqs_eel ?? ''),
       pixel: String(preset.pixel_eqs_eel ?? '')
     }
-    const check = await this.check(seq, code)
+    const base = preset.baseVals && typeof preset.baseVals === 'object' ? (preset.baseVals as Record<string, number>) : {}
+    const check = await this.check(seq, code, base)
     if (seq !== this.seq || this.disposed) return { ok: false, superseded: true }
+    // Erros (sintaxe, laço sem fim, valor inválido) primeiro; lento só quando o resto passou.
     if (check.errors.length) return { ok: false, errors: check.errors, ms: performance.now() - t0 }
     if (check.frameMs > SLOW_FRAME_MS) {
       return {
@@ -71,7 +73,7 @@ export class StudioCompiler {
     return { ok: true, ms: performance.now() - t0, frameMs: check.frameMs }
   }
 
-  private check(seq: number, code: Record<Block, string>): Promise<{ errors: StudioError[]; frameMs: number; slowBlock?: Block }> {
+  private check(seq: number, code: Record<Block, string>, baseVals: Record<string, number>): Promise<{ errors: StudioError[]; frameMs: number; slowBlock?: Block }> {
     return new Promise((resolve) => {
       const w = (this.worker ??= this.makeWorker())
       let running: Block | null = null
@@ -96,7 +98,7 @@ export class StudioCompiler {
         else done({ errors: m.errors, frameMs: m.ms, slowBlock: running ?? undefined })
       }
       w.addEventListener('message', onMsg)
-      w.postMessage({ seq, code, points: this.meshPoints() } satisfies CheckRequest)
+      w.postMessage({ seq, code, mesh: this.mesh(), baseVals } satisfies CheckRequest)
     })
   }
 

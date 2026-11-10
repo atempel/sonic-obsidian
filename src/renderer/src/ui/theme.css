@@ -135,3 +135,8 @@ input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px va
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; }
 }
+
+/* Texto da interface não é selecionável com o mouse (pedido do usuário, 2026-11-10); só o que vale
+   copiar: campos, código dos shaders no Estúdio e mensagens de erro (marcadas com .selectable). */
+#ui { -webkit-user-select: none; user-select: none; }
+#ui input, #ui textarea, #ui .selectable { -webkit-user-select: text; user-select: text; }
