@@ -235,7 +235,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           <h3>Rotação</h3>
           <Switch id="rotSwitch" label="Rotação automática" checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
           {rot.onBeat ? (
-            <Select<BeatBars> id="interval" label="Trocar a cada" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compassos`])} onChange={(bars) => run('rotation.set', { bars })} />
+            <Select<BeatBars> id="interval" label="Trocar a cada" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compasso${b > 1 ? 's' : ''}`])} onChange={(bars) => run('rotation.set', { bars })} />
           ) : (
             <Select<number> id="interval" label="Trocar a cada" value={rot.intervalSeconds} options={intervals.map((s) => [s, `${s} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
           )}

@@ -363,7 +363,7 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${rot.beatLeadMs} ms`} disabled={!rot.onBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
         </Row>
         <Row id="st-bars" label="Compassos" help="Com batida estável, troca a cada tantos compassos de 4 batidas. Sem batida, vale o intervalo em segundos.">
-          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compassos`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
+          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compasso${b > 1 ? 's' : ''}`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
       </Grp>
       <Grp title="Texto sobre o visual">

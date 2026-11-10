@@ -10,9 +10,11 @@
  *   período (2× e 3×) e com uma leve preferência por ~120 BPM (resolve dobro e metade). O pico
  *   é refinado por interpolação parabólica. A fase sai de um pente sobre os últimos segundos.
  * - Entre as análises, um volante prevê as batidas no período atual e corrige a fase aos poucos.
- * - Estável = BPM consistente por ~1 s, autocorrelação acima do limiar e batidas reais caindo
- *   onde o pente prevê. Perdida a estabilidade, o volante segue por `LOST_AFTER_MS` e então
- *   desiste (a rotação volta aos segundos).
+ * - Trava: o mesmo BPM confirmado por ~2 s. Travado, o andamento fica (o volante prevê as
+ *   batidas sozinho); a fase só é corrigida quando as batidas aparecem onde ele prevê, então
+ *   viradas, breaks e trechos calmos não soltam nada. O BPM só muda se outro andamento (que não
+ *   seja dobro, metade, 3/2 ou 2/3) se confirmar por ~4 s. Silêncio solta na hora; sem nenhuma
+ *   batida no lugar previsto por 30 s, também.
  *
  * Os limiares ainda serão ajustados com músicas reais no Windows: ficam todos em `BEAT`.
  */
@@ -41,13 +43,17 @@ export const BEAT = {
   MIN_ACF: 0.05,
   /** Razão mínima entre a curva nas batidas previstas e a média da curva (pente). */
   MIN_COMB: 2.8,
-  /** Análises seguidas com BPM a ±3 % para travar (4 × 250 ms = 1 s). */
-  LOCK_RUN: 4,
+  /** Análises seguidas com o mesmo BPM (±3 %) para travar o andamento (8 × 250 ms = 2 s). */
+  LATCH_RUN: 8,
+  /** Análises seguidas com outro andamento confirmado para trocar o travado (16 × 250 ms = 4 s). */
+  CHANGE_RUN: 16,
+  /** Sem nenhuma batida no lugar previsto por este tempo, solta a trava (silêncio solta na hora). */
+  RELEASE_AFTER_MS: 30000,
+  /** Ajuste fino do andamento pela deriva da fase (fração por análise). */
+  TEMPO_GAIN: 0.02,
   /** Janela (em batidas) e fração do onset típico que contam como "a batida ainda está aqui". */
   RECENT_BEATS: 2,
   RECENT_FRACTION: 0.2,
-  /** Sem confiança por este tempo, a batida é dada como perdida. */
-  LOST_AFTER_MS: 2500,
   /** Correção de fase por análise (0–1). */
   PHASE_GAIN: 0.35,
   /** Preferência por tempos perto de 120 BPM (desvio em oitavas). */
@@ -87,7 +93,9 @@ export class BeatTracker {
   private lastAnalyze = 0
   private run = 0
   private lastCandidate = 0
-  private unsureSince: number | null = null
+  private changeRun = 0
+  private baseBpm = 0
+  private lastGood = 0
   private readonly acf = new Float32Array(N)
   private readonly buf: Float32Array<ArrayBuffer>
   private readonly hopSamples: number
@@ -220,7 +228,7 @@ export class BeatTracker {
     for (let i = 0; i < len; i++) e0 += x(i) * x(i)
     const minLag = Math.floor(60000 / BEAT.MAX_BPM / BEAT.HOP_MS)
     const maxLag = Math.ceil(60000 / BEAT.MIN_BPM / BEAT.HOP_MS)
-    let confident = false
+    let candConfident = false
     let candidate = 0
     if (!silent && e0 > 1e-6) {
       // Autocorrelação normalizada até 3 × o maior período.
@@ -264,106 +272,155 @@ export class BeatTracker {
       candidate = 60000 / (lag * BEAT.HOP_MS)
       this.estimate = candidate
 
-      // Fase: pente com o período sobre a janela curta; a melhor fase é onde a curva mais se acumula.
-      const phaseCells = Math.round((BEAT.PHASE_S * 1000) / BEAT.HOP_MS)
-      const pCells = lag
-      let bestPhase = 0
-      let bestSum = -Infinity
-      let shortMean = 0
-      for (let i = 0; i < phaseCells; i++) shortMean += env[(end - 1 - i + N * 4) % N]!
-      shortMean /= phaseCells
-      for (let ph = 0; ph < Math.ceil(pCells); ph++) {
-        let s = 0
-        let n = 0
-        for (let k = 0; ; k++) {
-          const i = Math.round(ph + k * pCells)
-          if (i >= phaseCells) break
-          // vizinhos ajudam quando o onset cai entre células
-          s += env[(end - 1 - i + N * 4) % N]! + 0.5 * (env[(end - i + N * 4) % N]! + env[(end - 2 - i + N * 4) % N]!)
-          n++
-        }
-        if (n > 0 && s / n > bestSum) {
-          bestSum = s / n
-          bestPhase = ph
-        }
-      }
-      const combMean = bestSum / 2 // o pente soma 2 células de peso (1 + 0,5 + 0,5)
-      const comb = shortMean > 1e-6 ? combMean / shortMean : 0
-      this.confidence = Math.max(0, Math.min(1, (comb - 1) / 3)) * Math.min(1, acfPeak / (BEAT.MIN_ACF * 2))
-      // Batida recente: nas últimas `RECENT_BEATS` batidas houve um onset do tamanho dos que
-      // caem no pente. Sem isso, a janela curta ainda "lembraria" a batida por segundos.
-      let recentMax = 0
-      const recentCells = Math.ceil(BEAT.RECENT_BEATS * pCells) + 1
-      for (let i = 0; i < recentCells; i++) recentMax = Math.max(recentMax, env[(end - 1 - i + N * 4) % N]!)
-      const recentOk = recentMax >= BEAT.RECENT_FRACTION * combMean
-      // Pico agudo: em cada período, o maior onset contra a média do período. Bumbo dá um pico
-      // estreito (razão alta); um volume que ondula devagar (pad, chorus) dá uma curva larga.
-      let crestSum = 0
-      let crestN = 0
-      for (let k = 0; (k + 1) * pCells <= phaseCells; k++) {
-        let mx = 0
-        let sum = 0
-        const from = Math.round(k * pCells)
-        const to = Math.round((k + 1) * pCells)
-        for (let i = from; i < to; i++) {
-          const v = env[(end - 1 - i + N * 4) % N]!
-          sum += v
-          if (v > mx) mx = v
-        }
-        if (sum > 1e-9) {
-          crestSum += mx / (sum / (to - from))
-          crestN++
-        }
-      }
-      this.crest = crestN ? crestSum / crestN : 0
-      this.comb = comb
-      this.attack = this.levelC > 1e-6 ? combMean / this.levelC : 0
       this.acfPeak = acfPeak
-      confident = acfPeak >= BEAT.MIN_ACF && comb >= BEAT.MIN_COMB && recentOk && this.crest >= BEAT.MIN_CREST
+      const mC = this.measure(end, lag)
+      candConfident = acfPeak >= BEAT.MIN_ACF && this.passes(mC)
+    } else {
+      this.estimate = 0
+    }
 
-      if (confident) {
-        // Consistência do BPM entre análises.
+    if (!this.locked) {
+      // Procurando: trava quando o mesmo andamento se confirma por LATCH_RUN análises seguidas.
+      const m = candidate > 0 ? this.measure(end, 60000 / candidate / BEAT.HOP_MS) : null
+      this.show(m)
+      if (candConfident && m) {
         if (this.lastCandidate > 0 && Math.abs(candidate / this.lastCandidate - 1) < 0.03) this.run++
         else this.run = 0
         this.lastCandidate = candidate
-        const lockedNow = this.locked || this.run >= BEAT.LOCK_RUN
-        if (lockedNow) {
-          // BPM: suaviza se perto do atual; troca se a música mudou de andamento (já consistente).
-          if (this.bpm > 0 && Math.abs(candidate / this.bpm - 1) < 0.04) this.bpm += (candidate - this.bpm) * 0.3
-          else if (this.run >= BEAT.LOCK_RUN || this.bpm === 0) this.bpm = candidate
-          // Fase: última batida observada = célula `bestPhase` atrás (+ meia célula).
-          const p = this.periodMs
-          const observed = (end - 1 - bestPhase + 0.5) * BEAT.HOP_MS
-          const predictedLast = this.nextBeat - p
-          let err = (observed - predictedLast) % p
-          if (err > p / 2) err -= p
-          if (err < -p / 2) err += p
-          if (this.nextBeat === 0 || !this.locked) this.nextBeat = observed + p * Math.ceil((now - observed) / p + 1e-6)
-          else this.nextBeat += err * BEAT.PHASE_GAIN
-          if (!this.locked) {
-            this.locked = true
-            this.onState?.(true, this.bpm)
-          }
-        }
+        if (this.run >= BEAT.LATCH_RUN) this.latch(candidate, end, m.phase, now)
       } else {
         this.run = 0
         this.lastCandidate = candidate
       }
-    } else {
-      this.confidence = 0
-      this.estimate = 0
-      this.run = 0
+      return
     }
 
-    if (confident || !this.locked) this.unsureSince = null
-    else {
-      if (this.unsureSince === null) this.unsureSince = now
-      if (silent || now - this.unsureSince >= BEAT.LOST_AFTER_MS) {
-        this.locked = false
-        this.unsureSince = null
-        this.onState?.(false, this.bpm)
+    // Travado: o andamento fica. Silêncio de verdade (ou muito tempo sem nenhuma batida) solta.
+    if (silent || now - this.lastGood > BEAT.RELEASE_AFTER_MS) {
+      this.locked = false
+      this.run = 0
+      this.changeRun = 0
+      this.onState?.(false, this.bpm)
+      this.bpm = 0
+      return
+    }
+    // A fase só é corrigida quando as batidas aparecem onde o andamento travado prevê;
+    // viradas, breaks e trechos calmos não mexem em nada (o volante segue sozinho).
+    const pCells = this.periodMs / BEAT.HOP_MS
+    const mL = this.measure(end, pCells)
+    this.show(mL)
+    if (this.passes(mL)) {
+      this.lastGood = now
+      const p = this.periodMs
+      const observed = (end - 1 - mL.phase + 0.5) * BEAT.HOP_MS
+      let err = (observed - (this.nextBeat - p)) % p
+      if (err > p / 2) err -= p
+      if (err < -p / 2) err += p
+      this.nextBeat += err * BEAT.PHASE_GAIN
+      // Ajuste fino do andamento pela deriva da fase (no máximo ±3 % do que travou).
+      const trimmed = this.bpm * (1 - (err / p) * BEAT.TEMPO_GAIN)
+      this.bpm = Math.min(this.baseBpm * 1.03, Math.max(this.baseBpm * 0.97, trimmed))
+    }
+    // Andamento novo: só quando um BPM diferente (e que não é dobro, metade, 3/2 ou 2/3 do
+    // atual) se confirma por CHANGE_RUN análises seguidas.
+    const related = candidate > 0 && [1, 2, 0.5, 1.5, 2 / 3].some((r) => Math.abs(candidate / this.bpm / r - 1) < 0.04)
+    if (candConfident && !related && this.lastCandidate > 0 && Math.abs(candidate / this.lastCandidate - 1) < 0.03) this.changeRun++
+    else this.changeRun = 0
+    this.lastCandidate = candidate
+    if (this.changeRun >= BEAT.CHANGE_RUN) {
+      const m = this.measure(end, 60000 / candidate / BEAT.HOP_MS)
+      this.latch(candidate, end, m.phase, now)
+    }
+  }
+
+  /** Trava (ou troca) o andamento e alinha a fase pela última batida observada. */
+  private latch(bpm: number, end: number, phase: number, now: number): void {
+    this.bpm = bpm
+    this.baseBpm = bpm
+    const p = this.periodMs
+    const observed = (end - 1 - phase + 0.5) * BEAT.HOP_MS
+    this.nextBeat = observed + p * Math.ceil((now - observed) / p + 1e-6)
+    this.lastGood = now
+    this.run = 0
+    this.changeRun = 0
+    this.locked = true
+    this.onState?.(true, bpm)
+  }
+
+  private passes(m: Measure): boolean {
+    return m.comb >= BEAT.MIN_COMB && m.recentOk && m.crest >= BEAT.MIN_CREST
+  }
+
+  /** Guarda as medidas para o HUD. */
+  private show(m: Measure | null): void {
+    this.comb = m?.comb ?? 0
+    this.crest = m?.crest ?? 0
+    this.attack = m && this.levelC > 1e-6 ? m.combMean / this.levelC : 0
+    this.confidence = m ? Math.max(0, Math.min(1, (m.comb - 1) / 3)) * Math.min(1, m.crest / (BEAT.MIN_CREST * 1.5)) : 0
+  }
+
+  /**
+   * Pente com o período `pCells` (em células) sobre a janela curta: fase das batidas, razão do
+   * pente, agudeza dos picos e se ainda há batida recente.
+   */
+  private measure(end: number, pCells: number): Measure {
+    const env = this.env
+    const at = (i: number): number => env[(end - 1 - i + N * 4) % N]!
+    const phaseCells = Math.round((BEAT.PHASE_S * 1000) / BEAT.HOP_MS)
+    let shortMean = 0
+    for (let i = 0; i < phaseCells; i++) shortMean += at(i)
+    shortMean /= phaseCells
+    let bestPhase = 0
+    let bestSum = -Infinity
+    for (let ph = 0; ph < Math.ceil(pCells); ph++) {
+      let sum = 0
+      let n = 0
+      for (let k = 0; ; k++) {
+        const i = Math.round(ph + k * pCells)
+        if (i >= phaseCells) break
+        // vizinhos ajudam quando o onset cai entre células
+        sum += at(i) + 0.5 * (at(i - 1) + at(i + 1))
+        n++
+      }
+      if (n > 0 && sum / n > bestSum) {
+        bestSum = sum / n
+        bestPhase = ph
       }
     }
-    if (!this.locked && !confident) this.bpm = 0
+    const combMean = bestSum / 2 // o pente soma 2 células de peso (1 + 0,5 + 0,5)
+    const comb = shortMean > 1e-6 ? combMean / shortMean : 0
+    // Batida recente: nas últimas RECENT_BEATS batidas houve um onset do tamanho dos do pente.
+    let recentMax = 0
+    const recentCells = Math.ceil(BEAT.RECENT_BEATS * pCells) + 1
+    for (let i = 0; i < recentCells; i++) recentMax = Math.max(recentMax, at(i))
+    // Pico agudo: em cada período, o maior onset contra a média do período. Bumbo dá um pico
+    // estreito (razão alta); um volume que ondula devagar (pad, chorus) dá uma curva larga.
+    let crestSum = 0
+    let crestN = 0
+    for (let k = 0; (k + 1) * pCells <= phaseCells; k++) {
+      let mx = 0
+      let sum = 0
+      const from = Math.round(k * pCells)
+      const to = Math.round((k + 1) * pCells)
+      for (let i = from; i < to; i++) {
+        const v = at(i)
+        sum += v
+        if (v > mx) mx = v
+      }
+      if (sum > 1e-9) {
+        crestSum += mx / (sum / (to - from))
+        crestN++
+      }
+    }
+    return { phase: bestPhase, combMean, comb, recentOk: recentMax >= BEAT.RECENT_FRACTION * combMean && combMean > 0, crest: crestN ? crestSum / crestN : 0 }
   }
 }
+
+interface Measure {
+  phase: number
+  combMean: number
+  comb: number
+  recentOk: boolean
+  crest: number
+}
+

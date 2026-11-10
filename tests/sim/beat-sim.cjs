@@ -64,9 +64,16 @@ function track(kind, bpm, sec) {
   return { x, beats }
 }
 
-function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap }) {
+function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap, breakdown }) {
   let a = track(kind, bpm, sec)
   if (swap) { const b = track(swap.kind, swap.bpm, sec); const at = Math.floor(swap.at * SR); a.x.set(b.x.subarray(at), at); a.beats = a.beats.filter((t) => t < swap.at).concat(b.beats.filter((t) => t >= swap.at)) }
+  // Break: de `breakdown.at` por `breakdown.len` s, sem bumbo nem baixo (só pad baixo e chimbal), como numa virada.
+  if (breakdown) {
+    const b = track('ambient', 0, sec), a0 = Math.floor(breakdown.at * SR), a1 = Math.floor((breakdown.at + breakdown.len) * SR)
+    for (let i = a0; i < a1 && i < a.x.length; i++) a.x[i] = 0.4 * b.x[i] + 0.05 * rnd()
+  }
+  // Silêncio como o app vê: o medidor só declara silêncio depois de 3 s quietos.
+  let quietSince = null
   const fft = 32768
   let cur = 0
   const tap = { fftSize: fft, getFloatTimeDomainData(buf) { const end = Math.floor(cur * SR); for (let i = 0; i < fft; i++) { const j = end - fft + i; buf[i] = j >= 0 && j < a.x.length ? a.x[j] : 0 } } }
@@ -78,7 +85,9 @@ function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap 
   for (let t = 0; t < sec; ) {
     const dt = (1 / fps) * (1 + jitter * rnd())
     t += dt; cur = Math.round(t * SR) / SR
-    const n = bt.update(t * 1000, kind === 'silence')
+    let rms = 0; const j0 = Math.floor(cur * SR); for (let j = Math.max(0, j0 - 1024); j < j0; j++) rms += a.x[j] * a.x[j]; rms = Math.sqrt(rms / 1024)
+    if (rms >= 0.0005) quietSince = null; else if (quietSince === null) quietSince = t
+    const n = bt.update(t * 1000, quietSince !== null && t - quietSince >= 3)
     if (n > 0) ticks.push(cur - latencyMs / 1000)
     if (t > 6 && rnd() > 0.9) { diag.crest.push(bt.crest); diag.comb.push(bt.comb); diag.acf.push(bt.acfPeak); diag.attack.push(bt.attack) }
     if (bt.locked) { lockedTime += dt; if (firstLock === null) firstLock = t; if (t > sec / 2) bpms.push(bt.bpm) }
@@ -96,7 +105,9 @@ function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap 
     phaseMedMs: errs.length ? med(errs).toFixed(0) : '—',
     phaseP90Ms: absErrs.length ? [...absErrs].sort((p, q) => p - q)[Math.floor(absErrs.length * 0.9)].toFixed(0) : '—',
     flips: states.length,
-    loseS: swap && swap.kind === 'ambient' ? ((states.find((st) => !st.locked && st.t >= swap.at)?.t ?? NaN) - swap.at).toFixed(1) : '',
+    loseS: swap ? ((states.find((st) => !st.locked && st.t >= swap.at)?.t ?? NaN) - swap.at).toFixed(1) : '',
+    changeS: swap && swap.bpm ? ((states.find((st) => st.locked && st.t >= swap.at && Math.abs(st.bpm / swap.bpm - 1) < 0.03)?.t ?? NaN) - swap.at).toFixed(1) : '',
+    endBpm: bt.bpm.toFixed(1),
     crest: med(diag.crest).toFixed(1), comb: med(diag.comb).toFixed(1), acf: med(diag.acf).toFixed(2), attack: med(diag.attack).toFixed(2)
   }
 }
@@ -105,7 +116,9 @@ const cases = [
   { kind: 'house', bpm: 124 }, { kind: 'house', bpm: 128, fps: 30 }, { kind: 'techno', bpm: 132 },
   { kind: 'hiphop', bpm: 90 }, { kind: 'breaks', bpm: 172 }, { kind: 'house', bpm: 122, fps: 20, jitter: 0.5 },
   { kind: 'ambient', bpm: 0 }, { kind: 'silence', bpm: 0 },
-  { kind: 'house', bpm: 124, swap: { kind: 'ambient', bpm: 0, at: 20 } }, { kind: 'ambient', bpm: 0, swap: { kind: 'techno', bpm: 128, at: 15 } }
+  { kind: 'house', bpm: 124, swap: { kind: 'ambient', bpm: 0, at: 20 } }, { kind: 'ambient', bpm: 0, swap: { kind: 'techno', bpm: 128, at: 15 } },
+  { kind: 'house', bpm: 124, swap: { kind: 'silence', bpm: 0, at: 20 } }, { kind: 'house', bpm: 124, breakdown: { at: 15, len: 8 } },
+  { kind: 'house', bpm: 124, sec: 50, swap: { kind: 'techno', bpm: 140, at: 20 } }
 ]
 if (require.main === module) console.table(cases.map((c) => run(c)))
 module.exports = { run, track, BeatTracker, BEAT, SR }

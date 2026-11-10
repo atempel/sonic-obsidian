@@ -11,7 +11,7 @@ export const GAIN_MIN_DB = -12
 export const GAIN_MAX_DB = 12
 export const RECENTS_MAX = 8
 /** Troca no beat (spec 024): compassos de 4 batidas. */
-export const BEAT_BARS = [4, 8, 16, 32] as const
+export const BEAT_BARS = [1, 2, 4, 8, 16] as const
 export type BeatBars = (typeof BEAT_BARS)[number]
 export const BEAT_LEAD_DEFAULT_MS = 70
 export const BEAT_LEAD_MAX_MS = 200
@@ -169,7 +169,7 @@ export function defaultSettings(): Settings {
     version: 2,
     gainDb: 0,
     gainDefaultDb: 0,
-    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 16, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
+    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { level: 0, curve: 'b', adaptation: 'normal' },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
@@ -266,7 +266,7 @@ export function sanitizeSettings(raw: unknown): Settings {
       order: oneOf(rot.order, ['random', 'collection'], d.rotation.order),
       collectionId: typeof rot.collectionId === 'string' ? rot.collectionId : null,
       onBeat: bool(rot.onBeat, d.rotation.onBeat),
-      bars: BEAT_BARS.includes(rot.bars as BeatBars) ? (rot.bars as BeatBars) : d.rotation.bars,
+      bars: BEAT_BARS.includes(rot.bars as BeatBars) ? (rot.bars as BeatBars) : rot.bars === 32 ? 16 : d.rotation.bars,
       beatLeadMs: Math.round(num(rot.beatLeadMs, 0, BEAT_LEAD_MAX_MS, d.rotation.beatLeadMs) / 10) * 10
     },
     blend: {

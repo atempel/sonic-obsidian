@@ -392,3 +392,14 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - **Descartado:** congelar o quadro, porque o usuário quer o preset animando sem áudio.
   - **Descartado:** as teclas `A`, `S`, `D` e `F`, reservadas aos efeitos de vídeo do protótipo.
 
+## 2026-11-10 — Spec 024, revisão 3: o andamento trava e só muda quando outro se confirma
+- **Do usuário:** "ao invés de tentar identificar e alterar o valor o tempo inteiro, [...] identificar o BPM e depois deixá-lo seguir. Apenas se em algum momento for detectado um bpm diferente que possa ser atualizado." No log, a confiança caía em viradas e trechos calmos e, a cada nova trava, o BPM saía diferente.
+- **Decisão:**
+  - travar o andamento e seguir com o volante;
+  - corrigir só a fase (e ±3 % de ajuste fino) quando as batidas confirmam;
+  - trocar de andamento só depois de ~4 s de outro BPM confirmado, sem contar dobro, metade, 3/2 ou 2/3;
+  - soltar só em silêncio (3 s) ou depois de 30 s sem batida.
+  - Compassos passam a 1/2/4/8/16, com padrão 4: 16 e 32 eram longos demais (pedido do usuário).
+- **Troca no critério 3 da spec:** ambiente depois de uma faixa com batida não volta mais aos segundos. Para o DJ, manter o andamento no break é o comportamento certo.
+- **Descartado:** soltar por falta de confiança (era a causa das quedas); tap tempo agora (fica para o P1, se a detecção ainda errar o BPM).
+
