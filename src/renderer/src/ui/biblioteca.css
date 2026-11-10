@@ -50,6 +50,7 @@ body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
   transition: border-color var(--t-fast), background var(--t-fast); }
 .lib .search input::placeholder { color: var(--text-3); }
 .lib .search input:hover { border-color: var(--line-3); }
+.lib:focus { outline: none; }
 .lib .search input:focus-visible { outline-offset: 0; border-color: var(--violet); }
 .lib .search .si { position: absolute; left: 11px; top: 9px; color: var(--text-3); pointer-events: none; }
 .lib .search kbd { position: absolute; right: 9px; top: 9px; pointer-events: none; }

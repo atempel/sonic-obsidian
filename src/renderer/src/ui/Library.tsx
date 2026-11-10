@@ -51,7 +51,9 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
       setMenu(null)
       return
     }
-    panel.current?.querySelector<HTMLElement>('[role=tab][aria-selected=true]')?.focus()
+    // Foco na própria gaveta, sem anel visível: L e Esc fecham, Tab vai à busca. Focar a aba
+    // "Todos" deixava um anel no topo a cada abertura pelo teclado (relato do usuário, 2026-11-10).
+    panel.current?.focus({ preventScroll: true })
     // M12: degrau nas primeiras linhas, só na abertura.
     const el = panel.current
     if (!el) return
@@ -169,7 +171,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   return (
     <>
       <div class="lib-scrim" onClick={close} />
-      <aside class="lib" ref={panel} aria-label="Biblioteca de presets" aria-hidden={!open} onKeyDown={onKey}>
+      <aside class="lib" ref={panel} tabIndex={-1} aria-label="Biblioteca de presets" aria-hidden={!open} onKeyDown={onKey}>
         <div class="lib-head">
           <div class="brand">
             <Icon name="library" />
