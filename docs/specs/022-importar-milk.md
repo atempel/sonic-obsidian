@@ -1,6 +1,6 @@
 # 022 — Importar presets `.milk`
 
-**Fase:** 3 · **Status:** Em andamento · **Issue:** [#64](https://github.com/atempel/sonic-obsidian/issues/64) · **Depende de:** [021](021-migracao-butterchurn3.md)
+**Fase:** 3 · **Status:** Feita (PR #65; validada no Windows em 2026-11-10, exceto a importação de um nome novo, coberta pelo spike 006) · **Issue:** [#64](https://github.com/atempel/sonic-obsidian/issues/64) · **Depende de:** [021](021-migracao-butterchurn3.md)
 
 ## Problema
 Hoje só tocam os presets que vêm com o app. A comunidade MilkDrop tem milhares de `.milk`, e o usuário quer trazer os dele.

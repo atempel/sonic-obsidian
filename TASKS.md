@@ -17,7 +17,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Setup, diagnóstico e desempenho por preset** — [spec 012](docs/specs/012-setup-diagnostico-desempenho.md) · issue [#25](https://github.com/atempel/sonic-obsidian/issues/25)
 
 ## Manutenção
-- [x] **Passagem de performance, segurança e otimização** (PR #56 + log da v0.5.0). A abertura lenta é a primeira execução de um `.exe` novo e sem assinatura (8,3 s antes do `main.js`); aberta de novo, o primeiro quadro sai em ~1,1 s (DECISIONS 2026-11-09). Falta só confirmar com uma terceira abertura.
+- [x] **Passagem de performance, segurança e otimização** (PR #56 + log da v0.5.0). A abertura lenta é a primeira execução de um `.exe` novo e sem assinatura (8,3 s antes do `main.js`); aberta de novo, o primeiro quadro sai em ~1,1 s (DECISIONS 2026-11-09). Confirmado em 2026-11-10: abertura quente em 0,9 e 1,35 s.
 - [ ] Refazer a checagem de `electron@45.2.3` e `vite@8.3.6` depois de 19/11 (14 dias) — [docs/dependencias.md](docs/dependencias.md)
 - [x] Decidir sobre `electron@45.2.3` e `vite@8.3.6`: mantidos; refazer a checagem depois de 19/11 — [docs/dependencias.md](docs/dependencias.md)
 - [x] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder`: aceitas (só empacotamento); rever quando o electron-builder atualizar
@@ -45,13 +45,13 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Landing: refino de movimento e microinterações** (sistema de movimento da v3 no `site/` + músicas do Uppbeat criptografadas na demo) — [spec 019](docs/specs/019-landing-refino-movimento.md) · issue [#52](https://github.com/atempel/sonic-obsidian/issues/52)
 
 ## Agora — Fase 3 (Fontes e presets)
-- [x] **Migração para o Butterchurn 3** — mergeada no #62 (falta o teste do usuário no Windows)
-- [ ] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65 (falta o teste no Windows)
+- [x] **Migração para o Butterchurn 3** — #62, validada no Windows em 2026-11-10
+- [x] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65, validada no Windows
 - [ ] **Troca no beat a cada N compassos + segurar visual** (próximo; prioridade da pesquisa de mercado) — [spec 024](docs/specs/024-troca-no-beat-segurar.md) · issue [#67](https://github.com/atempel/sonic-obsidian/issues/67)
 - [ ] **Estúdio de presets** (depois da 024) — specs a criar
 - [ ] Fonte microfone (P1, depois do Estúdio)
 - ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)
-- [ ] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, headless 30/30 (falta o teste no Windows)
+- [x] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, validada no Windows
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))

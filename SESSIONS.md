@@ -16,9 +16,15 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 - **Pesquisa de mercado no repo:** `docs/research/mercado/` (pesquisa, personas, SYQEL), cópia exata do Claude Docs. `planejar-feature` passa a ler as personas, e a spec cita a persona.
 - **Com a pesquisa, a prioridade mudou:** a troca no beat + segurar vem antes do Estúdio. **Spec 024** planejada, issue #67: compassos 4/8/16/32, `Enter` segura, trocas manuais esperam a batida (M23), detecção própria.
 **Deixou em:**
-- **PR #65 aberto, CI verde, aguardando o teste do usuário no Windows e o ok para mergear.** Roteiro: 021 (motor 3), 022 (importar `.milk`, incluindo um `.milk` com JS) e 023 (coleções), mais o `sonic-obsidian.log` depois de ~30 min com rotação.
+- ~~PR #65 aguardando teste~~ (ver atualização abaixo). Roteiro: 021 (motor 3), 022 (importar `.milk`, incluindo um `.milk` com JS) e 023 (coleções), mais o `sonic-obsidian.log` depois de ~30 min com rotação.
 - **O branch da sessão está à frente do PR #65** com só docs, a spec 024 e o teste: `8a1584a`, `0e87547`, `046850e` e o encerramento. Depois do merge do #65, abrir um PR deste branch, ou alinhar com `merge -s ours` se o main já tiver tudo.
-- **Próximo:** implementar a 024 (`executar-task`); o Estúdio vem depois (specs a criar).
+- **Atualização (02:20 UTC):**
+  - O usuário testou 021/022/023 no Windows e aprovou: tudo normal, sem mudança de performance.
+  - Log de ~30 min: GPU entre 144 e 160 MB, abertura quente em 1,35 s, sem erros. O `.milk` com JS foi recusado na conversão.
+  - Corrigido o anel de foco na aba "Todos" ao abrir a Biblioteca com `L` (relato do usuário): agora o foco vai para a gaveta.
+  - **PR #65 mergeado** (squash `d166c59`). Este branch foi alinhado ao main, e o PR dele leva docs, a spec 024 e `tests/headless/`.
+  - Não testada pelo usuário: a importação de um `.milk` com nome novo (o arquivo baixado já estava na biblioteca e foi pulado, como esperado).
+- **Próximo:** implementar a 024 numa sessão nova (o contexto desta acabou); o Estúdio vem depois (specs a criar).
 - **Não verificado no Windows:** 021, 022 e 023, incluindo áudio, fps e estabilidade.
 - **A refazer:** checagem de `electron`/`vite` depois de 19/11.
 

@@ -1,6 +1,6 @@
 # 021 — Migração para o Butterchurn 3 (WASM)
 
-**Fase:** 3 · **Status:** Em andamento (PR #62) · **Issue:** [#63](https://github.com/atempel/sonic-obsidian/issues/63) · **Depende de:** [006](006-spike-butterchurn3-milk.md) (aprovado)
+**Fase:** 3 · **Status:** Feita (PR #62; validada pelo usuário no Windows em 2026-11-10) · **Issue:** [#63](https://github.com/atempel/sonic-obsidian/issues/63) · **Depende de:** [006](006-spike-butterchurn3-milk.md) (aprovado)
 
 ## Problema
 O motor 2.6.7 transforma as equações de cada preset em JavaScript (`new Function`). No Windows, um preset de teste com código malicioso executou dentro do app (spike 006). Enquanto for assim, nenhum preset de fora pode entrar: importar `.milk`, o Estúdio e o MCP dependem disso.
