@@ -47,6 +47,25 @@ const glError = (gl: WebGL2RenderingContext, p: WebGLProgram): string => {
   return first.replace(/\s+/g, ' ').trim().slice(0, 120)
 }
 
+/**
+ * Shader do preset atual que não compilou ou não linkou (`null` = ok). Partes internas do
+ * Butterchurn 3 (`renderer.warpShader/compShader.shaderProgram`); sem elas, `null`.
+ * Usado no visualizador de teste (022) e no principal (tela preta sem aviso, 2026-11-10).
+ */
+export function shaderError(viz: Visualizer): string | null {
+  const r = (viz as unknown as { renderer?: RendererInternals }).renderer
+  const gl = r?.gl
+  if (!gl) return null
+  for (const [label, h] of [
+    ['warp', r?.warpShader],
+    ['comp', r?.compShader]
+  ] as const) {
+    const p = h?.shaderProgram
+    if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return `shader ${label} não compila: ${glError(gl, p)}`
+  }
+  return null
+}
+
 /** Visualizador de 64×64 só para compilar; descartado ao fim do lote (e ao fechar o Estúdio, spec 026). */
 export class Validator {
   private readonly canvas = document.createElement('canvas')
@@ -65,17 +84,7 @@ export class Validator {
     } catch (err) {
       return `equações: ${err instanceof Error ? err.message : String(err)}`.slice(0, 160)
     }
-    const r = (this.viz as unknown as { renderer?: RendererInternals }).renderer
-    const gl = r?.gl
-    if (!gl) return null
-    for (const [label, h] of [
-      ['warp', r?.warpShader],
-      ['comp', r?.compShader]
-    ] as const) {
-      const p = h?.shaderProgram
-      if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return `shader ${label} não compila: ${glError(gl, p)}`
-    }
-    return null
+    return shaderError(this.viz)
   }
 
   dispose(): void {

@@ -421,3 +421,14 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Relato do usuário:** o `while(1)` não congelou (critério 4 ok). Mas, editando `per_frame`, o efeito pareceu travar e não voltou depois de corrigir um erro. Também dava para selecionar qualquer texto da interface.
 - **Travamento:** não reproduzido no headless com o mesmo preset. Hipótese: uma versão válida gerava NaN ou infinito (ex.: `log(bass)` no silêncio, `pow(-1, 0.5)`). Esse valor contamina a imagem, que se realimenta, e corrigir o código não a limpa. Para isso, o Worker agora roda com as variáveis reais do preset (valores-base, `q1…q32`, `x`/`y`/`rad`/`ang` por ponto da malha) e por 3 quadros, o último com o áudio em 0. Recusa a versão que deixa `zoom`, `rot`, `warp`, `cx`, `cy`, `dx`, `dy`, `sx`, `sy` ou `decay` inválidos. Divisão por zero no EEL dá 0 e não é problema. **Falta confirmar no Windows** se era essa a causa.
 - **Seleção (do usuário):** só o que vale copiar fica selecionável: campos, código dos shaders e mensagens de erro (classe `.selectable`). O resto da interface (`#ui`) não seleciona. **Descartado:** bloquear tudo, porque o erro e o shader são úteis para copiar.
+
+## 2026-11-10 — Tela preta sem aviso: conferir os shaders no visualizador principal
+- **Relato do usuário:** "Rovastar + Geiss - Hyperspace - kaleidoscope" e "Rovastar + Geiss - Snapshot Of Space (LSB mix)" ficam com a tela preta no Windows, e o log não registra nada. No Chromium da nuvem (SwiftShader), os dois desenham, inclusive com áudio fraco.
+- **Hipótese:** shader que não compila ou não linka na GPU/driver do usuário (no Windows, o ANGLE traduz o GLSL para Direct3D). O Butterchurn não avisa e desenha preto.
+- **Decisão:**
+  - depois de cada troca, o app confere o link dos shaders `warp`/`comp` do preset no visualizador principal (o mesmo teste da 022, agora em `shaderError`);
+  - se falhar, registra a mensagem do driver, pula o preset até o app fechar e mostra um toast;
+  - se compilou mas a tela fica toda preta por 3 s com som tocando, só registra "preset preto" (9 pixels lidos logo depois do render, uma vez por segundo, só nesses segundos).
+- **Descartado:**
+  - ocultar os dois presets à mão (não explica a causa e pode atingir outros);
+  - pular também os presets pretos (alguns são escuros de propósito).

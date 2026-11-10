@@ -16,7 +16,7 @@ import { hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
-import { importMilks, type MilkInput } from './importer'
+import { importMilks, shaderError, type MilkInput } from './importer'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
@@ -327,13 +327,34 @@ async function start(): Promise<void> {
       core.events.emit('slowPreset', { name, fps })
     }
   }
+  // Tela preta sem aviso (relato de 2026-11-10): shader que não compila na GPU do usuário é
+  // registrado com a mensagem do driver e pulado até o app fechar; preset que fica todo preto
+  // com som tocando é só registrado (pode ser outra causa).
+  const badShader = new Set<string>()
+  let blackCheck: { name: string; at: number; dark: number } | null = null
   core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
     core.events.emit('slowPreset', null)
     probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0, last: 0 }
-    viz.load(library.get(name), blendType, blendSeconds).catch((err: unknown) => {
-      // Preset que não compila para WASM: registra; o anterior continua na tela.
-      window.so.log(`preset não carregou: ${name}: ${err instanceof Error ? err.message : String(err)}`)
-    })
+    blackCheck = null
+    viz
+      .load(library.get(name), blendType, blendSeconds)
+      .then((applied) => {
+        if (!applied || core.state.current !== name) return
+        const err = shaderError(viz.visualizer)
+        if (!err) {
+          blackCheck = { name, at: performance.now() + blendSeconds * 1000 + 2000, dark: 0 }
+          return
+        }
+        window.so.log(`preset com shader que não compila nesta GPU: ${name}: ${err}`)
+        if (badShader.has(name)) return
+        badShader.add(name)
+        showToast('Este preset não funciona nesta placa de vídeo e foi pulado.', { force: true })
+        core.run('preset.next', { cut: true }, 'rotation')
+      })
+      .catch((err: unknown) => {
+        // Preset que não compila para WASM: registra; o anterior continua na tela.
+        window.so.log(`preset não carregou: ${name}: ${err instanceof Error ? err.message : String(err)}`)
+      })
     rotation.restart(performance.now())
     state.preset = name
     console.log(`[viz] preset: ${name} (${blendType}, ${blendSeconds} s)`)
@@ -710,7 +731,7 @@ async function start(): Promise<void> {
   // ou quebrar a transição seguinte. 3 erros em 1 s = o preset é pulado até o app fechar.
   const broken = new Set<string>()
   const baseSkip = library.isSkipped
-  library.isSkipped = (name) => broken.has(name) || baseSkip(name)
+  library.isSkipped = (name) => broken.has(name) || badShader.has(name) || baseSkip(name)
   let renderErrors: number[] = []
   const renderSafe = (elapsed: number): void => {
     try {
@@ -734,6 +755,19 @@ async function start(): Promise<void> {
       showToast('Este preset travou e foi pulado.', { force: true })
       run('preset.next', { cut: true }, 'rotation')
     }
+  }
+  /** 9 pontos do quadro recém-desenhado, todos quase pretos. Lido logo depois do render. */
+  const isBlackFrame = (): boolean => {
+    const gl = (viz.visualizer as unknown as { renderer?: { gl?: WebGL2RenderingContext } }).renderer?.gl
+    if (!gl) return false
+    const px = new Uint8Array(4)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    for (const fx of [0.2, 0.5, 0.8])
+      for (const fy of [0.2, 0.5, 0.8]) {
+        gl.readPixels(Math.floor(gl.drawingBufferWidth * fx), Math.floor(gl.drawingBufferHeight * fy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
+        if (px[0]! > 6 || px[1]! > 6 || px[2]! > 6) return false
+      }
+    return true
   }
   const loop = (now: number): void => {
     requestAnimationFrame(loop)
@@ -786,6 +820,16 @@ async function start(): Promise<void> {
     // No modo beat, a troca sai na batida e mistura no máximo 1 batida, para cair no tempo.
     if (!studio && rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
     renderSafe(dt * speed)
+    if (blackCheck && now >= blackCheck.at) {
+      const c = blackCheck
+      if (c.name !== core.state.current || document.hidden) blackCheck = null
+      else if (!isBlackFrame()) blackCheck = null
+      else if (silence.resting) c.at = now + 1000 // sem som, preto pode ser o preset descansando
+      else if (++c.dark >= 3) {
+        window.so.log(`preset preto: ${c.name} (os shaders compilaram; 3 s todo preto com som tocando)`)
+        blackCheck = null
+      } else c.at = now + 1000
+    }
     if (!firstFrame) {
       firstFrame = true
       window.so.mark('primeiro quadro')

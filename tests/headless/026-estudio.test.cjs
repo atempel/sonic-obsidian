@@ -64,10 +64,11 @@ function mainChecks() {
   const waitStatus = async (re, ms = 4000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(await status())) return true; await page.waitForTimeout(50) } return false }
 
   // 1. E abre com o preset atual
-  const c0 = await cur()
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
   await page.waitForSelector('.studio', { timeout: 5000 })
+  // Lido depois de abrir: a rotação (5 s) pode trocar o preset antes do E.
+  const c0 = await cur()
   ok('1a E abre o Estúdio', await page.isVisible('.studio'))
   const title0 = await page.inputValue('#studio-name')
   ok('1b título começa como "Remix de …"', title0.startsWith('Remix de '), title0)
