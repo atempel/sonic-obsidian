@@ -22,5 +22,6 @@ O desenho da interface vive num artefato do Claude Design (link e versão em [SY
 | `Sonic Obsidian Palco com vídeo.html` | Camada de vídeo no compositor, cenas na Biblioteca | Vídeo (a planejar) |
 | `Sonic Obsidian Modo performance.html` | VJ ao vivo: Preview/Program, crossfader, 20 pads, tap tempo | Vídeo (a planejar) |
 | `Sonic Obsidian Biblioteca clipes e cenas.html` | Detalhe do clipe (loop), criação de cena, cena no Estúdio | Vídeo (a planejar) |
+| `Sonic Obsidian Modos.html` | Modos de interface Simples · Completo · Rack (`docs/v3-modos.md`). Proposta, não decidida | A decidir |
 | `Sonic Obsidian Micro Faixa.html`, `Micro Navegação.html` | Laboratórios de microinterações (M01–M23, `docs/v3-microinteracoes.md`): faixa, medidor, abas, gaveta, toast, Modo limpo, controles da janela. Tudo Proposto | 2 (a escolher) |
 | `Sonic Obsidian Propostas.html`, `Vídeo Propostas.html`, `A Palco`, `B Biblioteca`, `C Rack` | Exploração e decisões (contexto, não implementar) | — |

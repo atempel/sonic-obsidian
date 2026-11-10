@@ -41,7 +41,7 @@ A janela não tem moldura nem barra de título (spec 004). Para fechar e minimiz
 - **Quando aparecem:** só quando o ponteiro entra na zona do canto (cerca de 160×96px a partir do canto superior direito) ou quando um deles recebe foco por teclado. Aparecem com fade em `t-fast` e somem `t-med` depois que o ponteiro sai da zona. Não aparecem junto com a faixa de controle, nem quando a Biblioteca, os Ajustes ou um diálogo estão abertos sobre o canto (o painel de ajustes tem o próprio fechar).
 - **Fechar:** fecha o app na hora, sem confirmação (tudo já salva sozinho). Hover = fundo `bg-04` e ícone `text-1`; sem vermelho. Teclado: `Ctrl+W` e `Alt+F4` continuam.
 - **Tela cheia:** os mesmos controles, na mesma zona.
-- **Arrastar a janela:** pelo visual (spec 004); a zona dos controles não arrasta.
+- **Arrastar a janela:** pela faixa do topo (40 px), fora do canto dos controles, sem indicação visual (10/11/2026).
 - **Rack:** mantém o próprio título com fechar; Modo performance tem "Sair (Esc)" e também ganha os controles da janela na mesma zona.
 
 ## Painel de atalhos (08/11/2026)
@@ -52,3 +52,16 @@ Um mapa rápido de todos os atalhos, sem sair do que se está fazendo.
 - **Contexto primeiro:** o grupo do lugar atual vem no topo com o rótulo "Agora" — com a Biblioteca aberta, um grupo **Biblioteca** (↑/↓, Enter, F, `/` foca a busca, Esc); no modo Rack, **Rack** (M volta ao Palco, Espaço, ←/→, F, R).
 - **Modo performance:** o mesmo `?` abre a versão do modo: um teclado desenhado com as fileiras `1`–`0` e `Q`–`P` mostrando o clipe de cada pad, `A S D F` (efeitos de segurar), `Z X C` (crossfader), `B` (tap), `N` (sincronizar), Espaço (corte), `V` (fade), `Tab` (deck), PgUp/PgDn (banco), `Esc` (sair).
 - **Busca rápida com comandos:** `Ctrl+K` / `/` passa a encontrar também comandos, num grupo "Comandos" abaixo dos presets: cada comando mostra o atalho em `kbd` à direita e Enter executa (ex.: "Modo limpo" `T`, "Abrir biblioteca" `L`, "Modo Rack" `M`, "Mostrar atalhos" `?`, "Configurações" `Ctrl+,`, "Tela cheia" `F11`, "Favoritar preset atual" `F`, "Rotação automática" `R`). Quem busca a ação aprende a tecla.
+
+
+## Coleções pela faixa (10/11/2026)
+Botão `folder-plus` ao lado da estrela, sem tecla. Abre um painel com uma linha marcável por coleção (`check` + nome + contagem em mono); clicar põe ou tira o preset atual e o painel continua aberto. "Nova coleção" vira um campo no lugar (Enter cria já com o preset). Um ponto violeta de 4 px no botão indica que o preset atual está em alguma coleção. Spec 023 no repo.
+
+## Modos de interface
+Proposta em `docs/v3-modos.md` e na página "Modos" (não decidida).
+
+## Ajustes rápidos: cabeçalho e rolagem (10/11/2026)
+- O cabeçalho tem "Todas as configurações" (ícone `settings`, `Ctrl+,`) ao lado do fechar; o link no fim do painel sai.
+- Cada seção tem um ícone de 16 px em `text-2` antes do título (Sinal `audio-lines`, Expressividade `activity`, Transições `blend`, Rotação `repeat`, Texto `type`).
+- Ao fechar, a rolagem volta ao topo depois da animação de saída. A Biblioteca é a exceção: ela guarda a posição da lista, que a pessoa costuma retomar.
+- Curva por frequência (EQ de 16 bandas dentro da Expressividade): `docs/v3-reatividade.md`.
