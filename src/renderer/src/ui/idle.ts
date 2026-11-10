@@ -25,7 +25,7 @@ export function setupIdle(blocked: () => boolean): Idle {
   window.addEventListener('pointerdown', wake, { passive: true })
   document.addEventListener('focusin', (e) => {
     // Foco por teclado (Tab) dentro da faixa traz a faixa de volta.
-    if ((e.target as HTMLElement | null)?.closest?.('.strip')) wake()
+    if ((e.target as HTMLElement | null)?.closest?.('.strip, .menu.collect')) wake()
   })
   wake()
   return {

@@ -1,6 +1,6 @@
 # 022 — Importar presets `.milk`
 
-**Fase:** 3 · **Status:** A fazer · **Issue:** [#64](https://github.com/atempel/sonic-obsidian/issues/64) · **Depende de:** [021](021-migracao-butterchurn3.md)
+**Fase:** 3 · **Status:** Em andamento · **Issue:** [#64](https://github.com/atempel/sonic-obsidian/issues/64) · **Depende de:** [021](021-migracao-butterchurn3.md)
 
 ## Problema
 Hoje só tocam os presets que vêm com o app. A comunidade MilkDrop tem milhares de `.milk`, e o usuário quer trazer os dele.
@@ -28,14 +28,15 @@ Importar `.milk` escolhendo arquivos ou arrastando para a janela. A conversão r
 Estúdio (edição), MCP (`create_preset`), conversão reversa GLSL → HLSL.
 
 ## Critérios de aceite (Windows)
-1. Arrastar os 10 `.milk` de `spike/006/milk/` importa 8 e explica as 2 falhas, sem travar o app.
+1. Arrastar 10 `.milk` que não estejam na biblioteca importa os que convertem e explica as falhas, sem travar o app. Os fixtures de `spike/006/milk/` já fazem parte do pacote oficial: arrastados como estão, os 10 são pulados ("já estavam na biblioteca"). Com cópias renomeadas, entram 8 e falham 2.
 2. Os importados tocam, aparecem como "Importado" na Biblioteca e na busca, e continuam lá depois de reabrir o app.
 3. Um `.milk` com `*_str` malicioso não executa nada.
 4. Remover um importado apaga o arquivo e tira o preset da Biblioteca.
 
-## Perguntas em aberto (confirmar ao começar)
-- Onde fica o botão no design: checar o protótipo (Configurações › Biblioteca e a gaveta).
-- Limite de quantidade importada? E o que fazer com nome repetido?
+## Perguntas respondidas (2026-11-10)
+- **Onde fica o botão:** está no protótipo `0fd0`, em Configurações › Biblioteca ("Importar presets .milk", "Escolher arquivos…"). A área de soltar fica no Palco (M21), com o rótulo "Importado" e o filtro "Importados" na Biblioteca. Diferenças em DIVERGENCIAS.
+- **Nome repetido:** é pulado e avisado (decisão do usuário).
+- **Limite:** 200 por vez, sem teto total (decisão do usuário).
 
 ## Referências
 [006](006-spike-butterchurn3-milk.md), `docs/architecture.md` §5, DECISIONS 2026-11-09.

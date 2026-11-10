@@ -11,7 +11,10 @@ import './settings.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureCheck, Core } from '../core/commands'
+import type { ImportResult, MilkInput } from '../importer'
 import { Icon } from './icons'
+import { CollectButton } from './CollectPop'
+import { DropZone } from './DropZone'
 import { Library } from './Library'
 import { Palette } from './Palette'
 import { QuickSettings } from './QuickSettings'
@@ -49,6 +52,11 @@ export interface PalcoBridge {
   /** Dispositivo e taxa da captura (Configurações › Captura). */
   captureInfo(): { device: string; sampleRate: number }
   presetCount(): number
+  /** Importar .milk (spec 022): converte no main, valida e grava. */
+  importMilk(files: MilkInput[], onProgress?: (done: number, total: number) => void): Promise<ImportResult>
+  isImported(name: string): boolean
+  importedCount(): number
+  removeImported(name: string): Promise<void>
 }
 
 /**
@@ -288,6 +296,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               <span class="core" aria-hidden="true" />
             </span>
           </button>
+          <CollectButton core={core} />
         </div>
         <div class="strip-t">
           <button
@@ -517,12 +526,13 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Edge core={core} />
       <Strip bridge={bridge} />
       <WindowControls core={core} />
-      <Library core={core} presets={presets} />
+      <Library core={core} presets={presets} imports={{ is: bridge.isImported, count: bridge.importedCount, remove: bridge.removeImported }} />
       <Palette core={core} presets={presets} />
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <Settings bridge={bridge} />
       <WelcomeCard core={core} />
       <ShortcutsPanel core={core} />
+      <DropZone bridge={bridge} />
       <GlobalToast />
     </>
   )
@@ -570,6 +580,6 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   setupPress()
   const { state } = bridge.core
   return setupIdle(
-    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip')
+    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
   )
 }

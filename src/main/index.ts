@@ -4,6 +4,7 @@ import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
 import { mark } from './startup'
 import { milkToPreset3 } from './milk'
+import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
 
 mark('main.js')
 import { JsonStore } from './store'
@@ -64,12 +65,23 @@ function registerStores(): void {
     }
   })
   ipcMain.handle('system:testFlags', () => readTestFlags())
-  // .milk → preset 3.x fora do renderer (o conversor HLSL precisa de eval); usado pela spec 022.
+  // Importar .milk (spec 022). A conversão fica aqui: o conversor HLSL precisa de eval, que o
+  // renderer proíbe. Entra texto, sai preset 3.x (EEL + GLSL); nada é executado.
+  const milkFile = (v: unknown): MilkFile => {
+    const f = v as Partial<MilkFile> | null
+    if (!f || typeof f.name !== 'string' || typeof f.text !== 'string') throw new Error('arquivo inválido')
+    if (f.text.length > MAX_BYTES) throw new Error('arquivo maior que 256 KB')
+    return { name: f.name.slice(0, 260), text: f.text }
+  }
   ipcMain.handle('presets:convertMilk', async (_e, text: unknown) => {
     const t = performance.now()
     const preset = await milkToPreset3(text)
     return { preset, ms: performance.now() - t }
   })
+  ipcMain.handle('presets:listImported', () => listImported())
+  ipcMain.handle('presets:saveImported', (_e, file: unknown) => saveImported(milkFile(file)))
+  ipcMain.handle('presets:removeImported', (_e, name: unknown) => removeImported(name))
+  ipcMain.handle('presets:pickMilk', (e) => pickMilkFiles(BrowserWindow.fromWebContents(e.sender)))
 }
 
 /**

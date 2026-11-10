@@ -25,6 +25,7 @@ import { Icon, type IconName } from './icons'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { dbText, secondsText } from './QuickSettings'
+import { importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
 
 /**
@@ -518,6 +519,22 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
   const lib = core.state.library
   const [open, setOpen] = useState(false)
   const [io, setIo] = useState<{ ok: boolean; text: string } | null>(null)
+  // Importar .milk (spec 022): resumo do último lote, com os motivos das falhas.
+  const [milk, setMilk] = useState<{ ok: boolean; text: string; fails: string[] } | null>(null)
+  const [milkBusy, setMilkBusy] = useState(false)
+  const importMilk = async (): Promise<void> => {
+    const picked = await window.so.presets.pickMilk()
+    if (!picked.files.length && !picked.tooBig.length) return
+    setMilkBusy(true)
+    try {
+      const r = await bridge.importMilk(picked.files, (done, total) => setMilk({ ok: true, text: `Importando… ${done}/${total}`, fails: [] }))
+      r.extra += picked.extra
+      for (const n of picked.tooBig) r.failed.push({ name: n.replace(/\.milk$/i, ''), reason: 'arquivo maior que 256 KB' })
+      setMilk({ ok: r.failed.length === 0, text: importSummary(r), fails: r.failed.map((f) => `${f.name}: ${f.reason}`) })
+    } finally {
+      setMilkBusy(false)
+    }
+  }
   const listRef = useRef<HTMLDivElement>(null)
   const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
 
@@ -550,8 +567,30 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
     <>
       <Grp title="Pacotes">
         <Row label="Base" help="butterchurn-presets e os pacotes extras que vêm com o app." kw="pacote presets">
-          <span class="count num">{bridge.presetCount()} presets</span>
+          <span class="count num">{bridge.presetCount() - bridge.importedCount()} presets</span>
         </Row>
+        <Row label="Importar presets .milk" help="Ou arraste arquivos .milk para a janela. Eles são convertidos e ficam marcados como importados." kw="milk arquivos importar importados">
+          {bridge.importedCount() > 0 && <span class="count num">{bridge.importedCount()} importados</span>}
+          <button class="btn sm" disabled={milkBusy} onClick={() => void importMilk()}>
+            Escolher arquivos…
+          </button>
+        </Row>
+        {milk && (
+          <div class={milk.ok ? 'note ok' : 'note'} role="status">
+            <Icon name={milk.ok ? 'check' : 'circle-alert'} small />
+            <span>
+              {milk.text}
+              {milk.fails.length > 0 && (
+                <ul class="fails">
+                  {milk.fails.slice(0, 10).map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                  {milk.fails.length > 10 && <li>e mais {milk.fails.length - 10} (detalhes no log)</li>}
+                </ul>
+              )}
+            </span>
+          </div>
+        )}
       </Grp>
       <Grp title="Presets ocultos">
         <Row label="Presets ocultos" help="Escondidos por você com “Não mostrar mais”." kw="ocultos restaurar gerenciar">

@@ -86,6 +86,28 @@ export class PresetLibrary {
     return name
   }
 
+  /** Importados pelo usuário (spec 022): rótulo "Importado" e "Remover importado". */
+  private readonly imported = new Set<string>()
+
+  isImported(name: string): boolean {
+    return this.imported.has(name)
+  }
+
+  get importedCount(): number {
+    return this.imported.size
+  }
+
+  addImported(name: string, preset: Preset): void {
+    this.imported.add(name)
+    this.addPresets({ [name]: preset })
+  }
+
+  removeImported(name: string): void {
+    if (!this.imported.delete(name)) return
+    this.presets.delete(name)
+    this.names = this.names.filter((n) => n !== name)
+  }
+
   /** Acrescenta presets (o pacote 3.x exporta o mapa nome → preset). */
   addPresets(map: Record<string, Preset>): void {
     for (const [name, preset] of Object.entries(map)) {
