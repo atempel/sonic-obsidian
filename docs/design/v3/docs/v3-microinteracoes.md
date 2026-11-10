@@ -43,7 +43,7 @@ Regras (destiladas das referências): o que acontece muitas vezes por dia não a
 - **M17 · Copiar → copiado** — o ícone `copy` vira `check` com escala cruzada (120 ms) e volta após 1,5 s.
 
 ### Estados e modos
-- **M18 · Silêncio com carência** — sem som, o núcleo da marca esvazia em 400 ms e o medidor se apaga em cascata; o painel "Sem áudio" só aparece depois de 1,2 s de silêncio contínuo (pausas curtas não piscam a tela). A volta do som remove o painel com fade de 220 ms.
+- **M18 · Silêncio com carência** — sem som, o núcleo da marca esvazia em 400 ms e o medidor se apaga em cascata; o painel "Nenhum som chegando" só aparece depois de 10 s de silêncio contínuo (pausas entre faixas não mostram o painel; decisão do usuário, 10/11). A volta do som remove o painel com fade de 220 ms.
 - **M19 · Modo limpo** — o texto sobre o visual some com fade de 400 ms; o ícone `eye-off` na faixa entra com 120 ms. Ao desligar, o cartão não reaparece sozinho: volta na próxima troca.
 - **M20 · Palco → Rack** — a faixa se transforma no rack (FLIP: posição e tamanho interpolados em 300 ms) e o visual encolhe para o visor; o caminho inverso volta pelo mesmo trajeto.
 - **M21 · Soltar arquivos** — enquanto arrasta, a borda tracejada "anda" (movimento só durante o gesto); ao soltar, a borda fecha num retângulo sólido por 120 ms e some.

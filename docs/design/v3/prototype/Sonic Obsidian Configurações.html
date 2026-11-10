@@ -37,7 +37,12 @@
   .search kbd { position: absolute; right: 8px; top: 8px; pointer-events: none; }
   .search:focus-within kbd, .search.has-val kbd { display: none; }
   #navlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .side nav { position: relative; }
   #navlist li[hidden] { display: none; }
+  .navind { position: absolute; left: -12px; top: 0; width: 2px; height: 20px; border-radius: 2px; background: var(--violet); pointer-events: none; opacity: 0; transition: transform 220ms var(--ease-out), opacity 220ms var(--ease-out); }
+  .navind.on { opacity: 1; }
+  .navind.nt { transition: none; }
+  @media (prefers-reduced-motion: reduce) { .navind { transition: none; } }
   #navlist button { width: 100%; height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 10px; border: 0; border-radius: var(--r-2); background: transparent; color: var(--text-2); text-align: left; cursor: pointer; transition: background var(--t-fast), color var(--t-fast); }
   #navlist button:hover { background: var(--bg-03); color: var(--text-1); }
   #navlist button:active { background: var(--bg-04); }
@@ -61,6 +66,13 @@
   .grp { margin-top: 28px; }
   .grp h3 { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--text-2); }
   .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 14px 12px; margin: 0 -12px; border-bottom: 1px solid var(--line-1); border-radius: var(--r-2); transition: background var(--t-med) var(--ease-out); }
+  .row[hidden] { display: none; }
+  .sub { margin: 18px 0 0; font-size: 13px; font-weight: 500; color: var(--text-1); }
+  .sub + .row { margin-top: 4px; }
+  .grp > .help { margin: 4px 0 0; }
+  th .phase { margin-left: 8px; }
+  .proto-t { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .testres.warn { color: var(--warn); }
   .row.hit, tr.hit { background: var(--violet-soft); }
   .row.stack { grid-template-columns: minmax(0, 1fr); }
   .lbl { color: var(--text-1); font-size: 14px; }
@@ -96,6 +108,28 @@
   .seg input:disabled + span { opacity: 0.45; }
   .seg input:disabled ~ * { pointer-events: none; }
   .seg label:has(input:disabled):hover span { background: transparent; color: var(--text-2); }
+
+  /* curva por frequência (EQ) */
+  .eq-box { display: grid; gap: 10px; min-width: 0; }
+  .eq-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .eq-top .help { margin: 0; }
+  .eq-read { color: var(--cyan); font-size: 13px; min-width: 14ch; text-align: right; }
+  .eq-plot { position: relative; border-radius: var(--r-1); touch-action: none; cursor: crosshair; }
+  .eq-plot canvas { display: block; width: 100%; height: 160px; background: var(--bg-00); border-radius: var(--r-1); }
+  .eq-bub { position: absolute; left: 0; top: 0; z-index: 2; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+    pointer-events: none; opacity: 0; transform: translate(-50%, -100%); transition: opacity var(--t-fast) var(--ease-out); }
+  .eq-bub.on { opacity: 1; }
+  .eq-bub.dn { transform: translate(-50%, 0); }
+  .eq-bub b { color: var(--cyan); font-weight: 500; }
+  .eq-freq { position: relative; height: 18px; margin-top: -6px; font-family: var(--font-num); font-size: 12px; line-height: 18px; color: var(--text-3); }
+  .eq-freq span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .eq-warn { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; color: var(--text-2); font-size: 13px; }
+  .eq-warn[hidden] { display: none; }
+  .eq-warn .ico { color: var(--text-3); }
+  .eq-warn span { display: inline-flex; align-items: center; gap: 8px; }
+  .eq-reset { margin-left: auto; }
+  .eq-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  @media (prefers-reduced-motion: reduce) { .eq-bub { transition: none; } }
 
   /* captura */
   .cap { margin-top: 24px; padding: 16px; display: grid; gap: 16px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); transition: border-color var(--t-med); }
@@ -220,7 +254,7 @@
       </div>
       <label class="sr" for="secsel">Seção</label>
       <select id="secsel" class="sel"></select>
-      <nav aria-label="Seções das configurações"><ul id="navlist"></ul></nav>
+      <nav aria-label="Seções das configurações"><ul id="navlist"></ul><span class="navind" id="navind" aria-hidden="true"></span></nav>
     </aside>
     <main class="content" id="content" tabindex="-1">
       <div class="wrap" id="wrap">
@@ -247,17 +281,35 @@
   /* ── Estado ── */
   var S = {
     abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
-    gain: 1, rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, blendAuto: 2.7, blendManual: 0, beat: false,
+    gain: 0, rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, trManual: 'aleatorio', tManual: 1, trAuto: 'crossfade', tAuto: 2.7, expr: 0, carater: 'energia', memoria: 'curta', curva16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvaPreset: 'plana', beat: false, silencio: false, imported: 8,
     canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, nomePreset: 'sempre', avisos: 'todos', limpo: false, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
     rackTop: true, rackPos: 'br', tela: '2'
   };
   var FMT = {
-    gain: function (v) { return v.toFixed(1).replace('.', ',') + '×'; },
+    gain: function (v) { return v === 0 ? '0 dB' : (v > 0 ? '+' : '\u2212') + Math.abs(v) + ' dB'; },
+    expr: function (v) { return v === 0 ? '0' : (v > 0 ? '+' : '\u2212') + Math.abs(v); },
     interval: function (v) { return v + ' s'; },
-    blendAuto: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
-    blendManual: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
+    tAuto: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
+    tManual: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
     minfps: function (v) { return v + ' fps'; }
   };
+
+  var EQ_HZ = [20, 31.5, 50, 80, 125, 200, 315, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500, 20000];
+  var EQ_LB = ['20', '31,5', '50', '80', '125', '200', '315', '500', '800', '1,25k', '2k', '3,15k', '5k', '8k', '12,5k', '20k'];
+  var EQ_PRE = [
+    ['plana', 'Plana', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    ['graves', 'Graves', [6, 6, 5, 4, 2, 0, -2, -3, -3, -3, -3, -3, -3, -3, -3, -3]],
+    ['medios', 'Médios', [-3, -3, -3, -2, 0, 2, 4, 5, 5, 4, 2, 0, -2, -3, -3, -3]],
+    ['agudos', 'Agudos', [-3, -3, -3, -3, -3, -3, -2, -1, 0, 1, 2, 4, 5, 6, 6, 5]],
+    ['sorriso', 'Sorriso', [5, 5, 4, 3, 1, 0, -2, -3, -3, -2, 0, 1, 3, 4, 5, 5]]
+  ];
+  function eqFmtDb(v) { return v === 0 ? '0 dB' : (v > 0 ? '+' : '−') + Math.abs(v) + ' dB'; }
+  function eqFmtHz(i) { var f = EQ_HZ[i]; return f >= 1000 ? String(f / 1000).replace('.', ',') + ' kHz' : String(f).replace('.', ',') + ' Hz'; }
+  function eqIsFlat(c) { for (var i = 0; i < 16; i++) if (c[i] !== 0) return false; return true; }
+  function eqMatch(c) {
+    for (var p = 0; p < EQ_PRE.length; p++) { var ok = true; for (var i = 0; i < 16; i++) if (EQ_PRE[p][2][i] !== c[i]) { ok = false; break; } if (ok) return EQ_PRE[p][0]; }
+    return 'custom';
+  }
 
   /* ── Construtores de controle ── */
   function row(o) {
@@ -289,9 +341,14 @@
 
   function par() { return Array.prototype.slice.call(arguments).map(function (x) { return '<span class="num par">' + x + '</span>'; }).join(' · '); }
   var favOpts = D.presets.filter(function (p) { return p.fav; }).map(function (p) { return [p.id, p.title + ' · por ' + p.author]; });
+  var TROPTS = [['corte', 'Corte seco'], ['crossfade', 'Crossfade'], ['varredura', 'Varredura'], ['plasma', 'Plasma'], ['radial', 'Radial'], ['aleatorio', 'Aleatório']];
+  var EXPR_HELP = {
+    carater: { contraste: 'Só amplia a diferença entre partes fortes e fracas.', energia: 'Amplia e sobe a base: tudo reage mais.', nervo: 'Energia com reação seca quando sobe e suave quando desce.' },
+    memoria: { curta: 'Compara com os últimos ~4 s, como o motor.', longa: 'Compara com os últimos ~30 s: as viradas da música aparecem mais.', fixa: 'Congela a referência agora: partes altas ficam sempre mais fortes.' }
+  };
   var collOpts = D.collections.map(function (c) { return [c.id, c.name]; });
 
-  var TOOLS = [["get_status", "Preset atual, autor, fonte, rotação, fps e BPM."], ["get_audio_features", "bass, mid, treb, nível e BPM, instantâneo ou média de N segundos."], ["list_presets", "Busca com filtros: favoritos, recentes, importados, meus e coleção."], ["get_preset", "Código .milk e metadados de um preset."], ["play_preset", "Toca um preset específico."], ["next_preset", "Vai para o próximo preset."], ["previous_preset", "Volta ao preset anterior."], ["random_preset", "Toca um preset aleatório."], ["set_rotation", "Liga ou desliga a rotação; define intervalo e ordem."], ["set_signal", "Ajusta ganho, blend automático e blend manual."], ["set_audio_source", "Troca a fonte: sistema, microfone, arquivo ou SoundCloud."], ["validate_preset", "Compila um .milk e devolve erros por seção e linha."], ["create_preset", "Cria um preset a partir de .milk; com preview toca sem salvar."], ["update_preset", "Edita presets seus; os de terceiros viram remix."], ["capture_frame", "PNG do quadro atual, para a IA ver o resultado."], ["show_text", "Mostra um texto no visual."], ["manage_collection", "Cria, renomeia, adiciona e remove itens de coleções."]];
+  var TOOLS = [["get_status", "Preset atual, autor, fonte, rotação, fps e BPM."], ["get_audio_features", "bass, mid, treb, nível e BPM, instantâneo ou média de N segundos."], ["list_presets", "Busca com filtros: favoritos, recentes, importados, meus e coleção."], ["get_preset", "Código .milk e metadados de um preset."], ["play_preset", "Toca um preset específico."], ["next_preset", "Vai para o próximo preset."], ["previous_preset", "Volta ao preset anterior."], ["random_preset", "Toca um preset aleatório."], ["set_rotation", "Liga ou desliga a rotação; define intervalo e ordem."], ["set_signal", "Ajusta ganho e o tipo e o tempo das transições."], ["set_audio_source", "Troca a fonte: sistema, microfone, arquivo ou SoundCloud."], ["validate_preset", "Compila um .milk e devolve erros por seção e linha."], ["create_preset", "Cria um preset a partir de .milk; com preview toca sem salvar."], ["update_preset", "Edita presets seus; os de terceiros viram remix."], ["capture_frame", "PNG do quadro atual, para a IA ver o resultado."], ["show_text", "Mostra um texto no visual."], ["manage_collection", "Cria, renomeia, adiciona e remove itens de coleções."]];
   var MCP_TABS = [['desktop', 'Claude Desktop'], ['code', 'Claude Code'], ['cursor', 'Cursor'], ['outro', 'Outro']];
   var ACTIVITY = [
     { t: '14:33:05', cli: 'Claude Desktop', tool: 'play_preset', ok: true, res: 'Geiss - Spiral Artifact tocando' },
@@ -310,22 +367,36 @@
     { act: 'Preset aleatório', keys: ['Espaço'] },
     { act: 'Preset anterior', keys: ['←'] },
     { act: 'Próximo preset', keys: ['→'] },
-    { act: 'Favoritar', keys: ['F'] },
+    { act: 'Tela cheia', keys: ['F', 'F11'] },
     { act: 'Rotação automática', keys: ['R'] },
     { act: 'Esconder controles', keys: ['H'] },
     { act: 'Busca rápida', keys: ['/', 'Ctrl+K'] },
     { act: 'Biblioteca', keys: ['L'] },
-    { act: 'Modo Rack', keys: ['M'] },
     { act: 'Ajustes rápidos', keys: [','] },
     { act: 'Configurações', keys: ['Ctrl+,'] },
-    { act: 'Tela cheia', keys: ['F11'] },
-    { act: 'Estúdio de presets', keys: ['E'] },
-    { act: 'Pausar controle por IA', keys: ['Ctrl+Shift+P'] },
+    { act: 'Tipo da transição', keys: ['B', 'Shift+B'] },
+    { act: 'Tempo da transição', keys: ['↑', '↓'] },
+    { act: 'Troca com corte seco', keys: ['Shift+→', 'Shift+←', 'Shift+Espaço'] },
+    { act: 'Expressividade', keys: ['+', '\u2212'] },
+    { act: 'Expressividade neutra', keys: ['0'] },
+    { act: 'Caráter da expressividade', keys: ['X'] },
+    { act: 'Memória da expressividade', keys: ['Shift+X'] },
     { act: 'Modo limpo', keys: ['T'] },
+    { act: 'Painel de diagnóstico', keys: ['Ctrl+Shift+D'] },
+    { act: 'Abrir o log', keys: ['Ctrl+Shift+L'] },
+    { act: 'Modo Rack', keys: ['M'], phase: 5 },
+    { act: 'Estúdio de presets', keys: ['E'], phase: 3 },
+    { act: 'Pausar controle por IA', keys: ['Ctrl+Shift+P'], phase: 4 },
     { act: 'Fechar o que estiver aberto', keys: ['Esc'], locked: true }
   ];
   var KEYS = JSON.parse(JSON.stringify(DEFAULT_KEYS));
   var cap = null;
+
+  function eqSeg() {
+    var opts = EQ_PRE.map(function (p) { return [p[0], p[1]]; }).concat([['custom', 'Personalizada']]);
+    var h = seg('curvaPreset', opts, S.curvaPreset);
+    return h.replace(/<label>(<input[^>]*value="custom"[^>]*>)/, '<label id="eqCustomLb"' + (S.curvaPreset === 'custom' ? '' : ' hidden') + '>$1');
+  }
 
   /* ── Seções ── */
   var SECTIONS = [
@@ -352,14 +423,14 @@
         '<div class="cap" data-search="status da captura dispositivo medidor nível testar captura ouvindo saída padrão do Windows">' +
         '<div class="cap-top"><span class="dot" aria-hidden="true"></span><div><b id="capTitle">Ouvindo a saída padrão do Windows</b><span id="capSub">' + esc(D.capture.device) + ' · <span class="num">' + esc(D.capture.rate) + '</span></span></div></div>' +
         '<div class="cap-lvl"><span>Nível de entrada</span><div class="meter" id="meter" role="img" aria-label="Nível de entrada ao vivo"></div></div>' +
-        '<div class="cap-test"><button class="btn" type="button" id="testBtn">Testar captura</button><span class="testres" id="testRes" role="status"></span><button class="btn btn-ghost sm" type="button" id="backSys" hidden>Voltar ao áudio do sistema</button></div></div>' +
+        '<div class="cap-test"><button class="btn" type="button" id="testBtn">Testar captura</button><label class="proto-t"><span class="switch"><input type="checkbox" id="silencio" data-k="silencio"><span class="track"></span></span>Simular silêncio (protótipo)</label><span class="testres" id="testRes" role="status"></span><button class="btn btn-ghost sm" type="button" id="backSys" hidden>Voltar ao áudio do sistema</button></div></div>' +
         grp('SoundCloud',
           row({ id: 'scConn', group: 1, label: 'Conexão com a API', help: 'Credenciais de app (OAuth 2.1, client credentials).', kw: 'soundcloud api credenciais', ctl: '<span class="conn"><span class="dot" aria-hidden="true"></span>Credenciais do app configuradas</span>' }) +
           '<p class="note" data-search="soundcloud limite diário 15 mil reproduções preview 30 s"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>A API limita cada app a <span class="num">15 mil</span> reproduções por dia. Faixas com acesso preview tocam só <span class="num">30 s</span>.</span></p>') +
         grp('Entrada',
           row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) })) +
         grp('Nível',
-          row({ id: 'gain', label: 'Ganho padrão', help: 'Aplicado ao abrir. Durante a música, use os Ajustes rápidos.', ctl: rng('gain', 0.5, 2, 0.1, S.gain) }));
+          row({ id: 'gain', label: 'Ganho padrão', help: '0 dB é o sinal como chega. Aplicado ao abrir; durante a música, use os Ajustes rápidos.', kw: 'dB decibel', ctl: rng('gain', -12, 12, 1, S.gain) }));
     } },
     { id: 'visual', name: 'Visual', icon: 'sparkles', desc: 'Como os presets passam de um para o outro.', html: function () {
       return grp('Rotação',
@@ -367,10 +438,26 @@
         row({ id: 'interval', label: 'Intervalo', help: 'Tempo até o próximo preset.', ctl: rng('interval', 5, 120, 5, S.interval) }) +
         row({ id: 'ordem', group: 1, label: 'Ordem', kw: 'Aleatória Coleção', ctl: seg('ordem', [['aleatoria', 'Aleatória'], ['colecao', 'Coleção']], S.ordem) }) +
         row({ id: 'colecao', label: 'Coleção', help: 'Usada quando a ordem é Coleção.', ctl: sel('colecao', collOpts, S.colecao, S.ordem !== 'colecao') })) +
-        grp('Transição',
-        row({ id: 'blendAuto', label: 'Blend na troca automática', help: 'Tempo da mistura quando a rotação troca o preset.', ctl: rng('blendAuto', 0, 10, 0.1, S.blendAuto) }) +
-        row({ id: 'blendManual', label: 'Blend quando você troca', help: 'Troca imediata responde melhor ao teclado.', ctl: rng('blendManual', 0, 10, 0.1, S.blendManual) }) +
+        grp('Transições',
+        '<h4 class="sub">Quando você troca</h4>' +
+        row({ id: 'trManual', label: 'Tipo', help: 'B troca o tipo; ↑/↓ mudam o tempo; Shift na troca faz corte seco.', kw: 'transição manual Corte seco Crossfade Varredura Plasma Radial Aleatório blend', ctl: sel('trManual', TROPTS, S.trManual) }) +
+        row({ id: 'tManual', label: 'Tempo', kw: 'transição manual duração segundos blend', ctl: rng('tManual', 0.1, 10, 0.1, S.tManual) }) +
+        '<h4 class="sub">Na troca automática</h4>' +
+        row({ id: 'trAuto', label: 'Tipo', kw: 'transição automática Corte seco Crossfade Varredura Plasma Radial Aleatório blend', ctl: sel('trAuto', TROPTS, S.trAuto) }) +
+        row({ id: 'tAuto', label: 'Tempo', kw: 'transição automática duração segundos blend', ctl: rng('tAuto', 0.1, 10, 0.1, S.tAuto) }) +
         row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', phase: 1, ctl: sw('beat', false, true) })) +
+        grp('Expressividade',
+        row({ id: 'expr', label: 'Nível', kw: 'expressividade reação intensidade', ctl: rng('expr', -3, 3, 1, S.expr) }) +
+        row({ id: 'carater', group: 1, label: 'Caráter', help: EXPR_HELP.carater[S.carater], kw: 'expressividade Contraste Energia Nervo', ctl: seg('carater', [['contraste', 'Contraste'], ['energia', 'Energia'], ['nervo', 'Nervo']], S.carater) }) +
+        row({ id: 'memoria', group: 1, label: 'Memória', help: EXPR_HELP.memoria[S.memoria], kw: 'expressividade Curta Longa Fixa referência', ctl: seg('memoria', [['curta', 'Curta'], ['longa', 'Longa'], ['fixa', 'Fixa']], S.memoria) }) +
+        '<p class="help" data-search="expressividade atalhos + − 0 X Shift+X nível caráter memória">+/− mudam o nível, 0 volta ao neutro, X troca o caráter, Shift+X a memória.</p>' +
+        '<div class="row stack" data-search="curva por frequência equalizador eq bandas graves médios agudos sorriso plana personalizada hz db bass mid treb restaurar plana usar fixa expressividade"><div class="txt"><span class="lbl" id="l-curvaPreset">Curva por frequência</span><p class="help">Quanto cada faixa de frequência move o visual. Não muda o som que você ouve.</p></div>' +
+        '<div class="ctl">' + eqSeg() + '<button class="btn sm eq-reset" type="button" id="eqReset"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Restaurar plana</button></div>' +
+        '<div class="eq-box"><div class="eq-top"><p class="help">Arraste uma barra na vertical. Duplo clique volta a banda a 0 dB.</p><span class="num eq-read" id="eqRead" aria-hidden="true"></span></div>' +
+        '<div class="eq-plot" id="eqPlot" tabindex="0" role="group" aria-label="Curva por frequência" aria-describedby="eqHint"><canvas id="eqCv" aria-hidden="true"></canvas><div class="eq-bub num" id="eqBub" aria-hidden="true"></div></div>' +
+        '<div class="eq-freq" id="eqFreq" aria-hidden="true"></div>' +
+        '<span class="eq-sr" id="eqHint">Setas para a esquerda e para a direita escolhem a banda. Setas para cima e para baixo mudam o ganho em 1 dB, com Shift em 3 dB. Duplo clique volta a banda a 0 dB.</span><span class="eq-sr" id="eqLive" aria-live="polite"></span>' +
+        '<div class="eq-warn" id="eqWarn" hidden><span><i data-lucide="info" class="ico ico-sm"></i>Com a memória Fixa, a curva age por inteiro.</span><button class="btn sm" type="button" id="eqFixa">Usar Fixa</button></div></div></div>') +
         grp('Texto sobre o visual',
         row({ id: 'nomePreset', label: 'Nome do preset', help: 'Cartão com o nome e o autor que aparece a cada troca.', kw: 'texto sobre o visual crédito cartão autor', ctl: sel('nomePreset', [['sempre', 'Sempre'], ['manual', 'Só quando eu troco'], ['nunca', 'Nunca']], S.nomePreset) }) +
         row({ id: 'titulo', label: 'Título da faixa', help: 'Ao tocar um arquivo ou uma faixa do SoundCloud. ' + par('launchSongTitleAnim'), kw: 'texto sobre o visual', ctl: sw('titulo', S.titulo) }) +
@@ -400,11 +487,11 @@
     } },
     { id: 'biblioteca', name: 'Biblioteca', icon: 'library', desc: 'Pacotes de presets, presets ocultos e coleções.', html: function () {
       return grp('Pacotes',
-        row({ id: 'pkgBase', group: 1, label: 'Base', help: 'butterchurn-presets', kw: 'pacote 386 presets', ctl: '<span class="num count">' + D.totalLibrary + ' presets</span>' }) +
-        row({ id: 'pkgExtra', group: 1, label: 'Extra', help: 'butterchurn-presets-extra', kw: 'pacote baixar 0 presets', ctl: '<span class="num count">0 presets</span><button class="btn sm" type="button" id="dlBtn">Baixar pacote extra</button>' }) +
+        row({ id: 'pkgBase', group: 1, label: 'Base', help: 'butterchurn-presets', kw: 'pacote 386 presets', ctl: '<span class="count">Base: <span class="num">' + D.totalLibrary + '</span> presets</span>' }) +
+        row({ id: 'pkgExtra', group: 1, label: 'Extra', help: 'butterchurn-presets-extra', kw: 'pacote baixar 0 presets', ctl: '<span class="count">Extra: <span class="num">0</span> presets</span><button class="btn sm" type="button" id="dlBtn">Baixar pacote extra</button>' }) +
         '<p class="note" id="dlErr" role="alert" hidden><i data-lucide="circle-alert" class="ico"></i><span>Não foi possível baixar o pacote extra. Verifique a conexão e tente de novo.</span></p>' +
-        row({ id: 'milk', group: 1, label: 'Importar presets .milk', help: 'Ou arraste arquivos .milk para a janela. Eles são convertidos e ficam marcados como importados.', kw: 'milk arquivos', ctl: '<button class="btn sm" type="button" id="milkBtn">Escolher arquivos…</button>' }) +
-        '<p class="note" id="milkNote" role="status" hidden></p><input type="file" id="milkFile" accept=".milk" multiple class="sr" tabindex="-1" aria-hidden="true">') +
+        row({ id: 'milk', group: 1, label: 'Importar presets .milk', help: 'Ou arraste arquivos .milk para a janela. Eles são convertidos e ficam marcados como importados.', kw: 'milk arquivos', ctl: '<span class="count" id="milkCount"><span class="num">' + S.imported + '</span> importados</span><button class="btn sm" type="button" id="milkBtn">Escolher arquivos…</button>' }) +
+        '<p class="note" id="milkNote" role="status"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>Última importação: 8 adicionados · 2 já estavam · 2 não converteram (Mandelverse: shader comp não compila; castle in the air: equação inválida)</span></p><input type="file" id="milkFile" accept=".milk" multiple class="sr" tabindex="-1" aria-hidden="true">') +
         grp('Presets ocultos',
         row({ id: 'hidden', group: 1, label: 'Presets ocultos', help: 'Escondidos por você com “Não mostrar mais”.', kw: 'restaurar gerenciar', ctl: '<span class="num count" id="hidCount"></span><button class="btn sm" type="button" id="hidBtn" aria-expanded="false" aria-controls="hidList">Gerenciar</button>' }) +
         '<div class="hlist" id="hidList" tabindex="-1" hidden></div>') +
@@ -461,6 +548,13 @@
         row({ id: 'c2', group: 1, label: 'Butterchurn', help: 'Jordan Berg e contribuidores' }) +
         row({ id: 'c3', group: 1, label: 'Presets', help: 'Artistas da comunidade MilkDrop, creditados no nome de cada preset.' }) +
         '<div class="row" data-search="Butterchurn Visualizer butterchurnviz.com link"><div class="txt"><a class="lnk" href="https://butterchurnviz.com" target="_blank" rel="noopener noreferrer">Butterchurn Visualizer (butterchurnviz.com)<i data-lucide="external-link" class="ico"></i></a></div><div class="ctl"></div></div>') +
+        grp('Feedback',
+        row({ id: 'fbBug', group: 1, label: 'Relatar um problema', help: 'Formulário de bug no GitHub, já preenchido.', kw: 'feedback bug erro problema github issue', ctl: '<button class="btn sm" type="button" data-fb="bug"><i data-lucide="external-link" class="ico ico-sm"></i>Abrir</button>' }) +
+        row({ id: 'fbIdea', group: 1, label: 'Sugerir uma ideia', help: 'Discussions › Ideas.', kw: 'feedback ideia sugestão github discussions', ctl: '<button class="btn sm" type="button" data-fb="idea"><i data-lucide="external-link" class="ico ico-sm"></i>Abrir</button>' }) +
+        row({ id: 'fbAsk', group: 1, label: 'Fazer uma pergunta', help: 'Discussions › Q&amp;A.', kw: 'feedback pergunta dúvida github discussions', ctl: '<button class="btn sm" type="button" data-fb="ask"><i data-lucide="external-link" class="ico ico-sm"></i>Abrir</button>' }) +
+        row({ id: 'fbDiag', group: 1, label: 'Copiar diagnóstico', help: 'Últimas 200 linhas do log, para colar no formulário.', kw: 'feedback diagnóstico log copiar', ctl: '<button class="btn sm" type="button" data-fb="diag"><i data-lucide="clipboard-copy" class="ico ico-sm"></i>Copiar</button>' }) +
+        row({ id: 'fbLog', group: 1, label: 'Abrir a pasta do log', help: 'Mostra a pasta com os arquivos de log no Explorer.', kw: 'feedback log pasta explorer', ctl: '<button class="btn sm" type="button" data-fb="log"><i data-lucide="folder-open" class="ico ico-sm"></i>Abrir</button>' })) +
+        grp('Licenças', row({ id: 'lic', group: 1, label: 'Licenças de terceiros', help: 'Butterchurn, presets e demais dependências.', kw: 'licença licenças MIT terceiros', ctl: '<button class="btn sm" type="button" id="licBtn"><i data-lucide="external-link" class="ico ico-sm"></i>Abrir</button>' })) +
         grp('Links',
         '<div class="row" data-search="Repositório no GitHub atempel sonic-obsidian link"><div class="txt"><a class="lnk" href="https://github.com/atempel/sonic-obsidian" target="_blank" rel="noopener noreferrer">Repositório no GitHub<i data-lucide="external-link" class="ico"></i></a><p class="help">github.com/atempel/sonic-obsidian</p></div><div class="ctl"></div></div>' +
         '<div class="row" data-search="Butterchurn link github jberg"><div class="txt"><a class="lnk" href="https://github.com/jberg/butterchurn" target="_blank" rel="noopener noreferrer">Butterchurn<i data-lucide="external-link" class="ico"></i></a><p class="help">github.com/jberg/butterchurn</p></div><div class="ctl"></div></div>');
@@ -479,7 +573,15 @@
     li.innerHTML = '<button type="button" data-sec="' + s.id + '"><i data-lucide="' + s.icon + '" class="ico"></i><span>' + s.name + '</span></button>';
     navlist.appendChild(li); s.li = li; s.btn = li.firstChild;
   });
-  var cur = null;
+  var cur = null, navind = $('#navind'), navFirst = true;
+  function moveInd() {
+    if (!cur || !cur.li || cur.li.hidden || !cur.li.offsetHeight) { navind.classList.remove('on'); return; }
+    var y = cur.li.offsetTop + Math.round((cur.li.offsetHeight - 20) / 2);
+    if (navFirst) { navind.classList.add('nt'); }
+    navind.style.transform = 'translateY(' + y + 'px)'; navind.classList.add('on');
+    if (navFirst) { void navind.offsetWidth; navind.classList.remove('nt'); navFirst = false; }
+  }
+  window.addEventListener('resize', moveInd);
   function byId(id) { return SECTIONS.filter(function (s) { return s.id === id; })[0]; }
   function show(id, focusNav) {
     var s = byId(id); if (!s) return;
@@ -490,10 +592,177 @@
       x.btn.tabIndex = x === s ? 0 : -1;
     });
     secsel.value = s.id;
+    moveInd();
     content.scrollTop = 0;
     if (focusNav) s.btn.focus();
     var h = $('.hit', s.panel); if (h) h.scrollIntoView({ block: 'nearest' });
   }
+
+  function createEQ(o) {
+    var N = 16, G = o.gutter || 0, H = o.h, PT = 8, PB = 8, BW = o.barW || 3, PH = H - PT - PB;
+    var cv = o.canvas, ctx = cv.getContext('2d'), grp = o.group, bub = o.bubble;
+    var sel = -1, focused = false, drag = false, last = null, raf = 0, W = 0, bt = 0, col = {};
+    var RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+    var Y = function (v) { return PT + (12 - v) / 24 * PH; };
+    function cols() {
+      var cs = getComputedStyle(document.documentElement);
+      ['--violet', '--violet-soft', '--text-1', '--text-3', '--line-1', '--line-2', '--line-3'].forEach(function (n) { col[n] = cs.getPropertyValue(n).trim(); });
+    }
+    cols();
+    function layout() {
+      if (!o.freq) return;
+      var w = cv.clientWidth, slot = (w - G) / N, idx = o.freqIdx ? o.freqIdx(slot) : [2, 5, 8, 11, 14], lb = o.freqLabels || EQ_LB;
+      o.freq.style.marginLeft = G + 'px';
+      o.freq.innerHTML = idx.map(function (i) { return '<span style="left:' + ((i + 0.5) / N * 100).toFixed(3) + '%">' + lb[i] + '</span>'; }).join('');
+    }
+    function draw(now) {
+      var w = cv.clientWidth; if (!w) return;
+      var dpr = window.devicePixelRatio || 1;
+      if (w !== W) { W = w; cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr); layout(); }
+      var c = o.get(), slot = (w - G) / N, y0 = Y(0), rm = RM.matches;
+      var t = rm ? 0 : now / 1000, silent = o.silent ? o.silent() : false;
+      var lvl = rm ? 0.5 : (silent ? 0.15 : clamp(o.level ? o.level() : 0.5, 0, 1));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, H);
+      // zonas (bass até 250 Hz, mid 250 Hz–4 kHz, treb acima de 4 kHz)
+      var Z = [[0, 6, 'bass'], [6, 12, 'mid'], [12, 16, 'treb']];
+      ctx.font = "12px 'JetBrains Mono', ui-monospace, monospace"; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      Z.forEach(function (z, k) {
+        var x0 = G + z[0] * slot, x1 = G + z[1] * slot;
+        if (k !== 1) { ctx.fillStyle = 'rgba(238,238,245,0.035)'; ctx.fillRect(x0, 0, x1 - x0, H); }
+        if (k > 0) { ctx.fillStyle = col['--line-2']; ctx.fillRect(Math.round(x0), 0, 1, H); }
+        ctx.fillStyle = col['--text-3']; ctx.fillText(z[2], x0 + 6, 15);
+      });
+      // escala em dB
+      if (G) {
+        ctx.fillStyle = col['--line-1'];
+        [6, -6].forEach(function (v) { ctx.fillRect(G, Math.round(Y(v)), w - G, 1); });
+        ctx.fillStyle = col['--text-3']; ctx.textAlign = 'right';
+        [[12, '+12'], [0, '0'], [-12, '−12']].forEach(function (s) { ctx.fillText(s[1], G - 8, Y(s[0]) + (s[0] === 12 ? 10 : s[0] === -12 ? -1 : 4)); });
+        ctx.textAlign = 'left';
+      }
+      // espectro ao vivo (dados falsos suaves)
+      var NB = 48; ctx.fillStyle = col['--text-3']; ctx.globalAlpha = 0.35;
+      for (var i = 0; i < NB; i++) {
+        var xa = G + i / NB * (w - G), xb = G + (i + 1) / NB * (w - G);
+        var wob = 0.6 + 0.4 * Math.sin(t * 3 + i * 0.9) * Math.sin(t * 1.7 + i * 0.37);
+        var a = clamp((1 - 0.5 * i / NB) * (0.25 + 0.65 * lvl) * (rm ? 0.8 + 0.2 * Math.sin(i * 0.9) : wob), 0.06, 1);
+        ctx.fillRect(xa + 0.5, H - PB - a * PH * 0.9, Math.max(1, xb - xa - 1), a * PH * 0.9);
+      }
+      ctx.globalAlpha = 1;
+      // linha de 0 dB
+      ctx.fillStyle = col['--line-3']; ctx.fillRect(G, Math.round(y0), w - G, 1);
+      // banda em destaque
+      if (sel >= 0 && (focused || drag)) { ctx.fillStyle = col['--violet-soft']; ctx.fillRect(G + sel * slot, 0, slot, H); }
+      // barras
+      ctx.fillStyle = col['--violet'];
+      ctx.globalAlpha = 0.55;
+      for (i = 0; i < N; i++) {
+        var cx = G + (i + 0.5) * slot, yy = Y(c[i]);
+        ctx.fillRect(Math.round(cx - BW / 2), Math.min(y0, yy), BW, Math.abs(yy - y0));
+      }
+      ctx.globalAlpha = 1;
+      // curva
+      ctx.strokeStyle = col['--violet']; ctx.lineWidth = 1.75; ctx.lineJoin = 'round'; ctx.beginPath();
+      for (i = 0; i < N; i++) { var px = G + (i + 0.5) * slot, py = Y(c[i]); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+      ctx.stroke();
+      for (i = 0; i < N; i++) {
+        var on = i === sel && (focused || drag);
+        ctx.beginPath(); ctx.arc(G + (i + 0.5) * slot, Y(c[i]), on ? 4.5 : 2.5, 0, 6.2832); ctx.fillStyle = on ? col['--text-1'] : col['--violet']; ctx.fill();
+        if (on) { ctx.lineWidth = 2; ctx.strokeStyle = col['--violet']; ctx.stroke(); }
+      }
+    }
+    function readout() {
+      if (o.readout) o.readout.innerHTML = sel < 0 ? '' : eqFmtHz(sel) + ' · ' + eqFmtDb(o.get()[sel]);
+    }
+    function refresh() { readout(); draw(performance.now()); }
+    function announce() { if (o.live && sel >= 0) o.live.textContent = eqFmtHz(sel) + ', ' + eqFmtDb(o.get()[sel]); }
+    function showBub(b, keep) {
+      var v = o.get()[b], slot = (cv.clientWidth - G) / N, cx = G + (b + 0.5) * slot, yy = Y(v);
+      bub.innerHTML = eqFmtHz(b) + ' · <b>' + eqFmtDb(v) + '</b>';
+      var bw = bub.offsetWidth || 90;
+      bub.style.left = clamp(cx, bw / 2 + 2, cv.clientWidth - bw / 2 - 2) + 'px';
+      var dn = yy < 34; bub.classList.toggle('dn', dn); bub.style.top = (dn ? yy + 10 : yy - 10) + 'px';
+      bub.classList.add('on');
+      clearTimeout(bt); if (keep) bt = setTimeout(function () { bub.classList.remove('on'); }, 600);
+    }
+    function at(e) {
+      var r = cv.getBoundingClientRect();
+      return { b: clamp(Math.floor((e.clientX - r.left - G) / ((r.width - G) / N)), 0, N - 1), v: clamp(Math.round(12 - (e.clientY - r.top - PT) / PH * 24), -12, 12) };
+    }
+    function apply(p) {
+      if (last && last.b !== p.b) {
+        var a = last.b, z = p.b, st = z > a ? 1 : -1;
+        for (var k = a + st; ; k += st) { o.set(k, Math.round(last.v + (p.v - last.v) * ((k - a) / (z - a)))); if (k === z) break; }
+      } else o.set(p.b, p.v);
+      last = p; sel = p.b; showBub(p.b); refresh();
+    }
+    cv.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault(); drag = true; last = null;
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      grp.focus({ preventScroll: true }); apply(at(e));
+    });
+    cv.addEventListener('pointermove', function (e) { if (drag) apply(at(e)); });
+    function up() { if (!drag) return; drag = false; last = null; clearTimeout(bt); bub.classList.remove('on'); announce(); refresh(); }
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('dblclick', function (e) { var p = at(e); sel = p.b; o.set(p.b, 0); announce(); showBub(p.b, true); refresh(); });
+    grp.addEventListener('focus', function () { focused = true; if (sel < 0) sel = 0; refresh(); });
+    grp.addEventListener('blur', function () { focused = false; bub.classList.remove('on'); refresh(); });
+    grp.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var k = e.key;
+      if (sel < 0) sel = 0;
+      if (k === 'ArrowLeft') sel = clamp(sel - 1, 0, N - 1);
+      else if (k === 'ArrowRight') sel = clamp(sel + 1, 0, N - 1);
+      else if (k === 'ArrowUp' || k === 'ArrowDown') o.set(sel, clamp(o.get()[sel] + (e.shiftKey ? 3 : 1) * (k === 'ArrowUp' ? 1 : -1), -12, 12));
+      else if (k === 'Home') sel = 0; else if (k === 'End') sel = N - 1;
+      else return;
+      e.preventDefault(); e.stopPropagation(); announce(); showBub(sel, true); refresh();
+    });
+    function loop(now) { draw(now); raf = requestAnimationFrame(loop); }
+    function start() { cancelAnimationFrame(raf); W = 0; if (RM.matches) draw(0); else raf = requestAnimationFrame(loop); }
+    function stop() { cancelAnimationFrame(raf); raf = 0; }
+    if (RM.addEventListener) RM.addEventListener('change', function () { if (raf || o.always) start(); });
+    window.addEventListener('resize', function () { W = 0; draw(performance.now()); });
+    return { start: start, stop: stop, refresh: refresh, draw: draw };
+  }
+
+  var eq = createEQ({
+    canvas: $('#eqCv'), group: $('#eqPlot'), bubble: $('#eqBub'), freq: $('#eqFreq'), readout: $('#eqRead'), live: $('#eqLive'), always: true,
+    h: 160, gutter: 36, barW: 4,
+    freqIdx: function (slot) { return slot >= 34 ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] : [0, 2, 4, 6, 8, 10, 12, 14]; },
+    get: function () { return S.curva16; },
+    set: function (i, v) { S.curva16[i] = v; S.curvaPreset = eqMatch(S.curva16); eqSync(); markSaved(); },
+    level: function () { return viz ? viz.level() : 0.5 },
+    silent: function () { return !!S.silencio }
+  });
+  function eqSync() {
+    var custom = S.curvaPreset === 'custom', flat = eqIsFlat(S.curva16);
+    $$('input[name="curvaPreset"]').forEach(function (r) { r.checked = r.value === S.curvaPreset; });
+    $('#eqCustomLb').hidden = !custom;
+    $('#eqWarn').hidden = S.memoria === 'fixa' || flat;
+    $('#eqReset').disabled = flat;
+    eq.refresh();
+  }
+  function eqPreset(id) {
+    var p = EQ_PRE.filter(function (x) { return x[0] === id; })[0]; if (!p) return;
+    S.curva16 = p[2].slice(); S.curvaPreset = id; eqSync(); markSaved();
+  }
+  wrap.addEventListener('change', function (e) {
+    var el = e.target; if (!el.dataset) return;
+    if (el.dataset.k === 'curvaPreset' && el.value !== 'custom') eqPreset(el.value);
+    else if (el.dataset.k === 'curvaPreset') eqSync();
+    else if (el.dataset.k === 'memoria') eqSync();
+  });
+  $('#eqReset').addEventListener('click', function () { eqPreset('plana'); $('#eqPlot').focus(); });
+  $('#eqFixa').addEventListener('click', function () {
+    S.memoria = 'fixa';
+    var r = $('input[name="memoria"][value="fixa"]'); if (r) r.checked = true;
+    var hp = $('#l-memoria').closest('.txt').querySelector('.help'); if (hp) hp.textContent = EXPR_HELP.memoria.fixa;
+    eqSync(); markSaved();
+  });
+  eqSync(); eq.start();
 
   /* ── Busca ── */
   function filter() {
@@ -512,6 +781,7 @@
     var vis = SECTIONS.filter(function (s) { return s.visible; });
     secsel.innerHTML = vis.map(function (s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
     emptyEl.hidden = vis.length > 0;
+    setTimeout(moveInd, 0);
     if (!vis.length) {
       SECTIONS.forEach(function (x) { x.panel.hidden = true; });
       $('#emptyMsg').textContent = 'Nenhuma configuração corresponde a “' + q.value.trim() + '”. Tente outro termo, como “fps” ou “atalho”.';
@@ -545,6 +815,27 @@
       tOff = setTimeout(function () { $('#saved').classList.remove('on'); $('#savedtxt').textContent = ''; }, 2200);
     }, 1500);
   }
+  /* ── Feedback e bugs (docs/v3-feedback.md) ── */
+  var GH = 'https://github.com/atempel/sonic-obsidian/';
+  var FB_URL = { bug: GH + 'issues/new?template=bug_report.yml', idea: GH + 'discussions/new?category=ideas', ask: GH + 'discussions/new?category=q-a' };
+  var fbT = null;
+  function flash(msg) {
+    clearTimeout(tOn); clearTimeout(fbT);
+    $('#savedtxt').textContent = msg; $('#saved').classList.add('on');
+    fbT = setTimeout(function () { $('#saved').classList.remove('on'); $('#savedtxt').textContent = ''; }, 2600);
+  }
+  content.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-fb]'); if (!b) return;
+    var k = b.dataset.fb;
+    if (FB_URL[k]) { window.open(FB_URL[k], '_blank', 'noopener'); flash('Abrimos o GitHub no navegador.'); }
+    else if (k === 'log') flash('Abrimos a pasta do log (protótipo).');
+    else if (k === 'diag') {
+      var orig = b.innerHTML; b.innerHTML = '<i data-lucide="check" class="ico ico-sm"></i>Copiado'; icons();
+      flash('Diagnóstico copiado: últimas 200 linhas do log.');
+      setTimeout(function () { if (b.isConnected) { b.innerHTML = orig; icons(); } }, 1500);
+    }
+  });
+
 
   /* ── Controles ── */
   function setDis(id, dis) { $$('[data-k="' + id + '"]').forEach(function (el) { el.disabled = !!dis; }); }
@@ -553,6 +844,9 @@
     setDis('colecao', !S.rot || S.ordem !== 'colecao');
     setDis('fav', S.abrirPreset !== 'favorito');
     setDis('minfps', !S.pular);
+    [['trManual', 'tManual'], ['trAuto', 'tAuto']].forEach(function (p) {
+      var r = $('#' + p[1]); if (r) r.closest('.row').hidden = S[p[0]] === 'corte';
+    });
   }
   function paintScreens() {
     $$('.scr').forEach(function (d) { d.classList.toggle('sel', d.dataset.scr === S.tela); });
@@ -571,6 +865,7 @@
     if (k === 'tela') paintScreens();
     if (k === 'fonte') paintSource();
     if (k === 'mcp') paintMcp();
+    if (k === 'carater' || k === 'memoria') { var hp = $('#l-' + k).closest('.txt').querySelector('.help'); if (hp) hp.textContent = EXPR_HELP[k][S[k]]; }
     deps(); markSaved();
   });
 
@@ -612,8 +907,9 @@
   $('#audBtn').addEventListener('click', function () { $('#audFile').click(); });
   $('#audFile').addEventListener('change', function (e) { if (e.target.files[0]) pickAudio(e.target.files[0]); e.target.value = ''; });
   function milkNote(n) {
-    var el = $('#milkNote'); el.hidden = false; el.className = 'note ok';
-    el.innerHTML = '<i data-lucide="check" class="ico"></i><span>' + n + (n === 1 ? ' preset importado e marcado como importado.' : ' presets importados e marcados como importados.') + '</span>'; icons(); markSaved();
+    var el = $('#milkNote'); S.imported += n;
+    $('#milkCount').innerHTML = '<span class="num">' + S.imported + '</span> importados';
+    el.innerHTML = '<i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>Última importação: ' + n + (n === 1 ? ' adicionado' : ' adicionados') + ' · 0 já estavam · 0 não converteram</span>'; icons(); markSaved();
   }
   $('#milkBtn').addEventListener('click', function () { $('#milkFile').click(); });
   $('#milkFile').addEventListener('change', function (e) { if (e.target.files.length) milkNote(e.target.files.length); e.target.value = ''; });
@@ -688,7 +984,9 @@
     b.disabled = true; r.className = 'testres'; r.textContent = 'Detectando som…';
     clearTimeout(testTimer);
     testTimer = setTimeout(function () {
-      r.className = 'testres done'; r.innerHTML = '<i data-lucide="check" class="ico ico-sm"></i>Som detectado'; icons();
+      if (S.silencio) { r.className = 'testres warn'; r.innerHTML = '<i data-lucide="circle-alert" class="ico ico-sm"></i>Nenhum som em 3 s. Toque algo no computador e tente de novo.'; }
+      else { r.className = 'testres done'; r.innerHTML = '<i data-lucide="check" class="ico ico-sm"></i>Som detectado'; }
+      icons();
       b.disabled = false;
     }, 3000);
   });
@@ -776,7 +1074,7 @@
   function renderKeys(focusI) {
     $('#keysBody').innerHTML = KEYS.map(function (k, i) {
       var keys = cap && cap.i === i ? '<span class="capt">Pressione a nova tecla (Esc cancela)</span>' : k.keys.map(function (x) { return '<kbd>' + esc(x) + '</kbd>'; }).join('<span class="or">ou</span>');
-      return '<tr data-search="' + esc(k.act + ' ' + k.keys.join(' ') + ' atalho tecla') + '"><th scope="row">' + k.act + '</th><td>' + keys + '</td><td class="act"><button class="ibtn" type="button" data-edit="' + i + '" aria-label="Alterar tecla de ' + esc(k.act) + '" title="Alterar tecla"' + (k.locked ? ' disabled' : '') + '><i data-lucide="pencil" class="ico ico-sm"></i></button></td></tr>';
+      return '<tr data-search="' + esc(k.act + ' ' + k.keys.join(' ') + ' atalho tecla' + (k.phase ? ' fase ' + k.phase : '')) + '"><th scope="row">' + k.act + (k.phase ? '<span class="phase">Fase ' + k.phase + '</span>' : '') + '</th><td>' + keys + '</td><td class="act"><button class="ibtn" type="button" data-edit="' + i + '" aria-label="Alterar tecla de ' + esc(k.act) + '" title="Alterar tecla"' + (k.locked ? ' disabled' : '') + '><i data-lucide="pencil" class="ico ico-sm"></i></button></td></tr>';
     }).join('');
     $('#keysReset').disabled = JSON.stringify(KEYS) === JSON.stringify(DEFAULT_KEYS);
     icons(); filter();
@@ -821,7 +1119,7 @@
   renderPerf(); renderHidden(); renderMcp(); renderClients(); paintMcp(); renderKeys();
   deps(); paintSource(); icons();
   filter();
-  function fromHash() { var h = (location.hash || '').slice(1); show(byId(h) ? h : 'captura'); }
+  function fromHash() { var h = (location.hash || '').slice(1); show(byId(h) ? h : 'geral'); }
   window.addEventListener('hashchange', fromHash);
   fromHash();
   if (window.matchMedia('(min-width: 900px)').matches) cur.btn.focus({ preventScroll: true });
