@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
     "test:ui": "node tests/headless/run.cjs",
+    "sim:beat": "node tests/sim/beat-sim.cjs",
     "dist:win": "electron-vite build && electron-builder --win --dir --publish never",
     "dist:release": "electron-vite build && electron-builder --win --publish never",
     "site:vendor": "node scripts/site-vendor.mjs"

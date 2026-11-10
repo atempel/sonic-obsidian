@@ -253,7 +253,7 @@ async function start(): Promise<void> {
   }
 
   // Efeitos dos eventos: o Core não toca o Butterchurn nem o áudio.
-  let appliedGainDb = Number.NaN
+  let appliedGainDb = Number.NaN // ganho linear aplicado (0 no Respiro)
   let rotationKey = ''
   let renderKey = JSON.stringify(settings.render)
   const applyState = (): void => {
@@ -262,10 +262,14 @@ async function start(): Promise<void> {
       renderKey = rk
       viz.applyRender(settings.render)
     }
-    if (settings.gainDb !== appliedGainDb) {
-      appliedGainDb = settings.gainDb
-      gain.gain.setTargetAtTime(10 ** (settings.gainDb / 20), ctx.currentTime, 0.02)
+    // Respiro (Shift+Enter): o visual perde o áudio devagar (~1 s) e o recebe de volta rápido.
+    const targetGain = core.state.breath ? 0 : 10 ** (settings.gainDb / 20)
+    if (targetGain !== appliedGainDb) {
+      const back = appliedGainDb === 0 && targetGain > 0
+      appliedGainDb = targetGain
+      gain.gain.setTargetAtTime(targetGain, ctx.currentTime, core.state.breath ? 0.3 : back ? 0.04 : 0.02)
     }
+    beat.leadMs = settings.rotation.beatLeadMs
     // Ligar a rotação ou mudar o intervalo recomeça a contagem (teclado ou faixa).
     // Trocar no beat, compassos e segurar/soltar também recomeçam (spec 024).
     const r = settings.rotation
@@ -276,6 +280,7 @@ async function start(): Promise<void> {
     }
     if (!r.onBeat) flushPending()
     state.gainDb = settings.gainDb
+    state.audio = state.audio.replace(/ · respiro$/, '') + (core.state.breath ? ' · respiro' : '')
     state.rotation = core.state.held
       ? 'segurada'
       : r.enabled
@@ -415,6 +420,10 @@ async function start(): Promise<void> {
     const r = core.run<boolean>('preset.hold', {}, 'keyboard')
     if (r.ok) showToast(r.value ? 'Visual segurado. Enter solta.' : 'Visual solto.', { force: true })
   }
+  const toggleBreath = (): void => {
+    const r = core.run<boolean>('audio.breath', {}, 'keyboard')
+    if (r.ok) showToast(r.value ? 'Respiro: o visual descansa sem o áudio. Shift+Enter volta.' : 'Áudio de volta no visual.', { force: true })
+  }
   const toggleRotation = (): void => {
     run('rotation.set', { enabled: !settings.rotation.enabled })
     showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
@@ -431,6 +440,7 @@ async function start(): Promise<void> {
     next: () => request('next', false, 'ui'),
     previous: () => request('previous', false, 'ui'),
     hold: toggleHold,
+    breath: toggleBreath,
     hide: () => idle.hideNow(),
     favorite: () => {
       const r = core.run<boolean>('library.favorite', {}, 'ui')
@@ -516,10 +526,15 @@ async function start(): Promise<void> {
     if (e.code === 'Space' && t?.closest('button, a')) return
     // Enter segura o visual (spec 024), mas num botão ou link continua acionando o controle,
     // e com um painel aberto é dele.
+    // Só um controle focado pelo teclado (:focus-visible) fica com o Enter: depois de um clique,
+    // o foco continua no botão, mas o Enter volta a ser do Palco.
     if (e.key === 'Enter') {
-      if (t?.closest('button, a, [role="button"], [role="menuitem"], [tabindex]') || core.state.overlay) return
+      const ctl = t?.closest('button, a, [role="button"], [role="menuitem"], [tabindex]')
+      if ((ctl && ctl.matches(':focus-visible')) || core.state.overlay) return
       e.preventDefault()
-      toggleHold()
+      ;(ctl as HTMLElement | null)?.blur()
+      if (e.shiftKey) toggleBreath()
+      else toggleHold()
       return
     }
     let handled = true
@@ -666,7 +681,8 @@ async function start(): Promise<void> {
     if (pending && (!beat.locked || now - pending.since > beat.periodMs * 1.5)) flushPending()
     beatCost += performance.now() - t0Beat
     beatFrames++
-    if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
+    // No modo beat, a troca sai na batida e mistura no máximo 1 batida, para cair no tempo.
+    if (rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
     renderSafe(dt * speed)
     if (!firstFrame) {
       firstFrame = true

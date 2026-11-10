@@ -4,6 +4,10 @@
 // que pode virar música ambiente (sem ataques) ou silêncio por `window.__audio(modo)`.
 // Vale para estados, interface e o algoritmo com áudio limpo; com música real, só no Windows.
 const H = require('./harness.cjs')
+// A rotação roda numa coleção de presets leves: um preset pesado sorteado pode travar o SwiftShader
+// do runner por segundos (o rAF para), e isso não é o que este teste mede (PR #76).
+const LIGHT_LIB = { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [
+  { id: 'leves', name: 'Leves', intervalSeconds: 30, presets: ['Rovastar - Oozing Resistance', 'Aderrasi - Potion of Spirits', 'Cope - The Neverending Explosion of Red Liquid Fire'] }] }
 const path = require('path'), os = require('os')
 const srv = H.serve(5200)
 const R = H.createResults('024-beat'); const ok = R.ok
@@ -12,7 +16,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   const b = await H.launch()
   const page = await b.newPage({ viewport: { width: 1280, height: 800 } }); R.attach(page)
   const errs = []; page.on('pageerror', e => errs.push(String(e))); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
-  await H.mockSo(page, { saveSettings: true, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4 }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
+  await H.mockSo(page, { saveSettings: true, library: LIGHT_LIB, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4, order: 'collection', collectionId: 'leves' }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
   await H.mockAudio(page, { bpm: BPM })
   // Trocas de preset com o tempo (performance.now) em que aconteceram.
   await page.addInitScript(() => {
@@ -88,6 +92,19 @@ const BPM = 124, BEAT_S = 60 / BPM
   ok('5f R não solta (só liga/desliga a rotação)', (await rotText()).includes('Segurado'))
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5g Enter de novo solta e a contagem recomeça', !(await rotText()).includes('Segurado') && /(4|3) c$/.test((await rotText()).trim()), await rotText())
+  // Depois de um clique, o foco fica no botão, mas o Enter volta a ser do Palco (só :focus-visible fica com ele).
+  await page.mouse.move(640, 700); await page.click('button[aria-label="Preset anterior"]'); await page.waitForTimeout(900)
+  await page.keyboard.press('Enter'); await page.waitForTimeout(300)
+  ok('5h Enter depois de clicar num botão segura (não repete o clique)', (await rotText()).includes('Segurado'), await rotText())
+  await page.keyboard.press('Enter'); await page.waitForTimeout(300)
+  // Respiro (Shift+Enter): o visual perde o áudio; a batida continua travada (a detecção vem antes do ganho).
+  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(1500)
+  ok('9a Respiro: etiqueta na faixa e toast', await page.isVisible('.breath-tag') && (await page.evaluate(() => document.body.innerText)).includes('Respiro'))
+  const lvl = await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)
+  ok('9b Respiro: medidor da faixa vazio (o visual não recebe áudio)', lvl === 0, `${lvl} segmentos acesos`)
+  ok('9c Respiro: a batida continua travada', await page.isVisible('.strip .bdot'))
+  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(800)
+  ok('9d Shift+Enter de novo devolve o áudio', !(await page.isVisible('.breath-tag')) && (await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)) > 0)
 
   // 6. Enter num botão aciona o botão.
   await page.mouse.move(640, 700)
@@ -109,6 +126,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.keyboard.press('Escape'); await page.waitForTimeout(300)
   await page.keyboard.press('Control+Comma'); await page.waitForTimeout(500)
   ok('8e Configurações: "Trocar no beat" habilitado', await page.$eval('#st-beat', e => !e.disabled && e.checked))
+  ok('8f Configurações: "Adiantar o visual" em 70 ms', await page.$eval('#st-lead', e => !e.disabled && Number(e.value) === 70))
   await page.keyboard.press('Escape'); await page.waitForTimeout(300)
 
   // 2c. Em 8 compassos, metade da frequência.

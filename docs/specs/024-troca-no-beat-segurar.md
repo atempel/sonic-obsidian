@@ -1,6 +1,6 @@
 # 024 — Troca no beat a cada N compassos e segurar visual
 
-**Fase:** 3 · **Status:** Implementada (falta validar no Windows) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
+**Fase:** 3 · **Status:** Implementada; revisão 2 depois do primeiro teste no Windows (falta validar) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
 
 ## Problema
 A rotação troca o preset a cada N segundos, fora do tempo da música. Para quem toca ou transmite um set, isso parece aleatório: o visual muda no meio de uma frase musical e não acompanha o drop.
@@ -80,6 +80,21 @@ Detecção de batida e BPM própria, no renderer, a partir do áudio que já che
 - Quando a batida trava pela primeira vez, a contagem em compassos começa **na troca seguinte** (como a spec pede para a volta da batida); até lá, segundos.
 - Sem batida estável: `RECENT_BEATS` (1,5 batida sem onset) + `LOST_AFTER_MS` (1 s) → ~2–3,5 s até perder.
 - Teste headless: `tests/headless/024-beat.test.cjs` (bumbo sintético a 124 BPM, ambiente e silêncio), 32/32.
+
+## Revisão 2 (2026-11-10, depois do primeiro teste no Windows)
+O usuário testou: a batida quase não travava (o ponto raramente aparecia), as trocas não pareciam no tempo e o `Enter` não teve efeito visível. No log, a batida travava e caía a cada 1–2 s, com o BPM pulando entre 96, 107 e 128.
+- **Detecção refeita, calibrada com um simulador** (`tests/sim/beat-sim.cjs`, com house, techno, hip-hop, breakbeat, ambiente e silêncio):
+  - energia dos graves suavizada (15 Hz) e comprimida (`log1p`), com um seguidor de pico: assim, o baixo com sidechain e notas graves longas não viram "batidas";
+  - nova checagem de "pico agudo";
+  - perda só depois de 2,5 s sem confiança.
+  - Resultado no simulador: house e techno travam em ~2 s com o BPM a ±1 e não caem; ambiente e silêncio nunca travam.
+  - Limites: hip-hop com swing e breakbeat ainda erram o andamento (o breakbeat sai na metade).
+  - O teste `tests/headless/024-beat-sim.test.cjs` guarda esses limites no CI.
+- **Sincronia (do usuário):**
+  - a batida mostrada e as trocas saem 70 ms antes da batida detectada, para compensar captura e desenho. O valor fica em Configurações › Transição › "Adiantar o visual", de 0 a 200 ms;
+  - no modo beat, a troca automática mistura no máximo 1 batida.
+- **`Enter`:** um botão clicado com o mouse não fica mais com o `Enter`; só um controle focado pelo teclado (`:focus-visible`). Antes, depois de clicar num botão da faixa, o `Enter` repetia o clique.
+- **Respiro (`Shift+Enter`, pedido do usuário):** o visual deixa de receber o áudio, como se nada tocasse, e depois o recebe de volta. O áudio cai em ~1 s e volta rápido. A detecção de batida continua ouvindo, porque vem antes do ganho. Não é persistido. A faixa mostra a etiqueta "Respiro".
 
 ## Perguntas em aberto
 - O `B` (tipo de transição, 013) conflita com o tap tempo do modo performance do protótipo. Decidir na P1.
