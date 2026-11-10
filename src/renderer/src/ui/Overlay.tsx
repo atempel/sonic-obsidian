@@ -580,6 +580,6 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   setupPress()
   const { state } = bridge.core
   return setupIdle(
-    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip')
+    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
   )
 }

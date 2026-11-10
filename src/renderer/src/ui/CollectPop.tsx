@@ -1,3 +1,4 @@
+import { createPortal } from 'preact/compat'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import { Icon } from './icons'
@@ -29,7 +30,8 @@ export function CollectButton({ core }: { core: Core }) {
       >
         <Icon name="folder-plus" />
       </button>
-      {open && <CollectPop core={core} anchor={btn.current} onClose={close} />}
+      {/* A `.strip` corta o que passa da borda (overflow: hidden): o painel vive fora dela. */}
+      {open && btn.current && createPortal(<CollectPop core={core} anchor={btn.current} onClose={close} />, btn.current.closest('.strip-wrap') ?? document.body)}
     </>
   )
 }
@@ -39,6 +41,7 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState('')
   const [, bump] = useState(0)
+  const [pos, setPos] = useState(() => placeFor(anchor))
   const nameInput = useRef<HTMLInputElement>(null)
   useLayoutEffect(() => {
     if (naming) nameInput.current?.focus()
@@ -51,6 +54,13 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
     const offs = [core.events.on('presetChanged', () => bump((x) => x + 1)), core.events.on('stateChanged', () => bump((x) => x + 1))]
     return () => offs.forEach((off) => off())
   }, [core])
+
+  // Sobe da faixa, alinhado à direita do botão.
+  useLayoutEffect(() => {
+    const place = (): void => setPos(placeFor(anchor))
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [anchor])
 
   useLayoutEffect(() => {
     ref.current?.querySelector<HTMLElement>('button, input')?.focus()
@@ -77,7 +87,7 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
     if (col) toggle(col.id, col.name, false)
     setNaming(false)
     setName('')
-    window.setTimeout(() => ref.current?.querySelector<HTMLElement>('[role=menuitemcheckbox]:last-of-type')?.focus(), 0)
+    window.setTimeout(() => [...(ref.current?.querySelectorAll<HTMLElement>('[role=menuitemcheckbox]') ?? [])].pop()?.focus(), 0)
   }
 
   const onKey = (e: KeyboardEvent): void => {
@@ -115,7 +125,14 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
   }
 
   return (
-    <div class="menu collect" role="menu" aria-label="Adicionar à coleção" ref={ref} onKeyDown={onKey}>
+    <div
+      class="menu collect"
+      role="menu"
+      aria-label="Adicionar à coleção"
+      ref={ref}
+      onKeyDown={onKey}
+      style={{ right: `${pos.right}px`, bottom: `${pos.bottom}px` }}
+    >
       {cols.map((c) => {
         const has = c.presets.includes(current)
         return (
@@ -149,4 +166,11 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
       )}
     </div>
   )
+}
+
+/** Posição fixa do painel: acima do botão, alinhado à direita dele. */
+function placeFor(anchor: HTMLElement | null): { right: number; bottom: number } {
+  const r = anchor?.getBoundingClientRect()
+  if (!r) return { right: 16, bottom: 96 }
+  return { right: Math.max(8, window.innerWidth - r.right), bottom: window.innerHeight - r.top + 12 }
 }

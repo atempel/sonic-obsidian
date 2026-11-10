@@ -31,3 +31,8 @@ Atalho de teclado; arrastar o preset para uma coleção; reordenar coleções pe
 
 ## Referências
 - Protótipo `1794178325-0fd0` não tem esta tela. Usa o menu "…" da Biblioteca (Palco integrado, `#libMenu`) e o botão de ícone da faixa. Registro em DIVERGENCIAS.
+
+## Verificação
+- **Headless (2026-11-10, Chromium + SwiftShader, `window.so` simulado com `presets`):** 30/30 checagens cobrindo os critérios 1–5 (abrir com marcas, marcar/desmarcar com toast e painel aberto, salvar na library, Biblioteca › Coleções, nova coleção com nome e com o nome padrão, Esc no campo, Esc/clique fora/botão fecham, Tab/Enter/setas/Home/End/Espaço, faixa não some, Espaço e setas não trocam o preset, marcas acompanham a troca de preset).
+- **Corrigido no teste:** o painel nascia dentro da `.strip`, que tem `overflow: hidden`, e ficava cortado (invisível, o clique caía no canvas). Agora ele é renderizado fora da faixa (portal na `.strip-wrap`, `position: fixed` acima do botão). O foco depois de criar uma coleção também ia para lugar nenhum (`:last-of-type` não achava a linha).
+- **Falta:** o teste no Windows.
