@@ -345,3 +345,15 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Descartado:**
   - resumir a pesquisa (perderia as fontes e a matriz);
   - só linkar o Claude Docs (agentes na nuvem nem sempre têm o conector).
+
+## 2026-11-10 — Spec 024: troca no beat e segurar vêm antes do Estúdio
+- **Do usuário, com base na pesquisa de mercado:** "troca no beat + segurar" atende três personas: DJ de Festa, Streamer de Set e VJ de Clube. O Estúdio atende sobretudo o Criador de Presets. A 024 vem antes, e o Estúdio logo depois.
+- **Decisões da spec (do usuário):**
+  - **Intervalo em compassos** (4/8/16/32, de 4 batidas cada). Sem batida estável, volta aos segundos.
+  - **`Enter` segura** e `R` continua ligando e desligando a rotação (como no SYQEL).
+  - **As trocas manuais também esperam a próxima batida** (M23).
+- **Técnica:** a detecção é própria, no renderer, sobre o `AnalyserNode` que já existe: fluxo espectral nos graves e autocorrelação, entre 70 e 180 BPM. Assim não entra dependência nova, e o custo fica sob controle (< 0,5 ms por quadro).
+- **Descartado:**
+  - intervalo em segundos quantizado ao beat (não acompanha a frase musical);
+  - `R` como "segurar" (o usuário preferiu separar segurar de desligar a rotação);
+  - detectar o primeiro tempo do compasso (downbeat), Ableton Link e MIDI clock, que ficam para quando houver usuários VJ.
