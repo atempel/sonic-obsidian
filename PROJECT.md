@@ -24,6 +24,7 @@ Terminar um app que eu abra todo dia: janela ou tela cheia, reagindo ao áudio d
 | Marca (logo SVG/PNG, regras) | [docs/brand/](docs/brand/README.md) |
 | Imagens do README e divulgação | [docs/media/](docs/media/README.md) |
 | Pesquisa técnica e de efeitos | `docs/research/` |
+| Pesquisa de mercado, personas e concorrentes | [docs/research/mercado/](docs/research/mercado/pesquisa-de-mercado.md) (cópia do Claude Docs) |
 | Versão Python e o plano/PRD originais | `legacy/python/`, `docs/legacy/` |
 | Referências ainda não incorporadas | `queue/` |
 | Planejamento, reflexão, estado do projeto | Notion — [página do projeto](https://app.notion.com/p/334d16734c17814ea20cf9f6dcb8b2fd) e linha na Tabela Meus Projetos |

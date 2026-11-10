@@ -337,3 +337,11 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - seguir o PRD (arquivo como P0) só porque estava no plano;
   - fazer o microfone antes do Estúdio.
 - **Protótipo:** `#srcMenu`, `#trackRow` e a área de soltar que fala de áudio continuam no desenho. No app, a área de soltar segue só com `.milk` (já em DIVERGENCIAS, spec 022).
+
+## 2026-11-10 — Pesquisa de mercado e personas entram no repo
+- **Do usuário:** o contexto da pesquisa "Pesquisa de mercado: quem usaria o Sonic Obsidian" (Claude Docs) precisa estar no repositório.
+- **Como:** cópia exata, exportada em Markdown, em `docs/research/mercado/`: pesquisa, personas e análise do SYQEL. O original continua no Claude Docs. Para atualizar, exporta-se de novo e o arquivo inteiro é substituído. Única mudança: o nome do autor fica como no LICENSE.
+- **Uso:** `planejar-feature` lê as personas, e cada spec diz no cabeçalho qual persona atende.
+- **Descartado:**
+  - resumir a pesquisa (perderia as fontes e a matriz);
+  - só linkar o Claude Docs (agentes na nuvem nem sempre têm o conector).
