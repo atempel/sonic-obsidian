@@ -4,6 +4,27 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-10 (madrugada) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6`
+**Fez:**
+- **Design:** o protótipo mudou de `0fd0` para `42d3`, e o espelho foi sincronizado no PR #72 (só docs, **mergeado**). Entram a página Modos, EQ de 16 bandas e respostas às divergências. Stub em `queue/2026-11-10-design-42d3-modos-feedback-eq.md`. A 024 não muda.
+- **Spec 024, troca no beat + segurar:** PR #71, **mergeado** (squash `1d5f34f`), com CI verde. Artifact `sonic-obsidian-win-565d351`.
+  - A detecção lê os graves pelo relógio do áudio (DECISIONS 2026-11-10). A versão por quadro errava o BPM com fps baixo.
+  - O teste headless passou 32/32.
+- **Spec 025, suíte de testes no CI** (issue #73), no PR #76, **aberto e aguardando ok**:
+  - harness comum e `npm run test:ui`, com 5 arquivos, todos passando;
+  - job no Ubuntu com `playwright@1.63.0`, instalado com `--no-save`.
+- **Specs 026 e 027, Estúdio** (issues #74 e #75), planejadas no PR #76. As perguntas em aberto estão nas specs.
+**Deixou em:**
+- **PR #76:** não mergear sem o ok do usuário para o Playwright no CI e sem as respostas do Estúdio.
+- **Teste no Windows da 024** (roteiro no PR #71): ainda não feito. Falta também o log de ~30 min.
+- **Não verificado no Windows:** 024 (áudio, fps, estabilidade, BPM com música real). Os limiares em `BEAT` podem precisar de ajuste.
+- **Ações do design 42d3 ainda no repo:**
+  - texto do vazio de coleções na busca;
+  - ponto violeta e toast da 023;
+  - `[`/`]` na spec do vídeo.
+- **Notion:** linha da tabela atualizada (Última ação, Próximo passo, Atualizado em).
+- **A refazer:** a checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-10 — Claude Code (nuvem, claude.ai/code) — branch `claude/stoic-faraday-31wbf8` (+ `claude/clever-faraday-72vlrd`, do PR #65)
 **Fez:**
 - Design checado: `1794178325-0fd0`, sem mudança.
