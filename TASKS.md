@@ -21,7 +21,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] Refazer a checagem de `electron@45.2.3` e `vite@8.3.6` depois de 19/11 (14 dias) — [docs/dependencias.md](docs/dependencias.md)
 - [x] Decidir sobre `electron@45.2.3` e `vite@8.3.6`: mantidos; refazer a checagem depois de 19/11 — [docs/dependencias.md](docs/dependencias.md)
 - [x] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder`: aceitas (só empacotamento); rever quando o electron-builder atualizar
-- [ ] **Suíte de testes automatizados de performance e regressão no CI** (pedido do usuário: não depender só da máquina dele; vem depois das tarefas abertas) — planejar: [queue/2026-11-09-suite-testes-performance.md](queue/2026-11-09-suite-testes-performance.md)
+- [ ] **Suíte de testes no CI** (pedido do usuário: não depender só da máquina dele) — [spec 025](docs/specs/025-suite-testes-ci.md) · issue [#73](https://github.com/atempel/sonic-obsidian/issues/73) · P0 aguarda o ok para o Playwright no CI
 - [x] Memória da GPU estável numa sessão longa: ~40 min visível, GPU entre 158 e 200 MB, sem tendência de alta (DECISIONS 2026-11-09)
 - [x] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
