@@ -1,59 +1,28 @@
 // Teste headless da spec 024 (troca no beat a cada N compassos + segurar). Uso: `npm run build` e
-// depois `node tests/headless/024-beat.cjs`. Precisa do Chromium/Playwright do ambiente da nuvem.
+// depois `npm run test:ui` (ou `node tests/headless/024-beat.test.cjs`). Precisa do Chromium/Playwright do ambiente da nuvem.
 // O getDisplayMedia simulado devolve um bumbo sintético a 124 BPM (buffer em loop: tempo exato),
 // que pode virar música ambiente (sem ataques) ou silêncio por `window.__audio(modo)`.
 // Vale para estados, interface e o algoritmo com áudio limpo; com música real, só no Windows.
-const { chromium } = require('playwright')
-const path = require('path'), http = require('http'), fs = require('fs'), os = require('os')
-const root = path.join(__dirname, '..', '..', 'out', 'renderer')
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' }
-const srv = http.createServer((q, r) => { const u = decodeURIComponent(q.url.split('?')[0]); const p = path.join(root, u === '/' ? 'index.html' : u); fs.readFile(p, (e, d) => { if (e) { r.writeHead(404); r.end(); return } r.writeHead(200, { 'content-type': types[path.extname(p)] || 'application/octet-stream' }); r.end(d) }) }).listen(5199)
-const results = []; const ok = (n, c, extra = '') => { results.push(`${c ? 'PASS' : 'FAIL'} ${n} ${extra}`) }
+const H = require('./harness.cjs')
+const path = require('path'), os = require('os')
+const srv = H.serve(5200)
+const R = H.createResults('024-beat'); const ok = R.ok
 const BPM = 124, BEAT_S = 60 / BPM
 ;(async () => {
-  const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] })
-  const page = await b.newPage({ viewport: { width: 1280, height: 800 } })
+  const b = await H.launch()
+  const page = await b.newPage({ viewport: { width: 1280, height: 800 } }); R.attach(page)
   const errs = []; page.on('pageerror', e => errs.push(String(e))); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
-  await page.addInitScript((bpm) => {
-    window.__saves = []; window.__logs = []
-    const lib = { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [] }
-    window.so = {
-      settings: { load: async () => ({ welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4 }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } }), save: async (d) => { window.__saves.push(JSON.parse(JSON.stringify(d))) } },
-      library: { load: async () => lib, save: async () => {} },
-      window: { toggleFullScreen: async () => {}, minimize: async () => {}, close: async () => {} },
-      system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async () => {}, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false }) },
-      app: { version: async () => '0.5.0' },
-      presets: { convertMilk: async () => ({ preset: {}, ms: 0 }), listImported: async () => [], saveImported: async () => {}, removeImported: async () => {}, pickMilk: async () => ({ files: [], tooBig: [], extra: 0 }) },
-      collections: { export: async () => ({ ok: true }), import: async () => ({ ok: false, canceled: true }) },
-      log: (m) => { window.__logs.push(m); window.__logT = window.__logT || []; window.__logT.push([performance.now(), m]); console.log('[so.log]', m) }, mark: () => {}, showLog: async () => {}
-    }
-    navigator.mediaDevices.getDisplayMedia = async () => {
-      const ac = new AudioContext(); const sr = ac.sampleRate; const d = ac.createMediaStreamDestination()
-      // Bumbo: seno de 55 Hz com queda rápida + um chimbal curto no contratempo.
-      const beatLen = Math.round(sr * 60 / bpm)
-      const kick = ac.createBuffer(1, beatLen, sr); const k = kick.getChannelData(0)
-      for (let i = 0; i < beatLen; i++) { const t = i / sr; k[i] = 0.8 * Math.sin(2 * Math.PI * (55 + 60 * Math.exp(-t * 30)) * t) * Math.exp(-t * 12) }
-      for (let i = 0; i < sr * 0.03; i++) { const j = Math.floor(beatLen / 2) + i; k[j] += 0.08 * (Math.random() * 2 - 1) * Math.exp(-i / sr * 120) }
-      // Ambiente: acorde sustentado com variação lenta, sem ataques.
-      const ambLen = sr * 4; const amb = ac.createBuffer(1, ambLen, sr); const a = amb.getChannelData(0)
-      for (let i = 0; i < ambLen; i++) { const t = i / sr; const lfo = 0.6 + 0.4 * Math.sin(2 * Math.PI * t / 4); a[i] = lfo * 0.15 * (Math.sin(2 * Math.PI * 110 * t) + Math.sin(2 * Math.PI * 164.8 * t) + Math.sin(2 * Math.PI * 220 * t)) }
-      let src = null
-      window.__audio = (mode) => {
-        if (src) { src.stop(); src.disconnect(); src = null }
-        if (mode === 'silence') return
-        src = ac.createBufferSource(); src.buffer = mode === 'ambient' ? amb : kick; src.loop = true; src.connect(d); src.start()
-      }
-      window.__audio('beat')
-      const s = d.stream; const c = document.createElement('canvas'); s.addTrack(c.captureStream(1).getVideoTracks()[0]); return s
-    }
-    // Trocas de preset com o tempo (performance.now) em que aconteceram.
+  await H.mockSo(page, { saveSettings: true, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4 }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
+  await H.mockAudio(page, { bpm: BPM })
+  // Trocas de preset com o tempo (performance.now) em que aconteceram.
+  await page.addInitScript(() => {
     window.__changes = []
     new MutationObserver(() => {
       const t = document.querySelector('.now-title')?.getAttribute('title')
       if (t && t !== window.__changes.at(-1)?.name) window.__changes.push({ name: t, at: performance.now() })
     }).observe(document, { subtree: true, attributes: true, attributeFilter: ['title'] })
-  }, BPM)
-  await page.goto('http://localhost:5199/')
+  })
+  await page.goto('http://localhost:5200/')
   await page.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
   await page.keyboard.press('Control+Shift+KeyD')
   const hud = () => page.$eval('#hud', e => e.textContent)
@@ -107,7 +76,8 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.evaluate(() => document.activeElement?.blur())
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5a faixa mostra "Segurado"', (await rotText()).includes('Segurado'), await rotText())
-  ok('5b toast de segurado', (await page.evaluate(() => document.body.innerText)).includes('Visual segurado'))
+  // O toast pode aparecer depois do primeiro quadro lento do headless: espera até 2 s em vez de ler uma vez.
+  ok('5b toast de segurado', await page.waitForFunction(() => document.body.innerText.includes('Visual segurado'), null, { timeout: 2000 }).then(() => true, () => false))
   await page.evaluate(() => { window.__changes = [] })
   await page.waitForTimeout(9500)
   ok('5c segurado: nenhuma troca automática em > 4 compassos', (await page.evaluate(() => window.__changes.length)) === 0)
@@ -172,6 +142,6 @@ const BPM = 124, BEAT_S = 60 / BPM
   ok('7b log só com mudanças de estado', logs.length <= 4, JSON.stringify(logs))
   await page.screenshot({ path: path.join(os.tmpdir(), '024-strip.png') })
   ok('sem erros na página', errs.filter(e => !/getDisplayMedia|AudioContext/.test(e)).length === 0, JSON.stringify(errs.slice(0, 5)))
-  console.log(results.join('\n')); console.log(`${results.filter(r => r.startsWith('PASS')).length}/${results.length}`)
-  await b.close(); srv.close()
-})().catch(e => { console.log(results.join('\n')); console.error(e); process.exit(1) })
+  const code = await R.finish()
+  await b.close(); srv.close(); process.exit(code)
+})().catch(e => { R.dump(); console.error(e); process.exit(1) })

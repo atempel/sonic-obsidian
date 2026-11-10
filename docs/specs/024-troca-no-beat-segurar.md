@@ -79,7 +79,7 @@ Detecção de batida e BPM própria, no renderer, a partir do áudio que já che
 - `src/renderer/src/beat.ts`: um `AnalyserNode` próprio (`fftSize` 32768 ≈ 0,7 s) no mesmo ramo do medidor de silêncio, antes do ganho, lido **pelo relógio do áudio** (só as amostras novas a cada quadro). Passa-baixas de 2 polos, energia em células de 10 ms, onset = subida da energia em dB. Autocorrelação a cada 250 ms; fase por pente. Todos os limiares em `BEAT`. Ver DECISIONS 2026-11-10 ("Detecção de batida pelo relógio do áudio").
 - Quando a batida trava pela primeira vez, a contagem em compassos começa **na troca seguinte** (como a spec pede para a volta da batida); até lá, segundos.
 - Sem batida estável: `RECENT_BEATS` (1,5 batida sem onset) + `LOST_AFTER_MS` (1 s) → ~2–3,5 s até perder.
-- Teste headless: `tests/headless/024-beat.cjs` (bumbo sintético a 124 BPM, ambiente e silêncio), 32/32.
+- Teste headless: `tests/headless/024-beat.test.cjs` (bumbo sintético a 124 BPM, ambiente e silêncio), 32/32.
 
 ## Perguntas em aberto
 - O `B` (tipo de transição, 013) conflita com o tap tempo do modo performance do protótipo. Decidir na P1.

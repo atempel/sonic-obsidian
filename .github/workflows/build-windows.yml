@@ -28,6 +28,17 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run build
+      # Testes headless (spec 025). Sem devDependency por enquanto: Playwright entra só no CI, com --no-save.
+      - run: npx -y playwright@1.63.0 install --with-deps chromium
+      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0
+      - run: npm run test:ui
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ github.sha }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
 
   build-windows:
     needs: typecheck
