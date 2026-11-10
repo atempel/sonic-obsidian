@@ -1,6 +1,6 @@
 # 024 — Troca no beat a cada N compassos e segurar visual
 
-**Fase:** 3 · **Status:** Implementada; revisão 3 depois do segundo teste no Windows (falta validar) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
+**Fase:** 3 · **Status:** Feita — validada no Windows em 2026-11-10 (revisão 3, PR #77) · **Issue:** [#67](https://github.com/atempel/sonic-obsidian/issues/67) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [003](003-rotacao-automatica.md), [013](013-transicoes.md)
 
 ## Problema
 A rotação troca o preset a cada N segundos, fora do tempo da música. Para quem toca ou transmite um set, isso parece aleatório: o visual muda no meio de uma frase musical e não acompanha o drop.
