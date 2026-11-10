@@ -4,6 +4,30 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-10 — Claude Code (nuvem, claude.ai/code) — branch `claude/stoic-faraday-31wbf8` (+ `claude/clever-faraday-72vlrd`, do PR #65)
+**Fez:**
+- Design checado: `1794178325-0fd0`, sem mudança.
+- **Spec 023, teste headless refeito: 30/30** (critérios 1–5; o mock de `window.so` agora inclui `presets`). O teste achou um bug real: o painel de coleções nascia dentro da `.strip` (`overflow: hidden`) e ficava cortado e invisível, com o clique caindo no canvas.
+  - Correção: portal para a `.strip-wrap` com `position: fixed`, e a faixa não some com o painel aberto.
+  - O foco depois de "Nova coleção" também se perdia; corrigido.
+  - Commit `9841b32`, enviado também ao branch do PR #65 a pedido do usuário. O script ficou em `tests/headless/023-colecoes.cjs`, semente da suíte de testes.
+- **PR #65 (022 + 023) saiu do rascunho.** CI verde; artifact `sonic-obsidian-win-fa433b2`, com o roteiro de teste de 021/022/023 enviado ao usuário.
+- **Fonte arquivo de áudio adiada** (decisão do usuário): volta com a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md)). PRD e TASKS atualizados.
+- **Pesquisa de mercado no repo:** `docs/research/mercado/` (pesquisa, personas, SYQEL), cópia exata do Claude Docs. `planejar-feature` passa a ler as personas, e a spec cita a persona.
+- **Com a pesquisa, a prioridade mudou:** a troca no beat + segurar vem antes do Estúdio. **Spec 024** planejada, issue #67: compassos 4/8/16/32, `Enter` segura, trocas manuais esperam a batida (M23), detecção própria.
+**Deixou em:**
+- ~~PR #65 aguardando teste~~ (ver atualização abaixo). Roteiro: 021 (motor 3), 022 (importar `.milk`, incluindo um `.milk` com JS) e 023 (coleções), mais o `sonic-obsidian.log` depois de ~30 min com rotação.
+- **O branch da sessão está à frente do PR #65** com só docs, a spec 024 e o teste: `8a1584a`, `0e87547`, `046850e` e o encerramento. Depois do merge do #65, abrir um PR deste branch, ou alinhar com `merge -s ours` se o main já tiver tudo.
+- **Atualização (02:20 UTC):**
+  - O usuário testou 021/022/023 no Windows e aprovou: tudo normal, sem mudança de performance.
+  - Log de ~30 min: GPU entre 144 e 160 MB, abertura quente em 1,35 s, sem erros. O `.milk` com JS foi recusado na conversão.
+  - Corrigido o anel de foco na aba "Todos" ao abrir a Biblioteca com `L` (relato do usuário): agora o foco vai para a gaveta.
+  - **PR #65 mergeado** (squash `d166c59`). Este branch foi alinhado ao main, e o PR dele leva docs, a spec 024 e `tests/headless/`.
+  - Não testada pelo usuário: a importação de um `.milk` com nome novo (o arquivo baixado já estava na biblioteca e foi pulado, como esperado).
+- **Próximo:** implementar a 024 numa sessão nova (o contexto desta acabou); o Estúdio vem depois (specs a criar).
+- **Não verificado no Windows:** 021, 022 e 023, incluindo áudio, fps e estabilidade.
+- **A refazer:** checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-09/10 — Claude Code (nuvem, claude.ai/code) — branch `claude/clever-faraday-72vlrd` (continuação)
 **Fez:**
 - Log da v0.5.0 analisado: a abertura lenta é a 1ª execução de cada `.exe` novo, e o app abre em ~1,1 s; memória da GPU estável em ~40 min. Corrigido o falso "preset pesado" ao voltar de janela oculta (#61).

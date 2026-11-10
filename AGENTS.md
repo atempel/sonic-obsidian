@@ -56,4 +56,5 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - [docs/PRD.md](docs/PRD.md) — roadmap e escopo (arquivo âncora)
 - `docs/design/v3/` — protótipo v3 espelhado do Claude Design (referência de interface)
 - `docs/design/` — exploração v1/v2, moodboard
+- `docs/research/mercado/` — pesquisa de mercado, [personas](docs/research/mercado/personas.md) e concorrentes (cópia do Claude Docs; ler antes de planejar feature)
 - `docs/research/` — pesquisa técnica (MilkDrop, FFT, efeitos)

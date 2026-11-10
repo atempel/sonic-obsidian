@@ -43,6 +43,9 @@ Estado de cada uma: [TASKS.md](../TASKS.md).
 ## Pesquisa
 | Documento | O que tem |
 |---|---|
+| [research/mercado/pesquisa-de-mercado.md](research/mercado/pesquisa-de-mercado.md) | **Pesquisa de mercado (nov/2026):** públicos (ouvintes, DJs, streamers, músicos, VJs), concorrentes, tendências, matriz de funcionalidades por persona e o que muda no backlog. |
+| [research/mercado/personas.md](research/mercado/personas.md) | **Sete proto-personas** com apelido (Nostálgico do Winamp, DJ de Festa, Streamer de Set, Artista Independente, VJ de Clube, Criador de Presets, Anfitrião de Ambiente). Specs citam a persona que atendem. |
+| [research/mercado/competidor-syqel.md](research/mercado/competidor-syqel.md) | Análise do SYQEL (mesmo motor, Butterchurn): funcionalidades, preços, o que aprender e o que não copiar. |
 | [research/audio-visualizer-research.md](research/audio-visualizer-research.md) | MilkDrop, AVS, Web Audio, captura de áudio no browser. |
 | [research/exploracao-efeitos-visuais.md](research/exploracao-efeitos-visuais.md) | Catálogo de efeitos visuais. |
 | [research/python-pyaudiowpatch-visualizer.md](research/python-pyaudiowpatch-visualizer.md) | Guia técnico da v1 (WASAPI, FFT, Pygame, ModernGL). |

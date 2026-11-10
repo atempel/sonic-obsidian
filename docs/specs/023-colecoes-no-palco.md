@@ -1,6 +1,6 @@
 # 023 — Adicionar o preset atual a coleções pelo Palco
 
-**Fase:** 3 · **Status:** Em andamento · **Issue:** [#66](https://github.com/atempel/sonic-obsidian/issues/66) · **Depende de:** [010](010-busca-biblioteca.md) (coleções)
+**Fase:** 3 · **Status:** Feita (PR #65; validada pelo usuário no Windows em 2026-11-10) · **Issue:** [#66](https://github.com/atempel/sonic-obsidian/issues/66) · **Depende de:** [010](010-busca-biblioteca.md) (coleções)
 
 ## Problema
 Hoje, para pôr o preset que está tocando numa coleção, é preciso abrir a Biblioteca, achar o preset na lista e usar o menu "…" da linha. No Palco a pessoa já está vendo o preset: é o melhor momento para guardá-lo e organizar (pedido do usuário, 2026-11-10).
@@ -35,4 +35,4 @@ Atalho de teclado; arrastar o preset para uma coleção; reordenar coleções pe
 ## Verificação
 - **Headless (2026-11-10, Chromium + SwiftShader, `window.so` simulado com `presets`):** 30/30 checagens cobrindo os critérios 1–5 (abrir com marcas, marcar/desmarcar com toast e painel aberto, salvar na library, Biblioteca › Coleções, nova coleção com nome e com o nome padrão, Esc no campo, Esc/clique fora/botão fecham, Tab/Enter/setas/Home/End/Espaço, faixa não some, Espaço e setas não trocam o preset, marcas acompanham a troca de preset).
 - **Corrigido no teste:** o painel nascia dentro da `.strip`, que tem `overflow: hidden`, e ficava cortado (invisível, o clique caía no canvas). Agora ele é renderizado fora da faixa (portal na `.strip-wrap`, `position: fixed` acima do botão). O foco depois de criar uma coleção também ia para lugar nenhum (`:last-of-type` não achava a linha).
-- **Falta:** o teste no Windows.
+- **Windows (2026-11-10):** o usuário testou e aprovou. O log de ~30 min tem GPU entre 144 e 160 MB, sem erros.
