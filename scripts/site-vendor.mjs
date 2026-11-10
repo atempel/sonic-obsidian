@@ -9,10 +9,10 @@ const nm = join(root, 'node_modules');
 const out = join(root, 'site', 'vendor');
 
 const files = [
-  ['butterchurn/lib/butterchurn.min.js', 'butterchurn.min.js'],
-  ['butterchurn/LICENSE', 'LICENSE-butterchurn.txt'],
-  ['butterchurn-presets/lib/butterchurnPresets.min.js', 'butterchurnPresets.min.js'],
-  ['butterchurn-presets/LICENSE', 'LICENSE-butterchurn-presets.txt'],
+  ['butterchurn-v2-site/lib/butterchurn.min.js', 'butterchurn.min.js'],
+  ['butterchurn-v2-site/LICENSE', 'LICENSE-butterchurn.txt'],
+  ['butterchurn-presets-v2-site/lib/butterchurnPresets.min.js', 'butterchurnPresets.min.js'],
+  ['butterchurn-presets-v2-site/LICENSE', 'LICENSE-butterchurn-presets.txt'],
   ['@fontsource/space-grotesk/LICENSE', 'fonts/OFL-SpaceGrotesk.txt'],
   ['@fontsource/jetbrains-mono/LICENSE', 'fonts/OFL-JetBrainsMono.txt']
 ];

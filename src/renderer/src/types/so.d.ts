@@ -18,6 +18,7 @@ interface Window {
       testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
     }
     app: { version(): Promise<string> }
+    presets: { convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }> }
     collections: {
       export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
       import(): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }>

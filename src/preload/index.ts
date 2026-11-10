@@ -39,6 +39,10 @@ contextBridge.exposeInMainWorld('so', {
     testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean }> => ipcRenderer.invoke('system:testFlags')
   },
   app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
+  /** .milk (texto) → preset do Butterchurn 3, convertido no main (spec 022). */
+  presets: {
+    convertMilk: (text: string): Promise<{ preset: Record<string, unknown>; ms: number }> => ipcRenderer.invoke('presets:convertMilk', String(text))
+  },
   /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */
   collections: {
     export: (text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }> => ipcRenderer.invoke('collections:export', text),

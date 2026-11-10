@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
 import { mark } from './startup'
+import { milkToPreset3 } from './milk'
 
 mark('main.js')
 import { JsonStore } from './store'
@@ -63,14 +64,21 @@ function registerStores(): void {
     }
   })
   ipcMain.handle('system:testFlags', () => readTestFlags())
+  // .milk → preset 3.x fora do renderer (o conversor HLSL precisa de eval); usado pela spec 022.
+  ipcMain.handle('presets:convertMilk', async (_e, text: unknown) => {
+    const t = performance.now()
+    const preset = await milkToPreset3(text)
+    return { preset, ms: performance.now() - t }
+  })
 }
 
 /**
  * Flags de teste (spec 012): `test-flags.json` na pasta de dados (Ctrl+Shift+L abre a pasta
  * do log, ao lado). Simula a captura recusada e a falta de WebGL 2 sem linha de comando.
- * Só estas duas chaves, só booleanos; arquivo ausente ou inválido = nenhuma flag.
+ * Só estas chaves, só booleanos; arquivo ausente ou inválido = nenhuma flag.
  */
-async function readTestFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }> {
+type TestFlags = { captureFail: boolean; noWebgl2: boolean }
+async function readTestFlags(): Promise<TestFlags> {
   try {
     const raw = JSON.parse(await readFile(join(app.getPath('userData'), 'test-flags.json'), 'utf8')) as Record<string, unknown>
     const flags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }

@@ -36,13 +36,17 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] Fechar a tipografia (manter Space Grotesk ou alternativa)
 
 ## Spikes de risco (podem rodar em paralelo à Fase 1/2)
-- [ ] **Butterchurn 3 (WASM) + pipeline `.milk`** — bloqueia presets próprios e criação via MCP — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue [#19](https://github.com/atempel/sonic-obsidian/issues/19)
+- [x] **Butterchurn 3 (WASM) + pipeline `.milk`** — aprovado (validado no Windows em 2026-11-09) — [spec 006](docs/specs/006-spike-butterchurn3-milk.md) · issue [#19](https://github.com/atempel/sonic-obsidian/issues/19)
 - [ ] **SoundCloud como fonte** — depende de conta Artist Pro — [spec 007](docs/specs/007-spike-soundcloud.md) · issue [#20](https://github.com/atempel/sonic-obsidian/issues/20)
 
 ## Abertura (repo público e MIT desde 2026-11-08, PR #43)
 - [x] **Releases no GitHub** (v0.5.0 publicada em 2026-11-09; PRs #58/#59; P1 = atualização automática e winget) — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
 - [x] **Landing page no GitHub Pages** (P0 no ar em atempel.github.io/sonic-obsidian, PR #48; P1 = 404 e notas da versão) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
 - [x] **Landing: refino de movimento e microinterações** (sistema de movimento da v3 no `site/` + músicas do Uppbeat criptografadas na demo) — [spec 019](docs/specs/019-landing-refino-movimento.md) · issue [#52](https://github.com/atempel/sonic-obsidian/issues/52)
+
+## Agora — Fase 3 (Fontes e presets)
+- [ ] **Migração para o Butterchurn 3 (WASM)** — [spec 021](docs/specs/021-migracao-butterchurn3.md) · issue [#63](https://github.com/atempel/sonic-obsidian/issues/63)
+- [ ] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64)
 
 ## Depois
 - Fase 3 — Fontes e presets · Fase 4 — MCP · Fase 5 — Extras (ver [PRD](docs/PRD.md) e [architecture.md](docs/architecture.md))

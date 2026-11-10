@@ -86,6 +86,7 @@ async function start(): Promise<void> {
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
+  await library.loadBasePack()
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
@@ -263,7 +264,10 @@ async function start(): Promise<void> {
   core.events.on('presetChanged', ({ name, blendType, blendSeconds }) => {
     core.events.emit('slowPreset', null)
     probe = { name, from: performance.now() + blendSeconds * 1000 + 1000, start: 0, frames: 0, last: 0 }
-    viz.load(library.get(name), blendType, blendSeconds)
+    viz.load(library.get(name), blendType, blendSeconds).catch((err: unknown) => {
+      // Preset que não compila para WASM: registra; o anterior continua na tela.
+      window.so.log(`preset não carregou: ${name}: ${err instanceof Error ? err.message : String(err)}`)
+    })
     rotation.restart(performance.now())
     state.preset = name
     console.log(`[viz] preset: ${name} (${blendType}, ${blendSeconds} s)`)
@@ -501,6 +505,28 @@ async function start(): Promise<void> {
   let frames = 0
   let windowStart = performance.now()
   let firstFrame = false
+  // Render resiliente (spec 021): um preset pode travar dentro do WASM ("float unrepresentable")
+  // ou quebrar a transição seguinte. 3 erros em 1 s = o preset é pulado até o app fechar.
+  const broken = new Set<string>()
+  const baseSkip = library.isSkipped
+  library.isSkipped = (name) => broken.has(name) || baseSkip(name)
+  let renderErrors: number[] = []
+  const renderSafe = (elapsed: number): void => {
+    try {
+      viz.render(elapsed)
+    } catch (err) {
+      const t = performance.now()
+      renderErrors = [...renderErrors.filter((x) => t - x < 1000), t]
+      if (renderErrors.length < 3) return
+      renderErrors = []
+      const name = core.state.current
+      if (!name || broken.has(name)) return
+      broken.add(name)
+      window.so.log(`preset travou e foi pulado: ${name}: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+      showToast('Este preset travou e foi pulado.', { force: true })
+      run('preset.next', { cut: true }, 'rotation')
+    }
+  }
   const loop = (now: number): void => {
     requestAnimationFrame(loop)
     const frameInterval = settings.fpsLimit === 'monitor' ? 0 : 1000 / settings.fpsLimit
@@ -539,7 +565,7 @@ async function start(): Promise<void> {
     const speed = silence.step(dt)
     dim.style.opacity = String(((1 - speed) / (1 - 0.15)) * SILENT_DIM)
     if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
-    viz.render(dt * speed)
+    renderSafe(dt * speed)
     if (!firstFrame) {
       firstFrame = true
       window.so.mark('primeiro quadro')

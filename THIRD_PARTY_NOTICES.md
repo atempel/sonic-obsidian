@@ -7,8 +7,9 @@ O motor visual é o [Butterchurn](https://github.com/jberg/butterchurn), de Jord
 
 Muito obrigado a Jordan Berg, a Ryan Geiss e a todos os autores de presets.
 
-- butterchurn 2.6.7 — MIT
-- butterchurn-presets 2.4.7 — MIT
+- butterchurn 3.0.0-beta.5 — MIT (no app)
+- butterchurn-presets 3.0.0-beta.4 — MIT (no app)
+- butterchurn 2.6.7 e butterchurn-presets 2.4.7 — MIT (só na landing, em `site/vendor/`)
 
 ```
 MIT License
@@ -36,15 +37,18 @@ SOFTWARE.
 
 (O texto de licença de `butterchurn-presets` é idêntico: MIT, Copyright (c) 2013-2018 Jordan Berg.)
 
-## Dependências de runtime desses pacotes (todas MIT)
-- @babel/runtime — Copyright (c) 2014-present Sebastian McKenzie and other contributors
-- babel-runtime 6.26.0 — Copyright (c) 2014-2017 Sebastian McKenzie
-- core-js 2.6.12 — Copyright (c) 2014-2020 Denis Pushkarev
-- regenerator-runtime 0.11.1 — Copyright (c) 2014-present, Facebook, Inc.
-- lodash 4.x — Copyright OpenJS Foundation and other contributors
+## Dependências de runtime desses pacotes
+- eel-wasm 0.0.16 — MIT, Copyright (c) Jordan Eldredge (compila as equações dos presets para WebAssembly)
+- @assemblyscript/loader 0.17.14 — Apache-2.0, Copyright (c) Daniel Wirtz / The AssemblyScript Authors (texto da licença em https://www.apache.org/licenses/LICENSE-2.0)
+- @babel/runtime — MIT, Copyright (c) 2014-present Sebastian McKenzie and other contributors
 - ecma-proposal-math-extensions 0.0.2 — MIT
+- Só na landing (empacotados no butterchurn-presets 2.4.7): babel-runtime 6.26.0, core-js 2.6.12, regenerator-runtime 0.11.1, lodash 4.x — MIT
 
-Todas sob a licença MIT, cujo texto é o mesmo reproduzido acima com o respectivo aviso de copyright.
+## Conversor de presets `.milk`
+- milkdrop-preset-utils 0.2.1 — MIT, Copyright (c) Jordan Berg
+- hlslparser-js 0.1.1 — MIT, Copyright (c) Jordan Berg (port em WebAssembly/Emscripten do hlslparser da Thekla, MIT)
+
+As licenças MIT acima têm o mesmo texto reproduzido no início deste arquivo, com o respectivo aviso de copyright.
 
 ## Preact
 [Preact](https://preactjs.com/) 11 (MIT) — Copyright (c) 2015-present Jason Miller. Licença MIT, mesmo texto reproduzido acima.

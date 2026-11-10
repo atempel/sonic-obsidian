@@ -2,7 +2,7 @@ import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
 import type { BlendType, RenderSettings } from './core/state'
 
 /**
- * Partes internas do Butterchurn 2.6.7 usadas para escolher o tipo de transição
+ * Partes internas do Butterchurn (2.6.7 e 3.x, mesma estrutura) usadas para escolher o tipo de transição
  * (spec 013): `visualizer.renderer.blendPattern` (`src/rendering/blendPattern.js`).
  * Não fazem parte da API pública; se mudarem, o app volta ao sorteio do motor.
  */
@@ -29,12 +29,16 @@ export class PresetVisualizer {
   private render_: RenderSettings
   private extraImagesLoaded = false
 
+  /** Pedido de preset mais recente: em trocas rápidas, vale o último (loadPreset é assíncrono). */
+  private loadSeq = 0
+  private loadChain: Promise<boolean> = Promise.resolve(true)
+
   constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement, render: RenderSettings) {
     this.render_ = { ...render }
     const { width, height } = this.size()
     canvas.width = width
     canvas.height = height
-    this.visualizer = butterchurn.createVisualizer(ctx, canvas, {
+    const opts = {
       width,
       height,
       pixelRatio: this.pixelRatio(),
@@ -42,7 +46,9 @@ export class PresetVisualizer {
       meshWidth: render.meshWidth,
       meshHeight: render.meshHeight,
       outputFXAA: render.fxaa
-    })
+    }
+    // onlyUseWASM: equações só em WASM; nenhum preset vira JavaScript (spec 021, spike 006).
+    this.visualizer = butterchurn.createVisualizer(ctx, canvas, { ...opts, onlyUseWASM: true })
     this.blendTypesAvailable = this.hookBlendPattern()
     if (render.extraImages) void this.loadExtraImages()
   }
@@ -67,8 +73,9 @@ export class PresetVisualizer {
     if (this.extraImagesLoaded) return
     this.extraImagesLoaded = true
     try {
-      const mod = await import('butterchurn/lib/butterchurnExtraImages.min.js')
-      this.visualizer.loadExtraImages(mod.default.getImages())
+      // No 3.x as imagens dos presets "image" vêm no próprio butterchurn-presets.
+      const mod = await import('butterchurn-presets/dist/imageData.min.js')
+      this.visualizer.loadExtraImages(mod.default)
     } catch (err) {
       this.extraImagesLoaded = false
       console.error('[viz] falha ao carregar o pacote de imagens extras', err)
@@ -81,9 +88,24 @@ export class PresetVisualizer {
   }
 
   /** Corte seco = blend 0; os demais tipos usam o tempo pedido. */
-  load(preset: Preset, type: BlendType, blendSeconds: number): void {
-    this.pendingType = type
-    this.visualizer.loadPreset(preset, type === 'cut' ? 0 : blendSeconds)
+  /**
+   * Corte seco = blend 0; os demais tipos usam o tempo pedido. Assíncrono (compilação WASM):
+   * os pedidos entram numa fila, e um pedido que já foi superado por outro mais novo é
+   * descartado antes de compilar, para um preset lento não tomar a tela depois do mais novo.
+   * Resolve `true` se este pedido foi aplicado.
+   */
+  load(preset: Preset, type: BlendType, blendSeconds: number): Promise<boolean> {
+    const seq = ++this.loadSeq
+    const run = async (): Promise<boolean> => {
+      if (seq !== this.loadSeq) return false
+      this.pendingType = type
+      // Cópia: o motor altera o objeto do preset (baseVals); a biblioteca guarda o original.
+      await this.visualizer.loadPreset(structuredClone(preset), type === 'cut' ? 0 : blendSeconds)
+      return true
+    }
+    const p = this.loadChain.then(run, run)
+    this.loadChain = p.catch(() => false)
+    return p
   }
 
   resize(): void {
