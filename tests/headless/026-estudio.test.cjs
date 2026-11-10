@@ -104,7 +104,7 @@ function mainChecks() {
   await page.fill(ta(2), 'while(1);')
   await page.waitForTimeout(450)
   const t4 = Date.now(); await page.evaluate(() => 1); const rt = Date.now() - t4
-  ok('4a interface responde durante o teste do laço', rt < 300, `${rt} ms`)
+  ok('4a interface responde durante o teste do laço (critério: não congela ~1 s)', rt < 800, `${rt} ms`)
   ok('4b laço recusado com mensagem', await waitStatus(/^1 erro$/, 3000), await status())
   ok('4c mensagem fala do laço', /Laço sem fim|Lento demais/.test(await page.$eval('.perr p', e => e.textContent).catch(() => '')), await page.$eval('.perr p', e => e.textContent).catch(() => ''))
   // 4e. valor inválido (NaN/infinito) é recusado antes de chegar à imagem

@@ -430,14 +430,17 @@ async function start(): Promise<void> {
   // ── Estúdio de presets (spec 026) ─────────────────────────
   // Rotação parada enquanto aberto (sem mexer no settings.json); ao sair, volta como estava.
   let studio: { compiler: StudioCompiler; source: string; applied: boolean } | null = null
+  /** Do E até fechar, incluindo a carga do Worker: a rotação não pode trocar o preset nesse meio-tempo. */
+  let studioBusy = false
   const audioVals = (): Float32Array | null => {
     const v = (viz.visualizer as unknown as { renderer?: { audioLevels?: { val?: unknown } } }).renderer?.audioLevels?.val
     return v instanceof Float32Array ? v : null
   }
   const openStudioFor = async (name?: string): Promise<void> => {
-    if (studio) return
+    if (studio || studioBusy) return
     const src = name ?? core.state.current
     if (!src || !library.has(src)) return
+    studioBusy = true
     if (src !== core.state.current) run('preset.play', { name: src }, 'ui')
     const { default: EelWorker } = await import('./studio/eel-worker?worker&inline')
     const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => ({ w: settings.render.meshWidth, h: settings.render.meshHeight }))
@@ -482,6 +485,7 @@ async function start(): Promise<void> {
         closeStudio()
         compiler.dispose()
         studio = null
+        studioBusy = false
         state.studio = undefined
         run('ui.close', {}, 'ui')
         window.so.log(`estúdio: fechado${saved ? ` com ${saved}` : ''}`)
@@ -800,7 +804,7 @@ async function start(): Promise<void> {
       core.events.emit('levelTick', { level: state.level })
     }
     // Sem som (aviso visível) ou sem captura: a rotação espera, como no protótipo.
-    if (silence.showNotice || core.state.capture !== 'ok' || studio) rotation.hold(now - lastLoop)
+    if (silence.showNotice || core.state.capture !== 'ok' || studioBusy) rotation.hold(now - lastLoop)
     lastLoop = now
     const dt = Math.min(0.1, Math.max(0.001, (now - lastRender) / 1000))
     lastRender = now
@@ -809,7 +813,7 @@ async function start(): Promise<void> {
     const t0Beat = performance.now()
     const crossed = beat.update(now, silence.resting)
     if (crossed > 0) {
-      if (!studio) for (let i = 0; i < crossed; i++) rotation.beat()
+      if (!studioBusy) for (let i = 0; i < crossed; i++) rotation.beat()
       core.events.emit('beatTick', {})
       flushPending()
     }
@@ -818,7 +822,7 @@ async function start(): Promise<void> {
     beatCost += performance.now() - t0Beat
     beatFrames++
     // No modo beat, a troca sai na batida e mistura no máximo 1 batida, para cair no tempo.
-    if (!studio && rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
+    if (!studioBusy && rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
     renderSafe(dt * speed)
     if (blackCheck && now >= blackCheck.at) {
       const c = blackCheck
