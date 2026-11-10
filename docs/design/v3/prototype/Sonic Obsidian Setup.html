@@ -53,6 +53,9 @@
   .shortcuts { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
   .shortcuts li { display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 10px; font-size: 13px; color: var(--text-2); }
   .shortcuts kbd { justify-self: start; }
+  .more { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 13px; color: var(--text-2); text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; transition: color var(--t-fast), text-decoration-color var(--t-fast); }
+  .more:hover { color: var(--text-1); text-decoration-color: var(--violet); }
+  .more:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; border-radius: var(--r-1); }
   .opt { display: flex; padding: 12px 0; border-top: 1px solid var(--line-1); }
   .opt .switch { width: 100%; justify-content: space-between; color: var(--text-1); font-size: 13px; }
   .card .actions { display: flex; align-items: center; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line-1); }
@@ -157,11 +160,8 @@
     <li><kbd>Espaço</kbd><span>Preset aleatório</span></li>
     <li><kbd>/</kbd><span>Buscar</span></li>
     <li><kbd>L</kbd><span>Biblioteca</span></li>
-    <li><kbd>M</kbd><span>Modo compacto</span></li>
   </ul>
-  <div class="opt">
-    <label class="switch"><span>Iniciar com o Windows</span><input type="checkbox" id="autostart"><span class="track"></span></label>
-  </div>
+  <a class="more" id="allKeys" href="Sonic Obsidian Palco integrado.html">Aperte <kbd>?</kbd> para ver todos os atalhos<i data-lucide="arrow-right" class="ico ico-sm"></i></a>
   <div class="actions">
     <button class="btn btn-primary" id="welcomeOk">Entendi</button>
     <a class="btn btn-ghost" href="Sonic Obsidian Configurações.html">Abrir configurações</a>
@@ -173,7 +173,7 @@
   <i data-lucide="volume-x" class="ico ico-lead"></i>
   <div class="txt">
     <div class="t">Nenhum som chegando</div>
-    <div class="d">A captura está ligada. Toque algo ou confira se o som está saindo pela saída padrão do Windows.</div>
+    <div class="d">Toque algo no computador e o visual reage.</div>
   </div>
   <button class="btn btn-ghost" id="testCap">Testar captura</button>
   <div class="testing" id="testing" hidden><span class="meter" id="testMeter" aria-hidden="true"></span><span class="num" id="testTxt">sem sinal</span></div>

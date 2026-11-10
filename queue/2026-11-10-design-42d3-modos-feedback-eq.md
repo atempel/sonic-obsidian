@@ -1,0 +1,5 @@
+# Design 42d3: Modos, Feedback, EQ de 16 bandas e respostas às divergências
+Status: Pending
+Fonte: docs/design/v3/ (versão `1794281099-42d3`): `docs/v3-modos.md`, `docs/v3-feedback.md`, `docs/v3-reatividade.md`, `docs/v3-respostas-divergencias.md`
+Resumo: (1) **Modos** Simples · Completo · Rack: proposta NÃO decidida, nada a implementar. (2) **Feedback e bugs** via GitHub (issue/Discussions, sem telemetria): proposta; exige Discussions ligado e `bug_report.yml` com ids estáveis. (3) **EQ de 16 bandas** na Expressividade: direção aprovada, detalhe em proposta; afeta a spec 015 (depende de gancho `audioLevels.updateAudioLevels` no Butterchurn 3, spike da spec 021). (4) Respostas às divergências: todas aceitas; ações no repo: texto do vazio de coleções na busca, ponto violeta e toast da spec 023, M18 em 10 s (já é assim), `[`/`]` na spec do vídeo.
+Destino provável: spec nova de Feedback; spec do EQ (ligada à 015/021); spec pequena de Modos só após decisão; ajustes pontuais na 010/023. Spec 024 (troca no beat/segurar): sem efeito, o desenho de `#onBeat`, da linha `beat`, de M23 e M09 não mudou.

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sonic Obsidian — Modos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="so-v3-base.css">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="so-v3-data.js"></script>
+<script src="so-v3-viz.js"></script>
+<style>
+  :root { --proto-h: 52px; }
+  html, body { overflow: hidden; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  button { cursor: pointer; }
+  button:active:not(:disabled) { transform: scale(0.97); }
+  .ibtn, .btn, .proto button, .seg button, .step button, .rot { transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+
+  /* ── Protótipo (fora do app) ── */
+  .proto { top: auto; bottom: 8px; left: 12px; font-size: 12px; }
+  .proto button { display: inline-flex; align-items: center; gap: 6px; height: 30px; font-size: 12px; }
+  .proto kbd { font-size: 12px; padding: 2px 5px; }
+  .proto .sp { width: 1px; height: 18px; background: var(--line-3); margin: 0 4px; }
+
+  /* ── Janela do app ── */
+  .app { position: fixed; left: 0; right: 0; top: 0; bottom: var(--proto-h); display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; background: var(--bg-00); overflow: hidden; }
+  .stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background: var(--bg-00); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .desk { display: none; min-width: 0; }
+
+  /* Cartão de crédito (troca de preset) */
+  .credit { position: absolute; left: 0; top: 0; padding: 28px 40px 48px 28px; pointer-events: none; opacity: 0; transition: opacity 400ms var(--ease-out);
+    background: linear-gradient(90deg, rgba(8,8,9,0.88) 0%, rgba(8,8,9,0.7) 60%, rgba(8,8,9,0) 100%); max-width: min(720px, 100%); }
+  .credit.on { opacity: 1; transition-duration: 120ms; }
+  .credit h1 { margin: 0; max-width: 22ch; font-size: clamp(24px, 3vw, 40px); line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+  .credit p { margin: 8px 0 0; font-size: 15px; color: var(--text-2); }
+  .credit .sweep { margin-top: 14px; width: 220px; height: 2px; background: var(--line-2); overflow: hidden; border-radius: 2px; }
+  .credit .sweep i { display: block; height: 100%; width: 100%; background: var(--violet); transform: scaleX(0); transform-origin: left; }
+
+  /* ── Faixa (Simples / Completo) ── */
+  .strip-wrap { position: absolute; z-index: 10; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; pointer-events: none; transition: opacity var(--t-fast) var(--ease-out); }
+  body.idle .strip-wrap { opacity: 0; transition-duration: 150ms; }
+  body[data-mode=rack] .strip-wrap, body[data-mode=float] .strip-wrap { display: none; }
+  .strip { pointer-events: auto; width: min(1120px, 100%); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  body.idle .strip { pointer-events: none; }
+  body[data-mode=simple] .strip { width: min(760px, 100%); }
+  body[data-mode=simple] .f { display: none !important; }
+  .now { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1 1 280px; }
+  .now-text { min-width: 0; flex: 1 1 auto; padding: 0 6px; }
+  .now-title { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .now-author { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tr { display: flex; align-items: center; gap: 2px; }
+  .tail { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+  .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 6px; }
+  .level { display: flex; align-items: center; margin-left: 8px; }
+  .fav[aria-pressed="true"] svg { fill: var(--violet); }
+  .rot { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 8px; border-radius: var(--r-2); border: 1px solid transparent; background: transparent; color: var(--text-2); }
+  .rot:hover { background: var(--bg-03); color: var(--text-1); }
+  .rot[aria-pressed="true"] { color: var(--text-1); }
+  .rot[aria-pressed="true"] .ico { color: var(--violet); }
+  .rot .num { font-size: 12px; color: var(--cyan); min-width: 4ch; }
+
+  /* ── Ajustes rápidos ── */
+  .sheet { position: absolute; z-index: 20; right: 16px; bottom: 96px; width: min(340px, calc(100% - 32px)); padding: 14px 16px 12px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); max-height: calc(100% - 112px); overflow-y: auto; }
+  .sheet-h .hb { display: flex; align-items: center; gap: 2px; }
+  .sheet[hidden] { display: none; }
+  .sheet-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .sheet-h h2 { margin: 0; font-size: 15px; font-weight: 600; }
+  .srow { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; }
+  .srow > label, .srow > .lbl { color: var(--text-1); font-size: 14px; }
+  .srow .grow { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; justify-content: flex-end; }
+  .srow .grow input[type=range] { max-width: 150px; }
+  .srow .v { font-family: var(--font-num); font-size: 12px; color: var(--text-2); min-width: 6ch; text-align: right; }
+  select { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font-size: 13px; }
+  select:hover { border-color: #4A4A64; }
+
+  /* ── Rack ── */
+  .rack { background: var(--bg-02); min-width: 0; }
+  .rk-title { display: none; }
+  .rk-body { display: flex; flex-wrap: wrap; align-items: stretch; }
+  .blk { padding: 10px 16px; min-width: 0; box-shadow: inset -1px 0 0 var(--line-2); display: flex; flex-direction: column; gap: 6px; }
+  .blk h3 { margin: 0; font: 500 10px/14px var(--font-num); color: var(--text-2); letter-spacing: 0; }
+  .blk .lb { font-size: 12px; color: var(--text-2); width: 56px; flex: none; }
+  .blk .ln { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+  .val { font-family: var(--font-num); font-variant-numeric: tabular-nums; color: var(--cyan); }
+  .b-now { flex: 1 1 210px; max-width: 280px; }
+  .n-t { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .n-a, .n-n { font-size: 12px; color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .n-n b { font-weight: 500; color: var(--text-1); }
+  .b-tr .ibtn { width: 34px; height: 34px; }
+  .b-tr .row { display: flex; gap: 0; align-items: center; }
+  .b-rot .val { font-size: 22px; line-height: 1.1; }
+  .b-rot .sw { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-2); }
+  .bands { display: flex; gap: 10px; align-items: flex-end; }
+  .band { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .band .bar { width: 14px; height: 64px; background: var(--bg-00); border: 1px solid var(--line-2); border-radius: var(--r-1); position: relative; overflow: hidden; }
+  .band .bar i { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: var(--cyan); transform: scaleY(0.1); transform-origin: bottom; }
+  .band span { font: 500 10px/12px var(--font-num); color: var(--text-2); }
+  .b-bd .wrap { display: flex; gap: 14px; align-items: flex-end; }
+  .fps { font-size: 12px; padding-bottom: 15px; white-space: nowrap; }
+
+  .seg { display: inline-flex; background: var(--bg-00); border: 1px solid var(--line-2); border-radius: var(--r-2); padding: 1px; gap: 1px; }
+  .seg button { height: 24px; padding: 0 8px; border: 0; border-radius: var(--r-1); background: transparent; color: var(--text-2); font-size: 12px; white-space: nowrap; }
+  .seg button:hover { color: var(--text-1); background: var(--bg-03); }
+  .seg button[aria-checked="true"] { background: var(--violet-soft); color: var(--text-1); box-shadow: inset 0 0 0 1px var(--violet-line); }
+  .step { display: inline-flex; align-items: center; gap: 2px; }
+  .step button { width: 26px; height: 26px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line-3); border-radius: var(--r-1); background: var(--bg-03); color: var(--text-1); }
+  .step button:hover { background: var(--bg-04); }
+  .step button:disabled { opacity: 0.4; cursor: default; }
+  .step .val { white-space: nowrap; min-width: 4.5ch; text-align: center; font-size: 13px; }
+
+  /* Rack embutido */
+  body[data-mode=rack] .app { grid-template-rows: minmax(0, 1fr) auto; }
+  body[data-mode=rack] .desk { display: block; }
+  body[data-mode=rack] .rack { min-height: 132px; border-top: 1px solid var(--line-3); }
+  body[data-mode=rack] .rk-body { padding: 0; }
+  body[data-mode=rack] .blk:last-child { box-shadow: none; }
+  body[data-mode=rack] .blk { padding: 12px 16px; }
+
+  /* Rack em janela */
+  body[data-mode=float] .app { grid-template-columns: minmax(0, 1fr) 612px; }
+  body[data-mode=float] .desk { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 16px; position: relative; background: var(--bg-01); border-left: 1px solid var(--line-2); }
+  .desk-lbl { display: none; position: absolute; left: 16px; top: 14px; font-size: 12px; color: var(--text-3); }
+  body[data-mode=float] .desk-lbl { display: block; }
+  .stage-lbl { display: none; position: absolute; z-index: 5; left: 12px; top: 12px; padding: 3px 8px; font-size: 12px; color: var(--text-2); background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  body[data-mode=float] .stage-lbl { display: block; }
+  body[data-mode=float] .rack { width: 580px; max-width: 100%; border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; margin-bottom: 24px; }
+  body[data-mode=float] .rk-title { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 4px 0 10px; background: var(--bg-03); border-bottom: 1px solid var(--line-2); font-size: 12px; color: var(--text-2); }
+  .rk-title .ttl { flex: 1; color: var(--text-1); font-weight: 500; }
+  .rk-title .ibtn { width: 26px; height: 26px; }
+  .rk-title .ibtn .ico { width: 15px; height: 15px; }
+  .rk-title .ibtn[aria-pressed="true"] { background: var(--violet-soft); }
+  body[data-mode=float] .rk-body { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 1px; background: var(--line-2); }
+  body[data-mode=float] .blk { background: var(--bg-02); padding: 8px 10px; box-shadow: none; gap: 4px; max-width: none; }
+  body[data-mode=float] .b-tr .ibtn { width: 30px; height: 30px; }
+  body[data-mode=float] .band .bar { height: 40px; }
+  body[data-mode=float] .b-now { order: 1; } body[data-mode=float] .b-tr { order: 2; } body[data-mode=float] .b-rot { order: 3; }
+  body[data-mode=float] .b-tx { order: 4; } body[data-mode=float] .b-ex { order: 5; } body[data-mode=float] .b-bd { order: 6; }
+  body[data-mode=float] .blk .lb { width: 50px; }
+  body[data-mode=float] .b-bd .wrap { gap: 8px; }
+  body[data-mode=float] .fps { padding-bottom: 14px; }
+  body[data-mode=float] .b-tx .lb { display: none; }
+  body[data-mode=float] .b-tx select { width: 100%; min-width: 0; }
+  body[data-mode=float] .seg button { padding: 0 6px; }
+  body[data-mode=float] .b-ex .seg { flex-wrap: nowrap; }
+
+  /* Toast */
+  .toast { position: fixed; z-index: 1100; left: 50%; top: 16px; transform: translate(-50%, -8px); padding: 8px 14px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); font-size: 14px; opacity: 0; pointer-events: none; transition: opacity var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out); }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Comparar */
+  dialog { padding: 0; border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--bg-01); color: var(--text-1); box-shadow: var(--shadow-pop); width: min(1000px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; }
+  dialog::backdrop { background: rgba(8, 8, 9, 0.75); }
+  .dlg-h { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 8px 20px; position: sticky; top: 0; background: var(--bg-01); }
+  .dlg-h h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .dlg-b { padding: 0 20px 20px; }
+  .note { margin: 0 0 14px; color: var(--text-2); font-size: 13px; max-width: 80ch; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line-2); }
+  thead th { font-weight: 600; color: var(--text-1); font-size: 14px; }
+  tbody th { font-weight: 500; color: var(--text-1); width: 14%; }
+  td { color: var(--text-2); }
+  td.def, th.def { background: var(--violet-soft); }
+  h3.q { margin: 22px 0 8px; font-size: 15px; font-weight: 600; }
+  ol.qs { margin: 0; padding-left: 20px; color: var(--text-1); font-size: 14px; }
+  ol.qs li { padding: 3px 0; }
+
+  @media (max-width: 960px) {
+    body[data-mode=float] .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+    body[data-mode=float] .desk { border-left: 0; border-top: 1px solid var(--line-2); padding: 36px 12px 0; }
+    body[data-mode=float] .rack { margin-bottom: 12px; }
+  }
+  @media (max-width: 760px) {
+    body[data-mode=rack] .b-now { flex: 1 1 140px; }
+    body[data-mode=rack] .b-tr { order: 2; } body[data-mode=rack] .b-tx { order: 3; } body[data-mode=rack] .b-rot { order: 4; } body[data-mode=rack] .b-ex { order: 5; } body[data-mode=rack] .b-bd { order: 6; }
+    body[data-mode=rack] .blk { padding: 8px 12px; }
+    .credit { padding: 16px 20px 32px 16px; }
+    .sheet { bottom: 130px; }
+    thead { display: none; }
+    table, tbody, tr, th, td { display: block; }
+    tbody th { width: auto; padding: 12px 0 2px; border: 0; }
+    td { padding: 4px 0 8px; border: 0; }
+    td::before { content: attr(data-l); display: block; font-size: 12px; font-weight: 500; color: var(--text-1); }
+    td.def { background: transparent; }
+    tr { border-bottom: 1px solid var(--line-2); }
+  }
+  @media (max-width: 600px) { :root { --proto-h: 88px; } .proto { right: 12px; } .level { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .toast { transition-duration: 0ms; } }
+</style>
+</head>
+<body data-mode="simple">
+
+<div class="app" id="app">
+  <div class="stage" id="stage">
+    <canvas id="viz" aria-label="Visual ao vivo"></canvas>
+    <span class="stage-lbl">Tela 2</span>
+
+    <div class="credit" id="credit" aria-hidden="true">
+      <h1 id="crTitle"></h1>
+      <p id="crBy"></p>
+      <div class="sweep"><i id="crSweep"></i></div>
+    </div>
+
+    <div class="strip-wrap" id="stripWrap">
+      <div class="strip" id="strip" role="toolbar" aria-label="Controles do visual">
+        <div class="now">
+          <button class="ibtn f" data-act="toastPalco" aria-label="Abrir biblioteca" title="Biblioteca (L)"><i data-lucide="library" class="ico"></i></button>
+          <div class="now-text"><div class="now-title" data-bind="title"></div><div class="now-author" data-bind="by"></div></div>
+          <button class="ibtn fav" data-act="fav" aria-pressed="false" aria-label="Favoritar" title="Favoritar"><i data-lucide="star" class="ico"></i></button>
+        </div>
+        <div class="tr">
+          <button class="ibtn" data-act="prev" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+          <button class="ibtn" data-act="shuf" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+          <button class="ibtn" data-act="next" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+        </div>
+        <button class="rot f" data-act="rot" aria-pressed="true" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num" data-bind="count"></span></button>
+        <div class="tail">
+          <button class="ibtn f" data-act="toastPalco" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>
+          <button class="ibtn f" data-act="toastPalco" aria-label="Adicionar à coleção" title="Adicionar à coleção (C)"><i data-lucide="folder-plus" class="ico"></i></button>
+          <button class="ibtn f" data-act="sheet" aria-label="Ajustes rápidos" title="Ajustes rápidos (,)" aria-expanded="false" aria-controls="sheet"><i data-lucide="sliders-horizontal" class="ico"></i></button>
+          <button class="ibtn f" data-act="toRack" aria-label="Rack embutido" title="Rack embutido (M)"><i data-lucide="picture-in-picture-2" class="ico"></i></button>
+          <button class="ibtn" data-act="fs" aria-label="Tela cheia" title="Tela cheia (F ou F11)"><i data-lucide="maximize" class="ico"></i></button>
+          <div class="level"><span class="meter" id="meter" aria-hidden="true"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <section class="sheet" id="sheet" role="dialog" aria-label="Ajustes rápidos" hidden>
+      <div class="sheet-h"><h2>Ajustes rápidos</h2><div class="hb"><button class="ibtn" data-act="toastCfg" aria-label="Todas as configurações" title="Todas as configurações (Ctrl+,)"><i data-lucide="settings" class="ico"></i></button><button class="ibtn" data-act="sheet" aria-label="Fechar ajustes" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button></div></div>
+      <div class="srow"><label for="gain">Ganho</label><div class="grow"><input type="range" id="gain" min="-12" max="12" value="0" step="1" style="--fill:50%"><span class="v" id="gainV">0 dB</span></div></div>
+      <div class="srow"><span class="lbl">Rotação</span><div class="grow">
+        <label class="switch"><input type="checkbox" id="rotSw" checked aria-label="Rotação automática"><span class="track"></span></label>
+        <label class="vh" for="rotInt">Intervalo da rotação</label>
+        <select id="rotInt"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="60">1 min</option><option value="120">2 min</option></select></div></div>
+      <div class="srow f"><label for="shTx">Transição</label><div class="grow"><select id="shTx" class="txSel"></select></div></div>
+      <div class="srow f"><span class="lbl">Expressividade</span><div class="grow"><span class="step" data-step="expr"><button type="button" data-d="-1" aria-label="Diminuir expressividade" title="Diminuir"><i data-lucide="minus" class="ico-sm"></i></button><span class="val" data-bind="expr"></span><button type="button" data-d="1" aria-label="Aumentar expressividade" title="Aumentar"><i data-lucide="plus" class="ico-sm"></i></button></span></div></div>
+      <div class="srow"><span class="lbl">Texto sobre o visual</span><div class="grow"><label class="switch"><input type="checkbox" id="txtSw" checked aria-label="Texto sobre o visual"><span class="track"></span></label></div></div>
+    </section>
+  </div>
+
+  <div class="desk" id="desk">
+    <span class="desk-lbl">Tela 1</span>
+    <section class="rack" id="rack" aria-label="Rack de controles">
+      <div class="rk-title">
+        <i data-lucide="grip-horizontal" class="ico ico-sm" aria-hidden="true"></i><span class="ttl">Rack</span>
+        <button class="ibtn" id="pinBtn" aria-pressed="true" aria-label="Sempre por cima" title="Sempre por cima"><i data-lucide="pin" class="ico"></i></button>
+      </div>
+      <div class="rk-body">
+        <div class="blk b-now"><h3>Agora tocando</h3>
+          <div class="n-t" data-bind="title"></div><div class="n-a" data-bind="by"></div>
+          <div class="n-n">próximo: <b data-bind="next"></b></div></div>
+        <div class="blk b-tr"><h3>Transporte</h3>
+          <div class="row">
+            <button class="ibtn" data-act="prev" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
+            <button class="ibtn" data-act="shuf" aria-label="Preset aleatório" title="Aleatório (Espaço)"><i data-lucide="shuffle" class="ico"></i></button>
+            <button class="ibtn" data-act="next" aria-label="Próximo preset" title="Próximo (→)"><i data-lucide="skip-forward" class="ico"></i></button>
+            <button class="ibtn fav" data-act="fav" aria-pressed="false" aria-label="Favoritar" title="Favoritar"><i data-lucide="star" class="ico"></i></button>
+            <button class="ibtn" data-act="toastPalco" aria-label="Adicionar à coleção" title="Adicionar à coleção (C)"><i data-lucide="folder-plus" class="ico"></i></button>
+          </div></div>
+        <div class="blk b-tx"><h3>Transição</h3>
+          <div class="ln"><label class="vh" for="txSel">Tipo de transição</label><select id="txSel" class="txSel"></select></div>
+          <div class="ln"><span class="lb">Tempo</span><span class="step" data-step="time"><button type="button" data-d="-1" aria-label="Reduzir tempo da transição" title="Reduzir"><i data-lucide="minus" class="ico-sm"></i></button><span class="val" data-bind="time"></span><button type="button" data-d="1" aria-label="Aumentar tempo da transição" title="Aumentar"><i data-lucide="plus" class="ico-sm"></i></button></span></div></div>
+        <div class="blk b-ex"><h3>Expressividade</h3>
+          <div class="ln"><span class="lb">Nível</span><span class="step" data-step="expr"><button type="button" data-d="-1" aria-label="Diminuir expressividade" title="Diminuir"><i data-lucide="minus" class="ico-sm"></i></button><span class="val" data-bind="expr"></span><button type="button" data-d="1" aria-label="Aumentar expressividade" title="Aumentar"><i data-lucide="plus" class="ico-sm"></i></button></span></div>
+          <div class="ln"><span class="lb">Caráter</span><span class="seg" role="radiogroup" aria-label="Caráter" data-seg="car"></span></div>
+          <div class="ln"><span class="lb">Memória</span><span class="seg" role="radiogroup" aria-label="Memória" data-seg="mem"></span></div></div>
+        <div class="blk b-rot"><h3>Rotação</h3>
+          <div class="sw"><label class="switch"><input type="checkbox" class="rotSw2" checked aria-label="Rotação automática"><span class="track"></span></label></div>
+          <div class="val" data-bind="count"></div></div>
+        <div class="blk b-bd"><h3>Bandas</h3>
+          <div class="wrap"><div class="bands" aria-hidden="true">
+            <div class="band"><div class="bar"><i id="bBass"></i></div><span>bass</span></div>
+            <div class="band"><div class="bar"><i id="bMid"></i></div><span>mid</span></div>
+            <div class="band"><div class="bar"><i id="bTreb"></i></div><span>treb</span></div></div>
+            <span class="fps val" id="fps">60 fps</span></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="proto" role="group" aria-label="Protótipo">
+  <b>Protótipo</b>
+  <button data-mode="simple" aria-pressed="true">Simples <kbd>1</kbd></button>
+  <button data-mode="full" aria-pressed="false">Completo <kbd>2</kbd></button>
+  <button data-mode="rack" aria-pressed="false">Rack embutido <kbd>3</kbd></button>
+  <button data-mode="float" aria-pressed="false">Rack em janela <kbd>4</kbd></button>
+  <span class="sp" aria-hidden="true"></span>
+  <button id="cmpBtn" aria-haspopup="dialog"><i data-lucide="columns-3" class="ico ico-sm"></i>Comparar</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<dialog id="cmp" aria-labelledby="cmpT">
+  <div class="dlg-h"><h2 id="cmpT">Modos de interface</h2><button class="ibtn" id="cmpX" aria-label="Fechar" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button></div>
+  <div class="dlg-b">
+    <p class="note">Proposta, não decidida. Um app, um estado, os mesmos comandos: o modo muda quanto da casca aparece, nunca o que o app sabe fazer. Trocar de modo é instantâneo e não perde nada.</p>
+    <table>
+      <thead><tr><th scope="col"></th><th scope="col">Simples (<i>Simple</i>)</th><th scope="col" class="def">Completo (<i>Full</i>), padrão</th><th scope="col">Rack (<i>Rack</i>)</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Para quem</th><td data-l="Simples">Deixa tocando: festa, trabalho, TV. Não quer configurar nada.</td><td class="def" data-l="Completo">Ouve e cura: troca, favorita, monta coleções, ajusta de vez em quando.</td><td data-l="Rack">Opera ao vivo ou estuda os presets: quer ver e mexer em tudo sem abrir painéis.</td></tr>
+        <tr><th scope="row">O visual</th><td data-l="Simples">Tela inteira</td><td class="def" data-l="Completo">Tela inteira</td><td data-l="Rack">Na outra tela (janela compacta) <b>ou</b> em cima do rack, na mesma janela (rack embutido)</td></tr>
+        <tr><th scope="row">Controles</th><td data-l="Simples">Faixa curta que some: agora tocando, anterior · aleatório · próximo, favoritar, tela cheia, medidor</td><td class="def" data-l="Completo">Faixa completa que some (a de hoje), com coleções, busca, Biblioteca, ajustes</td><td data-l="Rack">Tudo à vista, nada some: transporte, transição (tipo e tempo), expressividade (nível, caráter, memória), rotação com contagem, bass/mid/treb, fps, próximo da fila</td></tr>
+        <tr><th scope="row">Ajustes rápidos (,)</th><td data-l="Simples">Ganho, rotação, texto sobre o visual + "Todos os ajustes…"</td><td class="def" data-l="Completo">Todos (sinal, rotação, transições, expressividade, texto)</td><td data-l="Rack">Não precisa: os controles já estão no rack</td></tr>
+        <tr><th scope="row">Biblioteca (L)</th><td data-l="Simples">Favoritos e Todos (Coleções aparece quando existir uma)</td><td class="def" data-l="Completo">Completa</td><td data-l="Rack">Completa, encaixada à esquerda do rack embutido</td></tr>
+        <tr><th scope="row">Painel ?</th><td data-l="Simples">Os 10 atalhos essenciais + "Ver todos"</td><td class="def" data-l="Completo">Todos</td><td data-l="Rack">Todos, com o grupo Rack primeiro</td></tr>
+      </tbody>
+    </table>
+    <h3 class="q">Perguntas para o usuário</h3>
+    <ol class="qs">
+      <li>Os nomes: Simples · Completo · Rack, ou verbos (Ouvir · Explorar · Operar)?</li>
+      <li>No Simples, a Biblioteca fica (reduzida) ou sai de vez, ficando só a busca?</li>
+      <li>O padrão da primeira abertura: Completo (proposta) ou Simples?</li>
+      <li>O rack embutido é para você (uma tela só), ou o rack fica só em janela?</li>
+    </ol>
+  </div>
+</dialog>
+
+<script>
+(function () {
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const P = SO_DATA.presets;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MODES = { simple: 'Modo simples', full: 'Modo completo', rack: 'Rack embutido', float: 'Rack em janela' };
+  const ORDER = ['simple', 'full', 'rack', 'float'];
+  const TX = ['Corte seco', 'Crossfade', 'Varredura', 'Plasma', 'Radial', 'Aleatório'];
+  const CAR = ['Contraste', 'Energia', 'Nervo'];
+  const MEM = ['Curta', 'Longa', 'Fixa'];
+
+  const S = { mode: 'simple', prevMode: 'simple', cur: 0, next: 0, hist: [], favs: new Set(P.filter(p => p.fav).map(p => p.id)),
+    rot: true, interval: 30, left: 24, tx: 'Crossfade', time: 1.0, expr: 1, car: 'Energia', mem: 'Longa', gain: 0, text: true, fps: 60 };
+
+  const viz = SOViz.create($('#viz'));
+  const meterUpd = SOViz.meter($('#meter'), 20);
+
+  /* ── util ── */
+  const fmtTime = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  const fmtExpr = n => n > 0 ? '+' + n : n < 0 ? '−' + Math.abs(n) : '0';
+  const rand = () => { let i; do { i = Math.floor(Math.random() * P.length); } while (i === S.cur || i === S.next); return i; };
+  let toastT = 0;
+  function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600); }
+  const icons = () => { if (window.lucide) lucide.createIcons(); };
+
+  /* ── selects e segmentados ── */
+  $$('.txSel').forEach(sel => { sel.innerHTML = TX.map(t => '<option>' + t + '</option>').join(''); sel.value = S.tx; sel.addEventListener('change', () => { S.tx = sel.value; render(); }); });
+  $$('[data-seg]').forEach(g => {
+    const list = g.dataset.seg === 'car' ? CAR : MEM;
+    g.innerHTML = list.map(v => '<button type="button" role="radio" aria-checked="false" data-v="' + v + '">' + v + '</button>').join('');
+    g.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S[g.dataset.seg] = b.dataset.v; render(); });
+  });
+  $$('[data-step]').forEach(st => st.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return; const d = +b.dataset.d;
+    if (st.dataset.step === 'expr') S.expr = Math.max(-3, Math.min(3, S.expr + d));
+    else S.time = Math.max(0.5, Math.min(5, Math.round((S.time + d * 0.5) * 10) / 10));
+    render();
+  }));
+
+  /* ── render ── */
+  function bind(k, v) { $$('[data-bind="' + k + '"]').forEach(el => { if (el.textContent !== v) el.textContent = v; }); }
+  function render() {
+    const p = P[S.cur], n = P[S.next], isFav = S.favs.has(p.id);
+    bind('title', p.title); bind('by', 'por ' + p.author); bind('next', n.title);
+    bind('count', S.rot ? fmtTime(S.left) : '–:––');
+    bind('expr', fmtExpr(S.expr)); bind('time', S.time.toFixed(1).replace('.', ',') + ' s');
+    $$('[data-act=fav]').forEach(b => { b.setAttribute('aria-pressed', isFav); const l = isFav ? 'Remover dos favoritos' : 'Favoritar'; b.setAttribute('aria-label', l); b.title = l; });
+    $$('[data-act=rot]').forEach(b => b.setAttribute('aria-pressed', S.rot));
+    $('#rotSw').checked = S.rot; $$('.rotSw2').forEach(c => c.checked = S.rot);
+    $('#rotInt').value = String(S.interval);
+    $$('.txSel').forEach(s => s.value = S.tx);
+    $$('[data-seg]').forEach(g => $$('button', g).forEach(b => b.setAttribute('aria-checked', b.dataset.v === S[g.dataset.seg])));
+    $$('[data-step=expr] button').forEach(b => b.disabled = (+b.dataset.d < 0 && S.expr <= -3) || (+b.dataset.d > 0 && S.expr >= 3));
+    $$('[data-step=time] button').forEach(b => b.disabled = (+b.dataset.d < 0 && S.time <= 0.5) || (+b.dataset.d > 0 && S.time >= 5));
+    $('#txtSw').checked = S.text;
+  }
+
+  /* ── troca de preset ── */
+  let creditT = 0;
+  function blendMs() { return S.tx === 'Corte seco' ? 0 : S.time * 1000; }
+  function showCredit(ms) {
+    if (!S.text || S.mode === 'rack' || S.mode === 'float') return;
+    const c = $('#credit'), sw = $('#crSweep'), p = P[S.cur];
+    $('#crTitle').textContent = p.title; $('#crBy').textContent = 'por ' + p.author;
+    c.classList.add('on'); c.setAttribute('aria-hidden', 'false');
+    sw.style.transition = 'none'; sw.style.transform = 'scaleX(0)'; void sw.offsetWidth;
+    sw.style.transition = 'transform ' + (ms || 2000) + 'ms linear'; sw.style.transform = 'scaleX(1)';
+    clearTimeout(creditT); creditT = setTimeout(() => { c.classList.remove('on'); c.setAttribute('aria-hidden', 'true'); }, 4000);
+  }
+  function go(idx, push) {
+    if (push) { S.hist.push(S.cur); if (S.hist.length > 50) S.hist.shift(); }
+    S.cur = idx; if (S.next === S.cur) S.next = rand();
+    S.left = S.interval;
+    const ms = S.tx === 'Aleatório' ? 600 + Math.random() * 2400 : blendMs();
+    viz.setPreset(P[S.cur], ms); render(); showCredit(ms);
+  }
+  const actNext = () => { const i = S.next; S.next = rand(); go(i, true); };
+  const actPrev = () => { if (S.hist.length) go(S.hist.pop(), false); else go(rand(), false); };
+  const actShuf = () => { go(rand(), true); };
+  const actFav = () => { const id = P[S.cur].id; S.favs.has(id) ? S.favs.delete(id) : S.favs.add(id); render(); toast(S.favs.has(id) ? 'Favoritado' : 'Removido dos favoritos'); };
+  function actFs() {
+    const el = document.documentElement;
+    try { if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => toast('Tela cheia indisponível aqui')); } catch (e) { toast('Tela cheia indisponível aqui'); }
+  }
+  function toggleRot(v) { S.rot = typeof v === 'boolean' ? v : !S.rot; S.left = S.interval; render(); }
+  function sheetToggle(open) {
+    const sh = $('#sheet'); const o = typeof open === 'boolean' ? open : sh.hidden;
+    if (o && (S.mode === 'rack' || S.mode === 'float')) { toast('Os controles já estão no rack'); return; }
+    sh.hidden = !o; sh.scrollTop = 0; $$('[data-act=sheet][aria-expanded]').forEach(b => b.setAttribute('aria-expanded', o));
+    if (o) wake();
+  }
+
+  const ACT = { prev: actPrev, next: actNext, shuf: actShuf, fav: actFav, fs: actFs, rot: () => toggleRot(), sheet: () => sheetToggle(),
+    toastPalco: () => toast('No Palco integrado'), toastCfg: () => toast('Abre as Configurações'), toRack: () => setMode('rack') };
+  document.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (b && ACT[b.dataset.act]) ACT[b.dataset.act](); });
+
+  /* ── ajustes ── */
+  const gain = $('#gain');
+  gain.addEventListener('input', () => { S.gain = +gain.value; gain.style.setProperty('--fill', ((S.gain + 12) / 24 * 100) + '%'); $('#gainV').textContent = (S.gain > 0 ? '+' : S.gain < 0 ? '−' : '') + Math.abs(S.gain) + ' dB'; });
+  $('#rotSw').addEventListener('change', e => toggleRot(e.target.checked));
+  $$('.rotSw2').forEach(c => c.addEventListener('change', e => toggleRot(e.target.checked)));
+  $('#rotInt').addEventListener('change', e => { S.interval = +e.target.value; S.left = S.interval; render(); });
+  $('#txtSw').addEventListener('change', e => { S.text = e.target.checked; if (!S.text) $('#credit').classList.remove('on'); });
+  $('#pinBtn').addEventListener('click', e => { const b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); });
+
+  setInterval(() => { if (!S.rot) return; S.left--; if (S.left <= 0) actNext(); else bind('count', fmtTime(S.left)); }, 1000);
+
+  /* ── modos (com FLIP) ── */
+  function setMode(m, quiet) {
+    if (m === S.mode) return;
+    const rects = !reduced ? { rack: rect($('#rack')), strip: rect($('#strip')) } : null;
+    if (m !== 'rack' && m !== 'float') S.prevMode = m;
+    else if (S.mode !== 'rack' && S.mode !== 'float') S.prevMode = S.mode;
+    S.mode = m; document.body.dataset.mode = m;
+    $$('.proto [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+    if (m === 'rack' || m === 'float') { $('#sheet').hidden = true; $('#credit').classList.remove('on'); }
+    document.body.classList.remove('idle'); wake();
+    if (rects) { flip($('#rack'), rects.rack); flip($('#strip'), rects.strip); }
+    toast(MODES[m]);
+  }
+  function rect(el) { const r = el.getBoundingClientRect(); return r.width ? { x: r.left, y: r.top, w: r.width, h: r.height } : null; }
+  function flip(el, before) {
+    const after = rect(el); if (!after || !el.animate) return;
+    const ease = 'cubic-bezier(0.16, 1, 0.3, 1)';
+    if (!before) { el.animate([{ transform: 'translateY(' + Math.min(after.h, 140) + 'px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: ease }); return; }
+    const dx = before.x - after.x, dy = before.y - after.y, sx = before.w / after.w, sy = before.h / after.h;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.01 && Math.abs(sy - 1) < 0.01) return;
+    el.animate([{ transformOrigin: '0 0', transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')' }, { transformOrigin: '0 0', transform: 'none' }], { duration: 300, easing: ease });
+  }
+  $$('.proto [data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+  /* ── faixa: some após 2,5 s sem movimento ── */
+  let idleT = 0;
+  function wake() {
+    document.body.classList.remove('idle'); clearTimeout(idleT);
+    idleT = setTimeout(() => {
+      if (S.mode === 'rack' || S.mode === 'float') return;
+      if (!$('#sheet').hidden || $('#strip').contains(document.activeElement) || $('#strip').matches(':hover')) { wake(); return; }
+      document.body.classList.add('idle');
+    }, 2500);
+  }
+  $('#stage').addEventListener('mousemove', wake);
+  $('#stage').addEventListener('pointerdown', wake);
+
+  /* ── Comparar ── */
+  const cmp = $('#cmp');
+  $('#cmpBtn').addEventListener('click', () => { if (!cmp.open) cmp.showModal(); });
+  $('#cmpX').addEventListener('click', () => cmp.close());
+  cmp.addEventListener('click', e => { if (e.target === cmp) cmp.close(); });
+
+  /* ── teclado ── */
+  const typing = t => t && t.closest && t.closest('input:not([type=range]):not([type=checkbox]), select, textarea');
+  const inField = t => t && t.closest && t.closest('input, select, textarea');
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (cmp.open) { if (e.key === 'Escape') { e.preventDefault(); cmp.close(); } return; }
+    if (e.key === 'Escape') { if (!$('#sheet').hidden) { sheetToggle(false); } return; }
+    if (inField(e.target)) return;
+    const k = e.key;
+    if (k >= '1' && k <= '4') { setMode(ORDER[+k - 1]); }
+    else if (k === 'm' || k === 'M') { setMode(S.mode === 'rack' || S.mode === 'float' ? S.prevMode : 'rack'); }
+    else if (k === ',') { sheetToggle(); }
+    else if (k === ' ') { e.preventDefault(); actShuf(); }
+    else if (k === 'ArrowRight') { e.preventDefault(); actNext(); }
+    else if (k === 'ArrowLeft') { e.preventDefault(); actPrev(); }
+    else if (k === 'f' || k === 'F') { actFs(); }
+    else if (k === 'r' || k === 'R') { toggleRot(); }
+    else return;
+    wake();
+  });
+  document.addEventListener('keyup', e => { if (e.key === ' ' && !inField(e.target)) e.preventDefault(); });
+
+  /* ── loop: medidor, bandas, fps ── */
+  let frames = 0, lastF = performance.now(), fpsShown = 0;
+  function loop(now) {
+    const l = viz.level(), pk = viz.peak(), t = now / 1000;
+    if (document.body.dataset.mode === 'simple' || document.body.dataset.mode === 'full') meterUpd(l, pk);
+    if (S.mode === 'rack' || S.mode === 'float') {
+      const c = v => Math.max(0.04, Math.min(1, v));
+      $('#bBass').style.transform = 'scaleY(' + c(l * (0.95 + 0.35 * Math.sin(t * 2.1))) + ')';
+      $('#bMid').style.transform = 'scaleY(' + c(l * (0.75 + 0.3 * Math.sin(t * 3.3 + 1))) + ')';
+      $('#bTreb').style.transform = 'scaleY(' + c(l * (0.55 + 0.4 * Math.sin(t * 5.1 + 2) + 0.1 * Math.sin(t * 13))) + ')';
+    }
+    frames++;
+    if (now - lastF >= 500) {
+      const f = Math.round(frames * 1000 / (now - lastF)); frames = 0; lastF = now;
+      fpsShown = fpsShown ? Math.round(fpsShown * 0.5 + f * 0.5) : f;
+      const el = $('#fps'); const txt = Math.min(60, fpsShown) + ' fps'; if (el.textContent !== txt) el.textContent = txt;
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ── init ── */
+  S.next = rand();
+  viz.setPreset(P[S.cur], 0);
+  gain.style.setProperty('--fill', '50%');
+  render(); icons(); wake();
+})();
+</script>
+</body>
+</html>

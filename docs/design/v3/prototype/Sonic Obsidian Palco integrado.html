@@ -16,6 +16,7 @@
   [hidden] { display: none !important; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .proto { left: 12px; right: auto; top: auto; bottom: 136px; }
+  body.sheet-open .proto, body.lib-open .proto { visibility: hidden; }
   .proto .grp { display: inline-flex; align-items: center; gap: 2px; }
   .proto .grp span { color: var(--text-3); }
   a.btn { text-decoration: none; }
@@ -44,7 +45,7 @@
   body.lib-open .strip-wrap { padding-left: 376px; }
   body.lib-open .credit { padding-left: 400px; }
   @media (max-width: 900px) { body.lib-open .strip-wrap { padding-left: 16px; } }
-  .strip { pointer-events: auto; position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+  .strip { pointer-events: auto; position: relative; width: 100%; display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
     padding: 10px 10px 10px 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
   body.idle .strip { pointer-events: none; }
   .rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 100%; transform: scaleX(0); transform-origin: left; } /* M03 */
@@ -140,8 +141,28 @@
   body.lib-open .winctl, body.sheet-open .winctl, body.palette-open .winctl, body.dlg-open .winctl { opacity: 0; pointer-events: none; visibility: hidden; }
   .closed-screen { position: fixed; z-index: 1000; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: var(--bg-00); color: var(--text-2); }
   .closed-screen p { margin: 0; font-size: 16px; }
-  .sheet-link { width: 100%; justify-content: space-between; height: 38px; }
-  .sheet-link span { display: inline-flex; align-items: center; gap: 8px; }
+  .sheet header .hbtns { display: flex; align-items: center; gap: 2px; }
+  .sheet h3 { display: flex; align-items: center; gap: 8px; }
+  .sheet h3 .ico { width: 16px; height: 16px; color: var(--text-2); }
+
+  .seg.seg-eq { display: grid; grid-template-columns: repeat(6, 1fr); }
+  .seg-eq button { grid-column: span 2; min-width: 0; padding: 0 4px; white-space: nowrap; }
+  .seg-eq button:nth-child(n+4) { grid-column: span 3; }
+  .seg-eq.has-custom button:nth-child(n+4) { grid-column: span 2; }
+  .seg-eq button[hidden] { display: none; }
+  .eq-plot { position: relative; margin-top: 10px; border-radius: var(--r-1); touch-action: none; cursor: crosshair; }
+  .eq-plot canvas { display: block; width: 100%; height: 96px; background: var(--bg-00); border-radius: var(--r-1); }
+  .eq-bub { position: absolute; left: 0; top: 0; z-index: 2; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+    pointer-events: none; opacity: 0; transform: translate(-50%, -100%); transition: opacity var(--t-fast) var(--ease-out); }
+  .eq-bub.on { opacity: 1; }
+  .eq-bub.dn { transform: translate(-50%, 0); }
+  .eq-bub b { color: var(--cyan); font-weight: 500; }
+  .eq-freq { position: relative; height: 18px; margin-top: 4px; font-family: var(--font-num); font-size: 12px; line-height: 18px; color: var(--text-3); }
+  .eq-freq span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+  .eq-warn { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12px; line-height: 1.35; color: var(--text-2); }
+  .eq-warn[hidden] { display: none; }
+  .eq-warn .btn { flex: none; height: 26px; padding: 0 10px; font-size: 12px; }
+  .eq-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* ── Biblioteca (gaveta à esquerda) ── */
   .lib-scrim { position: fixed; z-index: 5; top: 0; bottom: 0; left: min(360px, 100vw); right: 0; background: rgba(8,8,9,0.35); opacity: 0; pointer-events: none; transition: opacity 180ms var(--ease-out); }
@@ -232,6 +253,40 @@
   .menu .ico { color: var(--text-2); }
   .menu .grow { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .menu hr { border: 0; border-top: 1px solid var(--line-2); margin: 4px 0; }
+  /* Coleções pela faixa (#colPop) */
+  .colbtn { position: relative; }
+  .colbtn .dot { position: absolute; top: 6px; right: 6px; width: 4px; height: 4px; border-radius: 50%; background: var(--violet); opacity: 0; transform: scale(0.5); pointer-events: none;
+    transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .colbtn.has .dot { opacity: 1; transform: none; }
+  #colPop { width: 248px; z-index: 1000; } /* acima do cromo do protótipo (.proto) */
+  #colPop button, #colPop .newrow { gap: 8px; }
+  #colPop .chk { flex: none; width: 16px; height: 16px; display: grid; place-items: center; }
+  #colPop .chk .ico { width: 16px; height: 16px; }
+  #colPop [role="menuitemcheckbox"] .chk .ico { opacity: 0; color: var(--violet); }
+  #colPop [role="menuitemcheckbox"][aria-checked="true"] .chk .ico { opacity: 1; }
+  #colPop .cnt { flex: none; font-size: 12px; color: var(--text-3); }
+  #colPop .newrow { display: flex; align-items: center; height: 34px; padding: 0 6px 0 10px; }
+  #colPop .newrow .ico { color: var(--text-2); }
+  #colPop .newrow input { flex: 1; min-width: 0; height: 28px; padding: 0 8px; background: var(--bg-01); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font-size: 13px; }
+  #colPop .newrow input::placeholder { color: var(--text-3); }
+  #colPop .newrow input:focus-visible { outline-offset: 0; border-color: var(--violet); }
+  /* Transições e Expressividade */
+  .tblock { margin-bottom: 8px; }
+  .tblock + .tblock { margin-top: 14px; }
+  .tblock h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--text-1); }
+  .seg { display: flex; gap: 2px; padding: 2px; background: var(--bg-00); border: 1px solid var(--line-3); border-radius: var(--r-2); }
+  .seg button { flex: 1; height: 28px; padding: 0 6px; border: 1px solid transparent; border-radius: var(--r-1); background: transparent; color: var(--text-2); font-size: 13px; cursor: pointer;
+    transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast); }
+  .seg button:hover { color: var(--text-1); background: var(--bg-03); }
+  .seg button[aria-checked="true"] { color: var(--text-1); background: var(--violet-soft); border-color: var(--violet-line); }
+  .seg-desc { margin: 6px 0 0; min-height: 2.7em; font-size: 12px; line-height: 1.35; color: var(--text-3); }
+  .k-phase { display: inline-block; margin-left: 8px; padding: 0 6px; font-size: 12px; font-weight: 400; color: var(--text-3); border: 1px solid var(--line-2); border-radius: var(--r-1); }
+  .gtoast { max-width: min(560px, calc(100vw - 32px)); text-align: center; }
+  /* Aviso de preset pesado: logo acima da faixa, à direita */
+  .strip-box { position: relative; width: min(1120px, 100%); }
+  .heavy-warn { position: absolute; right: 0; bottom: calc(100% + 8px); pointer-events: auto; background: linear-gradient(rgba(255,181,71,0.10), rgba(255,181,71,0.10)), var(--bg-01); box-shadow: var(--shadow-pop);
+    transition: opacity var(--t-med) var(--ease-out); }
+  body.idle .heavy-warn { opacity: 0; pointer-events: none; transition-duration: 150ms; }
 
   /* ── Modo Rack ── */
   body.is-rack .state { display: none; }
@@ -477,7 +532,7 @@
   /* M16 · fechar gira 90° no hover */
   #winClose .ico { transition: transform var(--t-fast) var(--ease-out); }
   #winClose:hover .ico { transform: rotate(90deg); }
-  /* M18 · painel "Sem áudio" (aparece após 1,2 s de silêncio contínuo; some em 220 ms) */
+  /* M18 · painel "Nenhum som chegando" (aparece após 10 s de silêncio contínuo; some em 220 ms) */
   .state.fade { opacity: 0; visibility: hidden; transition: opacity var(--t-med) var(--ease-out), visibility 0s linear var(--t-med); }
   .state.fade.show { opacity: 1; visibility: visible; transition: opacity var(--t-med) var(--ease-out), visibility 0s; }
   /* M19 · modo limpo: o texto some em 400 ms; ícone entra em 120 ms */
@@ -508,6 +563,24 @@
 
   /* ═══════════ Painel de atalhos (?) e comandos da busca: sem animação ═══════════ */
   .scrim.k { z-index: 44; }
+  /* Feedback e bugs */
+  #fbMenu { z-index: 1000; width: 224px; }
+  .scrim.fb { z-index: 1001; }
+  body.fb-open .scrim.fb { opacity: 1; pointer-events: auto; }
+  .fb-dialog { position: fixed; z-index: 1002; left: 50%; top: 16vh; transform: translateX(-50%); width: min(440px, calc(100vw - 32px)); padding: 18px 20px 16px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
+  .fb-dialog[hidden] { display: none; }
+  .fb-dialog h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 16px; font-weight: 600; }
+  .fb-dialog h2 .ico { color: var(--text-2); }
+  .fb-dialog p { margin: 0 0 12px; font-size: 13px; color: var(--text-2); }
+  .fb-dialog p.fb-note { margin: 12px 0 4px; }
+  .fb-dialog p.fb-acct { margin: 0 0 16px; color: var(--text-3); }
+  .fb-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line-2); border-radius: var(--r-2); }
+  .fb-list li { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 12px; }
+  .fb-list li + li { border-top: 1px solid var(--line-1); }
+  .fb-list .fb-k { flex: none; width: 96px; font-size: 13px; color: var(--text-2); }
+  .fb-list .fb-v { flex: 1; min-width: 0; font-size: 13px; color: var(--text-1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fb-list li.off .fb-v { color: var(--text-3); text-decoration: line-through; }
+  .fb-dialog .actions { display: flex; gap: 8px; justify-content: flex-end; }
   body.kbd-open .scrim.k { opacity: 1; pointer-events: auto; }
   .kpanel { position: fixed; z-index: 45; left: 50%; top: 8vh; transform: translateX(-50%); width: min(760px, calc(100vw - 32px)); max-height: 80vh; display: flex; flex-direction: column;
     background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); }
@@ -543,6 +616,7 @@
     .favp .fav-wrap .fill, .favp[aria-pressed="true"] .fav-wrap .fill { transform: none; transition: opacity 120ms linear !important; }
     .favp .core { display: none; }
     .ind { transition: none !important; }
+    .eq-bub { transition: none !important; }
     .lib, .sheet { transform: none !important; opacity: 0; transition: opacity 120ms linear, visibility 0s linear 120ms !important; }
     body.lib-open .lib, body.sheet-open .sheet { opacity: 1; transition: opacity 120ms linear, visibility 0s !important; }
     .lib.enter .rows > li, .lib.enter .collist > li, .lib.enter .corder > li { animation: none !important; }
@@ -554,6 +628,7 @@
     .clean-ico, .clean-ico.on { transform: none; }
     .switch { --st: 1; --sh: 14px; }
     .sbub .b, .sbub.on .b { transform: translate(-50%, 0); }
+    .colbtn .dot, .colbtn.has .dot { transform: none; transition: opacity 120ms linear; }
     .state.fade { transition: opacity 120ms linear, visibility 0s linear 120ms !important; }
     .state.fade.show { transition: opacity 120ms linear, visibility 0s !important; }
     .dz-box .march { animation: none !important; }
@@ -573,8 +648,9 @@
 </div>
 
 <div class="state fade" id="silence" role="status">
-  <h2><i data-lucide="volume-x" class="ico"></i>Sem áudio</h2>
-  <p>Toque algo no computador e o visual reage. A captura continua ligada.</p>
+  <h2><i data-lucide="volume-x" class="ico"></i>Nenhum som chegando</h2>
+  <p>Toque algo no computador e o visual reage.</p>
+  <div class="actions"><button type="button" class="btn" id="testCap">Testar captura</button></div>
 </div>
 <div class="state error" id="denied" hidden role="alert">
   <h2><i data-lucide="triangle-alert" class="ico"></i>Não foi possível capturar o áudio</h2>
@@ -586,6 +662,8 @@
 </div>
 
 <div class="strip-wrap" id="stripWrap">
+ <div class="strip-box">
+  <span class="chip heavy-warn" id="heavyChip" hidden><i data-lucide="gauge" class="ico ico-sm"></i><span class="num">38 fps</span> · preset pesado <button class="btn btn-ghost" id="skipHeavy">Pular e ocultar</button></span>
   <div class="strip" role="toolbar" aria-label="Controles do visual">
     <i class="rot-line" id="rotLine"></i>
     <div class="now">
@@ -594,7 +672,8 @@
         <div class="now-row"><div class="now-title stack" id="nowTitle"><span></span><span aria-hidden="true"></span></div><span class="clean-ico" id="cleanIco" role="img" aria-label="Modo limpo ligado" title="Modo limpo ligado (T)" hidden><i data-lucide="eye-off" class="ico ico-sm"></i></span></div>
         <div class="now-author stack" id="nowAuthor"><span></span><span aria-hidden="true"></span></div>
       </div>
-      <button class="ibtn fav favp" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
+      <button class="ibtn fav favp" id="favBtn" aria-pressed="false" aria-label="Favoritar" title="Favoritar"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
+      <button class="ibtn colbtn" id="colBtn" aria-label="Adicionar à coleção" title="Adicionar à coleção" aria-haspopup="menu" aria-expanded="false" aria-controls="colPop"><i data-lucide="folder-plus" class="ico"></i><i class="dot" aria-hidden="true"></i></button>
     </div>
     <div class="strip-t">
       <button class="ibtn" id="prevBtn" aria-label="Preset anterior" title="Anterior (←)"><i data-lucide="skip-back" class="ico"></i></button>
@@ -604,7 +683,6 @@
       <button class="rot" id="rotBtn" aria-pressed="true" title="Rotação automática (R)"><i data-lucide="repeat" class="ico"></i><span>Rotação</span><span class="num" id="rotTime">0:30</span></button>
     </div>
     <div class="tail">
-      <span class="chip" id="heavyChip" hidden><i data-lucide="gauge" class="ico ico-sm"></i><span class="num">38 fps</span> · preset pesado <button class="btn btn-ghost" id="skipHeavy">Pular e ocultar</button></span>
       <button class="chip-ai" id="aiChip" aria-haspopup="dialog" aria-expanded="false" aria-controls="aiPop" hidden><i data-lucide="plug" class="ico ico-sm"></i><span id="aiChipTxt">Claude Desktop</span></button>
       <button class="ibtn" id="srcBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="srcMenu" aria-label="Fonte de áudio: Áudio do sistema" title="Fonte de áudio"><i data-lucide="monitor-speaker" class="ico"></i></button>
       <div class="level" id="levelBox"><span class="meter" id="meter" aria-hidden="true"></span></div>
@@ -612,7 +690,7 @@
       <button class="ibtn" id="searchBtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)"><i data-lucide="search" class="ico"></i></button>
       <button class="ibtn" id="kbdBtn" aria-label="Atalhos" title="Atalhos (?)" aria-haspopup="dialog"><i data-lucide="keyboard" class="ico"></i></button>
       <button class="ibtn" id="sheetBtn" aria-label="Ajustes rápidos" title="Ajustes rápidos (,)" aria-expanded="false" aria-controls="sheet"><i data-lucide="sliders-horizontal" class="ico"></i></button>
-      <button class="ibtn" id="fsBtn" aria-label="Tela cheia" title="Tela cheia (F11)"><i data-lucide="maximize" class="ico"></i></button>
+      <button class="ibtn" id="fsBtn" aria-label="Tela cheia" title="Tela cheia (F)"><i data-lucide="maximize" class="ico"></i></button>
     </div>
     <div class="trow" id="trackRow" hidden>
       <button class="ibtn" id="tPlay" aria-label="Pausar" title="Pausar"><i data-lucide="pause" class="ico"></i></button>
@@ -624,6 +702,7 @@
       <button class="ibtn" id="tBack" aria-label="Voltar ao áudio do sistema" title="Voltar ao áudio do sistema"><i data-lucide="x" class="ico"></i></button>
     </div>
   </div>
+ </div>
 </div>
 
 <div class="winctl" id="winctl" role="group" aria-label="Janela">
@@ -666,40 +745,70 @@
   <div class="hiddenbar" id="libHidden" hidden></div>
 </aside>
 <div class="menu" id="libMenu" role="menu" hidden></div>
+<div class="menu" id="colPop" role="menu" aria-label="Adicionar à coleção" hidden></div>
 
 <!-- Ajustes rápidos (direita) -->
 <aside class="sheet" id="sheet" aria-label="Ajustes rápidos">
   <header>
     <h2>Ajustes rápidos</h2>
-    <button class="ibtn" id="sheetClose" aria-label="Fechar ajustes" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button>
+    <div class="hbtns">
+      <button class="ibtn" id="fbBtn" aria-label="Feedback e bugs" title="Feedback e bugs" aria-haspopup="menu" aria-expanded="false" aria-controls="fbMenu"><i data-lucide="message-square" class="ico"></i></button>
+      <button class="ibtn" id="sheetSettings" aria-label="Todas as configurações" title="Todas as configurações (Ctrl+,)"><i data-lucide="settings" class="ico"></i></button>
+      <button class="ibtn" id="sheetClose" aria-label="Fechar ajustes" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button>
+    </div>
   </header>
   <div class="body">
     <section>
-      <h3>Sinal</h3>
+      <h3><i data-lucide="audio-lines" class="ico" aria-hidden="true"></i>Sinal</h3>
       <div class="field">
         <div class="field-top"><label for="gain">Ganho</label><span class="val num" id="gainVal">+3 dB</span></div>
-        <input type="range" id="gain" min="-12" max="12" step="1" value="3">
+        <input type="range" id="gain" min="-12" max="12" step="1" value="0">
       </div>
     </section>
     <section>
-      <h3>Rotação</h3>
+      <h3><i data-lucide="activity" class="ico" aria-hidden="true"></i>Expressividade</h3>
+      <div class="field">
+        <div class="field-top"><label for="exprSl">Nível</label><span class="val num" id="exprVal">0</span></div>
+        <input type="range" id="exprSl" min="-3" max="3" step="1" value="0">
+      </div>
+      <div class="field">
+        <div class="field-top"><span id="charLbl">Caráter</span></div>
+        <div class="seg" id="charSeg" role="radiogroup" aria-labelledby="charLbl"></div>
+        <p class="seg-desc" id="charDesc" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <div class="field-top"><span id="memLbl">Memória</span></div>
+        <div class="seg" id="memSeg" role="radiogroup" aria-labelledby="memLbl"></div>
+        <p class="seg-desc" id="memDesc" aria-live="polite"></p>
+      </div>
+      <div class="field">
+        <div class="field-top"><span id="eqLbl">Curva por frequência</span><span class="val num" id="eqRead"></span></div>
+        <div class="seg seg-eq" id="eqSeg" role="radiogroup" aria-labelledby="eqLbl"></div>
+        <div class="eq-plot" id="eqPlot" tabindex="0" role="group" aria-label="Curva por frequência" aria-describedby="eqHint">
+          <canvas id="eqCv" aria-hidden="true"></canvas>
+          <div class="eq-bub num" id="eqBub" aria-hidden="true"></div>
+        </div>
+        <div class="eq-freq" id="eqFreq" aria-hidden="true"></div>
+        <span class="eq-sr" id="eqHint">Setas para a esquerda e para a direita escolhem a banda. Setas para cima e para baixo mudam o ganho em 1 dB, com Shift em 3 dB. Duplo clique volta a banda a 0 dB.</span>
+        <span class="eq-sr" id="eqLive" aria-live="polite"></span>
+        <div class="eq-warn" id="eqWarn" hidden><span>Com a memória Fixa, a curva age por inteiro.</span><button type="button" class="btn" id="eqFixa">Usar Fixa</button></div>
+      </div>
+    </section>
+    <section>
+      <h3><i data-lucide="repeat" class="ico" aria-hidden="true"></i>Rotação</h3>
       <div class="line"><span id="rotSwLbl">Rotação automática</span>
         <label class="switch"><input type="checkbox" id="rotSwitch" checked aria-labelledby="rotSwLbl"><span class="track"></span></label></div>
       <div class="line"><label for="interval">Trocar a cada</label>
         <select class="sel" id="interval"><option value="15">15 s</option><option value="30" selected>30 s</option><option value="45">45 s</option><option value="90">90 s</option></select></div>
       <div class="line"><span id="beatSwLbl">Trocar no beat</span>
         <label class="switch"><input type="checkbox" id="beatSwitch" aria-labelledby="beatSwLbl"><span class="track"></span></label></div>
-      <div class="field">
-        <div class="field-top"><label for="blendA">Blend na troca automática</label><span class="val num" id="blendAVal">2,7 s</span></div>
-        <input type="range" id="blendA" min="0" max="5" step="0.1" value="2.7">
-      </div>
-      <div class="field">
-        <div class="field-top"><label for="blendM">Blend quando você troca</label><span class="val num" id="blendMVal">0,0 s</span></div>
-        <input type="range" id="blendM" min="0" max="5" step="0.1" value="0">
-      </div>
     </section>
     <section>
-      <h3>Texto sobre o visual</h3>
+      <h3><i data-lucide="blend" class="ico" aria-hidden="true"></i>Transições</h3>
+      <div id="sheetTrans"></div>
+    </section>
+    <section>
+      <h3><i data-lucide="type" class="ico" aria-hidden="true"></i>Texto sobre o visual</h3>
       <div class="line"><label for="otPreset">Nome do preset</label>
         <select class="sel" id="otPreset"><option value="always" selected>Sempre</option><option value="manual">Só quando eu troco</option><option value="never">Nunca</option></select></div>
       <div class="line"><span id="otTrackLbl">Título da faixa</span>
@@ -709,9 +818,6 @@
       <div class="line"><span id="otCleanLbl">Modo limpo <kbd>T</kbd></span>
         <label class="switch"><input type="checkbox" id="otClean" aria-labelledby="otCleanLbl"><span class="track"></span></label></div>
       <p class="note">O crédito do autor continua na faixa de controle e na Biblioteca.</p>
-    </section>
-    <section>
-      <a class="btn sheet-link" id="settingsLink" href="Sonic Obsidian Configurações.html"><span><i data-lucide="settings" class="ico"></i>Todas as configurações</span><kbd>Ctrl+,</kbd></a>
     </section>
   </div>
 </aside>
@@ -756,14 +862,14 @@
         <span class="sep" aria-hidden="true"></span>
         <button type="button" class="ibtn" data-act="rot" id="rRot" aria-pressed="true" aria-label="Rotação" title="Rotação (R)"><i data-lucide="repeat" class="ico"></i></button>
         <span class="rot-n num" id="rotN">30 s</span>
-        <button type="button" class="ibtn favp" data-act="fav" id="rFav" aria-pressed="false" aria-label="Favoritar" title="Favoritar (F)"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
+        <button type="button" class="ibtn favp" data-act="fav" id="rFav" aria-pressed="false" aria-label="Favoritar" title="Favoritar"><span class="fav-wrap"><i data-lucide="star" class="ico"></i><svg class="ico fill" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="core" aria-hidden="true"></span></span></button>
         <span class="sep" aria-hidden="true"></span>
         <label for="rColl" class="vh">Coleção</label>
         <select class="rsel" id="rColl"></select>
         <div class="gain" title="Ganho">
           <label for="gainMini" class="vh">Ganho</label>
           <i data-lucide="volume-2" class="ico"></i>
-          <input type="range" id="gainMini" min="-12" max="12" step="1" value="3">
+          <input type="range" id="gainMini" min="-12" max="12" step="1" value="0">
         </div>
       </div>
 
@@ -780,17 +886,9 @@
             <div class="tpanel" role="tabpanel" id="p-s" aria-labelledby="dtab-s" hidden>
               <div class="field">
                 <div class="fl"><label for="gainR">Ganho</label><output class="num" id="gainOut" for="gainR">+3 dB</output></div>
-                <input type="range" id="gainR" min="-12" max="12" step="1" value="3">
+                <input type="range" id="gainR" min="-12" max="12" step="1" value="0">
               </div>
-              <div class="field">
-                <div class="fl"><label for="blendAR">Blend na troca automática</label><output class="num" id="blendAOut" for="blendAR">2,7 s</output></div>
-                <input type="range" id="blendAR" min="0" max="5" step="0.1" value="2.7">
-              </div>
-              <div class="field">
-                <div class="fl"><label for="blendMR">Blend quando você troca</label><output class="num" id="blendMOut" for="blendMR">0,0 s</output></div>
-                <input type="range" id="blendMR" min="0" max="5" step="0.1" value="0">
-                <div class="scale num"><span>0 s</span><span>5 s</span></div>
-              </div>
+              <div id="rackTrans"></div>
               <div class="srow">
                 <label class="switch"><input type="checkbox" id="onBeat" disabled><span class="track"></span><span>Trocar no beat</span></label>
                 <p class="note">Fase 3 · precisa de detecção de BPM</p>
@@ -866,6 +964,22 @@
     <button type="submit" class="btn btn-primary">Tocar</button>
   </form>
 </div>
+<div class="menu" id="fbMenu" role="menu" aria-label="Feedback e bugs" hidden>
+  <button type="button" role="menuitem" data-fb="bug"><i data-lucide="bug" class="ico"></i><span class="grow">Relatar um problema</span></button>
+  <button type="button" role="menuitem" data-fb="idea"><i data-lucide="lightbulb" class="ico"></i><span class="grow">Sugerir uma ideia</span></button>
+  <button type="button" role="menuitem" data-fb="ask"><i data-lucide="circle-help" class="ico"></i><span class="grow">Fazer uma pergunta</span></button>
+  <hr>
+  <button type="button" role="menuitem" data-fb="diag"><i data-lucide="clipboard-copy" class="ico" id="fbDiagIco"></i><span class="grow">Copiar diagnóstico</span></button>
+</div>
+<div class="scrim fb" id="fbScrim"></div>
+<div class="fb-dialog" id="fbDialog" role="dialog" aria-modal="true" aria-labelledby="fbTitle" hidden>
+  <h2 id="fbTitle"><i data-lucide="bug" class="ico"></i>Relatar um problema</h2>
+  <p>Vamos abrir o formulário do GitHub já preenchido com:</p>
+  <ul class="fb-list" id="fbList"></ul>
+  <p class="fb-note">O log não vai junto. Use “Copiar diagnóstico” e cole no formulário.</p>
+  <p class="fb-acct">Você vai precisar de uma conta no GitHub para enviar.</p>
+  <div class="actions"><button type="button" class="btn btn-ghost" id="fbCancel">Cancelar</button><button type="button" class="btn btn-primary" id="fbGo"><i data-lucide="external-link" class="ico ico-sm"></i>Abrir no GitHub</button></div>
+</div>
 <div class="menu ai-pop" id="aiPop" role="dialog" aria-label="Controle por IA" hidden></div>
 <div class="bigtext" id="bigtext" role="status" aria-live="polite"><strong id="bigMain"></strong><span id="bigSub"></span></div>
 <div class="sc-dialog" id="scDialog" role="dialog" aria-label="Tocar do SoundCloud?" hidden>
@@ -874,7 +988,7 @@
   <div class="actions"><button type="button" class="btn btn-ghost" id="scNo">Cancelar</button><button type="button" class="btn btn-primary" id="scYes">Tocar</button></div>
 </div>
 <div class="dropzone" id="dropzone" aria-hidden="true">
-  <div class="dz-box"><i class="march" aria-hidden="true"></i><i class="solid" aria-hidden="true"></i><i data-lucide="file-plus-2" class="ico"></i><strong>Solte para adicionar presets .milk</strong><span>Arquivos de áudio tocam como fonte temporária</span></div>
+  <div class="dz-box"><i class="march" aria-hidden="true"></i><i class="solid" aria-hidden="true"></i><i data-lucide="file-plus-2" class="ico"></i><strong>Solte para adicionar presets .milk</strong></div>
 </div>
 <div class="gtoast" id="gtoast" role="status" aria-live="polite"><span id="gtoastTx"></span></div>
 
@@ -885,6 +999,7 @@
   <b>Protótipo</b>
   <button data-state="normal" aria-pressed="true">Normal</button>
   <button data-state="silence" aria-pressed="false">Silêncio</button>
+  <button id="protoSilNow" title="Silêncio com o painel já visível (sem esperar 10 s)">Ver painel já</button>
   <button data-state="denied" aria-pressed="false">Captura negada</button>
   <button data-state="heavy" aria-pressed="false">Preset pesado</button>
   <button data-state="file" aria-pressed="false">Arquivo</button>
@@ -910,7 +1025,7 @@
   const fmt = s => Math.floor(s / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
   const pad = n => String(n).padStart(2, '0');
   const setText = (el, t) => { if (el._t !== t) { el._t = t; el.textContent = t; } };
-  const SETTINGS_URL = $('settingsLink').href;
+  const SETTINGS_URL = new URL('Sonic Obsidian Configurações.html', location.href).href;
 
   // ═══════════ Microinterações (docs/v3-microinteracoes.md) ═══════════
   const EO = 'cubic-bezier(0.16, 1, 0.3, 1)';
@@ -1065,13 +1180,13 @@
     }
     Promise.all(flipAnims.map(a => a.finished.catch(() => {}))).then(() => { if (tok === flipTok) flipCancel(); });
   }
-  // M18 · painel "Sem áudio" só depois de 1,2 s de silêncio contínuo; a volta do som o remove com fade de 220 ms
+  // M18 · painel "Nenhum som chegando" só depois de 10 s de silêncio contínuo (o núcleo e o medidor reagem na hora); a volta do som o remove com fade de 220 ms
   let silT = 0;
   function syncSilence() {
     const el = $('silence');
     if (state !== 'silence') { clearTimeout(silT); silT = 0; el.classList.remove('show'); return; }
     if (silT || el.classList.contains('show')) return;
-    silT = setTimeout(() => { silT = 0; el.classList.add('show'); }, 1200);
+    silT = setTimeout(() => { silT = 0; el.classList.add('show'); }, 10000);
   }
   // M19 · ícone do modo limpo (eye-off) entra em 120 ms
   let cleanIcoT = 0;
@@ -1102,7 +1217,7 @@
   const colls = D.collections.map(c => ({ id: c.id, name: c.name, ids: c.ids.slice(), interval: c.interval }));
   const getColl = id => colls.filter(c => c.id === id)[0];
   const hidden = new Set();
-  let cur = P[0], hist = [0], hi = 0, blendA = 2700, blendM = 0, baseInterval = 30, interval = 30, left = 30, rotOn = true;
+  let cur = P[0], hist = [0], hi = 0, colOpen = false, cutNext = false, baseInterval = 30, interval = 30, left = 30, rotOn = true;
   let src = 'system', track = null, pop = null, aiOn = false, aiPaused = false, uiState = 'normal';
   const overlayText = { preset: 'always', track: true, toasts: 'all' };
   let cleanMode = false;
@@ -1134,7 +1249,7 @@
   let creditTimer = 0, rSigTimer = 0;
   function play(p, o) {
     o = o || {};
-    const ms = o.auto ? blendA : blendM;
+    const tk = o.auto ? T.auto : T.manual, ms = (cutNext || tk.type === 'cut') ? 0 : Math.round(tk.sec * 1000);
     if (rotOn && mode === 'stage') drainRot(1 - left / interval); // M03
     if (!o.keepColl && activeColl) { activeColl = null; interval = baseInterval; syncInterval(); }
     cur = p;
@@ -1168,7 +1283,7 @@
       else { swapStack(stT, cur.title, 0, true); swapStack(stA, 'por ' + cur.author, 40, false); } // M02
       nowId = cur.id;
     }
-    syncFavBtns(true);
+    syncFavBtns(true); syncColBtn();
     $('heavyChip').hidden = !(state === 'heavy' && cur.heavy);
   }
   function syncFavBtns(instant) {
@@ -1245,14 +1360,93 @@
     ['gain', 'gainMini', 'gainR'].forEach(id => { $(id).value = v; fill($(id)); $(id).setAttribute('aria-valuetext', t); });
     $('gainVal').textContent = t; $('gainOut').textContent = t; $('gainMini').title = 'Ganho: ' + t;
   }
-  function setBlendA(v) { blendA = +v * 1000; ['blendA', 'blendAR'].forEach(id => { $(id).value = v; fill($(id)); }); $('blendAVal').textContent = fmtS(v); $('blendAOut').textContent = fmtS(v); }
-  function setBlendM(v) { blendM = +v * 1000; ['blendM', 'blendMR'].forEach(id => { $(id).value = v; fill($(id)); }); $('blendMVal').textContent = fmtS(v); $('blendMOut').textContent = fmtS(v); }
   ['gain', 'gainMini', 'gainR'].forEach(id => $(id).oninput = e => setGain(e.target.value));
-  ['blendA', 'blendAR'].forEach(id => $(id).oninput = e => setBlendA(e.target.value));
-  ['blendM', 'blendMR'].forEach(id => $(id).oninput = e => setBlendM(e.target.value));
-  setGain(3); setBlendA(2.7); setBlendM(0);
+  setGain(0);
+
+  // ── Transições (tipo + tempo, manual e automática) e Expressividade ──
+  const TTYPES = [['cut', 'Corte seco'], ['crossfade', 'Crossfade'], ['sweep', 'Varredura'], ['plasma', 'Plasma'], ['radial', 'Radial'], ['random', 'Aleatório']];
+  const TBLK = [['manual', 'Quando você troca'], ['auto', 'Na troca automática']];
+  const T = { manual: { type: 'random', sec: 1.0 }, auto: { type: 'crossfade', sec: 2.7 } };
+  const CHARS = [['Contraste', 'Só amplia a diferença entre partes fortes e fracas.'], ['Energia', 'Amplia e sobe a base: tudo reage mais.'], ['Nervo', 'Energia com reação seca quando sobe e suave quando desce.']];
+  const MEMS = [['Curta', 'Compara com os últimos ~4 s, como o motor.'], ['Longa', 'Compara com os últimos ~30 s: as viradas da música aparecem mais.'], ['Fixa', 'Congela a referência agora: partes altas ficam sempre mais fortes.']];
+  const XS = { lvl: 0, chr: 1, mem: 0, curve16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvePreset: 'plana' };
+  let eqWarnHook = null;
+  /* ── EQ gráfico de 16 bandas (curva de expressividade) ── */
+  var EQ_HZ = [20, 31.5, 50, 80, 125, 200, 315, 500, 800, 1250, 2000, 3150, 5000, 8000, 12500, 20000];
+  var EQ_LB = ['20', '31,5', '50', '80', '125', '200', '315', '500', '800', '1,25k', '2k', '3,15k', '5k', '8k', '12,5k', '20k'];
+  var EQ_PRE = [
+    ['plana', 'Plana', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    ['graves', 'Graves', [6, 6, 5, 4, 2, 0, -2, -3, -3, -3, -3, -3, -3, -3, -3, -3]],
+    ['medios', 'Médios', [-3, -3, -3, -2, 0, 2, 4, 5, 5, 4, 2, 0, -2, -3, -3, -3]],
+    ['agudos', 'Agudos', [-3, -3, -3, -3, -3, -3, -2, -1, 0, 1, 2, 4, 5, 6, 6, 5]],
+    ['sorriso', 'Sorriso', [5, 5, 4, 3, 1, 0, -2, -3, -3, -2, 0, 1, 3, 4, 5, 5]]
+  ];
+  function eqFmtDb(v) { return v === 0 ? '0 dB' : (v > 0 ? '+' : '−') + Math.abs(v) + ' dB'; }
+  function eqFmtHz(i) { var f = EQ_HZ[i]; return f >= 1000 ? String(f / 1000).replace('.', ',') + ' kHz' : String(f).replace('.', ',') + ' Hz'; }
+  function eqIsFlat(c) { for (var i = 0; i < 16; i++) if (c[i] !== 0) return false; return true; }
+  function eqMatch(c) {
+    for (var p = 0; p < EQ_PRE.length; p++) { var ok = true; for (var i = 0; i < 16; i++) if (EQ_PRE[p][2][i] !== c[i]) { ok = false; break; } if (ok) return EQ_PRE[p][0]; }
+    return 'custom';
+  }
+  const fmtX = v => v === 0 ? '0' : (v > 0 ? '+' : '−') + Math.abs(v);
+  const IMP = { important: true };
+  function transHTML(p, rack) {
+    return TBLK.map(([k, title]) => {
+      const id = 't' + p + k;
+      return '<div class="tblock"><h4>' + title + '</h4><div class="line"><label for="' + id + 'Ty">Tipo</label><select class="sel" id="' + id + 'Ty">' +
+        TTYPES.map(t => '<option value="' + t[0] + '">' + t[1] + '</option>').join('') + '</select></div><div class="field" id="' + id + 'Wrap">' +
+        (rack ? '<div class="fl"><label for="' + id + 'Sl">Tempo</label><output class="num" id="' + id + 'Out" for="' + id + 'Sl"></output></div>'
+              : '<div class="field-top"><label for="' + id + 'Sl">Tempo</label><span class="val num" id="' + id + 'Out"></span></div>') +
+        '<input type="range" id="' + id + 'Sl" min="0.1" max="5" step="0.1"></div></div>';
+    }).join('');
+  }
+  $('sheetTrans').innerHTML = transHTML('S', false); $('rackTrans').innerHTML = transHTML('R', true);
+  function syncT() {
+    ['S', 'R'].forEach(p => TBLK.forEach(([k]) => {
+      const id = 't' + p + k, o = T[k], sl = $(id + 'Sl');
+      $(id + 'Ty').value = o.type; sl.value = o.sec; fill(sl); sl.setAttribute('aria-valuetext', fmtS(o.sec));
+      $(id + 'Out').textContent = fmtS(o.sec); $(id + 'Wrap').hidden = o.type === 'cut';
+    }));
+  }
+  ['S', 'R'].forEach(p => TBLK.forEach(([k]) => {
+    const id = 't' + p + k;
+    $(id + 'Ty').onchange = e => { T[k].type = e.target.value; syncT(); };
+    $(id + 'Sl').oninput = e => { T[k].sec = +e.target.value; syncT(); };
+  }));
+  function segBuild(sid, arr, key) {
+    const el = $(sid);
+    el.innerHTML = arr.map((a, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-i="' + i + '">' + a[0] + '</button>').join('');
+    el.onclick = e => { const b = e.target.closest('button'); if (b) { XS[key] = +b.dataset.i; syncX(); } };
+    el.onkeydown = e => {
+      const n = arr.length, d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      let i = XS[key];
+      if (d) i = (i + d + n) % n; else if (e.key === 'Home') i = 0; else if (e.key === 'End') i = n - 1; else return;
+      e.preventDefault(); e.stopPropagation(); XS[key] = i; syncX(); el.querySelectorAll('button')[i].focus();
+    };
+  }
+  segBuild('charSeg', CHARS, 'chr'); segBuild('memSeg', MEMS, 'mem');
+  function segSet(sid, did, arr, i) {
+    $(sid).querySelectorAll('button').forEach((b, k) => { b.setAttribute('aria-checked', k === i); b.tabIndex = k === i ? 0 : -1; });
+    $(did).textContent = arr[i][1];
+  }
+  function syncX() {
+    const sl = $('exprSl'); sl.value = XS.lvl; fill(sl); sl.setAttribute('aria-valuetext', fmtX(XS.lvl)); $('exprVal').textContent = fmtX(XS.lvl);
+    segSet('charSeg', 'charDesc', CHARS, XS.chr); segSet('memSeg', 'memDesc', MEMS, XS.mem);
+    if (eqWarnHook) eqWarnHook();
+  }
+  $('exprSl').oninput = e => { XS.lvl = +e.target.value; syncX(); };
+  function keyExpr(d) { XS.lvl = d === 0 ? 0 : Math.max(-3, Math.min(3, XS.lvl + d)); syncX(); gToast('Expressividade ' + fmtX(XS.lvl), IMP); }
+  function keyChar() { XS.chr = (XS.chr + 1) % CHARS.length; syncX(); gToast('Caráter ' + CHARS[XS.chr][0] + ' · ' + CHARS[XS.chr][1], IMP); }
+  function keyMem() { XS.mem = (XS.mem + 1) % MEMS.length; syncX(); gToast('Memória ' + MEMS[XS.mem][0] + ' · ' + MEMS[XS.mem][1], IMP); }
+  function keyTType(d) {
+    const i = TTYPES.findIndex(t => t[0] === T.manual.type); T.manual.type = TTYPES[(i + d + TTYPES.length) % TTYPES.length][0]; syncT();
+    gToast('Transição: ' + TTYPES.find(t => t[0] === T.manual.type)[1], IMP);
+  }
+  function keyTTime(d) { T.manual.sec = Math.max(0.1, Math.min(5, Math.round((T.manual.sec + d) * 10) / 10)); syncT(); gToast('Tempo da transição: ' + fmtS(T.manual.sec), IMP); }
+  const cutRun = fn => () => { cutNext = true; try { fn(); } finally { cutNext = false; } };
+  syncT(); syncX();
   // M15 · balão com o valor sobre o polegar: no arrasto; setas do teclado mostram por 600 ms; some em 120 ms
-  const SLID = { gain: 'gainVal', blendA: 'blendAVal', blendM: 'blendMVal', gainR: 'gainOut', blendAR: 'blendAOut', blendMR: 'blendMOut' };
+  const SLID = { gain: 'gainVal', gainR: 'gainOut', exprSl: 'exprVal', tSmanualSl: 'tSmanualOut', tSautoSl: 'tSautoOut', tRmanualSl: 'tRmanualOut', tRautoSl: 'tRautoOut' };
   const bub = $('sbub'); let bubFor = null, bubDrag = false, bubKt = 0;
   function bubPlace(r) {
     const rc = r.getBoundingClientRect(), pct = (r.value - r.min) / (r.max - r.min);
@@ -1356,7 +1550,7 @@
   function wake() {
     document.body.classList.remove('idle'); clearTimeout(idleT);
     if (mode !== 'stage') return;
-    idleT = setTimeout(() => { if (!pinned && !pOpen && !kOpen && !sOpen && !lOpen && !pop && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
+    idleT = setTimeout(() => { if (!pinned && !colOpen && !pOpen && !kOpen && !sOpen && !lOpen && !pop && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
   }
   const edge = $('edge');
   addEventListener('mousemove', e => {
@@ -1404,6 +1598,11 @@
   }
   function renderList() {
     const L = $('pList'); L.innerHTML = '';
+    if (tab === 'col' && !q && !colls.length) {
+      rows = [];
+      L.innerHTML = '<div class="p-empty"><i data-lucide="folder-plus" class="ico"></i><strong>Nenhuma coleção ainda.</strong>Crie uma pelo botão de coleção na faixa ou na Biblioteca (L).</div>';
+      icons(); return;
+    }
     if (tab === 'col' && !q) {
       rows = colls.map(c => ({ col: c }));
       rows.forEach((r, i) => {
@@ -1457,7 +1656,7 @@
   }
   function openPalette() {
     if (pOpen) return; if (kOpen) closeShortcuts(); pOpen = true; lastFocus = document.activeElement;
-    closeMenu(); edge.classList.remove('on');
+    closeMenu(); closeCol(false); edge.classList.remove('on');
     document.body.classList.add('palette-open'); q = ''; $('pInput').value = ''; act = 0;
     renderTabs(); renderList(); setTimeout(() => $('pInput').focus(), 30); wake();
   }
@@ -1476,24 +1675,30 @@
   const kPanel = $('kPanel'), kQ = $('kQ'); let kOpen = false, kLast = null;
   const norm = t => String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
   const KEYS = [
-    { name: 'Reprodução', rows: [['Preset aleatório', [['Espaço']]], ['Preset anterior', [['←']]], ['Próximo preset', [['→']]], ['Favoritar', [['F']]], ['Rotação automática', [['R']]]] },
-    { name: 'Navegação', rows: [['Buscar presets', [['/'], ['Ctrl', 'K']]], ['Biblioteca', [['L']]], ['Modo Rack / Palco', [['M']]], ['Editar uma cópia no Estúdio', [['E']]], ['Ajustes rápidos', [[',']]], ['Configurações', [['Ctrl', ',']]]] },
+    { name: 'Reprodução', rows: [['Preset aleatório', [['Espaço']]], ['Preset anterior', [['←']]], ['Próximo preset', [['→']]], ['Rotação automática', [['R']]]] },
+    { name: 'Navegação', rows: [['Buscar presets', [['/'], ['Ctrl', 'K']]], ['Biblioteca', [['L']]], ['Ajustes rápidos', [[',']]], ['Configurações', [['Ctrl', ',']]]] },
     { name: 'Texto e controles', rows: [['Esconder controles', [['H']]], ['Modo limpo', [['T']]]] },
-    { name: 'Vídeo', note: 'No Palco com vídeo', rows: [['Camada de vídeo', [['V']]], ['Opacidade do vídeo', [['[', ']']]], ['Modo de mistura', [['G']]], ['Clipe anterior / próximo', [['Shift', '←'], ['Shift', '→']]], ['Salvar cena', [['Ctrl', 'S']]], ['Modo performance', [['P']]]] },
-    { name: 'Janela', rows: [['Tela cheia', [['F11']]], ['Fechar o app', [['Ctrl', 'W']]], ['Fechar painel ou gaveta', [['Esc']]], ['Mostrar atalhos', [['?']]]] },
-    { name: 'IA', rows: [['Pausar controle por IA', [['Ctrl', 'Shift', 'P']]]] },
+    { name: 'Transição', rows: [['Tipo da transição', [['B'], ['Shift', 'B']]], ['Tempo da transição', [['↑'], ['↓']]], ['Troca com corte seco', [['Shift', '←'], ['Shift', '→'], ['Shift', 'Espaço']]]] },
+    { name: 'Expressividade', rows: [['Aumentar / diminuir expressividade', [['+'], ['−']]], ['Expressividade neutra', [['0']]], ['Caráter da expressividade', [['X']]], ['Memória da expressividade', [['Shift', 'X']]]] },
+    { name: 'Janela', rows: [['Tela cheia', [['F'], ['F11']]], ['Fechar o app', [['Ctrl', 'W']]], ['Fechar painel ou gaveta', [['Esc']]], ['Mostrar atalhos', [['?']]]] },
+    { name: 'Diagnóstico', rows: [['Painel de diagnóstico', [['Ctrl', 'Shift', 'D']]], ['Abrir o log', [['Ctrl', 'Shift', 'L']]]] },
+    { name: 'Vídeo', phase: 'Fase 5', note: 'No Palco com vídeo', rows: [['Camada de vídeo', [['V']]], ['Opacidade do vídeo', [['[', ']']]], ['Modo de mistura', [['G']]], ['Clipe anterior / próximo', [['Shift', '←'], ['Shift', '→']]], ['Salvar cena', [['Ctrl', 'S']]], ['Modo performance', [['P']]]] },
+    { name: 'IA', phase: 'Fase 4', rows: [['Pausar controle por IA', [['Ctrl', 'Shift', 'P']]]] },
+    { name: 'Modo Rack', phase: 'Fase 5', rows: [['Alternar Palco / Rack', [['M']]]] },
+    { name: 'Estúdio', phase: 'Fase 3', rows: [['Editar uma cópia no Estúdio', [['E']]]] },
   ];
   function ctxGroup() {
     if (lOpen) return { name: 'Agora · Biblioteca', now: true, rows: [['Mover entre as linhas', [['↑'], ['↓']]], ['Tocar o preset', [['Enter']]], ['Limpar a busca ou fechar', [['Esc']]]] };
-    if (mode === 'rack') return { name: 'Agora · Rack', now: true, rows: [['Voltar ao Palco', [['M']]], ['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Favoritar', [['F']]], ['Rotação automática', [['R']]]] };
-    return { name: 'Agora · Palco', now: true, rows: [['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Favoritar', [['F']]], ['Esconder controles', [['H']]], ['Biblioteca', [['L']]]] };
+    if (mode === 'rack') return { name: 'Agora · Rack', now: true, rows: [['Voltar ao Palco', [['M']]], ['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Tela cheia', [['F']]], ['Rotação automática', [['R']]]] };
+    return { name: 'Agora · Palco', now: true, rows: [['Preset aleatório', [['Espaço']]], ['Anterior / próximo', [['←'], ['→']]], ['Tela cheia', [['F']]], ['Esconder controles', [['H']]], ['Biblioteca', [['L']]]] };
   }
   function renderK() {
     const f = norm(kQ.value.trim()); let html = '';
     [ctxGroup()].concat(KEYS).forEach(g => {
-      const rs = g.rows.filter(r => !f || norm(r[0] + ' ' + r[1].map(a => a.join(' ')).join(' ')).indexOf(f) > -1);
+      const gm = !!f && norm(g.name).indexOf(f) > -1;
+      const rs = g.rows.filter(r => !f || gm || norm(r[0] + ' ' + r[1].map(a => a.join(' ')).join(' ')).indexOf(f) > -1);
       if (!rs.length) return;
-      html += '<section class="k-g' + (g.now ? ' now' : '') + '"><h3>' + esc(g.name) + '</h3>' + (g.note ? '<p class="k-note">' + esc(g.note) + '</p>' : '') +
+      html += '<section class="k-g' + (g.now ? ' now' : '') + '"><h3>' + esc(g.name) + (g.phase ? '<span class="k-phase">' + esc(g.phase) + '</span>' : '') + '</h3>' + (g.note ? '<p class="k-note">' + esc(g.note) + '</p>' : '') +
         rs.map(r => '<div class="k-row"><span>' + esc(r[0]) + '</span><span class="k-keys">' +
           r[1].map(a => a.map(k => '<kbd>' + esc(k) + '</kbd>').join('')).join('<span class="k-or">ou</span>') + '</span></div>').join('') + '</section>';
     });
@@ -1501,7 +1706,7 @@
   }
   function openShortcuts() {
     if (kOpen) return; kOpen = true; kLast = document.activeElement;
-    if (pOpen) closePalette(); closeMenu(); closePop(false);
+    if (pOpen) closePalette(); closeMenu(); closePop(false); closeCol(false);
     document.body.classList.add('kbd-open'); kPanel.hidden = false; kQ.value = ''; renderK(); kQ.focus(); wake();
   }
   function closeShortcuts() {
@@ -1523,9 +1728,15 @@
     { label: 'Mostrar atalhos', keys: ['?'], icon: 'keyboard', run: () => openShortcuts() },
     { label: 'Ajustes rápidos', keys: [','], icon: 'sliders-horizontal', stage: true, run: () => setSheet(!sOpen) },
     { label: 'Configurações', keys: ['Ctrl', ','], icon: 'settings', run: () => { location.href = SETTINGS_URL; } },
-    { label: 'Tela cheia', keys: ['F11'], icon: 'maximize', run: () => toggleFs() },
-    { label: 'Favoritar preset atual', keys: ['F'], icon: 'star', run: () => toggleFav() },
+    { label: 'Relatar um problema', keys: [], icon: 'bug', run: () => fbAct('bug') },
+    { label: 'Sugerir uma ideia', keys: [], icon: 'lightbulb', run: () => fbAct('idea') },
+    { label: 'Fazer uma pergunta', keys: [], icon: 'circle-help', run: () => fbAct('ask') },
+    { label: 'Copiar diagnóstico', keys: [], icon: 'clipboard-copy', run: () => fbAct('diag') },
+    { label: 'Tela cheia', keys: ['F'], icon: 'maximize', run: () => toggleFs() },
+    { label: 'Favoritar preset atual', keys: [], icon: 'star', run: () => toggleFav() },
+    { label: 'Adicionar à coleção…', keys: [], icon: 'folder-plus', stage: true, run: () => openCol() },
     { label: 'Rotação automática', keys: ['R'], icon: 'repeat', run: () => setRot(!rotOn) },
+    ...EQ_PRE.map(p => ({ label: 'Curva: ' + p[1], keys: [], icon: 'activity', run: () => eqPreset(p[0], true) })),
   ];
   function cmdList() {
     const f = norm(q);
@@ -1705,7 +1916,7 @@
     else if (a === 'back') { M.mode = 'root'; renderMenu(); menuEl.querySelector('button, a').focus(); }
     else if (a === 'add') {
       const c = getColl(b.dataset.cid);
-      if (c.ids.indexOf(id) > -1) libToast('Já está em ' + c.name + '.'); else { c.ids.push(id); libToast('Adicionado a ' + c.name + '.'); }
+      if (c.ids.indexOf(id) > -1) libToast('Já está em ' + c.name + '.'); else { c.ids.push(id); libToast('Adicionado a ' + c.name + '.'); syncColBtn(); }
       closeMenu(true);
     } else if (a === 'hide') {
       const idx = Array.from(libList.querySelectorAll('[data-col="main"]')).findIndex(n => n.closest('[data-id]') && +n.closest('[data-id]').dataset.id === id);
@@ -1762,10 +1973,340 @@
   let sOpen = false;
   function setSheet(v, quiet) {
     if (v === sOpen) return; sOpen = v; document.body.classList.toggle('sheet-open', v); $('sheetBtn').setAttribute('aria-expanded', v);
+    clearTimeout(setSheet._t);
+    const sb = document.querySelector('#sheet .body');
+    if (v) { sb.scrollTop = 0; eqStart(); }
+    else setSheet._t = setTimeout(() => { sb.scrollTop = 0; eqStop(); }, 200); // depois da saída (180 ms), sem salto visível
     if (!quiet) { if (v) setTimeout(() => $('sheetClose').focus(), 60); else $('sheetBtn').focus(); }
     wake();
   }
   $('sheetBtn').onclick = () => setSheet(!sOpen); $('sheetClose').onclick = () => setSheet(false);
+  $('sheetSettings').onclick = () => { location.href = SETTINGS_URL; };
+  document.addEventListener('pointerdown', e => { if (sOpen && !$('sheet').contains(e.target) && !$('sheetBtn').contains(e.target) && !$('fbMenu').contains(e.target) && !$('fbDialog').contains(e.target) && !$('fbScrim').contains(e.target)) setSheet(false, true); });
+
+  // ═══════════ Curva por frequência (EQ de 16 bandas) ═══════════
+  function createEQ(o) {
+    var N = 16, G = o.gutter || 0, H = o.h, PT = 8, PB = 8, BW = o.barW || 3, PH = H - PT - PB;
+    var cv = o.canvas, ctx = cv.getContext('2d'), grp = o.group, bub = o.bubble;
+    var sel = -1, focused = false, drag = false, last = null, raf = 0, W = 0, bt = 0, col = {};
+    var RM = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+    var Y = function (v) { return PT + (12 - v) / 24 * PH; };
+    function cols() {
+      var cs = getComputedStyle(document.documentElement);
+      ['--violet', '--violet-soft', '--text-1', '--text-3', '--line-1', '--line-2', '--line-3'].forEach(function (n) { col[n] = cs.getPropertyValue(n).trim(); });
+    }
+    cols();
+    function layout() {
+      if (!o.freq) return;
+      var w = cv.clientWidth, slot = (w - G) / N, idx = o.freqIdx ? o.freqIdx(slot) : [2, 5, 8, 11, 14], lb = o.freqLabels || EQ_LB;
+      o.freq.style.marginLeft = G + 'px';
+      o.freq.innerHTML = idx.map(function (i) { return '<span style="left:' + ((i + 0.5) / N * 100).toFixed(3) + '%">' + lb[i] + '</span>'; }).join('');
+    }
+    function draw(now) {
+      var w = cv.clientWidth; if (!w) return;
+      var dpr = window.devicePixelRatio || 1;
+      if (w !== W) { W = w; cv.width = Math.round(w * dpr); cv.height = Math.round(H * dpr); layout(); }
+      var c = o.get(), slot = (w - G) / N, y0 = Y(0), rm = RM.matches;
+      var t = rm ? 0 : now / 1000, silent = o.silent ? o.silent() : false;
+      var lvl = rm ? 0.5 : (silent ? 0.15 : clamp(o.level ? o.level() : 0.5, 0, 1));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, H);
+      // zonas (bass até 250 Hz, mid 250 Hz–4 kHz, treb acima de 4 kHz)
+      var Z = [[0, 6, 'bass'], [6, 12, 'mid'], [12, 16, 'treb']];
+      ctx.font = "12px 'JetBrains Mono', ui-monospace, monospace"; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+      Z.forEach(function (z, k) {
+        var x0 = G + z[0] * slot, x1 = G + z[1] * slot;
+        if (k !== 1) { ctx.fillStyle = 'rgba(238,238,245,0.035)'; ctx.fillRect(x0, 0, x1 - x0, H); }
+        if (k > 0) { ctx.fillStyle = col['--line-2']; ctx.fillRect(Math.round(x0), 0, 1, H); }
+        ctx.fillStyle = col['--text-3']; ctx.fillText(z[2], x0 + 6, 15);
+      });
+      // escala em dB
+      if (G) {
+        ctx.fillStyle = col['--line-1'];
+        [6, -6].forEach(function (v) { ctx.fillRect(G, Math.round(Y(v)), w - G, 1); });
+        ctx.fillStyle = col['--text-3']; ctx.textAlign = 'right';
+        [[12, '+12'], [0, '0'], [-12, '−12']].forEach(function (s) { ctx.fillText(s[1], G - 8, Y(s[0]) + (s[0] === 12 ? 10 : s[0] === -12 ? -1 : 4)); });
+        ctx.textAlign = 'left';
+      }
+      // espectro ao vivo (dados falsos suaves)
+      var NB = 48; ctx.fillStyle = col['--text-3']; ctx.globalAlpha = 0.35;
+      for (var i = 0; i < NB; i++) {
+        var xa = G + i / NB * (w - G), xb = G + (i + 1) / NB * (w - G);
+        var wob = 0.6 + 0.4 * Math.sin(t * 3 + i * 0.9) * Math.sin(t * 1.7 + i * 0.37);
+        var a = clamp((1 - 0.5 * i / NB) * (0.25 + 0.65 * lvl) * (rm ? 0.8 + 0.2 * Math.sin(i * 0.9) : wob), 0.06, 1);
+        ctx.fillRect(xa + 0.5, H - PB - a * PH * 0.9, Math.max(1, xb - xa - 1), a * PH * 0.9);
+      }
+      ctx.globalAlpha = 1;
+      // linha de 0 dB
+      ctx.fillStyle = col['--line-3']; ctx.fillRect(G, Math.round(y0), w - G, 1);
+      // banda em destaque
+      if (sel >= 0 && (focused || drag)) { ctx.fillStyle = col['--violet-soft']; ctx.fillRect(G + sel * slot, 0, slot, H); }
+      // barras
+      ctx.fillStyle = col['--violet'];
+      ctx.globalAlpha = 0.55;
+      for (i = 0; i < N; i++) {
+        var cx = G + (i + 0.5) * slot, yy = Y(c[i]);
+        ctx.fillRect(Math.round(cx - BW / 2), Math.min(y0, yy), BW, Math.abs(yy - y0));
+      }
+      ctx.globalAlpha = 1;
+      // curva
+      ctx.strokeStyle = col['--violet']; ctx.lineWidth = 1.75; ctx.lineJoin = 'round'; ctx.beginPath();
+      for (i = 0; i < N; i++) { var px = G + (i + 0.5) * slot, py = Y(c[i]); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+      ctx.stroke();
+      for (i = 0; i < N; i++) {
+        var on = i === sel && (focused || drag);
+        ctx.beginPath(); ctx.arc(G + (i + 0.5) * slot, Y(c[i]), on ? 4.5 : 2.5, 0, 6.2832); ctx.fillStyle = on ? col['--text-1'] : col['--violet']; ctx.fill();
+        if (on) { ctx.lineWidth = 2; ctx.strokeStyle = col['--violet']; ctx.stroke(); }
+      }
+    }
+    function readout() {
+      if (o.readout) o.readout.innerHTML = sel < 0 ? '' : eqFmtHz(sel) + ' · ' + eqFmtDb(o.get()[sel]);
+    }
+    function refresh() { readout(); draw(performance.now()); }
+    function announce() { if (o.live && sel >= 0) o.live.textContent = eqFmtHz(sel) + ', ' + eqFmtDb(o.get()[sel]); }
+    function showBub(b, keep) {
+      var v = o.get()[b], slot = (cv.clientWidth - G) / N, cx = G + (b + 0.5) * slot, yy = Y(v);
+      bub.innerHTML = eqFmtHz(b) + ' · <b>' + eqFmtDb(v) + '</b>';
+      var bw = bub.offsetWidth || 90;
+      bub.style.left = clamp(cx, bw / 2 + 2, cv.clientWidth - bw / 2 - 2) + 'px';
+      var dn = yy < 34; bub.classList.toggle('dn', dn); bub.style.top = (dn ? yy + 10 : yy - 10) + 'px';
+      bub.classList.add('on');
+      clearTimeout(bt); if (keep) bt = setTimeout(function () { bub.classList.remove('on'); }, 600);
+    }
+    function at(e) {
+      var r = cv.getBoundingClientRect();
+      return { b: clamp(Math.floor((e.clientX - r.left - G) / ((r.width - G) / N)), 0, N - 1), v: clamp(Math.round(12 - (e.clientY - r.top - PT) / PH * 24), -12, 12) };
+    }
+    function apply(p) {
+      if (last && last.b !== p.b) {
+        var a = last.b, z = p.b, st = z > a ? 1 : -1;
+        for (var k = a + st; ; k += st) { o.set(k, Math.round(last.v + (p.v - last.v) * ((k - a) / (z - a)))); if (k === z) break; }
+      } else o.set(p.b, p.v);
+      last = p; sel = p.b; showBub(p.b); refresh();
+    }
+    cv.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault(); drag = true; last = null;
+      try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      grp.focus({ preventScroll: true }); apply(at(e));
+    });
+    cv.addEventListener('pointermove', function (e) { if (drag) apply(at(e)); });
+    function up() { if (!drag) return; drag = false; last = null; clearTimeout(bt); bub.classList.remove('on'); announce(); refresh(); }
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('dblclick', function (e) { var p = at(e); sel = p.b; o.set(p.b, 0); announce(); showBub(p.b, true); refresh(); });
+    grp.addEventListener('focus', function () { focused = true; if (sel < 0) sel = 0; refresh(); });
+    grp.addEventListener('blur', function () { focused = false; bub.classList.remove('on'); refresh(); });
+    grp.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      var k = e.key;
+      if (sel < 0) sel = 0;
+      if (k === 'ArrowLeft') sel = clamp(sel - 1, 0, N - 1);
+      else if (k === 'ArrowRight') sel = clamp(sel + 1, 0, N - 1);
+      else if (k === 'ArrowUp' || k === 'ArrowDown') o.set(sel, clamp(o.get()[sel] + (e.shiftKey ? 3 : 1) * (k === 'ArrowUp' ? 1 : -1), -12, 12));
+      else if (k === 'Home') sel = 0; else if (k === 'End') sel = N - 1;
+      else return;
+      e.preventDefault(); e.stopPropagation(); announce(); showBub(sel, true); refresh();
+    });
+    function loop(now) { draw(now); raf = requestAnimationFrame(loop); }
+    function start() { cancelAnimationFrame(raf); W = 0; if (RM.matches) draw(0); else raf = requestAnimationFrame(loop); }
+    function stop() { cancelAnimationFrame(raf); raf = 0; }
+    if (RM.addEventListener) RM.addEventListener('change', function () { if (raf || o.always) start(); });
+    window.addEventListener('resize', function () { W = 0; draw(performance.now()); });
+    return { start: start, stop: stop, refresh: refresh, draw: draw };
+  }
+  const eq = createEQ({
+    canvas: $('eqCv'), group: $('eqPlot'), bubble: $('eqBub'), freq: $('eqFreq'), readout: $('eqRead'), live: $('eqLive'),
+    h: 96, gutter: 0, barW: 3, freqIdx: () => [2, 5, 8, 11, 14], freqLabels: ['', '', '50', '', '', '200', '', '', '800', '', '', '3k', '', '', '12k', ''],
+    get: () => XS.curve16, set: (i, v) => { XS.curve16[i] = v; XS.curvePreset = eqMatch(XS.curve16); eqSync(); },
+    level: () => viz.level(), silent: () => isSilent()
+  });
+  const EQ_SEG = EQ_PRE.concat([['custom', 'Personalizada']]);
+  $('eqSeg').innerHTML = EQ_SEG.map((p, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-id="' + p[0] + '"' + (p[0] === 'custom' ? ' hidden' : '') + '>' + p[1] + '</button>').join('');
+  function eqSync() {
+    const seg = $('eqSeg'), custom = XS.curvePreset === 'custom';
+    seg.classList.toggle('has-custom', custom);
+    seg.querySelectorAll('button').forEach(b => {
+      const on = b.dataset.id === XS.curvePreset;
+      if (b.dataset.id === 'custom') b.hidden = !custom;
+      b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1;
+    });
+    $('eqWarn').hidden = XS.mem === 2 || eqIsFlat(XS.curve16);
+    eq.refresh();
+  }
+  eqWarnHook = eqSync;
+  function eqPreset(id, toast) {
+    const p = EQ_PRE.find(x => x[0] === id); if (!p) return;
+    XS.curve16 = p[2].slice(); XS.curvePreset = id; eqSync();
+    if (toast) gToast('Curva: ' + p[1], IMP);
+  }
+  $('eqSeg').onclick = e => { const b = e.target.closest('button'); if (b && b.dataset.id !== 'custom') eqPreset(b.dataset.id, true); };
+  $('eqSeg').onkeydown = e => {
+    const ids = EQ_PRE.map(p => p[0]), d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    let i = ids.indexOf(XS.curvePreset);
+    if (d) i = i < 0 ? (d > 0 ? 0 : ids.length - 1) : (i + d + ids.length) % ids.length; else if (e.key === 'Home') i = 0; else if (e.key === 'End') i = ids.length - 1; else return;
+    e.preventDefault(); e.stopPropagation(); eqPreset(ids[i], true); $('eqSeg').querySelector('button[data-id="' + ids[i] + '"]').focus();
+  };
+  $('eqFixa').onclick = () => { XS.mem = 2; syncX(); };
+  function eqStart() { eq.start(); }
+  function eqStop() { eq.stop(); }
+  eqSync();
+
+  // ═══════════ Coleções pela faixa ═══════════
+  const colBtn = $('colBtn'), colPop = $('colPop');
+  const inColl = c => c.ids.indexOf(cur.id) > -1;
+  function placeCol() {
+    const r = colBtn.getBoundingClientRect(), w = colPop.offsetWidth;
+    colPop.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + 'px';
+    colPop.style.top = 'auto'; colPop.style.bottom = (innerHeight - r.top + 8) + 'px';
+    colPop.style.maxHeight = Math.max(120, r.top - 16) + 'px'; colPop.style.overflowY = 'auto';
+  }
+  function renderCol() {
+    colPop.innerHTML = colls.map(c => '<button type="button" role="menuitemcheckbox" aria-checked="' + inColl(c) + '" data-cid="' + c.id + '"><span class="chk" aria-hidden="true"><i data-lucide="check" class="ico"></i></span><span class="grow">' + esc(c.name) + '</span><span class="num cnt">' + c.ids.length + '</span></button>').join('') +
+      '<hr><button type="button" role="menuitem" data-new="1"><span class="chk" aria-hidden="true"><i data-lucide="plus" class="ico"></i></span><span class="grow">Nova coleção</span></button>';
+    icons(); placeCol();
+  }
+  function syncColBtn() {
+    colBtn.classList.toggle('has', colls.some(inColl));
+    if (!colOpen) return;
+    const rows = Array.from(colPop.querySelectorAll('[data-cid]'));
+    if (rows.length !== colls.length || rows.some((b, i) => b.dataset.cid !== String(colls[i].id))) { if (!colPop.querySelector('#colNew')) renderCol(); return; }
+    rows.forEach((b, i) => { b.setAttribute('aria-checked', inColl(colls[i])); b.querySelector('.cnt').textContent = colls[i].ids.length; });
+  }
+  function openCol() {
+    if (colOpen || mode !== 'stage') return;
+    closeMenu(); closePop(false); colOpen = true; colBtn.setAttribute('aria-expanded', 'true'); colPop.hidden = false; wake(); renderCol();
+    const f = colPop.querySelector('button'); if (f) f.focus();
+  }
+  function closeCol(refocus) {
+    if (!colOpen) return; colOpen = false; colBtn.setAttribute('aria-expanded', 'false'); colPop.hidden = true;
+    if (refocus) colBtn.focus(); wake();
+  }
+  function newColStart() {
+    const row = colPop.querySelector('[data-new]'); if (!row) return;
+    const w = document.createElement('div'); w.className = 'newrow';
+    w.innerHTML = '<span class="chk" aria-hidden="true"><i data-lucide="plus" class="ico"></i></span><input type="text" id="colNew" maxlength="40" placeholder="Nome da coleção" aria-label="Nome da nova coleção" autocomplete="off" spellcheck="false">';
+    row.replaceWith(w); icons(); placeCol(); $('colNew').focus();
+  }
+  function newColCreate() {
+    const inp = $('colNew'); if (!inp) return;
+    const name = inp.value.trim() || 'Coleção ' + (colls.length + 1);
+    Lb.nColl++; colls.push({ id: 'n' + Lb.nColl, name, ids: [cur.id], interval: 30 });
+    renderCollSel(); renderCol(); syncColBtn();
+    const last = colPop.querySelectorAll('[data-cid]'); if (last.length) last[last.length - 1].focus();
+    gToast('Criada “' + name + '” com este preset.', IMP);
+    if (lOpen) renderLib(); if (pOpen) { renderTabs(); renderList(); }
+  }
+  colBtn.onclick = () => colOpen ? closeCol(true) : openCol();
+  colPop.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.new) { newColStart(); return; }
+    const c = getColl(b.dataset.cid); if (!c) return;
+    const i = c.ids.indexOf(cur.id);
+    if (i > -1) { c.ids.splice(i, 1); gToast('Removido de ' + c.name + '.', IMP); } else { c.ids.push(cur.id); gToast('Adicionado a ' + c.name + '.', IMP); }
+    syncColBtn(); if (lOpen) renderLib(); if (pOpen) { renderTabs(); renderList(); }
+  });
+  colPop.addEventListener('keydown', e => {
+    const inp = e.target.tagName === 'INPUT', items = Array.from(colPop.querySelectorAll('button, input')), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i + items.length - 1) % items.length].focus(); }
+    else if (e.key === 'Home' && !inp) { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End' && !inp) { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Escape') {
+      e.preventDefault();
+      if (inp) { renderCol(); const nb = colPop.querySelector('[data-new]'); if (nb) nb.focus(); } else closeCol(true);
+    }
+    else if (e.key === 'Tab') { e.preventDefault(); closeCol(true); }
+    else if (e.key === 'Enter' && inp) { e.preventDefault(); newColCreate(); }
+    e.stopPropagation();
+  });
+  document.addEventListener('pointerdown', e => { if (colOpen && !colPop.contains(e.target) && !colBtn.contains(e.target)) closeCol(false); });
+  addEventListener('resize', () => { if (colOpen) placeCol(); });
+
+  // ═══════════ Feedback e bugs (docs/v3-feedback.md) ═══════════
+  const GH = 'https://github.com/atempel/sonic-obsidian/';
+  const FB_URL = { idea: GH + 'discussions/new?category=ideas', ask: GH + 'discussions/new?category=q-a' };
+  const FB_INFO = [['version', 'Versão', 'v0.6.0'], ['windows', 'Windows', 'Windows 11 24H2'], ['gpu', 'GPU', 'NVIDIA RTX 3070'], ['audio', 'Saída de áudio', 'Alto-falantes (Realtek)'], ['preset', 'Preset atual', null]];
+  const fbBtn = $('fbBtn'), fbMenu = $('fbMenu'), fbDlg = $('fbDialog');
+  let fbOpen = false, fbDlgOpen = false, fbDlgLast = null, fbDiagT = 0;
+  function openUrl(u) { window.open(u, '_blank', 'noopener'); gToast('Abrimos o GitHub no navegador.', { force: true }); }
+  function placeFb() {
+    const r = fbBtn.getBoundingClientRect(), w = fbMenu.offsetWidth;
+    fbMenu.style.left = Math.min(Math.max(8, r.right - w), innerWidth - w - 8) + 'px'; fbMenu.style.top = (r.bottom + 6) + 'px';
+  }
+  function openFb() {
+    if (fbOpen) return; fbOpen = true; fbBtn.setAttribute('aria-expanded', 'true'); fbMenu.hidden = false; placeFb();
+    fbMenu.querySelector('button').focus(); wake();
+  }
+  function closeFb(refocus) {
+    if (!fbOpen) return; fbOpen = false; fbBtn.setAttribute('aria-expanded', 'false'); fbMenu.hidden = true;
+    if (refocus) fbBtn.focus(); wake();
+  }
+  function fbDiagReset() {
+    const n = fbMenu.querySelector('[data-fb="diag"] .ico'); if (!n) return;
+    const i = document.createElement('i'); i.className = 'ico'; i.setAttribute('data-lucide', 'clipboard-copy'); n.replaceWith(i); icons();
+  }
+  function fbDiag() {
+    const n = fbMenu.querySelector('[data-fb="diag"] .ico');
+    const i = document.createElement('i'); i.className = 'ico'; i.setAttribute('data-lucide', 'check'); n.replaceWith(i); icons();
+    gToast('Diagnóstico copiado: últimas 200 linhas do log.', { force: true });
+    clearTimeout(fbDiagT); fbDiagT = setTimeout(fbDiagReset, 1500);
+  }
+  function fbAct(k) {
+    closeFb(false);
+    if (k === 'bug') openFbDialog(); else if (k === 'diag') fbDiag(); else openUrl(FB_URL[k]);
+  }
+  function renderFbList() {
+    $('fbList').innerHTML = FB_INFO.map(it => {
+      const v = it[2] === null ? cur.full : it[2];
+      return '<li><span class="fb-k" id="fbk-' + it[0] + '">' + it[1] + '</span><span class="fb-v num" id="fbv-' + it[0] + '" title="' + esc(v) + '">' + esc(v) + '</span>' +
+        '<label class="switch"><input type="checkbox" checked data-key="' + it[0] + '" aria-labelledby="fbk-' + it[0] + ' fbv-' + it[0] + '"><span class="track"></span></label></li>';
+    }).join('');
+  }
+  function openFbDialog() {
+    if (fbDlgOpen) return; fbDlgOpen = true; fbDlgLast = document.activeElement; closePop(false); closeCol(false);
+    if (pOpen) closePalette();
+    renderFbList(); document.body.classList.add('fb-open'); fbDlg.hidden = false; $('fbGo').focus(); wake();
+  }
+  function closeFbDialog(refocus) {
+    if (!fbDlgOpen) return; fbDlgOpen = false; document.body.classList.remove('fb-open'); fbDlg.hidden = true;
+    if (refocus && fbDlgLast && document.contains(fbDlgLast) && fbDlgLast.focus) fbDlgLast.focus(); wake();
+  }
+  function fbBugUrl() {
+    const on = k => { const c = fbDlg.querySelector('input[data-key="' + k + '"]'); return c && c.checked; };
+    const val = k => { const it = FB_INFO.find(x => x[0] === k); return it[2] === null ? cur.full : it[2]; };
+    const sys = ['windows', 'gpu', 'audio'].filter(on).map(val).join(', ');
+    const q = ['template=bug_report.yml'];
+    if (on('version')) q.push('version=' + encodeURIComponent(val('version')));
+    if (sys) q.push('system=' + encodeURIComponent(sys));
+    if (on('preset')) q.push('preset=' + encodeURIComponent(val('preset')));
+    return GH + 'issues/new?' + q.join('&');
+  }
+  fbBtn.onclick = () => fbOpen ? closeFb(true) : openFb();
+  fbMenu.addEventListener('click', e => { const b = e.target.closest('[data-fb]'); if (b) fbAct(b.dataset.fb); });
+  fbMenu.addEventListener('keydown', e => {
+    const items = Array.from(fbMenu.querySelectorAll('button')), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i + items.length - 1) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeFb(true); }
+    else if (e.key === 'Tab') { e.preventDefault(); closeFb(true); }
+    e.stopPropagation();
+  });
+  document.addEventListener('pointerdown', e => { if (fbOpen && !fbMenu.contains(e.target) && !fbBtn.contains(e.target)) closeFb(false); });
+  addEventListener('resize', () => { if (fbOpen) placeFb(); });
+  $('fbList').addEventListener('change', e => { const li = e.target.closest('li'); if (li) li.classList.toggle('off', !e.target.checked); });
+  $('fbCancel').onclick = () => closeFbDialog(true); $('fbScrim').onclick = () => closeFbDialog(true);
+  $('fbGo').onclick = () => { const u = fbBugUrl(); closeFbDialog(false); openUrl(u); };
+  fbDlg.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); closeFbDialog(true); e.stopPropagation(); return; }
+    if (e.key !== 'Tab') { e.stopPropagation(); return; }
+    const fs = Array.from(fbDlg.querySelectorAll('input, button')).filter(x => !x.disabled); const i = fs.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); fs[fs.length - 1].focus(); } else if (!e.shiftKey && i === fs.length - 1) { e.preventDefault(); fs[0].focus(); }
+  });
+  // Silêncio: "Testar captura" e atalho do protótipo
+  $('testCap').onclick = () => gToast(isSilent() ? 'Ainda sem som. Toque algo no computador.' : 'Captura ok: som chegando.', IMP);
+  $('protoSilNow').onclick = () => { setState('silence'); clearTimeout(silT); silT = 0; $('silence').classList.add('show'); };
 
   // ═══════════ Modo Rack ═══════════
   const marqClip = $('marqClip'), marqIn = $('marqIn');
@@ -1883,7 +2424,7 @@
     if (m === mode) return;
     const fl = flipMeasure(m); // M20: medidas antes da troca
     if (m === 'rack') {
-      if (lOpen) setLib(false, null, true); if (sOpen) setSheet(false, true);
+      closeCol(false); if (lOpen) setLib(false, null, true); if (sOpen) setSheet(false, true);
       mode = 'rack'; document.body.classList.add('is-rack'); document.body.classList.remove('idle', 'lib-open');
       $('palco').hidden = true; $('rackScene').hidden = false; edge.classList.remove('on');
       renderRack(false); setTimeout(() => $('rack').hidden ? $('rReopen').focus() : $('rBack').focus(), 0);
@@ -2100,13 +2641,16 @@
       added.push(p);
     });
     play(added[0]);
-    gToast('3 presets adicionados à biblioteca');
+    gToast('8 presets adicionados · 2 já estavam · 2 não converteram');
     if (lOpen) renderLib();
   }
   $('importBtn').onclick = importMilk;
 
   // ═══════════ Teclado ═══════════
   function handleEsc(e) {
+    if (fbDlgOpen) { closeFbDialog(true); return; }
+    if (fbOpen) { closeFb(true); return; }
+    if (colOpen) { closeCol(true); return; }
     if (kOpen) { closeShortcuts(); return; }
     if (!$('scDialog').hidden) { closeScDialog(); return; }
     if (pop) { closePop(true); return; }
@@ -2152,7 +2696,7 @@
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'F11') { e.preventDefault(); toggleFs(); return; }
     if (e.key === '?' && !typing) { e.preventDefault(); kOpen ? closeShortcuts() : openShortcuts(); return; }
-    if (pOpen || kOpen) return;
+    if (pOpen || kOpen || colOpen || fbOpen || fbDlgOpen) return;
     if (lOpen && libEl.contains(ae) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
       const down = e.key === 'ArrowDown';
       if (ae === libQ) { if (down) { const f = libList.querySelector('[data-col="main"]'); if (f) { e.preventDefault(); f.focus(); } } return; }
@@ -2163,15 +2707,26 @@
       return;
     }
     if (typing) return;
+    if (ae && ae.id === 'eqPlot' && /^(Arrow|Home|End)/.test(e.key)) return;
     wake();
     const k = e.key.toLowerCase();
     if (e.key === '/') { e.preventDefault(); openPalette(); }
-    else if (e.key === ' ') { if (tag === 'BUTTON' || tag === 'A' || type === 'checkbox' || type === 'radio') return; e.preventDefault(); request('random', random, false); }
+    else if (e.key === ' ') { if (tag === 'BUTTON' || tag === 'A' || type === 'checkbox' || type === 'radio') return; e.preventDefault(); request('random', e.shiftKey ? cutRun(random) : random, false); }
     else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
       if (type === 'range' || type === 'radio' || (ae && ae.getAttribute('role') === 'tab')) return;
-      e.preventDefault(); e.key === 'ArrowRight' ? request('next', next, false) : request('prev', prev, false);
+      e.preventDefault(); const fwd = e.key === 'ArrowRight', fn = fwd ? next : prev;
+      request(fwd ? 'next' : 'prev', e.shiftKey ? cutRun(fn) : fn, false);
     }
-    else if (k === 'f') toggleFav();
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      if (type === 'range' || (ae && /^(tab|menuitem|radio|menuitemradio|menuitemcheckbox)$/.test(ae.getAttribute('role') || ''))) return;
+      e.preventDefault(); keyTTime(e.key === 'ArrowUp' ? 0.5 : -0.5);
+    }
+    else if (e.key === '+' || e.key === '=') keyExpr(1);
+    else if (e.key === '-' || e.key === '−' || e.key === '_') keyExpr(-1);
+    else if (e.key === '0') keyExpr(0);
+    else if (k === 'x') e.shiftKey ? keyMem() : keyChar();
+    else if (k === 'b') keyTType(e.shiftKey ? -1 : 1);
+    else if (k === 'f') toggleFs();
     else if (k === 'r') setRot(!rotOn);
     else if (k === 't') setClean(!cleanMode, true);
     else if (k === 'e') { location.href = STUDIO_URL + '?copiar=' + cur.id; }
