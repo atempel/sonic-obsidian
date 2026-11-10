@@ -21,10 +21,18 @@ interface MenuState {
   sub: boolean
 }
 
-export function Library({ core, presets }: { core: Core; presets: readonly string[] }) {
+/** Importados (spec 022): rótulo, filtro "Importados" e "Remover importado". */
+export interface ImportsApi {
+  is(name: string): boolean
+  count(): number
+  remove(name: string): Promise<void>
+}
+
+export function Library({ core, presets, imports }: { core: Core; presets: readonly string[]; imports: ImportsApi }) {
   const open = core.state.overlay === 'library'
   const [q, setQ] = useState('')
   const [tab, setTab] = useState<Tab>('all')
+  const [impOnly, setImpOnly] = useState(false)
   const [detail, setDetail] = useState<string | null>(null)
   const [recents, setRecents] = useState<string[]>([])
   const [menu, setMenu] = useState<MenuState | null>(null)
@@ -111,11 +119,32 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
     const names =
       tab === 'recents'
         ? recents.filter((n) => allSet.has(n) && !core.isHidden(n) && n.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
-        : listFor(core, presets, allSet, tab === 'collections' ? 'all' : tab, query)
+        : listFor(core, presets, allSet, tab === 'collections' ? 'all' : tab, query).filter((n) => !(tab === 'all' && impOnly) || imports.is(n))
+    const chips =
+      tab === 'all' && !detail ? (
+        <div class="chips">
+          <button aria-pressed={impOnly} onClick={() => setImpOnly(!impOnly)}>
+            Importados
+          </button>
+        </div>
+      ) : null
     body =
       names.length === 0 ? (
-        <LibEmpty tab={tab} q={query} allHidden={allHidden} onClear={() => setQ('')} onRestore={() => restoreHidden(core)} />
+        <>
+          {chips}
+          {tab === 'all' && impOnly && !query ? (
+            <div class="empty">
+              <Icon name="file-plus-2" />
+              <span class="h">Nenhum preset importado.</span>
+              <span class="s">Arraste arquivos .milk para a janela para adicioná-los.</span>
+            </div>
+          ) : (
+            <LibEmpty tab={tab} q={query} allHidden={allHidden} onClear={() => setQ('')} onRestore={() => restoreHidden(core)} />
+          )}
+        </>
       ) : (
+        <>
+        {chips}
         <ul class="rows">
           {names.map((name) => (
             <PresetRow
@@ -123,6 +152,7 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
               core={core}
               name={name}
               q={query}
+              imported={imports.is(name)}
               onPlay={() => play(name)}
               onFav={() => fav(name)}
               onMore={(el) => {
@@ -132,6 +162,7 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
             />
           ))}
         </ul>
+        </>
       )
   }
 
@@ -194,7 +225,7 @@ export function Library({ core, presets }: { core: Core; presets: readonly strin
           </div>
         )}
       </aside>
-      {menu && <RowMenu core={core} menu={menu} setMenu={setMenu} />}
+      {menu && <RowMenu core={core} menu={menu} setMenu={setMenu} imports={imports} />}
     </>
   )
 }
@@ -203,7 +234,7 @@ function restoreHidden(core: Core): void {
   if (core.run('library.restore', { reason: 'user' }, 'ui').ok) say('Presets restaurados.')
 }
 
-function PresetRow(props: { core: Core; name: string; q: string; onPlay(): void; onFav(): void; onMore(el: HTMLElement): void }) {
+function PresetRow(props: { core: Core; name: string; q: string; imported: boolean; onPlay(): void; onFav(): void; onMore(el: HTMLElement): void }) {
   const { core, name, q } = props
   const { title, author } = splitPresetName(name)
   const playing = name === core.state.current
@@ -223,9 +254,14 @@ function PresetRow(props: { core: Core; name: string; q: string; onPlay(): void;
               <Highlight text={title} q={q} />
             </span>
           </span>
-          {author && (
+          {(author || props.imported) && (
             <span class="a">
-              por <Highlight text={author} q={q} />
+              {author && (
+                <span class="au">
+                  por <Highlight text={author} q={q} />
+                </span>
+              )}
+              {props.imported && <span class="imp-tag">Importado</span>}
             </span>
           )}
         </span>
@@ -240,7 +276,7 @@ function PresetRow(props: { core: Core; name: string; q: string; onPlay(): void;
   )
 }
 
-function RowMenu({ core, menu, setMenu }: { core: Core; menu: MenuState; setMenu(m: MenuState | null): void }) {
+function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState; setMenu(m: MenuState | null): void; imports: ImportsApi }) {
   const ref = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     ref.current?.querySelector<HTMLElement>('button')?.focus()
@@ -315,6 +351,18 @@ function RowMenu({ core, menu, setMenu }: { core: Core; menu: MenuState; setMenu
             <Icon name="eye-off" small />
             <span class="grow">Não mostrar mais</span>
           </button>
+          {imports.is(menu.name) && (
+            <button
+              role="menuitem"
+              onClick={() => {
+                setMenu(null)
+                void imports.remove(menu.name).then(() => say('Preset importado removido.'))
+              }}
+            >
+              <Icon name="trash-2" small />
+              <span class="grow">Remover importado</span>
+            </button>
+          )}
         </>
       )}
     </div>

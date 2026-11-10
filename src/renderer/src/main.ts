@@ -15,6 +15,7 @@ import { hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
+import { importMilks, type MilkInput } from './importer'
 import { SILENT_DIM, SilenceState } from './silence'
 import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
@@ -87,6 +88,8 @@ async function start(): Promise<void> {
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
   await library.loadBasePack()
+  // Importados pelo usuário (spec 022), antes do primeiro preset: o último usado pode ser um deles.
+  for (const imp of await window.so.presets.listImported().catch(() => [])) library.addImported(imp.name, imp.preset)
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
@@ -285,7 +288,24 @@ async function start(): Promise<void> {
     expressionAvailable: !!exprProbe,
     fps: () => state.fps,
     captureInfo: () => captureInfo,
-    presetCount: () => library.count
+    presetCount: () => library.count,
+    importMilk: async (files: MilkInput[], onProgress?: (done: number, total: number) => void) => {
+      const r = await importMilks(files, ctx, library, onProgress)
+      if (r.added.length) {
+        state.presetCount = library.count
+        core.events.emit('stateChanged', { origin: 'ui' }) // Biblioteca e busca veem os novos
+      }
+      return r
+    },
+    isImported: (name: string) => library.isImported(name),
+    importedCount: () => library.importedCount,
+    removeImported: async (name: string) => {
+      await window.so.presets.removeImported(name)
+      library.removeImported(name)
+      if (core.state.current === name) run('preset.next', { cut: false }, 'ui')
+      state.presetCount = library.count
+      core.events.emit('stateChanged', { origin: 'ui' })
+    }
   })
   // Abrir em tela cheia (Configurações › Geral).
   if (settings.startFullscreen && !isFullScreen()) core.run('window.fullscreen', {}, 'startup')

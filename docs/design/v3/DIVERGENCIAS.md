@@ -123,3 +123,11 @@ Protótipo `1794178325-0fd0`, página Palco integrado (`#kPanel`, `kbdBtn`, coma
 - **Boas-vindas:** a linha "Aperte ? para ver todos os atalhos" é clicável e abre o painel.
 - **`?` com o foco no filtro do painel** fecha o painel em vez de filtrar por "?".
 **Status:** aberta.
+
+### 2026-11-10 — Importar .milk · diferenças da spec 022
+Protótipo `1794178325-0fd0` (Palco integrado: `#dropzone`, rótulo "Importado", filtro "Importados"; Configurações › Biblioteca, linha "Importar presets .milk"). **No app:**
+- **Área de soltar:** só a linha "Solte para adicionar presets .milk". A linha "Arquivos de áudio tocam como fonte temporária" sai: a fonte "arquivo de áudio" ainda não existe (Fase 3, outra spec).
+- **Resumo:** o toast diz quantos entraram, quantos já estavam na biblioteca (nome igual é pulado, decisão do usuário) e quais não converteram. Nas Configurações, a nota também lista o motivo de cada falha. O protótipo só mostra o caso de sucesso.
+- **Remover importado:** fica no menu "…" da linha. O protótipo não desenha remoção.
+- **Contagem:** "Base" mostra só os presets que vêm com o app; os importados aparecem na linha de importar ("N importados").
+**Status:** aberta.

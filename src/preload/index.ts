@@ -41,7 +41,14 @@ contextBridge.exposeInMainWorld('so', {
   app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
   /** .milk (texto) → preset do Butterchurn 3, convertido no main (spec 022). */
   presets: {
-    convertMilk: (text: string): Promise<{ preset: Record<string, unknown>; ms: number }> => ipcRenderer.invoke('presets:convertMilk', String(text))
+    convertMilk: (text: string): Promise<{ preset: Record<string, unknown>; ms: number }> => ipcRenderer.invoke('presets:convertMilk', String(text)),
+    /** Importados salvos (nome + preset convertido). */
+    listImported: (): Promise<{ name: string; preset: Record<string, unknown> }[]> => ipcRenderer.invoke('presets:listImported'),
+    /** Converte de novo no main e grava fonte + cache. */
+    saveImported: (file: { name: string; text: string }): Promise<void> => ipcRenderer.invoke('presets:saveImported', { name: String(file.name), text: String(file.text) }),
+    removeImported: (name: string): Promise<void> => ipcRenderer.invoke('presets:removeImported', String(name)),
+    /** Diálogo nativo de .milk (até 200; os grandes demais voltam em tooBig). */
+    pickMilk: (): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }> => ipcRenderer.invoke('presets:pickMilk')
   },
   /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */
   collections: {

@@ -17,7 +17,7 @@ async function convertShader(src: string): Promise<string> {
   // Parênteses explícitos antes do conversor: contorno do bug de a*b*c → && (hlsl-fix.ts).
   const full = fixPreparedHeader(prepareShader(parenthesizeHlsl(src))).replace('float4 shader_body (', 'float4 main_shader_sentinel (')
   const out = await convertHLSLShader(full, 'main_shader_sentinel', 'fs')
-  if (!out) throw new Error('o conversor HLSL não gerou o shader')
+  if (!out || /parsing failed/i.test(out)) throw new Error('o conversor HLSL não conseguiu ler o shader')
   return fixConvertedGlsl(processUnOptimizedShader(out))
 }
 
@@ -25,7 +25,11 @@ export async function milkToPreset3(text: unknown): Promise<Record<string, unkno
   if (typeof text !== 'string') throw new Error('.milk precisa ser texto')
   if (text.length > MAX_BYTES) throw new Error(`.milk maior que ${MAX_BYTES / 1024} KB`)
   const p = splitPreset(text.replace(/\r\n?/g, '\n'))
-  const [warp, comp] = await Promise.all([convertShader(p.warp), convertShader(p.comp)])
+  const section = (name: string, src: string): Promise<string> =>
+    convertShader(src).catch((err: unknown) => {
+      throw new Error(`shader ${name}: ${err instanceof Error ? err.message : String(err)}`)
+    })
+  const [warp, comp] = await Promise.all([section('warp', p.warp), section('comp', p.comp)])
   return {
     version: 2,
     baseVals: p.baseVals,

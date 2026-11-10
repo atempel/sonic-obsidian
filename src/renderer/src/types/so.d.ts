@@ -18,7 +18,13 @@ interface Window {
       testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
     }
     app: { version(): Promise<string> }
-    presets: { convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }> }
+    presets: {
+      convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }>
+      listImported(): Promise<{ name: string; preset: Record<string, unknown> }[]>
+      saveImported(file: { name: string; text: string }): Promise<void>
+      removeImported(name: string): Promise<void>
+      pickMilk(): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }>
+    }
     collections: {
       export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
       import(): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }>
