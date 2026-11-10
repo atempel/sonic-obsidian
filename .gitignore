@@ -38,3 +38,6 @@ $RECYCLE.BIN/
 # Landing (gerado por npm run site:vendor)
 site/vendor/
 site/assets/audio/
+
+# Testes headless (spec 025)
+test-results/

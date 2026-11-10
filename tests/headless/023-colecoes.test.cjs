@@ -1,34 +1,19 @@
 // Teste headless da spec 023 (coleções pelo Palco), critérios 1–5. Semente da suíte de testes
 // (queue/2026-11-09-suite-testes-performance.md). Uso: `npm run build` e depois
-// `node tests/headless/023-colecoes.cjs`. Precisa do Chromium/Playwright do ambiente da nuvem.
+// `npm run test:ui` (ou `node tests/headless/023-colecoes.test.cjs`). Precisa do Chromium/Playwright do ambiente da nuvem.
 // Serve out/renderer na porta 5199 e simula window.so (incluindo presets) e o getDisplayMedia.
 // Vale para layout e estados; áudio e fps só se verificam no Windows.
-const { chromium } = require('playwright')
-const path = require('path'), http = require('http'), fs = require('fs')
-const root = path.join(__dirname, '..', '..', 'out', 'renderer')
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.wasm': 'application/wasm', '.json': 'application/json', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml' }
-const srv = http.createServer((q, r) => { const p = path.join(root, decodeURIComponent(q.url.split('?')[0]) === '/' ? 'index.html' : decodeURIComponent(q.url.split('?')[0])); fs.readFile(p, (e, d) => { if (e) { r.writeHead(404); r.end(); return } r.writeHead(200, { 'content-type': types[path.extname(p)] || 'application/octet-stream' }); r.end(d) }) }).listen(5199)
-const results = []; const ok = (n, c, extra = '') => { results.push(`${c ? 'PASS' : 'FAIL'} ${n} ${extra}`) }
+const H = require('./harness.cjs')
+const path = require('path'), os = require('os')
+const srv = H.serve(5199)
+const R = H.createResults('023-colecoes'); const ok = R.ok
 ;(async () => {
-  const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] })
-  const page = await b.newPage({ viewport: { width: 1280, height: 800 } })
+  const b = await H.launch()
+  const page = await b.newPage({ viewport: { width: 1280, height: 800 } }); R.attach(page)
   const errs = []; page.on('pageerror', e => errs.push(String(e))); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
-  await page.addInitScript(() => {
-    const lib = { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [
-      { id: 'c1', name: 'Calmos', presets: [], intervalSeconds: 30 }, { id: 'c2', name: 'Festa', presets: [], intervalSeconds: 30 }] }
-    window.__saves = []
-    window.so = {
-      settings: { load: async () => ({ welcomeSeen: true }), save: async () => {} },
-      library: { load: async () => lib, save: async (d) => { window.__saves.push(JSON.parse(JSON.stringify(d))) } },
-      window: { toggleFullScreen: async () => {}, minimize: async () => {}, close: async () => {} },
-      system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async () => {}, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false }) },
-      app: { version: async () => '0.5.0' },
-      presets: { convertMilk: async () => ({ preset: {}, ms: 0 }), listImported: async () => [], saveImported: async () => {}, removeImported: async () => {}, pickMilk: async () => ({ files: [], tooBig: [], extra: 0 }) },
-      collections: { export: async () => ({ ok: true }), import: async () => ({ ok: false, canceled: true }) },
-      log: (m) => console.log('[so.log]', m), mark: () => {}, showLog: async () => {}
-    }
-    navigator.mediaDevices.getDisplayMedia = async () => { const ac = new AudioContext(); const o = ac.createOscillator(); const d = ac.createMediaStreamDestination(); o.connect(d); o.start(); const s = d.stream; const c = document.createElement('canvas'); s.addTrack(c.captureStream(1).getVideoTracks()[0]); return s }
-  })
+  await H.mockSo(page, { settings: { welcomeSeen: true, rotation: { enabled: false, intervalSeconds: 30 } }, library: { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [
+    { id: 'c1', name: 'Calmos', presets: [], intervalSeconds: 30 }, { id: 'c2', name: 'Festa', presets: [], intervalSeconds: 30 }] } })
+  await H.mockAudio(page)
   await page.goto('http://localhost:5199/')
   await page.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
   await page.waitForTimeout(1500)
@@ -39,7 +24,7 @@ const results = []; const ok = (n, c, extra = '') => { results.push(`${c ? 'PASS
   const c0 = await cur()
   // 1
   await page.mouse.move(600, 400); await page.click(btn)
-  ok('1a painel abre', await page.isVisible(pop)); await page.screenshot({ path: path.join(require('os').tmpdir(), '023-pop.png') }); ok('1f painel não é cortado (clique acerta a linha)', await page.evaluate(() => { const b = document.querySelector('.menu.collect [role=menuitemcheckbox]').getBoundingClientRect(); return document.elementFromPoint(b.x + 20, b.y + b.height / 2)?.closest('.menu.collect') != null }))
+  ok('1a painel abre', await page.isVisible(pop)); await page.screenshot({ path: path.join(os.tmpdir(), '023-pop.png') }); ok('1f painel não é cortado (clique acerta a linha)', await page.evaluate(() => { const b = document.querySelector('.menu.collect [role=menuitemcheckbox]').getBoundingClientRect(); return document.elementFromPoint(b.x + 20, b.y + b.height / 2)?.closest('.menu.collect') != null }))
   const rows = await page.$$eval(`${pop} [role=menuitemcheckbox]`, es => es.map(e => [e.textContent, e.getAttribute('aria-checked')]))
   ok('1b lista as 2 coleções, nenhuma marcada', rows.length === 2 && rows.every(r => r[1] === 'false'), JSON.stringify(rows))
   ok('1c aria-expanded', (await page.getAttribute(btn, 'aria-expanded')) === 'true')
@@ -133,8 +118,8 @@ const results = []; const ok = (n, c, extra = '') => { results.push(`${c ? 'PASS
   const tab = await page.$('[role=tab]:has-text("Coleções")'); if (tab) await tab.click(); await page.waitForTimeout(300)
   const libText = await page.evaluate(() => document.querySelector('.drawer, .library, [class*=lib]')?.innerText ?? document.body.innerText)
   ok('2h Biblioteca › Coleções reflete', /Festa[\s\S]*1 preset/.test(libText) && /Noite[\s\S]*1 preset/.test(libText) && /Calmos[\s\S]*1 preset/.test(libText), libText.slice(0, 300).replace(/\n/g, ' | '))
-  await page.screenshot({ path: path.join(require('os').tmpdir(), '023-lib.png') })
+  await page.screenshot({ path: path.join(os.tmpdir(), '023-lib.png') })
   ok('sem erros na página', errs.filter(e => !/getDisplayMedia|AudioContext/.test(e)).length === 0, JSON.stringify(errs.slice(0, 5)))
-  console.log(results.join('\n')); console.log(`${results.filter(r => r.startsWith('PASS')).length}/${results.length}`)
-  await b.close(); srv.close()
-})().catch(e => { console.log(results.join('\n')); console.error(e); process.exit(1) })
+  const code = await R.finish()
+  await b.close(); srv.close(); process.exit(code)
+})().catch(e => { R.dump(); console.error(e); process.exit(1) })

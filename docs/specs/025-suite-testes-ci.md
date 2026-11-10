@@ -12,7 +12,7 @@ Transformar os testes headless em uma suíte versionada que roda em todo PR, no 
 
 ## Escopo
 **P0 — interface e estados no CI (Ubuntu)**
-- `playwright@1.63.0` como devDependency (mesma versão do ambiente da nuvem; Apache-2.0; checagem em `docs/dependencias.md`).
+- `playwright@1.63.0` (mesma versão do ambiente da nuvem; Apache-2.0; checagem em `docs/dependencias.md`). Sem devDependency por enquanto: o CI instala com `npm install --no-save` (o `npm ci` falharia com o lock desatualizado); adicionar ao `package.json` depende do ok do usuário.
 - `tests/headless/harness.cjs`: servidor de `out/renderer`, `window.so` simulado e `getDisplayMedia` com áudio sintético (bumbo, ambiente, silêncio), reaproveitados pelos testes.
 - `npm run test:ui`: roda todos os `tests/headless/*.test.cjs` em sequência e sai com erro se algum falhar.
 - Os testes 023 (coleções) e 024 (beat) passam a usar o harness. Entram testes curtos de regressão de interface:
@@ -43,5 +43,5 @@ Transformar os testes headless em uma suíte versionada que roda em todo PR, no 
 
 ## Referências
 - [queue/2026-11-09-suite-testes-performance.md](../../queue/2026-11-09-suite-testes-performance.md)
-- `tests/headless/023-colecoes.cjs`, `tests/headless/024-beat.cjs`
+- `tests/headless/023-colecoes.test.cjs`, `tests/headless/024-beat.test.cjs`
 - `.github/workflows/build-windows.yml`
