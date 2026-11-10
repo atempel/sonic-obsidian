@@ -4,6 +4,8 @@ import { KeyCaps, takeSettingsSection } from './ShortcutsPanel'
 import { SHORTCUT_GROUPS, keysText } from './shortcuts'
 import type { Core } from '../core/commands'
 import {
+  BEAT_BARS,
+  type BeatBars,
   BLEND_MAX_S,
   BLEND_MIN_S,
   BLEND_TYPES,
@@ -354,8 +356,11 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
       <Grp title="Transição">
         <BlendRow core={core} run={run} target="auto" label="Na troca automática" help="Tipo e tempo da mistura quando a rotação troca o preset." available={bridge.blendTypesAvailable} />
         <BlendRow core={core} run={run} target="manual" label="Quando você troca" help="Teclado, faixa, Biblioteca e busca. Shift na troca faz corte seco." available={bridge.blendTypesAvailable} />
-        <Row label="Trocar no beat" help="Muda de preset quando detectar uma batida forte." phase="Fase 3">
-          <Sw id="st-beat" label="Trocar no beat" checked={false} disabled />
+        <Row id="st-beat" label="Trocar no beat" help="Muda de preset quando detectar uma batida forte." kw="bpm compasso batida segurar">
+          <Sw id="st-beat" label="Trocar no beat" checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+        </Row>
+        <Row id="st-bars" label="Compassos" help="Com batida estável, troca a cada tantos compassos de 4 batidas. Sem batida, vale o intervalo em segundos.">
+          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compassos`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
       </Grp>
       <Grp title="Texto sobre o visual">

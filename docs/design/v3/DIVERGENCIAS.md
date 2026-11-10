@@ -139,3 +139,12 @@ Protótipo `1794178325-0fd0` não tem esta tela. **No app:**
 - sem atalho de teclado (decisão do usuário).
 A sessão de design pode propor o desenho definitivo.
 **Status:** Aceita (design atualizado na versão 1794281099-42d3). Ação no repo: ponto violeta de 4 px no botão quando o preset atual está em alguma coleção e o toast "Criada “Nome” com este preset."
+
+### 2026-11-10 — Troca no beat e segurar · diferenças da spec 024
+Protótipo `1794281099-42d3`, página Palco integrado (`#beatSwitch`, `.bdot`, `.ibtn.wait`, M23) e Configurações (linha `beat`). **No app:**
+- **Segurar (`Enter`):** a área da rotação na faixa troca o ícone por um cadeado e mostra "Segurado" (spec 024; o protótipo não desenha). Um toast confirma: "Visual segurado. Enter solta." / "Visual solto."
+- **Ponto de beat:** fica dentro do botão da rotação, depois da contagem, e só aparece com "Trocar no beat" ligado e a batida estável. No protótipo, `#bdot` está no Rack.
+- **Ajustes rápidos:** com "Trocar no beat" ligado, "Trocar a cada" lista 4/8/16/32 compassos, e uma nota diz o intervalo de reserva ("Sem batida estável, troca a cada 30 s. Enter segura o visual.").
+- **Configurações › Transição:** além do switch "Trocar no beat", uma linha "Compassos" com o mesmo seletor.
+- **M23:** um segundo pedido durante a espera substitui o primeiro (spec 024); no protótipo, repetir a mesma tecla cancela.
+**Status:** Aberta (aguarda a sessão de design).

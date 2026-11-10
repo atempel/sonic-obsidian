@@ -10,6 +10,9 @@ export const ROTATION_STEPS_S = [15, 30, 45, 90]
 export const GAIN_MIN_DB = -12
 export const GAIN_MAX_DB = 12
 export const RECENTS_MAX = 8
+/** Troca no beat (spec 024): compassos de 4 batidas. */
+export const BEAT_BARS = [4, 8, 16, 32] as const
+export type BeatBars = (typeof BEAT_BARS)[number]
 
 /** Tipos de transição (spec 013), na ordem que `B` percorre. */
 export const BLEND_TYPES = ['cut', 'crossfade', 'wipe', 'plasma', 'radial', 'random'] as const
@@ -110,6 +113,9 @@ export interface Settings {
     intervalSeconds: number
     order: RotationOrder
     collectionId: string | null
+    /** Trocar no beat (spec 024): conta compassos em vez de segundos quando há batida estável. */
+    onBeat: boolean
+    bars: BeatBars
   }
   /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
   blend: { manual: BlendRule; auto: BlendRule }
@@ -159,7 +165,7 @@ export function defaultSettings(): Settings {
     version: 2,
     gainDb: 0,
     gainDefaultDb: 0,
-    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null },
+    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 16 },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { level: 0, curve: 'b', adaptation: 'normal' },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
@@ -254,7 +260,9 @@ export function sanitizeSettings(raw: unknown): Settings {
       enabled: bool(rot.enabled, d.rotation.enabled),
       intervalSeconds: num(rot.intervalSeconds, 5, 600, d.rotation.intervalSeconds),
       order: oneOf(rot.order, ['random', 'collection'], d.rotation.order),
-      collectionId: typeof rot.collectionId === 'string' ? rot.collectionId : null
+      collectionId: typeof rot.collectionId === 'string' ? rot.collectionId : null,
+      onBeat: bool(rot.onBeat, d.rotation.onBeat),
+      bars: BEAT_BARS.includes(rot.bars as BeatBars) ? (rot.bars as BeatBars) : d.rotation.bars
     },
     blend: {
       manual: sanitizeBlendRule(blend.manual, blend.manualSeconds, d.blend.manual),

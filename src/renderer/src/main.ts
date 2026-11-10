@@ -1,5 +1,6 @@
 import { captureSystemAudio } from './capture'
-import { Core, type CaptureCheck, type Origin } from './core/commands'
+import { Core, type CaptureCheck, type Origin, type WaitKey } from './core/commands'
+import { BeatTracker } from './beat'
 import {
   BLEND_TYPE_LABEL,
   EXPRESSION_ADAPTATIONS,
@@ -63,6 +64,11 @@ async function start(): Promise<void> {
   const preGain = ctx.createAnalyser()
   preGain.fftSize = 1024
   const preSamples = new Float32Array(preGain.fftSize)
+  // Detecção de batida (spec 024): ramo do mesmo sinal antes do ganho, com buffer longo,
+  // lido pelo relógio do áudio (não depende do fps). O analyser repassa o som sem mudá-lo.
+  const beatTap = ctx.createAnalyser()
+  beatTap.fftSize = 32768
+  preGain.connect(beatTap)
   const silence = new SilenceState()
   const dim = document.getElementById('dim') as HTMLElement
 
@@ -99,10 +105,48 @@ async function start(): Promise<void> {
   const exprProbe = hookExpression(viz.visualizer, () => settings.expression)
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)
-  const rotation = new AutoRotation(performance.now(), () => ({
-    enabled: settings.rotation.enabled,
-    intervalSeconds: core.rotationIntervalSeconds
-  }))
+  // ── Batida (spec 024): só mudanças de estado vão para o log, nunca cada batida ──
+  const beat = new BeatTracker(beatTap, ctx, (locked, bpm) => {
+    window.so.log(locked ? `beat: estável a ${bpm.toFixed(0)} BPM` : 'beat: perdido, voltando a segundos')
+    if (!locked) {
+      rotation.beatLost()
+      flushPending()
+    }
+    core.events.emit('beatState', { locked, bpm })
+  })
+  const rotation = new AutoRotation(
+    performance.now(),
+    () => ({
+      enabled: settings.rotation.enabled,
+      intervalSeconds: core.rotationIntervalSeconds,
+      held: core.state.held,
+      onBeat: settings.rotation.onBeat,
+      bars: settings.rotation.bars
+    }),
+    () => beat.locked
+  )
+  // Troca manual no beat (M23): vale o último pedido; sai na próxima batida ou na hora sem batida.
+  let pending: { key: WaitKey; go: () => void; since: number } | null = null
+  const setPending = (p: typeof pending): void => {
+    pending = p
+    core.events.emit('beatWait', { key: p?.key ?? null })
+  }
+  const flushPending = (): void => {
+    const p = pending
+    if (!p) return
+    setPending(null)
+    p.go()
+  }
+  const WAIT_CMD: Record<WaitKey, string> = { next: 'preset.next', previous: 'preset.previous', random: 'preset.random' }
+  const request = (key: WaitKey, cut = false, origin: Origin = 'keyboard'): void => {
+    const go = (): void => void run(WAIT_CMD[key], { cut }, origin)
+    if (!settings.rotation.onBeat || !beat.locked) {
+      if (pending) setPending(null)
+      go()
+      return
+    }
+    setPending({ key, go, since: performance.now() })
+  }
 
   // ── Captura do áudio do sistema, com checklist (spec 012) e "Tentar de novo" ──
   let source: MediaStreamAudioSourceNode | null = null
@@ -223,13 +267,20 @@ async function start(): Promise<void> {
       gain.gain.setTargetAtTime(10 ** (settings.gainDb / 20), ctx.currentTime, 0.02)
     }
     // Ligar a rotação ou mudar o intervalo recomeça a contagem (teclado ou faixa).
-    const key = `${settings.rotation.enabled}:${core.rotationIntervalSeconds}`
+    // Trocar no beat, compassos e segurar/soltar também recomeçam (spec 024).
+    const r = settings.rotation
+    const key = `${r.enabled}:${core.rotationIntervalSeconds}:${r.onBeat}:${r.bars}:${core.state.held}`
     if (key !== rotationKey) {
       rotationKey = key
       rotation.restart(performance.now())
     }
+    if (!r.onBeat) flushPending()
     state.gainDb = settings.gainDb
-    state.rotation = settings.rotation.enabled ? `${core.rotationIntervalSeconds} s` : 'pausada'
+    state.rotation = core.state.held
+      ? 'segurada'
+      : r.enabled
+        ? `${core.rotationIntervalSeconds} s${r.onBeat ? ` ou ${r.bars} compassos` : ''}`
+        : 'pausada'
     state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `limite ${settings.fpsLimit}`
   }
   core.events.on('stateChanged', applyState)
@@ -280,6 +331,10 @@ async function start(): Promise<void> {
     core,
     presets: () => library.all(),
     rotationRemaining: () => rotation.remaining(performance.now()),
+    rotationProgress: () => rotation.progress(performance.now()),
+    rotationBars: () => (rotation.barsMode ? rotation.barsRemaining() : null),
+    beatLocked: () => beat.locked,
+    request: (key: WaitKey) => request(key, false, 'ui'),
     retryCapture: () => connectCapture(),
     captureChecks: () => checks,
     openSoundSettings: () => void window.so.system.openSoundSettings(),
@@ -356,6 +411,10 @@ async function start(): Promise<void> {
     run('overlayText.set', { clean: !settings.overlayText.clean })
     showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
   }
+  const toggleHold = (): void => {
+    const r = core.run<boolean>('preset.hold', {}, 'keyboard')
+    if (r.ok) showToast(r.value ? 'Visual segurado. Enter solta.' : 'Visual solto.', { force: true })
+  }
   const toggleRotation = (): void => {
     run('rotation.set', { enabled: !settings.rotation.enabled })
     showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
@@ -368,9 +427,10 @@ async function start(): Promise<void> {
     settings: () => toggleOverlay(core, 'settings'),
     shortcuts: () => toggleShortcuts(core),
     fullscreen: () => run('window.fullscreen', {}, 'ui'),
-    random: () => run('preset.random', { cut: false }, 'ui'),
-    next: () => run('preset.next', { cut: false }, 'ui'),
-    previous: () => run('preset.previous', { cut: false }, 'ui'),
+    random: () => request('random', false, 'ui'),
+    next: () => request('next', false, 'ui'),
+    previous: () => request('previous', false, 'ui'),
+    hold: toggleHold,
     hide: () => idle.hideNow(),
     favorite: () => {
       const r = core.run<boolean>('library.favorite', {}, 'ui')
@@ -454,14 +514,23 @@ async function start(): Promise<void> {
     }
     // Espaço com foco num botão aciona o botão (acessibilidade), não o aleatório.
     if (e.code === 'Space' && t?.closest('button, a')) return
+    // Enter segura o visual (spec 024), mas num botão ou link continua acionando o controle,
+    // e com um painel aberto é dele.
+    if (e.key === 'Enter') {
+      if (t?.closest('button, a, [role="button"], [role="menuitem"], [tabindex]') || core.state.overlay) return
+      e.preventDefault()
+      toggleHold()
+      return
+    }
     let handled = true
     // Shift na troca = corte seco na hora, sem mudar o ajuste salvo (spec 013).
     const cut = e.shiftKey
     // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md), agora como comandos do Core.
+    // Com "Trocar no beat", as trocas esperam a próxima batida (M23), Shift incluído.
     if (e.code === 'ArrowRight') {
-      run('preset.next', { cut })
+      request('next', cut)
     } else if (e.code === 'ArrowLeft') {
-      run('preset.previous', { cut })
+      request('previous', cut)
     } else if (e.code === 'KeyX') {
       // X cicla o Caráter; Shift+X a Memória (spec 015).
       if (e.shiftKey) {
@@ -474,7 +543,7 @@ async function start(): Promise<void> {
         showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`)
       }
     } else if (e.code === 'Space') {
-      run('preset.random', { cut })
+      request('random', cut)
     } else if (e.code === 'KeyB') {
       // B / Shift+B: ciclo do tipo da troca manual.
       run('blend.set', { target: 'manual', type: cycleBlendType(settings.blend.manual.type, e.shiftKey ? -1 : 1) })
@@ -525,6 +594,8 @@ async function start(): Promise<void> {
   let frames = 0
   let windowStart = performance.now()
   let firstFrame = false
+  let beatCost = 0
+  let beatFrames = 0
   // Render resiliente (spec 021): um preset pode travar dentro do WASM ("float unrepresentable")
   // ou quebrar a transição seguinte. 3 erros em 1 s = o preset é pulado até o app fechar.
   const broken = new Set<string>()
@@ -584,6 +655,17 @@ async function start(): Promise<void> {
     lastRender = now
     const speed = silence.step(dt)
     dim.style.opacity = String(((1 - speed) / (1 - 0.15)) * SILENT_DIM)
+    const t0Beat = performance.now()
+    const crossed = beat.update(now, silence.resting)
+    if (crossed > 0) {
+      for (let i = 0; i < crossed; i++) rotation.beat()
+      core.events.emit('beatTick', {})
+      flushPending()
+    }
+    // Rede de segurança: nada espera mais que ~1 batida.
+    if (pending && (!beat.locked || now - pending.since > beat.periodMs * 1.5)) flushPending()
+    beatCost += performance.now() - t0Beat
+    beatFrames++
     if (rotation.due(now)) run('rotation.advance', {}, 'rotation')
     renderSafe(dt * speed)
     if (!firstFrame) {
@@ -600,6 +682,10 @@ async function start(): Promise<void> {
         const ex = settings.expression
         state.expression = `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
       }
+      const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} batidas (${rotation.barsRemaining()} c restantes)` : ''
+      state.beat = `beat ${beat.locked ? 'estável' : 'procurando'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confiança ${beat.confidence.toFixed(2)}${bs} · detecção ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/quadro`
+      beatCost = 0
+      beatFrames = 0
       const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
       if (mem) state.heapMb = Math.round(mem.usedJSHeapSize / 1048576)
       if (!hudEl.hidden) hud.show(state)

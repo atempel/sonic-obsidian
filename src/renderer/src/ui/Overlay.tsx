@@ -10,7 +10,7 @@ import './ajustes.css'
 import './settings.css'
 import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
-import type { CaptureCheck, Core } from '../core/commands'
+import type { CaptureCheck, Core, WaitKey } from '../core/commands'
 import type { ImportResult, MilkInput } from '../importer'
 import { Icon } from './icons'
 import { CollectButton } from './CollectPop'
@@ -38,6 +38,14 @@ export interface PalcoBridge {
   presets(): readonly string[]
   /** Segundos até a próxima troca automática. */
   rotationRemaining(): number
+  /** Fração já percorrida do intervalo (0–1), em segundos ou em compassos. */
+  rotationProgress(): number
+  /** Compassos que faltam, ou `null` quando a contagem é em segundos (spec 024). */
+  rotationBars(): number | null
+  /** Batida estável agora (spec 024). */
+  beatLocked(): boolean
+  /** Troca manual que espera a próxima batida com "Trocar no beat" (M23). */
+  request(key: WaitKey): void
   /** Refaz a captura passo a passo (spec 012); `true` se funcionou. */
   retryCapture(): Promise<boolean>
   captureChecks(): CaptureCheck[]
@@ -203,26 +211,49 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   const authorEl = useRef<HTMLDivElement>(null)
   const time = useRef<HTMLSpanElement>(null)
   const fpsEl = useRef<HTMLSpanElement>(null)
-  const { settings, current } = core.state
+  const bdot = useRef<HTMLSpanElement>(null)
+  const [locked, setLocked] = useState(bridge.beatLocked())
+  const [wait, setWait] = useState<WaitKey | null>(null)
+  const { settings, current, held } = core.state
   const rotOn = settings.rotation.enabled
+  const onBeat = settings.rotation.onBeat
   const fav = core.isFavorite(current)
   const fullscreen = bridge.isFullScreen()
 
   // Progresso da rotação: DOM direto, ~4×/s basta para m:ss e a linha.
   useEffect(() => {
     const tick = (): void => {
-      const on = core.state.settings.rotation.enabled
-      const interval = core.rotationIntervalSeconds
-      const left = bridge.rotationRemaining()
-      lineP.current = on ? Math.min(1, Math.max(0, 1 - left / interval)) : 0
+      const on = core.state.settings.rotation.enabled && !core.state.held
+      const bars = bridge.rotationBars()
+      lineP.current = on ? bridge.rotationProgress() : 0
       if (line.current) line.current.style.transform = `scaleX(${lineP.current})`
-      if (time.current) time.current.textContent = on ? mmss(left) : 'off'
+      if (time.current) time.current.textContent = core.state.held ? '' : !on ? 'off' : bars !== null ? `${bars} c` : mmss(bridge.rotationRemaining())
       if (fpsEl.current) fpsEl.current.textContent = `${Math.round(bridge.fps())} fps`
     }
     tick()
     const id = window.setInterval(tick, 250)
     return () => window.clearInterval(id)
   }, [bridge, core])
+
+  // Batida (spec 024): o ponto pisca direto no DOM (sem re-render) e some sem batida estável.
+  useEffect(() => {
+    let t: number | undefined
+    const offs = [
+      core.events.on('beatTick', () => {
+        const d = bdot.current
+        if (!d) return
+        d.classList.add('on')
+        window.clearTimeout(t)
+        t = window.setTimeout(() => d.classList.remove('on'), 80)
+      }),
+      core.events.on('beatState', ({ locked }) => setLocked(locked)),
+      core.events.on('beatWait', ({ key }) => setWait(key))
+    ]
+    return () => {
+      window.clearTimeout(t)
+      offs.forEach((off) => off())
+    }
+  }, [core])
 
   // M02 (título e autor trocam em pilha) e M03 (a linha esvazia) na troca de preset.
   useLayoutEffect(() => {
@@ -300,43 +331,52 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
         </div>
         <div class="strip-t">
           <button
-            class="ibtn"
+            class={wait === 'previous' ? 'ibtn wait' : 'ibtn'}
+            aria-busy={wait === 'previous' || undefined}
             aria-label="Preset anterior"
             title="Anterior (←)"
             onClick={(e) => {
               if (e.detail > 0) nudgeIcon(e.currentTarget, -2)
-              core.run('preset.previous', {}, 'ui')
+              bridge.request('previous')
             }}
           >
             <Icon name="skip-back" />
           </button>
           <button
-            class="ibtn"
+            class={wait === 'random' ? 'ibtn wait' : 'ibtn'}
+            aria-busy={wait === 'random' || undefined}
             aria-label="Preset aleatório"
             title="Aleatório (Espaço)"
             onClick={(e) => {
               if (e.detail > 0) shuffleIcon(e.currentTarget)
-              core.run('preset.random', {}, 'ui')
+              bridge.request('random')
             }}
           >
             <Icon name="shuffle" />
           </button>
           <button
-            class="ibtn"
+            class={wait === 'next' ? 'ibtn wait' : 'ibtn'}
+            aria-busy={wait === 'next' || undefined}
             aria-label="Próximo preset"
             title="Próximo (→)"
             onClick={(e) => {
               if (e.detail > 0) nudgeIcon(e.currentTarget, 2)
-              core.run('preset.next', {}, 'ui')
+              bridge.request('next')
             }}
           >
             <Icon name="skip-forward" />
           </button>
           <span class="sep" aria-hidden="true" />
-          <button class="rot" aria-pressed={rotOn} title="Rotação automática (R)" onClick={() => core.run('rotation.set', { enabled: !rotOn }, 'ui')}>
-            <Icon name="repeat" />
-            <span>Rotação</span>
-            <span class="num" ref={time} />
+          <button
+            class={held ? 'rot held' : 'rot'}
+            aria-pressed={rotOn}
+            title={held ? 'Visual segurado: Enter solta (R liga e desliga a rotação)' : `Rotação automática (R)${onBeat ? ' · no beat' : ''}`}
+            onClick={() => core.run('rotation.set', { enabled: !rotOn }, 'ui')}
+          >
+            <Icon name={held ? 'lock' : 'repeat'} />
+            <span>{held ? 'Segurado' : 'Rotação'}</span>
+            <span class="num" ref={time} hidden={held} />
+            {onBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label="Batida estável" title="Batida estável" />}
           </button>
         </div>
         <div class="tail">

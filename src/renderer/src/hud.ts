@@ -11,6 +11,8 @@ export interface HudState {
   expression?: string
   /** Memória JS do renderer (MB), para ver crescimento em sessões longas. */
   heapMb?: number
+  /** Spec 024: BPM, confiança, compassos e custo da detecção. */
+  beat?: string
   error?: string
 }
 
@@ -28,6 +30,7 @@ export class Hud {
       `${s.preset}\n` +
       `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressividade indisponível'}\n` +
-      `→ ← presets · + − 0 expressividade · X caráter · Shift+X memória · B ↑↓ transição · T modo limpo · Espaço aleatório`
+      `${s.beat ?? 'beat: aguardando'}\n` +
+      `→ ← presets · + − 0 expressividade · X caráter · Shift+X memória · B ↑↓ transição · T modo limpo · Espaço aleatório · Enter segurar`
   }
 }
