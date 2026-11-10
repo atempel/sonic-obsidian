@@ -108,6 +108,36 @@ export class PresetLibrary {
     this.names = this.names.filter((n) => n !== name)
   }
 
+  /** Meus presets (Estúdio, spec 026): nome (= título) → id da pasta e crédito. */
+  private readonly mine = new Map<string, { id: string; meta: SoMineMeta }>()
+
+  mineInfo(name: string): { id: string; meta: SoMineMeta } | null {
+    return this.mine.get(name) ?? null
+  }
+
+  get mineCount(): number {
+    return this.mine.size
+  }
+
+  /** Acrescenta ou atualiza um "meu" preset (salvar de novo troca o preset guardado). */
+  setMine(name: string, id: string, meta: SoMineMeta, preset: Preset): void {
+    this.mine.set(name, { id, meta })
+    if (this.presets.has(name)) this.presets.set(name, preset)
+    else this.addPresets({ [name]: preset })
+  }
+
+  removeMine(name: string): void {
+    if (!this.mine.delete(name)) return
+    this.presets.delete(name)
+    this.names = this.names.filter((n) => n !== name)
+  }
+
+  /** Nome livre: "<nome>", senão "<nome> (2)", "(3)"… */
+  freeName(base: string): string {
+    if (!this.presets.has(base)) return base
+    for (let i = 2; ; i++) if (!this.presets.has(`${base} (${i})`)) return `${base} (${i})`
+  }
+
   /** Acrescenta presets (o pacote 3.x exporta o mapa nome → preset). */
   addPresets(map: Record<string, Preset>): void {
     for (const [name, preset] of Object.entries(map)) {

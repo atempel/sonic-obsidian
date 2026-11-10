@@ -4,6 +4,24 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-10 (noite) — Claude Code (nuvem, claude.ai/code) — branch `claude/vibrant-pascal-rqir88`
+**Fez:**
+- **Design checado:** `1794281099-42d3`, sem mudança.
+- **Respostas da 026 coletadas** (camada em tela cheia; nome perguntado no 1º salvar + campo em Configurações; `bas_att` na 027; laço testado num Worker). Spec atualizada.
+- **Estúdio P0 (spec 026, #74), no PR #79:**
+  - editor das três equações com compilação ao vivo, erro com bloco e linha, e a última versão válida tocando;
+  - Worker com `eel-wasm` e teto de 1 s;
+  - salvar em `presets/mine/<id>/`, com crédito "baseado em";
+  - filtro "Meus" e "Remover meu preset" na Biblioteca;
+  - rotação parada.
+- **Teste headless** `026-estudio.test.cjs`: 48/48; a suíte passa 7/7. O mock comum ganhou `listMine/saveMine/removeMine`.
+**Deixou em:**
+- **PR #79 mergeado** com o ok do usuário, depois de 2 rodadas de teste no Windows. Na 1ª, o laço infinito não congelou. Vieram dois relatos: a seleção de texto na interface (agora só campos, shaders e erros) e o efeito que travou. Para o travamento, o Worker passou a recusar valores NaN/infinito. Na 2ª: "funcionou".
+- **Novo pedido:** o beat às vezes trava em outro instrumento, e não na batida principal. Stub em `queue/2026-11-10-beat-batida-principal.md` e item no TASKS.
+- **Próximo:** Estúdio P1 (spec 027, #75), revisar a spec e trazer as perguntas; ou planejar o beat na batida principal.
+- **Não medido à parte:** fps e GPU numa sessão longa com o Estúdio aberto (critério 9). O usuário validou o uso geral.
+- **A refazer:** checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-10 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/sleepy-darwin-8zm6g6` (continuação)
 **Fez:**
 - **PR #76 mergeado**, com o ok do usuário para o Playwright no CI: suíte headless (025 P0) e specs do Estúdio 026/027.

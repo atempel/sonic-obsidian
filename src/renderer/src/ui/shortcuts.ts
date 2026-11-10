@@ -47,7 +47,8 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { label: 'Busca rápida', keys: [['/'], ['Ctrl', 'K']] },
       { label: 'Biblioteca', keys: [['L']] },
       { label: 'Ajustes rápidos', keys: [[',']] },
-      { label: 'Configurações', keys: [['Ctrl', ',']] }
+      { label: 'Configurações', keys: [['Ctrl', ',']] },
+      { label: 'Abrir o Estúdio', keys: [['E']] }
     ]
   },
   {
@@ -112,6 +113,7 @@ export type ActionId =
   | 'hide'
   | 'hold'
   | 'breath'
+  | 'studio'
 
 export interface Command {
   id: ActionId
@@ -135,6 +137,7 @@ export const COMMANDS: Command[] = [
   { id: 'next', label: 'Próximo preset', keys: ['→'], icon: 'skip-forward' },
   { id: 'previous', label: 'Preset anterior', keys: ['←'], icon: 'skip-back' },
   { id: 'hide', label: 'Esconder controles', keys: ['H'], icon: 'eye-off' },
+  { id: 'studio', label: 'Abrir o Estúdio', keys: ['E'], icon: 'pencil' },
   // Sem tecla no Palco: F é tela cheia (decisão do usuário; DIVERGENCIAS 2026-11-09).
   { id: 'favorite', label: 'Favoritar preset atual', keys: [], icon: 'star' }
 ]

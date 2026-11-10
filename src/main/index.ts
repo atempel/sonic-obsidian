@@ -5,6 +5,7 @@ import { log, logMetrics, logPath } from './log'
 import { mark } from './startup'
 import { milkToPreset3 } from './milk'
 import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
+import { listMine, removeMine, saveMine } from './mine'
 
 mark('main.js')
 import { JsonStore } from './store'
@@ -82,6 +83,14 @@ function registerStores(): void {
   ipcMain.handle('presets:saveImported', (_e, file: unknown) => saveImported(milkFile(file)))
   ipcMain.handle('presets:removeImported', (_e, name: unknown) => removeImported(name))
   ipcMain.handle('presets:pickMilk', (e) => pickMilkFiles(BrowserWindow.fromWebContents(e.sender)))
+  // Meus presets (Estúdio, spec 026): o main gera o id e sanitiza o preset antes de gravar.
+  ipcMain.handle('presets:listMine', () => listMine())
+  ipcMain.handle('presets:saveMine', async (_e, data: unknown) => {
+    const r = await saveMine(data)
+    log('main', `estúdio: salvo ${r.meta.title} (${r.id})`)
+    return r
+  })
+  ipcMain.handle('presets:removeMine', (_e, id: unknown) => removeMine(id))
 }
 
 /**

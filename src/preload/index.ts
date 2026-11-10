@@ -10,6 +10,18 @@ const store = (name: 'settings' | 'library') => ({
   save: (data: unknown): Promise<void> => ipcRenderer.invoke('store:save', name, data)
 })
 
+interface MineMeta {
+  title: string
+  author: string
+  basedOn: { name: string; author: string } | null
+  createdAt: string
+}
+interface MineEntry {
+  id: string
+  meta: MineMeta
+  preset: Record<string, unknown>
+}
+
 contextBridge.exposeInMainWorld('so', {
   settings: store('settings'),
   library: store('library'),
@@ -48,7 +60,12 @@ contextBridge.exposeInMainWorld('so', {
     saveImported: (file: { name: string; text: string }): Promise<void> => ipcRenderer.invoke('presets:saveImported', { name: String(file.name), text: String(file.text) }),
     removeImported: (name: string): Promise<void> => ipcRenderer.invoke('presets:removeImported', String(name)),
     /** Diálogo nativo de .milk (até 200; os grandes demais voltam em tooBig). */
-    pickMilk: (): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }> => ipcRenderer.invoke('presets:pickMilk')
+    pickMilk: (): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }> => ipcRenderer.invoke('presets:pickMilk'),
+    /** Meus presets (Estúdio, spec 026): o main gera o id e sanitiza o preset. */
+    listMine: (): Promise<MineEntry[]> => ipcRenderer.invoke('presets:listMine'),
+    saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: MineMeta }> =>
+      ipcRenderer.invoke('presets:saveMine', data),
+    removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id))
   },
   /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */
   collections: {

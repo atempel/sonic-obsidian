@@ -33,7 +33,7 @@ async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = 
       window: { toggleFullScreen: async () => {}, minimize: async () => {}, close: async () => {} },
       system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async () => {}, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false }) },
       app: { version: async () => '0.5.0' },
-      presets: { convertMilk: async () => ({ preset: {}, ms: 0 }), listImported: async () => [], saveImported: async () => {}, removeImported: async () => {}, pickMilk: async () => ({ files: [], tooBig: [], extra: 0 }) },
+      presets: { convertMilk: async () => ({ preset: {}, ms: 0 }), listImported: async () => [], saveImported: async () => {}, removeImported: async () => {}, pickMilk: async () => ({ files: [], tooBig: [], extra: 0 }), listMine: async () => [], saveMine: async () => ({ id: '0'.repeat(24), meta: {} }), removeMine: async () => {} },
       collections: { export: async () => ({ ok: true }), import: async () => ({ ok: false, canceled: true }) },
       log: (m) => { if (logs) { window.__logs.push(m); window.__logT.push([performance.now(), m]) } console.log('[so.log]', m) }, mark: () => {}, showLog: async () => {}
     }

@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <!-- 'unsafe-eval': o Butterchurn compila as equações dos presets com new Function.
-         img-src data:/blob:: alguns presets trazem texturas embutidas como imagens data:. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:" />
+         img-src data:/blob:: alguns presets trazem texturas embutidas como imagens data:.
+         worker-src blob:: o Worker do Estúdio (spec 026), embutido pelo Vite, que testa as equações com teto de tempo. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src blob:" />
     <title>Sonic Obsidian</title>
     <style>
       html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }

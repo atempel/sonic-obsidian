@@ -183,6 +183,21 @@ function Geral({ core, run }: { core: Core; run: Run }) {
           <Sw id="st-full" label="Abrir em tela cheia" checked={s.startFullscreen} onChange={(v) => run('settings.set', { startFullscreen: v })} />
         </Row>
       </Grp>
+      <Grp title="Meus presets">
+        <Row id="st-author" label="Seu nome nos presets" help="Aparece no crédito dos presets salvos no Estúdio. Vazio = “Eu”." kw="autor estúdio crédito nome">
+          <input
+            class="sel sel-w txt"
+            id="st-author"
+            type="text"
+            maxLength={60}
+            autocomplete="off"
+            spellcheck={false}
+            placeholder="Eu"
+            value={s.authorName ?? ''}
+            onChange={(e) => run('settings.set', { authorName: (e.target as HTMLInputElement).value })}
+          />
+        </Row>
+      </Grp>
       <Grp title="Preset inicial">
         <Row id="st-preset" label="Preset ao abrir">
           <Sel<StartupPreset>

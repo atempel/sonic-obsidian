@@ -65,15 +65,16 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
 ## 5. Presets do usuário e Estúdio
 
 ### Formatos e armazenamento
-- O formato do usuário é o **`.milk`** (texto do MilkDrop 2): portátil, editável por humanos e por IA, compatível com a comunidade.
-- O que o Butterchurn carrega é o preset convertido. O app guarda os dois: o `.milk` é a fonte; o convertido é cache.
+- **Importados:** a fonte é o **`.milk`** (texto do MilkDrop 2); o convertido é cache.
+- **Meus presets (Estúdio, spec 026):** a fonte é o **preset Butterchurn 3 em JSON** (`*_eel` + shaders GLSL). Os presets do pacote já são JSON, sem `.milk` nem caminho de volta para HLSL; guardar o JSON evita perder os shaders. O `.milk` vira formato de exportação (027). DECISIONS 2026-11-10.
 - Pasta de dados (`app.getPath('userData')`):
   ```
   presets/
     imported/<id>.milk            # importados (arquivo/arrastar)
-    mine/<id>/v0003.milk          # do usuário: uma versão por salvamento ou edição via MCP
-    mine/<id>/meta.json           # título, autor, baseado-em (crédito original), origem (você / <cliente MCP>)
-    cache/<hash>.json             # preset convertido para o Butterchurn
+    imported/<id>.json            # convertido (cache) + nome
+    mine/<id>/preset.json         # meu preset (Estúdio): o preset Butterchurn 3
+    mine/<id>/preset.prev.json    # a versão anterior (P0); histórico completo na 027
+    mine/<id>/meta.json           # título, autor, basedOn (crédito original), createdAt
   library.json                    # favoritos, ocultos, recentes, coleções, fps medido
   settings.json
   ```
@@ -90,10 +91,12 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
 ```
 - **Regra de segurança:** nenhum preset de fora vira JavaScript. Sem o Butterchurn 3.x (`onlyUseWASM`), este pipeline não é ligado (ver DECISIONS, proposta de 2026-11-08).
 - Shaders GLSL não executam código no host, mas podem travar a GPU ou não compilar: compilar com `try/catch`, medir o tempo do primeiro quadro e reverter se passar de um limite.
-- Exportar `.milk` é devolver o arquivo-fonte (não existe conversor reverso GLSL → HLSL; por isso o `.milk` é sempre a fonte).
+- Exportar `.milk`: importados devolvem o arquivo-fonte; meus presets precisam de um gerador de `.milk` a partir do JSON (027), com aviso quando o shader GLSL não tem volta para HLSL.
+- **No P0 do Estúdio (026)** a validação tem duas barreiras antes do visualizador principal: um Worker com o `eel-wasm` (erro com bloco e linha, e um quadro rodado com teto de 1 s, porque `loop(n, …)` não tem limite e `while` limita a ~1 milhão de voltas por chamada, o que em `per_pixel` multiplica pelos pontos da malha) e o visualizador de teste de 64×64 da 022. CSP: `worker-src blob:`.
 
 ### Estúdio
-- Abas Básico (parâmetros `baseVals`), Equações (`per_frame_init`, `per_frame`, `per_pixel`), Ondas, Formas, Shaders (`warp`, `comp`) e Código `.milk` — todas editam o mesmo `.milk` em memória.
+- P0 (026): camada em tela cheia sobre o Palco; a prévia é o visualizador principal. Edita `per_frame_init`, `per_frame` e `per_pixel`; shaders só leitura.
+- P1 (027): abas Básico (parâmetros `baseVals`), Equações, Ondas, Formas, Shaders (`warp`, `comp`) — todas editam o mesmo preset em memória.
 - Compila com debounce de 400 ms pelo pipeline acima; com erro, continua tocando a última versão válida.
 - Variáveis de áudio expostas nas equações: `bass`, `mid`, `treb`, `bass_att`, `mid_att`, `treb_att`, `time`, `frame`, `fps`.
 - Cada salvamento e cada `update_preset` via MCP gera uma versão restaurável, com origem registrada.

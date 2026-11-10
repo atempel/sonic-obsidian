@@ -47,8 +47,8 @@ const glError = (gl: WebGL2RenderingContext, p: WebGLProgram): string => {
   return first.replace(/\s+/g, ' ').trim().slice(0, 120)
 }
 
-/** Visualizador de 64×64 só para compilar; descartado ao fim do lote. */
-class Validator {
+/** Visualizador de 64×64 só para compilar; descartado ao fim do lote (e ao fechar o Estúdio, spec 026). */
+export class Validator {
   private readonly canvas = document.createElement('canvas')
   private readonly viz: Visualizer
   constructor(ctx: AudioContext) {

@@ -23,6 +23,10 @@ import { mountOverlay, toggleOverlay } from './ui/Overlay'
 import { dismissFloat, mountWebglError } from './ui/Diagnostics'
 import { closeShortcuts, isShortcutsOpen, toggleShortcuts } from './ui/ShortcutsPanel'
 import { setActionRunner, type ActionId } from './ui/shortcuts'
+import { closeStudio, openStudio } from './ui/Studio'
+import { setMineLookup } from './ui/preset-name'
+import { StudioCompiler } from './studio/compile'
+import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { isFullScreen, setupWindowChrome } from './window'
@@ -96,6 +100,9 @@ async function start(): Promise<void> {
   await library.loadBasePack()
   // Importados pelo usuário (spec 022), antes do primeiro preset: o último usado pode ser um deles.
   for (const imp of await window.so.presets.listImported().catch(() => [])) library.addImported(imp.name, imp.preset)
+  // Meus presets (Estúdio, spec 026): o título é o nome; o crédito "baseado em" vem do meta.
+  for (const m of await window.so.presets.listMine().catch(() => [])) library.setMine(library.mineInfo(m.meta.title) ? m.meta.title : library.freeName(m.meta.title), m.id, m.meta, m.preset)
+  setMineLookup((name) => library.mineInfo(name)?.meta ?? null)
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
@@ -365,7 +372,19 @@ async function start(): Promise<void> {
       if (core.state.current === name) run('preset.next', { cut: false }, 'ui')
       state.presetCount = library.count
       core.events.emit('stateChanged', { origin: 'ui' })
-    }
+    },
+    isMine: (name: string) => !!library.mineInfo(name),
+    removeMine: async (name: string) => {
+      const info = library.mineInfo(name)
+      if (!info) return
+      await window.so.presets.removeMine(info.id)
+      library.removeMine(name)
+      window.so.log(`estúdio: removido ${name}`)
+      if (core.state.current === name) run('preset.next', { cut: false }, 'ui')
+      state.presetCount = library.count
+      core.events.emit('stateChanged', { origin: 'ui' })
+    },
+    openStudio: (name?: string) => void openStudioFor(name)
   })
   // Abrir em tela cheia (Configurações › Geral).
   if (settings.startFullscreen && !isFullScreen()) core.run('window.fullscreen', {}, 'startup')
@@ -386,6 +405,76 @@ async function start(): Promise<void> {
   console.log(`[startup] primeiro preset em ${(performance.now() - t0).toFixed(0)} ms (${first?.ok ? 'último usado' : 'aleatório'})`)
   state.presetCount = library.count
   void connectCapture()
+
+  // ── Estúdio de presets (spec 026) ─────────────────────────
+  // Rotação parada enquanto aberto (sem mexer no settings.json); ao sair, volta como estava.
+  let studio: { compiler: StudioCompiler; source: string; applied: boolean } | null = null
+  const audioVals = (): Float32Array | null => {
+    const v = (viz.visualizer as unknown as { renderer?: { audioLevels?: { val?: unknown } } }).renderer?.audioLevels?.val
+    return v instanceof Float32Array ? v : null
+  }
+  const openStudioFor = async (name?: string): Promise<void> => {
+    if (studio) return
+    const src = name ?? core.state.current
+    if (!src || !library.has(src)) return
+    if (src !== core.state.current) run('preset.play', { name: src }, 'ui')
+    const { default: EelWorker } = await import('./studio/eel-worker?worker&inline')
+    const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => ({ w: settings.render.meshWidth, h: settings.render.meshHeight }))
+    const s: { compiler: StudioCompiler; source: string; applied: boolean } = { compiler, source: src, applied: false }
+    studio = s
+    probe = null
+    run('ui.open', { overlay: 'studio' }, 'ui')
+    const srcMine = library.mineInfo(src)
+    let mineRef: { name: string; id: string } | null = srcMine ? { name: src, id: srcMine.id } : null
+    const basedOn = srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
+    window.so.log(`estúdio: aberto com ${src}`)
+    openStudio({
+      core,
+      sourceName: src,
+      source: structuredClone(library.get(src)),
+      mine: srcMine,
+      compile: (p) => compiler.compile(p),
+      apply: (p) => {
+        s.applied = true
+        viz.load(p, 'crossfade', 0.4).catch((err: unknown) => window.so.log(`estúdio: versão não carregou: ${err instanceof Error ? err.message : String(err)}`))
+      },
+      levels: () => {
+        const v = audioVals()
+        return v ? [v[0]!, v[1]!, v[2]!] : null
+      },
+      save: async ({ preset, title, author }) => {
+        if (mineRef) {
+          const r = await window.so.presets.saveMine({ id: mineRef.id, preset: preset as Record<string, unknown> })
+          library.setMine(mineRef.name, r.id, r.meta, preset)
+          return { name: mineRef.name, id: r.id, meta: r.meta }
+        }
+        const free = library.freeName(title)
+        const r = await window.so.presets.saveMine({ meta: { title: free, author, basedOn }, preset: preset as Record<string, unknown> })
+        const finalName = library.mineInfo(r.meta.title) || !library.has(r.meta.title) ? r.meta.title : library.freeName(r.meta.title)
+        library.setMine(finalName, r.id, r.meta, preset)
+        mineRef = { name: finalName, id: r.id }
+        state.presetCount = library.count
+        core.events.emit('stateChanged', { origin: 'ui' }) // Biblioteca e busca veem o novo
+        return { name: finalName, id: r.id, meta: r.meta }
+      },
+      close: (saved) => {
+        closeStudio()
+        compiler.dispose()
+        studio = null
+        state.studio = undefined
+        run('ui.close', {}, 'ui')
+        window.so.log(`estúdio: fechado${saved ? ` com ${saved}` : ''}`)
+        // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).
+        if (saved) run('preset.play', { name: saved }, 'ui')
+        else if (s.applied && library.has(src)) run('preset.play', { name: src }, 'ui')
+        rotation.restart(performance.now())
+      },
+      log: (m) => window.so.log(m),
+      reportCost: (t) => {
+        state.studio = t
+      }
+    })
+  }
 
   const run = (name: string, args: Record<string, unknown> = {}, origin: Origin = 'keyboard') => {
     const result = core.run(name, args, origin)
@@ -442,6 +531,7 @@ async function start(): Promise<void> {
     hold: toggleHold,
     breath: toggleBreath,
     hide: () => idle.hideNow(),
+    studio: () => void openStudioFor(),
     favorite: () => {
       const r = core.run<boolean>('library.favorite', {}, 'ui')
       if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
@@ -463,6 +553,8 @@ async function start(): Promise<void> {
       e.preventDefault()
       return
     }
+    // Estúdio aberto (spec 026): as teclas são dele (Ctrl+S, Ctrl+Enter, Esc, Tab nos campos).
+    if (core.state.overlay === 'studio') return
     // Ctrl+K abre e fecha a busca rápida de qualquer lugar (spec 010).
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.code === 'KeyK') {
       e.preventDefault()
@@ -576,6 +668,9 @@ async function start(): Promise<void> {
       toggleClean()
     } else if (e.code === 'KeyH') {
       idle.hideNow()
+    } else if (e.code === 'KeyE' && !e.shiftKey) {
+      // Estúdio com uma cópia do preset atual (spec 026).
+      void openStudioFor()
     } else if (e.code === 'KeyR') {
       toggleRotation()
     } else if (e.key === ',') {
@@ -625,6 +720,13 @@ async function start(): Promise<void> {
       renderErrors = [...renderErrors.filter((x) => t - x < 1000), t]
       if (renderErrors.length < 3) return
       renderErrors = []
+      // No Estúdio, a versão em edição que trava no motor volta ao original, sem pular o preset.
+      if (studio) {
+        window.so.log(`estúdio: a versão em edição travou no motor: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+        showToast('A versão em edição travou no motor. Voltei ao preset de origem.', { force: true })
+        if (library.has(studio.source)) void viz.load(library.get(studio.source), 'cut', 0)
+        return
+      }
       const name = core.state.current
       if (!name || broken.has(name)) return
       broken.add(name)
@@ -664,7 +766,7 @@ async function start(): Promise<void> {
       core.events.emit('levelTick', { level: state.level })
     }
     // Sem som (aviso visível) ou sem captura: a rotação espera, como no protótipo.
-    if (silence.showNotice || core.state.capture !== 'ok') rotation.hold(now - lastLoop)
+    if (silence.showNotice || core.state.capture !== 'ok' || studio) rotation.hold(now - lastLoop)
     lastLoop = now
     const dt = Math.min(0.1, Math.max(0.001, (now - lastRender) / 1000))
     lastRender = now
@@ -673,7 +775,7 @@ async function start(): Promise<void> {
     const t0Beat = performance.now()
     const crossed = beat.update(now, silence.resting)
     if (crossed > 0) {
-      for (let i = 0; i < crossed; i++) rotation.beat()
+      if (!studio) for (let i = 0; i < crossed; i++) rotation.beat()
       core.events.emit('beatTick', {})
       flushPending()
     }
@@ -682,7 +784,7 @@ async function start(): Promise<void> {
     beatCost += performance.now() - t0Beat
     beatFrames++
     // No modo beat, a troca sai na batida e mistura no máximo 1 batida, para cair no tempo.
-    if (rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
+    if (!studio && rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
     renderSafe(dt * speed)
     if (!firstFrame) {
       firstFrame = true
