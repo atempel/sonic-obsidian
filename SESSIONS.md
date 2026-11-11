@@ -4,6 +4,21 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-11 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/ecstatic-carson-9x3kh6`
+**Fez:**
+- **Design checado:** o artefato está em `1794352628-1d72`, o espelho em `1794281099-42d3`. Não sincronizado nesta sessão: a frente não tem tela desenhada, só o AGC precisa de interface no P1.
+- **Frente escolhida pelo usuário:** ganho automático + reação ao áudio. O usuário trouxe uma pesquisa própria (Cowork), copiada em `docs/research/reatividade/`.
+- **Achado conferido no código** (`expression.ts` e o bundle do motor): a Memória Longa/Fixa semeia a média uma vez, com `imm/val`. Aberta em silêncio, a Fixa trava `bass` em 1,00. Com `level: 0`, o Caráter não age.
+- **Spec 028** (corrigir a Memória, HUD/log, AGC, Memória "Viva" A/B), issue #81, TASKS e DECISIONS.
+- **Fila:** stub com o resto da pesquisa (curva de 16 bandas, build/break/drop, hardcut, fork etc.).
+**Deixou em:**
+- Branch com docs só (sem código), sem PR.
+- **Pendente:** respostas às 3 perguntas da spec 028.
+- **Antes do build novo:** o usuário confere no HUD (`Ctrl+Shift+D`) a Memória salva e `bass x → y` (critério 1).
+- **Próximo:** implementar a 028 P0 (`executar-task`); sincronizar o design (`1d72`) antes do P1 de interface.
+- **Não verificado:** nada rodou no app; a causa só se confirma no Windows.
+- **A refazer:** checagem de `electron`/`vite` depois de 19/11.
+
 ### 2026-11-11 — Claude Code (nuvem, claude.ai/code) — branch `claude/vibrant-pascal-rqir88` (continuação)
 **Fez:**
 - **PR #80 mergeado** com o ok do usuário, validado no Windows: dois presets ficavam pretos ("Hyperspace - kaleidoscope", "Snapshot Of Space (LSB mix)").

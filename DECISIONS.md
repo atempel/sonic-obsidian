@@ -438,3 +438,14 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - patch no `node_modules` (some a cada `npm install`);
   - aumentar o ponto para N px (o MilkDrop desenha 1 px; muda o visual dos presets).
 - **Validado no Windows (2026-11-11):** os dois presets voltaram a desenhar ("os dois presets funcionaram").
+
+## 2026-11-11 — Spec 028: a reação ao áudio vem antes do Estúdio P1, sem fork
+- **Do usuário:** a frente escolhida é ganho automático + reação ao áudio, fundamentada numa pesquisa própria (Cowork), copiada em `docs/research/reatividade/2026-11-11-destravar-reatividade.md` (cópia inteira, pelo mesmo motivo da pesquisa de mercado).
+- **Achado conferido no código:** a Memória Longa/Fixa da Expressividade semeia a média uma vez, com `imm/val`. Aberta em silêncio, a Fixa trava `bass/mid/treb` em 1,00. Corrigir isso e medir no HUD vem antes de qualquer mudança no motor.
+- **Ordem da spec:** corrigir → medir (HUD e log) → AGC. A causa se confirma no Windows antes do build novo (critério 1).
+- **Motor:** segue o Butterchurn fixado, com ganchos na instância. O fork (MIT) só entra quando um item exigir (áudio float, `time` desacoplado, variáveis novas, `.milk2`), e será registrado aqui.
+- **AGC sem compressão:** ganho lento sobre a média de ~10 s, com teto, congelado no silêncio e no Respiro. Comprimir achataria o contraste do drop, que é o que move o visual.
+- **Descartado:**
+  - trocar de motor (projectM em WASM, motores DirectX via Spout): custa muito e não resolve a reatividade;
+  - curva de 16 bandas e estrutura build/break/drop nesta spec (vão para a fila, `queue/2026-11-11-pesquisa-reatividade-roadmap.md`);
+  - bibliotecas GPL/AGPL de beat/onset.
