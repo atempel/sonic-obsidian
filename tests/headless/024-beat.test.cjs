@@ -103,8 +103,10 @@ const BPM = 124, BEAT_S = 60 / BPM
   const lvl = await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)
   ok('9b Respiro: medidor da faixa vazio (o visual não recebe áudio)', lvl === 0, `${lvl} segmentos acesos`)
   ok('9c Respiro: a batida continua travada', await page.isVisible('.strip .bdot'))
-  await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(800)
-  ok('9d Shift+Enter de novo devolve o áudio', !(await page.isVisible('.breath-tag')) && (await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)) > 0)
+  await page.keyboard.press('Shift+Enter')
+  // Até 2,5 s: com poucos quadros por segundo no headless, o medidor pode levar mais que 800 ms para acender.
+  const back = await page.waitForFunction(() => !document.querySelector('.breath-tag') && document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip').length > 0, null, { timeout: 2500 }).then(() => true, () => false)
+  ok('9d Shift+Enter de novo devolve o áudio', back)
 
   // 6. Enter num botão aciona o botão.
   await page.mouse.move(640, 700)

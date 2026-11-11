@@ -1,0 +1,5 @@
+# Visual reagindo pouco ao áudio e "pulsando" no silêncio
+Status: Pending
+Fonte: relato do usuário (2026-11-11), testes recentes no Windows ouvindo pelo Spotify
+Resumo: o usuário sente os presets refletindo o áudio cada vez menos; quando o áudio para, os efeitos continuam pulsando "como se fosse falso", uma animação parada com a leitura do áudio por cima. Pontos a medir antes de mudar algo: (1) o bass/mid/treb do motor é relativo à média dos últimos ~4 s (imm/longAvg), então música constante fica perto de 1 e o pulso vem de mudanças, não do volume; (2) a Expressividade (+/−, Caráter X, Memória Shift+X; spec 015) muda essa leitura, e "Memória lenta/travada" achata a reação; (3) no silêncio, as equações com `time` seguem animando, e o app só desacelera o relógio e escurece (SilenceState); o pulso residual pode vir da média que cai devagar; (4) nível baixo na captura (ver queue/2026-11-10-nivel-ganho-automatico.md). Pedir o HUD (Ctrl+Shift+D: "bass x → y", expressividade) com música e em silêncio.
+Destino provável: investigação (spec curta) junto do ganho automático

@@ -4,6 +4,22 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-11 — Claude Code (nuvem, claude.ai/code) — branch `claude/vibrant-pascal-rqir88` (continuação)
+**Fez:**
+- **PR #80 mergeado** com o ok do usuário, validado no Windows: dois presets ficavam pretos ("Hyperspace - kaleidoscope", "Snapshot Of Space (LSB mix)").
+  - O log de diagnóstico do próprio PR mostrou a causa: a onda principal em pontos do Butterchurn 3 não define `gl_PointSize`, e o ANGLE/Direct3D não desenha.
+  - Correção em `fixPointSize`.
+  - Ficaram no app os registros "preset preto" e de shader que não compila (este pula o preset).
+  - A rotação passa a ficar parada desde o `E` do Estúdio.
+- **Stubs em `queue/`, de relatos e pedidos do usuário:**
+  - ganho automático;
+  - reação ao áudio;
+  - controle de velocidade (`time`).
+**Deixou em:**
+- `main` com o #80. Nada aberto.
+- **Próximo:** Estúdio P1 (spec 027), beat na batida principal, ganho automático/reação ao áudio ou o controle de velocidade. O usuário escolhe.
+- **Retorno do usuário:** Expressividade e Memória ficaram evidentes; o Caráter (X) ainda é pouco perceptível.
+
 ### 2026-11-10 (noite) — Claude Code (nuvem, claude.ai/code) — branch `claude/vibrant-pascal-rqir88`
 **Fez:**
 - **Design checado:** `1794281099-42d3`, sem mudança.

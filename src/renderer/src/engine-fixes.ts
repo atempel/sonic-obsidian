@@ -48,3 +48,30 @@ export function hookShaderCleanup(visualizer: Visualizer): boolean {
   }
   return true
 }
+
+/**
+ * Onda em pontos invisível no Windows (relato de 2026-11-10: "Hyperspace - kaleidoscope" e
+ * "Snapshot Of Space (LSB mix)" ficavam pretos). O vertex shader da onda principal do
+ * Butterchurn 3 (`BasicWaveform`) desenha `gl.POINTS` com `wave_dots` sem escrever
+ * `gl_PointSize`; pela especificação o tamanho fica indefinido: o SwiftShader desenha 1 px, o
+ * ANGLE sobre Direct3D não desenha nada. Aqui, todo vertex shader GLSL ES 3.00 que não escreve
+ * `gl_PointSize` passa a escrever 1.0 (o ponto de 1 px do MilkDrop) no começo do `main`. Fora de
+ * `gl.POINTS` o valor é ignorado. Vale para todos os contextos WebGL 2 da página (principal e
+ * de teste). Sem patch no pacote.
+ */
+export function fixPointSize(): void {
+  const proto = WebGL2RenderingContext.prototype as WebGL2RenderingContext & { __soPointSize?: boolean }
+  if (proto.__soPointSize) return
+  proto.__soPointSize = true
+  const original = proto.shaderSource
+  proto.shaderSource = function (this: WebGL2RenderingContext, shader: WebGLShader, source: string): void {
+    original.call(this, shader, withPointSize(this, shader, source))
+  }
+}
+
+/** Exportada para o teste: o texto como o motor manda, já corrigido. */
+export function withPointSize(gl: WebGL2RenderingContext, shader: WebGLShader, source: string): string {
+  if (!/^\s*#version 300 es/.test(source) || /\bgl_PointSize\b/.test(source)) return source
+  if (gl.getShaderParameter(shader, gl.SHADER_TYPE) !== gl.VERTEX_SHADER) return source
+  return source.replace(/void\s+main\s*\(\s*(void)?\s*\)\s*\{/, (m) => `${m}\n  gl_PointSize = 1.0;`)
+}
