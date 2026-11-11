@@ -437,3 +437,4 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Descartado:**
   - patch no `node_modules` (some a cada `npm install`);
   - aumentar o ponto para N px (o MilkDrop desenha 1 px; muda o visual dos presets).
+- **Validado no Windows (2026-11-11):** os dois presets voltaram a desenhar ("os dois presets funcionaram").

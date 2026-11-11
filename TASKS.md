@@ -51,6 +51,8 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Estúdio de presets (P0): editar equações com prévia ao vivo, validar, salvar como "Meu preset" com crédito** (PR #79, validada no Windows em 2026-11-10) — [spec 026](docs/specs/026-estudio-presets-p0.md) · issue [#74](https://github.com/atempel/sonic-obsidian/issues/74) · 
 - [ ] **Estúdio de presets (P1): parâmetros, ondas/formas, shaders, versões, exportar `.milk`, novo preset** (próximo) — [spec 027](docs/specs/027-estudio-presets-p1.md) · issue [#75](https://github.com/atempel/sonic-obsidian/issues/75)
 - [ ] Fonte microfone (P1, depois do Estúdio)
+- [ ] **Controle de velocidade do visual** (`time`; pedido do usuário) — [queue](queue/2026-11-11-controle-velocidade.md), planejar
+- [ ] **Ganho automático e reação ao áudio** (relatos do usuário) — [queue](queue/2026-11-10-nivel-ganho-automatico.md), [queue](queue/2026-11-11-reacao-ao-audio.md), investigar
 - [ ] **Beat na batida principal** (bumbo/caixa, não outros instrumentos; relato do usuário) — [queue](queue/2026-11-10-beat-batida-principal.md), planejar
 - ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)
 - [x] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, validada no Windows
