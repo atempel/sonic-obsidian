@@ -17,6 +17,11 @@ A pesquisa [destravar a reatividade](../research/reatividade/2026-11-11-destrava
 
 Sem regressão no caminho de áudio: as constantes do motor são iguais nas versões 2.6.7 e 3.0, sem suavização nova.
 
+**Primeira leitura no Windows (2026-11-11, build atual):** Caráter Nervo, Memória Fixa, Nível 0.
+- `bass` antes = depois, variando de 0,5 a 1,9. **O Caráter inerte se confirma:** com Nível 0, a curva não age.
+- **A trava em 1,00 não apareceu nesta abertura** (o app provavelmente abriu já com som). Continua por reproduzir abrindo com o Spotify pausado (critério 2).
+- Mesmo sem travar, a Fixa compara tudo com a média congelada na abertura. Uma faixa mais baixa que aquela lê abaixo de 1 o tempo todo, e uma mais alta fica perto do teto. A reação passa a depender de qual música tocava ao abrir.
+
 ## Proposta
 Três passos, nesta ordem e no mesmo gancho de hoje (`audioLevels.updateAudioLevels`, sem fork):
 1. **Corrigir** a Memória e cobrir com teste.
@@ -34,7 +39,16 @@ Cada passo tem critério próprio e pode ser entregue separado.
   - **Fixa** congela a média na primeira semente válida e de novo ao ser escolhida (como na 015).
   - **Longa** nunca parte de 0.
   - Ao voltar do silêncio longo, que o app já detecta (`SilenceState.resting`), a Memória Longa não reaproveita uma média de minutos atrás: semeia de novo.
-- **Silêncio (squelch):** com `SilenceState.resting`, a Expressividade entrega `bass/mid/treb` neutros (1) em vez de ruído normalizado, sem mudar o relógio que já desacelera. O limiar do medidor continua o mesmo; o piso de `imm` usado na semente é medido no Windows (P0 do HUD) antes de ser fixado.
+- **Silêncio (squelch, decisão do usuário):** com `SilenceState.resting`, os presets recebem **zero** (`bass/mid/treb` e `_att` = 0), em vez de ruído normalizado.
+  - Os efeitos não congelam: o relógio segue mais lento (15 %) e a tela escurece, como hoje. O efeito de "parou" fica claro.
+  - Zero já é o que o motor entrega sozinho nos primeiros minutos de silêncio. Hoje, depois de alguns minutos, ele salta para 1, e isso deixa de acontecer.
+  - A volta do som sai do zero em ~1 s, sem degrau. O limiar do medidor continua o mesmo; o piso de `imm` usado na semente é medido no Windows (HUD) antes de ser fixado.
+- **Padrão visível (pedido do usuário):** a interface mostra qual opção é a padrão, para ficar fácil voltar a "tudo como esperado".
+  - Nos Ajustes rápidos › Expressividade, as opções de Caráter e Memória levam "· padrão" na padrão (Energia, Curta), e o Nível marca o 0.
+  - O toast de `X`/`Shift+X` diz "(padrão)" quando cai nela.
+  - Um "Restaurar padrão" volta Nível, Caráter e Memória de uma vez.
+  - Com Nível 0, o Caráter aparece como "sem efeito no nível 0".
+  - Sem desenho para isso: entra em `DIVERGENCIAS.md` para a sessão de design responder.
 - **Respiro:** ao voltar do `Shift+Enter`, a mesma regra de nova semente; `val` limitado a 0–4 também com `level = 0` (hoje só a curva limita).
 - **HUD (`Ctrl+Shift+D`), linha de áudio:**
   - `imm`, `longAvg` do motor e da Memória, `bass` antes → depois;
@@ -48,7 +62,8 @@ Cada passo tem critério próprio e pode ser entregue separado.
   - silêncio → neutro;
   - Respiro e volta.
 
-**P1 — ganho automático (AGC)**
+**P1 — Normalizar áudio (ganho automático, AGC; nome do usuário, desligado por padrão)**
+Como funciona, para quem usa: o app ouve o nível médio dos últimos ~10 s e sobe ou desce o volume que entra no visual (o som das caixas não muda) até um nível de referência. É a mesma ideia do "normalizar volume" do Spotify, só que medida ao vivo. Uma faixa dos anos 90 mais baixa ganha alguns dB, e uma faixa atual alta perde alguns. A mudança é lenta, de segundos, para não apagar a diferença entre o break e o drop dentro da música. O ganho manual continua, como ajuste fino em cima.
 - **Onde:** um `GainNode` antes do motor, depois do medidor de silêncio e da detecção de batida (que seguem medindo antes de qualquer ganho).
 - **Como:**
   - mede RMS numa janela de ~10 s e mira uma referência (a definir no Windows, perto do nível de uma faixa atual masterizada);
@@ -56,8 +71,8 @@ Cada passo tem critério próprio e pode ser entregue separado.
   - congela no silêncio e no Respiro, para não "bombear" em breaks.
   - Não comprime: não achata a dinâmica dentro da faixa, porque o contraste do drop é o que move o visual.
 - **Manual:** o ganho dos Ajustes rápidos vira **ajuste fino** de −6 a +6 dB sobre o AGC; desligado o AGC, volta a ser o ganho de hoje.
-- **Estado:** `settings.autoGain: boolean` (padrão: pergunta 2) e comando `audio.autoGain`.
-- **Interface:** item "Ganho automático" nos Ajustes rápidos, junto do Ganho, e em Configurações › Áudio, com o valor aplicado em mono ("auto +5 dB"). Não há desenho: ver Referências.
+- **Estado:** `settings.autoGain: boolean` (padrão: desligado) e comando `audio.autoGain`.
+- **Interface:** item "Normalizar áudio" nos Ajustes rápidos, junto do Ganho, e em Configurações › Áudio, com o valor aplicado em mono ("auto +5 dB"). Não há desenho: ver Referências.
 - **Teste no simulador** (`tests/sim/`): a mesma faixa a −20 e a −8 dBFS chega ao motor com ≤ 2 dB de diferença em 15 s, e um break de 8 s não sobe o ganho mais de 3 dB.
 
 **P1 — janela curta (teste A/B)**
@@ -73,22 +88,25 @@ Cada passo tem critério próprio e pode ser entregue separado.
 - Áudio float, bandas novas e variáveis novas, que exigem fork do motor. Também `.milk2`, vídeo, MIDI/OSC e perfil de GPU.
 
 ## Critérios de aceite (no Windows, com o build do CI)
-1. **Antes de instalar o build novo:** o HUD do build atual mostra a Memória salva e `bass x → y`. O resultado é anotado na issue: confirma ou descarta a causa 1.
+1. **Antes de instalar o build novo:** o HUD do build atual mostra a Memória salva e `bass x → y`. Feito em 2026-11-11: Nervo + Fixa + Nível 0; antes = depois, 0,5–1,9 (ver Problema).
 2. Abrir o app **com o Spotify pausado** e Memória Fixa, dar play: `bass` (depois) varia com a música em ≤ 5 s. Desvio visível no HUD; nada de `1.00 → 1.00` fixo. O mesmo em Longa e Curta.
 3. Abrir **com música tocando** em Fixa: `bass` não fica em 4,00 por mais de 2 s.
-4. Pausar a música: em ≤ 4 s `bass/mid/treb` (depois) ficam em 1,00, sem pulso que siga o ruído. O relógio desacelera como hoje.
+4. Pausar a música: em ≤ 4 s `bass/mid/treb` (depois) ficam em 0,00, sem pulso que siga o ruído, e continuam em 0 depois de 5 min. Os efeitos seguem animando, mais lentos e escuros. Dar play: a reação volta em ~1 s.
+4b. Ajustes rápidos mostram "· padrão" em Energia e Curta e "sem efeito no nível 0" no Caráter com Nível 0; "Restaurar padrão" volta tudo, e o toast de `X` diz "(padrão)".
 5. Respiro (`Shift+Enter`) e volta: sem `bass` acima de 4 nem travado.
 6. HUD mostra `imm`, `longAvg`, RMS/pico em dBFS e ganho em vigor; o log tem a linha da abertura e a amostra de 5 min.
-7. (P1) Com AGC ligado, "Children (Dream Version)" (Robert Miles) e uma faixa atual alta chegam ao motor com nível parecido (HUD, ≤ 3 dB de diferença em 15 s). Num break, o ganho não sobe mais de 3 dB.
+7. (P1) Com "Normalizar áudio" ligado, "Children (Dream Version)" (Robert Miles) e uma faixa atual alta chegam ao motor com nível parecido (HUD, ≤ 3 dB de diferença em 15 s). Num break, o ganho não sobe mais de 3 dB.
 8. (P1) Memória Viva: o usuário compara com Curta em 2 faixas estáveis e decide se fica.
 9. `npm run typecheck` e `npm run test:ui` passam; fps igual ao de antes no HUD (o gancho e o AGC custam < 0,1 ms por quadro).
 
+## Respostas do usuário (2026-11-11)
+- **Memória:** continua salva entre aberturas.
+- **Normalizar áudio:** é o nome do ganho automático. Vem desligado, e o manual vira ajuste fino (±6 dB).
+- **Silêncio:** zero; os efeitos não congelam, só ficam sem input e mais lentos.
+- **Pedido novo:** marcar as opções padrão na interface (P0).
+
 ## Perguntas em aberto
-1. **Padrões da Expressividade:**
-   - ligar o Nível em +1 por padrão (o Caráter passa a agir sem ninguém mexer) ou manter 0?
-   - a Memória continua salva entre aberturas (como hoje) ou volta para Curta ao abrir, como o ganho?
-2. **AGC:** ligado por padrão? O ganho manual vira ajuste fino (±6 dB) ou continua com a faixa de hoje somada ao automático?
-3. **Silêncio:** com a música parada, os presets devem receber neutro (`bass = 1`, só o relógio anda devagar, proposta) ou zero (`bass = 0`, como o motor faz sozinho nos primeiros minutos)?
+1. **Nível padrão:** manter 0 (o motor puro; o Caráter só age quando o usuário sobe ou desce o Nível, e a interface passa a dizer isso) ou abrir em +1 (contraste 1,4×, base um pouco mais alta e o Caráter já perceptível)? Proposta: manter 0 com a indicação na interface.
 
 ## Referências
 - Pesquisa: [docs/research/reatividade/2026-11-11-destravar-reatividade.md](../research/reatividade/2026-11-11-destravar-reatividade.md) (seções 2, 3 e 4.A; itens A1–A4, A6).

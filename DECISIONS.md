@@ -449,3 +449,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - trocar de motor (projectM em WASM, motores DirectX via Spout): custa muito e não resolve a reatividade;
   - curva de 16 bandas e estrutura build/break/drop nesta spec (vão para a fila, `queue/2026-11-11-pesquisa-reatividade-roadmap.md`);
   - bibliotecas GPL/AGPL de beat/onset.
+
+## 2026-11-11 — Spec 028: respostas do usuário
+- **Silêncio = zero, sem congelar:** com a música parada, os presets recebem `bass/mid/treb` = 0, o relógio segue lento e a tela escurece. O usuário quer o "parou" claro na tela. **Descartado:** neutro (1), a proposta inicial, que deixaria os presets com cara de "música constante".
+- **"Normalizar áudio"** é o nome do ganho automático: desligado por padrão, com o ganho manual como ajuste fino de ±6 dB.
+- **A Memória segue salva** entre aberturas.
+- **Padrão visível (pedido do usuário):** "· padrão" nas opções, "(padrão)" no toast, "Restaurar padrão" e o aviso "sem efeito no nível 0" no Caráter. Entra no P0, sem desenho (DIVERGENCIAS).
+- **Leitura do HUD (build atual):** Nervo + Fixa + Nível 0, `bass` antes = depois, entre 0,5 e 1,9. O Caráter inerte no Nível 0 está confirmado; a trava em 1,00 não apareceu nesta abertura e falta reproduzir abrindo em silêncio.

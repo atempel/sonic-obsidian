@@ -13,7 +13,8 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 - **Fila:** stub com o resto da pesquisa (curva de 16 bandas, build/break/drop, hardcut, fork etc.).
 **Deixou em:**
 - Branch com docs só (sem código), sem PR.
-- **Pendente:** respostas às 3 perguntas da spec 028.
+- **Respostas do usuário registradas na 028:** silêncio = zero, Normalizar áudio desligado, Memória salva, padrão visível na interface. HUD do build atual: Nervo + Fixa + Nível 0, `bass` antes = depois, 0,5–1,9 (trava em 1,00 não reproduzida).
+- **Pendente:** Nível padrão, 0 com aviso (proposta) ou +1.
 - **Antes do build novo:** o usuário confere no HUD (`Ctrl+Shift+D`) a Memória salva e `bass x → y` (critério 1).
 - **Próximo:** implementar a 028 P0 (`executar-task`); sincronizar o design (`1d72`) antes do P1 de interface.
 - **Não verificado:** nada rodou no app; a causa só se confirma no Windows.
