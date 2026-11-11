@@ -12,7 +12,7 @@ import {
   sanitizeSettings,
   stepBlendSeconds
 } from './core/state'
-import { hookShaderCleanup } from './engine-fixes'
+import { fixPointSize, hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
@@ -82,6 +82,8 @@ async function start(): Promise<void> {
   const samples = new Float32Array(meter.fftSize)
 
   const initialSettings = sanitizeSettings(rawSettings)
+  // Antes de criar o motor: os shaders são compilados na criação (onda em pontos, 2026-11-10).
+  fixPointSize()
   const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
   viz.visualizer.connectAudio(gain)
   hookShaderCleanup(viz.visualizer)
