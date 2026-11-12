@@ -1,4 +1,5 @@
 > **Cópia da pesquisa feita pelo usuário com o Claude (Cowork)**, colada na sessão de 2026-11-11. Auditoria no commit `3e9c620`. Texto como veio; para atualizar, substituir o arquivo inteiro. Conferência no código feita nesta sessão: ver "Conferido no repo" no fim.
+> Resumo para o Claude Code, com os mesmos IDs (A1–F2) e as mesmas decisões pendentes: [Sonic Obsidian — Reatividade ao áudio: diagnóstico e plano](https://claude.ai/artifact/T8VRDyCmsZyqWRQeSBdDUm) (Claude Docs, 2026-11-11). O estudo completo no projeto do Cowork chama-se `claude/estudo-reatividade-e-motores.md`; esta cópia é ele.
 
 # Destravar a reatividade do Sonic Obsidian antes de trocar de motor
 
