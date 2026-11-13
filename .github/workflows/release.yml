@@ -16,6 +16,11 @@ on:
         description: 'Versão da release, sem o v (ex.: 0.5.0). Vazio = só ensaio.'
         required: false
         default: ''
+      publicar:
+        description: 'Publicar direto (sem rascunho). Só com o ok do usuário no bloco de teste (skill rodada).'
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -55,7 +60,7 @@ jobs:
           ls -la
           sha256sum SonicObsidian-Setup.exe SonicObsidian-win-x64.zip > SHA256SUMS.txt
           cat SHA256SUMS.txt
-      - name: Rascunho da release
+      - name: Release (rascunho, ou publicada com publicar=true)
         if: env.TAG != ''
         shell: bash
         env:
@@ -63,7 +68,9 @@ jobs:
         run: |
           pre=""
           case "$TAG" in *-*) pre="--prerelease" ;; esac
-          gh release create "$TAG" --draft $pre --target "$GITHUB_SHA" \
+          draft="--draft"
+          [ "${{ inputs.publicar }}" = "true" ] && draft=""
+          gh release create "$TAG" $draft $pre --target "$GITHUB_SHA" \
             --title "Sonic Obsidian $TAG" \
             --notes-file .github/release-notes.md \
             release/SonicObsidian-Setup.exe release/SonicObsidian-win-x64.zip release/SHA256SUMS.txt

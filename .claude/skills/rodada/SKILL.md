@@ -35,7 +35,7 @@ Na nuvem não há GraphQL: `gh issue list`, `gh pr create` e afins **falham**. U
 - checks: `gh api …/commits/<sha>/check-runs --jq '.check_runs[]|{name,status,conclusion}'`
 - merge: `gh api -X PUT …/pulls/N/merge -f merge_method=squash`
 - build do bloco: `gh api -X POST …/actions/workflows/build-windows.yml/dispatches -f ref=rc/vX.Y.Z`; o link do artifact sai de `…/actions/runs/<id>` (`…/actions/runs?branch=rc/vX.Y.Z&event=workflow_dispatch`)
-- release (**só depois do ok do usuário**; tags não sobem da nuvem): `gh api -X POST …/actions/workflows/release.yml/dispatches -f ref=rc/vX.Y.Z -f 'inputs[version]=X.Y.Z'` → rascunho; publicar com `gh api -X PATCH …/releases/<id> -F draft=false`
+- release (**só depois do ok do usuário**; tags não sobem da nuvem; a sessão não pode criar nem editar releases pela API, quem cria é o workflow): `gh api -X POST …/actions/workflows/release.yml/dispatches -f ref=rc/vX.Y.Z -f 'inputs[version]=X.Y.Z' -F 'inputs[publicar]=true'` (sem `publicar` → rascunho, para quando o usuário disse que publica ele mesmo)
 - build Windows de um PR (só quando o usuário pedir um artifact daquele PR): `-X POST …/issues/<PR>/labels -f 'labels[]=build-windows'`
 - `scripts/ciclo-labels.sh` cria as labels que faltarem (idempotente).
 
@@ -47,7 +47,7 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 **1. Responder ao usuário** (destrava o que ele já fez; tem prioridade):
 - `test-block` com comentário dele mais novo que o último da rodada:
   - **problema relatado** → cada um vira issue `bug` + `ready` + `prioridade` no mesmo milestone, citada na issue do bloco. A correção é um PR para a `rc/vX.Y.Z` (depois PR `rc/vX.Y.Z → main`). Com os bugs do bloco corrigidos, disparar novo build da `rc/…` e comentar na issue do bloco: link do build novo e roteiro **só do que mudou**.
-  - **"ok"** (sem problema pendente) → é o ok para a release: disparar o workflow `release` na `rc/vX.Y.Z` com a versão, publicar o rascunho quando os arquivos subirem (a menos que ele tenha dito que publica), PR `rc/vX.Y.Z → main` se ainda houver diferença, fechar a issue do bloco e o milestone. Notas da release: as do bloco.
+  - **"ok"** (sem problema pendente) → é o ok para a release: disparar o workflow `release` na `rc/vX.Y.Z` com a versão e `publicar=true` (ou sem, se ele disse que publica), conferir que a release apareceu, PR `rc/vX.Y.Z → main` se ainda houver diferença, fechar a issue do bloco e o milestone. Notas da release: as do bloco.
 - `needs-decision` com resposta dele → incorporar à spec (branch `docs/…`, PR), tirar a atribuição, label `ready`.
 - PR com comentário dele não respondido → tratar no próprio PR.
 
