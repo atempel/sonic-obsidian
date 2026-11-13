@@ -16,7 +16,7 @@ needs-design|c5def5|Precisa de desenho no Claude Design (atribuída ao usuário)
 blocked|b60205|Bloqueio externo; motivo no último comentário
 ready|0e8a16|Spec pronta; a rodada pode implementar
 in-progress|fbca04|Reivindicada por uma rodada do ciclo
-release-candidate|5319e7|Teste de uma release em rascunho (atribuída ao usuário)
+test-block|5319e7|Testar bloco vX.Y.Z: build congelado para o usuário testar antes da release
 prioridade|e11d21|Fura a fila do ciclo
 agent-decided|bfdadc|A rodada decidiu algo reversível sozinha — revisar no teste da release
 bug|d73a4a|Algo não funciona

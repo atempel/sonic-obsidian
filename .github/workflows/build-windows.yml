@@ -66,5 +66,6 @@ jobs:
         with:
           name: ${{ steps.meta.outputs.name }}
           path: release/win-unpacked/
-          retention-days: 7
+          # Build de bloco de teste (disparo manual) fica 30 dias; o de PR, 7.
+          retention-days: ${{ github.event_name == 'workflow_dispatch' && 30 || 7 }}
           if-no-files-found: error
