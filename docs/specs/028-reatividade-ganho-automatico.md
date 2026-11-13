@@ -1,6 +1,6 @@
 # 028 — Reação ao áudio: corrigir a Memória, medir de verdade e ganho automático
 
-**Fase:** 3 · **Status:** Planejada · **Issue:** [#81](https://github.com/atempel/sonic-obsidian/issues/81) · **Personas:** Nostálgico do Winamp, DJ de Festa, Streamer de Set, Anfitrião de Ambiente ([personas](../research/mercado/personas.md)) · **Depende de:** [015](015-expressividade.md), [005](005-sinal-entrada.md)
+**Fase:** 3 · **Status:** P0 implementado (PR da rodada 2026-11-13, testar no bloco v0.6.0); P1 na issue própria · **Issue:** [#81](https://github.com/atempel/sonic-obsidian/issues/81) · **Personas:** Nostálgico do Winamp, DJ de Festa, Streamer de Set, Anfitrião de Ambiente ([personas](../research/mercado/personas.md)) · **Depende de:** [015](015-expressividade.md), [005](005-sinal-entrada.md)
 
 ## Problema
 Relatos do usuário (2026-11-10/11, Windows, Spotify):

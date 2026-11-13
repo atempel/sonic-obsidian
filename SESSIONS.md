@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/028-reacao-ao-audio-p0`
+**Fez:** Passo 4 da `rodada`: issue #81 (spec 028, `prioridade`) reivindicada e implementada no **P0**. `expression.ts`: semente da Memória só com som (média de `imm` em 2 s, depois do aquecimento), Longa semeia de novo depois do silêncio/Respiro, silêncio = zero com rampa (0,3 s / 1 s), saída sempre 0–4. Ajustes rápidos: "· padrão", "Sem efeito no nível 0", "Restaurar padrão"; toasts com "(padrão)". HUD com `imm`, médias, RMS/pico em dBFS e ganho; log na abertura e a cada 5 min. Teste `028-expressividade` (42 casos; o código antigo falha 14, incluindo a trava da Fixa em 1,00). P1 (Normalizar áudio, Memória Viva) virou a issue #86 (`ready`, v0.6.0). DECISIONS com a escolha da semente (`agent-decided`). Design checado: artefato em `1794352628-1d72`, sem desenho para o padrão visível (entrada já aberta em DIVERGENCIAS).
+**Deixou em:** PR aberto com `Closes #81`. Não verificado: áudio real, fps e o visual (vão para o bloco v0.6.0). Nesta nuvem, 023 e 026 falham por tempo também no `main` (ambiente; o 026 é a #85). Fila `ready` do v0.6.0: #85, #86, #69. Nada novo atribuído ao usuário.
+
 ### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/atualizacao-automatica`
 **Fez:** Passo 2 da `rodada`: PR #70 (spec 029, atualização automática) estava em conflito com o `main` e com o `typecheck` vermelho (base antiga, antes do CI sob demanda). Trouxe o `main` para a branch por merge (sem reescrever histórico), mantendo as duas entradas do DECISIONS. Decidiu a pergunta pequena da 029 (versão: milestone v0.6.0, `agent-decided`). Issue #69 → `ready`, milestone v0.6.0.
 **Deixou em:** PR #70 mergeado se o CI ficou verde. Na fila `ready` do v0.6.0: #85 (teste 026 instável, `prioridade`), #81 (spec 028, `prioridade`), #69 (029). Nada novo atribuído ao usuário. Não verificado: nada de código mudou.

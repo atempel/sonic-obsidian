@@ -439,6 +439,15 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - aumentar o ponto para N px (o MilkDrop desenha 1 px; muda o visual dos presets).
 - **Validado no Windows (2026-11-11):** os dois presets voltaram a desenhar ("os dois presets funcionaram").
 
+## 2026-11-13 — Spec 028 P0: como a Memória semeia e como o silêncio zera (rodada, `agent-decided`)
+- **Semente da Memória (Longa/Fixa):** média de `imm` em 2 s seguidos de som, depois do quadro 50 do motor. "Com som" = RMS antes do ganho acima do limiar de silêncio de hoje (−66 dBFS) e `imm` > 0; fora do Respiro. Antes da semente, o preset recebe o motor como está.
+  - **Por quê não a `longAvg` do motor, como a spec dizia:** depois de um silêncio ou do Respiro, a média do motor (~4 s) está quase em zero, e semear com ela satura `bass` em 4 por vários segundos. A média de `imm` só com som mede o nível da música, que é o que a semente quer. Com a música já tocando desde o quadro 0, as duas dão quase o mesmo número.
+  - O "piso de `imm`" da spec virou o limiar de RMS que já existe: não precisa de número novo medido no Windows. O HUD mostra `imm`, a média do motor e a da Memória para conferir.
+- **A Fixa** semeia ao ser escolhida (e ao abrir com ela) e depois não muda, nem depois do silêncio. **A Longa** semeia de novo ao voltar do silêncio longo e do Respiro, e não atualiza a média enquanto não há som.
+- **Silêncio = zero:** um fator multiplica a saída: desce a 0 em ~0,3 s quando o app entra em repouso (3 s sem som) e sobe em ~1 s na volta. Saída sempre limitada a 0–4, também com Nível 0.
+- **P1 em issue própria (#86):** Normalizar áudio e Memória Viva. A spec já previa entrega separada; o P0 fecha a #81.
+- **Descartado:** semear pela `longAvg` do motor (satura na volta do silêncio); um piso fixo de `imm` (dependeria do volume e da faixa).
+
 ## 2026-11-11 — Spec 028: a reação ao áudio vem antes do Estúdio P1, sem fork
 - **Do usuário:** a frente escolhida é ganho automático + reação ao áudio, fundamentada numa pesquisa própria (Cowork), copiada em `docs/research/reatividade/2026-11-11-destravar-reatividade.md` (cópia inteira, pelo mesmo motivo da pesquisa de mercado).
 - **Achado conferido no código:** a Memória Longa/Fixa da Expressividade semeia a média uma vez, com `imm/val`. Aberta em silêncio, a Fixa trava `bass/mid/treb` em 1,00. Corrigir isso e medir no HUD vem antes de qualquer mudança no motor.

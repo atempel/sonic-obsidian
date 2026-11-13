@@ -42,6 +42,8 @@ export const EXPRESSION_CURVES = ['a', 'b', 'c'] as const
 export type ExpressionCurve = (typeof EXPRESSION_CURVES)[number]
 export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked'] as const
 export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
+/** Padrão da Expressividade (spec 028: a interface marca e restaura). Nível 0 = o motor puro (DECISIONS 2026-11-13). */
+export const EXPRESSION_DEFAULT: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation } = { level: 0, curve: 'b', adaptation: 'normal' }
 export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
   a: 'Contraste — picos mais altos, vales mais fundos',
   b: 'Energia — contraste e a base mais agitada',
@@ -173,7 +175,7 @@ export function defaultSettings(): Settings {
     gainDefaultDb: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
-    expression: { level: 0, curve: 'b', adaptation: 'normal' },
+    expression: { ...EXPRESSION_DEFAULT },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
     fpsLimit: 60,
     startupPreset: 'last',
