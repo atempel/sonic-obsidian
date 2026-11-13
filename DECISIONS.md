@@ -477,3 +477,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Mantidas as fricções:** teste no Windows antes de publicar (agora por bloco) e separação design × desenvolvimento (`needs-design`; a rodada nunca desenha).
 - **CI sob demanda:** typecheck e testes headless continuam em todo PR que mexe no app; o build Windows só roda com a label `build-windows` no PR ou por disparo manual (é assim que a rodada builda o bloco; artifact de 30 dias). O push no `main` não builda mais. O repo é público, então os minutos são gratuitos: o ganho é fila e ruído, não custo.
 - **Descartado:** escolher trabalho pelo TASKS.md (duas rodadas sobrepostas pegariam a mesma tarefa); testar cada PR (o usuário virava o gargalo); release em rascunho como build de teste (a release deve existir só depois do ok); testar direto do `main` (ele muda enquanto o usuário testa).
+
+## 2026-11-13 — Spec 029: versão da primeira release com atualizador (rodada, `agent-decided`)
+- **Decisão:** a atualização automática entra no milestone aberto mais antigo com vaga (**v0.6.0**), e a primeira release com atualizador é a desse bloco. Pergunta pequena e reversível da spec 029, decidida pela opção recomendada nela.
+- **Descartado:** uma 0.5.1 só para o atualizador — o ciclo automático lança por bloco, não por feature.
+- **Fica em aberto para a implementação:** onde fica o aviso no design (se o protótipo não cobrir, a issue vai para `needs-design`).

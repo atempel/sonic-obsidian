@@ -73,7 +73,7 @@ Assinatura de código; atualização automática do zip portátil (troca de past
 
 ## Perguntas em aberto (confirmar ao começar)
 - **Onde fica o aviso no design:** rodar `sincronizar-design` e ver se o protótipo já tem lugar para isso (faixa? Configurações › Sobre?). Se não tiver, pedir a peça no Claude Design antes de implementar a UI e registrar a lacuna em DIVERGENCIAS.
-- **Versão da primeira release com atualizador:** 0.6.0 (sugestão, é uma mudança visível para o usuário) ou 0.5.1.
+- ~~**Versão da primeira release com atualizador:** 0.6.0 ou 0.5.1.~~ Decidido pela rodada (2026-11-13, `agent-decided`): a release do milestone em que o PR entrar (hoje **v0.6.0**).
 - Se o usuário estiver no meio de uma performance, o aviso deve esperar? (P1: adiar o aviso enquanto a tela cheia estiver ativa.)
 
 ## Referências
