@@ -439,6 +439,25 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - aumentar o ponto para N px (o MilkDrop desenha 1 px; muda o visual dos presets).
 - **Validado no Windows (2026-11-11):** os dois presets voltaram a desenhar ("os dois presets funcionaram").
 
+## 2026-11-11 — Spec 028: a reação ao áudio vem antes do Estúdio P1, sem fork
+- **Do usuário:** a frente escolhida é ganho automático + reação ao áudio, fundamentada numa pesquisa própria (Cowork), copiada em `docs/research/reatividade/2026-11-11-destravar-reatividade.md` (cópia inteira, pelo mesmo motivo da pesquisa de mercado).
+- **Achado conferido no código:** a Memória Longa/Fixa da Expressividade semeia a média uma vez, com `imm/val`. Aberta em silêncio, a Fixa trava `bass/mid/treb` em 1,00. Corrigir isso e medir no HUD vem antes de qualquer mudança no motor.
+- **Ordem da spec:** corrigir → medir (HUD e log) → AGC. A causa se confirma no Windows antes do build novo (critério 1).
+- **Motor:** segue o Butterchurn fixado, com ganchos na instância. O fork (MIT) só entra quando um item exigir (áudio float, `time` desacoplado, variáveis novas, `.milk2`), e será registrado aqui.
+- **AGC sem compressão:** ganho lento sobre a média de ~10 s, com teto, congelado no silêncio e no Respiro. Comprimir achataria o contraste do drop, que é o que move o visual.
+- **Descartado:**
+  - trocar de motor (projectM em WASM, motores DirectX via Spout): custa muito e não resolve a reatividade;
+  - curva de 16 bandas e estrutura build/break/drop nesta spec (vão para a fila, `queue/2026-11-11-pesquisa-reatividade-roadmap.md`);
+  - bibliotecas GPL/AGPL de beat/onset.
+
+## 2026-11-11 — Spec 028: respostas do usuário
+- **Silêncio = zero, sem congelar:** com a música parada, os presets recebem `bass/mid/treb` = 0, o relógio segue lento e a tela escurece. O usuário quer o "parou" claro na tela. **Descartado:** neutro (1), a proposta inicial, que deixaria os presets com cara de "música constante".
+- **"Normalizar áudio"** é o nome do ganho automático: desligado por padrão, com o ganho manual como ajuste fino de ±6 dB.
+- **A Memória segue salva** entre aberturas.
+- **Padrão visível (pedido do usuário):** "· padrão" nas opções, "(padrão)" no toast, "Restaurar padrão" e o aviso "sem efeito no nível 0" no Caráter. Entra no P0, sem desenho (DIVERGENCIAS).
+- **Leitura do HUD (build atual):** Nervo + Fixa + Nível 0, `bass` antes = depois, entre 0,5 e 1,9. O Caráter inerte no Nível 0 está confirmado; a trava em 1,00 não apareceu nesta abertura e falta reproduzir abrindo em silêncio.
+- **Nível padrão (2026-11-13, do usuário):** continua 0, o motor puro. Com Nível 0, o Caráter avisa "sem efeito no nível 0" (P0, padrão visível). **Descartado:** abrir em +1, que mudaria a reação de todos os presets sem o usuário pedir.
+
 ## 2026-11-13 — Ciclo automático: issues como estado, release como portão de teste
 - **Decisão:** uma tarefa agendada do Claude Code roda a skill `rodada` a cada 4 h; cada rodada faz uma unidade de trabalho (responder ao usuário → mergear o que está verde → fechar release → implementar → planejar → manutenção) e encerra.
 - **Estado nas issues, não no TASKS.md:** labels `backlog`, `needs-decision`, `needs-design`, `blocked`, `ready`, `in-progress`, `release-candidate` (+ `prioridade`, `agent-decided`); milestones = releases. A rodada reivindica a issue (label + comentário) antes de ler qualquer arquivo, para que duas rodadas sobrepostas nunca peguem a mesma tarefa.
