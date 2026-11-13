@@ -48,6 +48,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] **Atualização automática pelo GitHub Releases** (`electron-updater`; checagem diária, download em segundo plano, um clique reinicia e atualiza; portátil só avisa) — [spec 029](docs/specs/029-atualizacao-automatica.md) · issue [#69](https://github.com/atempel/sonic-obsidian/issues/69)
 
 ## Agora — Fase 3 (Fontes e presets)
+- [ ] **Idiomas: inglês (fonte) e português (Brasil)** (próxima da fila, pedido do usuário) — [spec 030](docs/specs/030-idiomas.md) · issue [#101](https://github.com/atempel/sonic-obsidian/issues/101)
 - [x] **Migração para o Butterchurn 3** — #62, validada no Windows em 2026-11-10
 - [x] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65, validada no Windows
 - [x] **Troca no beat a cada N compassos + segurar visual + Respiro** (PRs #71 e #77, validada no Windows em 2026-11-10) — [spec 024](docs/specs/024-troca-no-beat-segurar.md) · issue [#67](https://github.com/atempel/sonic-obsidian/issues/67)
