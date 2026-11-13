@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, sessão com o usuário) — branch `docs/design-sync-598c`
+**Fez:** Passou ao usuário um prompt para o Claude Design desenhar a atualização automática (029) e corrigir a interface da 028. Com o design publicado (`1794603894-598c`), sincronizou o espelho: `Palco integrado`, `Configurações`, docs de navegação, modos, feedback, reatividade e os novos `v3-novidades.md` e `v3-perfis.md`. DIVERGENCIAS 2026-11-11 → aceita com 5 correções. Stub em `queue/`. #69 → `ready` (sem atribuição). Issue nova para as correções da 028.
+**Deixou em:** PR de sync. Specs a criar a partir do stub: Perfis, Modos (Simples), Feedback, curva de 16 bandas.
+
 ### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.6.0`
 **Fez:** Passo 3 da `rodada`: o milestone v0.6.0 ficou sem issues abertas além da #69 (`needs-design`), que foi para o novo milestone v0.7.0 (DECISIONS, `agent-decided`). PR `chore: versão 0.6.0` (`package.json`/lock e `.github/release-notes.md` com o que mudou desde a 0.5.0). Depois do merge: branch `rc/v0.6.0`, build Windows dela e a issue "Testar bloco v0.6.0" (atribuída ao usuário) com o roteiro da 028 (PRs #87 e #89) e uma checagem rápida do resto.
 **Deixou em:** bloco v0.6.0 esperando o teste do usuário; nenhuma release criada (só depois do "ok" na issue do bloco). Fila: nada `ready`; `backlog` #73 (025) e #75 (027) para planejar. Notion pendente (sem acesso nesta superfície).

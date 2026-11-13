@@ -1,6 +1,6 @@
-# Sonic Obsidian v3 — Feedback e bugs (proposta)
+# Sonic Obsidian v3 — Feedback e bugs
 
-> Sessão de design, 10/11/2026. **Status: proposta.** O app é aberto (MIT) e sem conta: o feedback vai para o GitHub, sem servidor nosso e sem telemetria.
+> Sessão de design, 10/11/2026. **Status: aprovado para spec (10/11/2026).** O app é aberto (MIT) e sem conta: o feedback vai para o GitHub, sem servidor nosso e sem telemetria.
 
 ## Três portas, cada uma com um destino
 | No app | Vai para | Por quê |

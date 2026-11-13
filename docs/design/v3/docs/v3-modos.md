@@ -1,6 +1,6 @@
-# Sonic Obsidian v3 — Modos de interface (proposta)
+# Sonic Obsidian v3 — Modos de interface
 
-> Sessão de design, 10/11/2026. **Status: proposta, não decidida.** Página de referência: "Modos". Nada a implementar até o usuário escolher.
+> Sessão de design, 10/11/2026. **Status: decidido em 10/11/2026** (respostas abaixo). Página de referência: "Modos". Ordem: Simples primeiro; o Rack segue na Fase 5.
 
 ## Princípio
 Um app, um estado, os mesmos comandos. O modo muda **quanto da casca aparece**, nunca o que o app sabe fazer:
@@ -37,8 +37,15 @@ Um modo "Avançado" no Palco mostraria os mesmos controles do Rack num lugar dif
 - **Barato (logo depois da 023):** Simples. É a mesma faixa com itens escondidos, mais os Ajustes reduzidos e o painel `?` curto. Uma spec pequena.
 - **Fase 5:** Rack em janela e embutido (já no roadmap), agora com os controles da 013 e da 015.
 
-## Perguntas para o usuário
-1. Os nomes: Simples · Completo · Rack, ou verbos (Ouvir · Explorar · Operar)?
-2. No Simples, a Biblioteca fica (reduzida) ou sai de vez, ficando só a busca?
-3. O padrão da primeira abertura: Completo (proposta) ou Simples?
-4. O rack embutido é para você (uma tela só), ou o rack fica só em janela?
+## Decisões do usuário (10/11/2026)
+1. **Nomes:** Simples · Completo · Rack (en: Simple · Full · Rack).
+2. **Biblioteca no Simples:** fica, reduzida (Favoritos e Todos; Coleções quando existir uma).
+3. **Primeira abertura:** Completo.
+4. **Rack:** nas duas formas, em janela e embutido.
+
+## Rack em janela e transmissão (OBS)
+Na forma em janela, o Rack já separa o visual da interface: o visual vai para uma janela própria, sem faixa, toasts nem cursor. Essa é a **janela de transmissão** que o SYQEL tem, então não vira um recurso à parte. A janela do visual ganha duas opções em Configurações › Telas:
+- **Onde:** tela cheia numa tela escolhida, **ou** uma janela comum de tamanho fixo, que o OBS captura mesmo quando você só tem uma tela.
+- **Tamanho fixo:** 1920×1080 · 1280×720 · 1080×1920 (vertical) · personalizado.
+
+Nela nunca aparece texto da interface. O texto sobre o visual segue a configuração da pessoa (o Modo limpo vale aqui também). Comando: "Abrir janela de transmissão", que abre o visual nessa janela sem entrar no Rack.

@@ -15,7 +15,7 @@
   body.is-rack { overflow: auto; }
   [hidden] { display: none !important; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .proto { left: 12px; right: auto; top: auto; bottom: 136px; }
+  .proto { left: 12px; right: auto; top: auto; bottom: 150px; }
   body.sheet-open .proto, body.lib-open .proto { visibility: hidden; }
   .proto .grp { display: inline-flex; align-items: center; gap: 2px; }
   .proto .grp span { color: var(--text-3); }
@@ -144,6 +144,65 @@
   .sheet header .hbtns { display: flex; align-items: center; gap: 2px; }
   .sheet h3 { display: flex; align-items: center; gap: 8px; }
   .sheet h3 .ico { width: 16px; height: 16px; color: var(--text-2); }
+
+  /* ── Perfis (barra fixa abaixo do cabeçalho dos Ajustes rápidos) ── */
+  .sheet .body { flex: 1; min-height: 0; }
+  .pf { flex: none; position: sticky; top: 0; z-index: 3; background: var(--bg-01); border-bottom: 1px solid var(--line-2); }
+  .pf-bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px 0 20px; }
+  .pf-lbl { flex: none; font-size: 13px; color: var(--text-2); }
+  .pf-sel { flex: 1; min-width: 0; height: 32px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px; text-align: left; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); cursor: pointer;
+    transition: background var(--t-fast), border-color var(--t-fast); }
+  .pf-sel:hover { background: var(--bg-04); border-color: #4A4A64; }
+  .pf-sel[aria-expanded="true"] { border-color: var(--violet-line); }
+  .pf-sel:focus-visible { outline-offset: 2px; }
+  .pf-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+  .pf-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--violet); }
+  .pf-dot[hidden] { display: none; }
+  .pf-sel .pf-chev { margin-left: auto; color: var(--text-2); transition: transform var(--t-med) var(--ease-out); }
+  .pf-sel[aria-expanded="true"] .pf-chev { transform: rotate(180deg); }
+  .pf-sub { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 46px; padding: 6px 12px 8px 20px; }
+  .pf-sub [hidden] { display: none; }
+  .pf-sum { flex: 1; min-width: 0; margin: 0; font-size: 12px; line-height: 1.4; color: var(--text-3); overflow-wrap: anywhere; }
+  .pf-mod { flex: 1; min-width: 0; font-size: 12px; color: var(--text-2); }
+  .pf-acts { display: flex; align-items: center; gap: 4px; }
+  .pf-btn { height: 26px; padding: 0 10px; font-size: 12px; }
+  .pf .pf-menu { position: absolute; z-index: 6; left: 20px; right: 12px; top: 46px; width: auto; animation: pfIn 160ms var(--ease-out); }
+  .pf-menu[hidden] { display: none; }
+  @keyframes pfIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  .pf .pf-menu button { gap: 8px; }
+  .pf-menu .chk { flex: none; width: 16px; height: 16px; display: grid; place-items: center; }
+  .pf-menu .chk .ico { width: 16px; height: 16px; }
+  .pf-menu [role="menuitemradio"] .chk .ico { opacity: 0; color: var(--violet); }
+  .pf-menu [role="menuitemradio"][aria-checked="true"] .chk .ico { opacity: 1; }
+  .pf-menu .tag { flex: none; font-size: 12px; color: var(--text-3); }
+  .pf-menu kbd { flex: none; margin-left: 2px; opacity: .75; }
+  .pf-pane { padding: 12px 12px 14px 20px; border-top: 1px solid var(--line-1); background: var(--bg-02); }
+  .pf-pane[hidden] { display: none; }
+  .pf-fl { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-2); }
+  .pf-in { width: 100%; height: 34px; padding: 0 10px; background: var(--bg-01); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font-size: 14px; }
+  .pf-in::placeholder { color: var(--text-3); opacity: 1; }
+  .pf-in:hover { border-color: #4A4A64; }
+  .pf-in:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; }
+  .pf-grps { margin: 12px 0 0; padding: 0; border: 0; min-width: 0; }
+  .pf-grps legend { padding: 0; margin-bottom: 2px; font-size: 13px; color: var(--text-2); }
+  .cbx { position: relative; display: flex; align-items: center; gap: 10px; height: 30px; font-size: 13px; color: var(--text-1); cursor: pointer; }
+  .cbx input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .cbx .box { flex: none; width: 16px; height: 16px; display: grid; place-items: center; border: 1.5px solid var(--line-3); border-radius: var(--r-1); background: transparent; transition: background var(--t-fast), border-color var(--t-fast); }
+  .cbx .box .ico { width: 12px; height: 12px; stroke-width: 3; color: #fff; opacity: 0; transform: scale(0.6); transition: opacity var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out); }
+  .cbx:hover .box { border-color: #4A4A64; }
+  .cbx input:checked + .box { background: var(--violet); border-color: var(--violet); }
+  .cbx input:checked + .box .ico { opacity: 1; transform: none; }
+  .cbx input:focus-visible + .box { outline: 2px solid var(--violet); outline-offset: 2px; }
+  .pf-note { margin: 6px 0 0; font-size: 12px; line-height: 1.4; color: var(--text-3); }
+  .pf-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+  .pf-actions .btn { height: 32px; padding: 0 14px; font-size: 13px; }
+  .pf-actions .btn:disabled { opacity: 0.45; cursor: default; }
+  .pf-ct { margin: 0; font-size: 13px; font-weight: 500; }
+  .pf-diff { list-style: none; margin: 8px 0 0; padding: 0; max-height: 168px; overflow-y: auto; }
+  .pf-diff li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line-1); font-size: 13px; color: var(--text-2); }
+  .pf-diff li:last-child { border-bottom: 0; }
+  .pf-diff .num { flex: none; max-width: 62%; text-align: right; font-size: 12px; color: var(--cyan); }
+  @media (prefers-reduced-motion: reduce) { .pf-menu { animation: none; } .pf-sel .pf-chev, .cbx .box .ico { transition: none; transform: none; } .pf-sel[aria-expanded="true"] .pf-chev { transform: rotate(180deg); } }
 
   .seg.seg-eq { display: grid; grid-template-columns: repeat(6, 1fr); }
   .seg-eq button { grid-column: span 2; min-width: 0; padding: 0 4px; white-space: nowrap; }
@@ -287,6 +346,39 @@
   .heavy-warn { position: absolute; right: 0; bottom: calc(100% + 8px); pointer-events: auto; background: linear-gradient(rgba(255,181,71,0.10), rgba(255,181,71,0.10)), var(--bg-01); box-shadow: var(--shadow-pop);
     transition: opacity var(--t-med) var(--ease-out); }
   body.idle .heavy-warn { opacity: 0; pointer-events: none; transition-duration: 150ms; }
+
+  /* ── Atualização automática (spec 029): plaquinha acima da faixa, à esquerda ── */
+  .upd { position: absolute; left: 0; bottom: calc(100% + 8px); max-width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-height: 40px; padding: 4px 4px 4px 10px;
+    background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); font-size: 13px; color: var(--text-1); pointer-events: auto;
+    transition: opacity var(--t-med) var(--ease-out) 80ms, transform var(--t-med) var(--ease-out) 80ms, visibility 0s linear 0s; }
+  .upd.beside-heavy { max-width: calc(100% - 301px); }
+  .upd.off { opacity: 0; transform: translateY(6px); visibility: hidden; pointer-events: none;
+    transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out), visibility 0s linear 150ms; }
+  .upd > .ico { width: 16px; height: 16px; color: var(--text-2); }
+  .upd .upd-tx { color: var(--text-1); }
+  .upd .upd-in { display: contents; }
+  .upd .btn { height: 28px; padding: 0 8px; font-size: 13px; gap: 6px; }
+  .upd .btn .ico { width: 12px; height: 12px; }
+  .upd .btn-ghost { color: var(--text-2); }
+  .upd .btn-ghost:hover { color: var(--text-1); }
+  .upd .spin { animation: updspin 1s linear infinite; }
+  @keyframes updspin { to { transform: rotate(360deg); } }
+  .restart-veil { position: fixed; inset: 0; z-index: 999; background: var(--bg-00); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 240ms var(--ease-out), visibility 0s linear 240ms; }
+  .restart-veil.on { opacity: 1; visibility: visible; transition: opacity 100ms var(--ease-out), visibility 0s; }
+  /* Sinal › Normalizar áudio e Expressividade (spec 028) */
+  .line .ln { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .num.auto { font-size: 12px; color: var(--cyan); white-space: nowrap; }
+  .sec-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+  .sec-head h3 { margin: 0; }
+  .sec-head .btn { height: 28px; padding: 0 8px; font-size: 13px; gap: 6px; }
+  .sec-head .btn .ico { width: 14px; height: 14px; }
+  .sl0 { position: relative; }
+  .sl0::before { content: ""; position: absolute; left: 50%; top: 50%; width: 2px; height: 9px; margin: -4.5px 0 0 -1px; border-radius: 1px; background: var(--text-3); }
+  .sl0 input { position: relative; z-index: 1; }
+  .seg button { position: relative; }
+  .seg button.def::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--text-3); }
+  .seg.dim button, .seg.dim button[aria-checked="true"] { color: var(--text-3); }
+  .seg.dim button:hover { color: var(--text-2); }
 
   /* ── Modo Rack ── */
   body.is-rack .state { display: none; }
@@ -616,6 +708,9 @@
     .favp .fav-wrap .fill, .favp[aria-pressed="true"] .fav-wrap .fill { transform: none; transition: opacity 120ms linear !important; }
     .favp .core { display: none; }
     .ind { transition: none !important; }
+    .upd, .upd.off { transform: none; transition: opacity 120ms linear !important; }
+    .upd .spin { animation: none; }
+    .restart-veil, .restart-veil.on { transition: opacity 120ms linear !important; }
     .eq-bub { transition: none !important; }
     .lib, .sheet { transform: none !important; opacity: 0; transition: opacity 120ms linear, visibility 0s linear 120ms !important; }
     body.lib-open .lib, body.sheet-open .sheet { opacity: 1; transition: opacity 120ms linear, visibility 0s !important; }
@@ -663,6 +758,7 @@
 
 <div class="strip-wrap" id="stripWrap">
  <div class="strip-box">
+  <div class="upd off" id="upd" role="status" aria-live="polite" aria-atomic="true"><span class="upd-in" id="updIn"></span></div>
   <span class="chip heavy-warn" id="heavyChip" hidden><i data-lucide="gauge" class="ico ico-sm"></i><span class="num">38 fps</span> · preset pesado <button class="btn btn-ghost" id="skipHeavy">Pular e ocultar</button></span>
   <div class="strip" role="toolbar" aria-label="Controles do visual">
     <i class="rot-line" id="rotLine"></i>
@@ -757,19 +853,56 @@
       <button class="ibtn" id="sheetClose" aria-label="Fechar ajustes" title="Fechar (Esc)"><i data-lucide="x" class="ico"></i></button>
     </div>
   </header>
+  <div class="pf" id="pf">
+    <div class="pf-bar">
+      <span class="pf-lbl" id="pfLbl">Perfil</span>
+      <button type="button" class="pf-sel" id="pfSel" aria-haspopup="menu" aria-expanded="false" aria-controls="pfMenu" aria-label="Perfil: Padrão"><span class="pf-name" id="pfName">Padrão</span><span class="pf-dot" id="pfDot" hidden></span><i data-lucide="chevron-down" class="ico ico-sm pf-chev" aria-hidden="true"></i></button>
+    </div>
+    <div class="pf-sub">
+      <p class="pf-sum num" id="pfSum"></p>
+      <span class="pf-mod" id="pfMod" hidden>Modificado</span>
+      <span class="pf-acts" id="pfActs" hidden>
+        <button type="button" class="btn btn-ghost pf-btn" id="pfUndo">Desfazer</button>
+        <button type="button" class="btn pf-btn" id="pfUpd">Atualizar</button>
+      </span>
+    </div>
+    <div class="menu pf-menu" id="pfMenu" role="menu" aria-label="Perfis" hidden></div>
+    <div class="pf-pane" id="pfConfirm" role="group" aria-labelledby="pfConfT" hidden>
+      <p class="pf-ct" id="pfConfT">Atualizar o perfil com estes valores?</p>
+      <ul class="pf-diff" id="pfDiff"></ul>
+      <div class="pf-actions"><button type="button" class="btn btn-ghost" id="pfConfNo">Cancelar</button><button type="button" class="btn btn-primary" id="pfConfOk">Atualizar perfil</button></div>
+    </div>
+    <form class="pf-pane" id="pfForm" hidden novalidate autocomplete="off">
+      <label class="pf-fl" for="pfNameIn">Nome do perfil</label>
+      <input class="pf-in" id="pfNameIn" type="text" maxlength="40" placeholder="Perfil 1" spellcheck="false">
+      <fieldset class="pf-grps" id="pfGrps"><legend>O que guardar</legend>
+        <label class="cbx"><input type="checkbox" value="expressividade" checked><span class="box"><i data-lucide="check" class="ico" aria-hidden="true"></i></span>Expressividade</label>
+        <label class="cbx"><input type="checkbox" value="transicoes" checked><span class="box"><i data-lucide="check" class="ico" aria-hidden="true"></i></span>Transições</label>
+        <label class="cbx"><input type="checkbox" value="rotacao" checked><span class="box"><i data-lucide="check" class="ico" aria-hidden="true"></i></span>Rotação</label>
+        <label class="cbx"><input type="checkbox" value="sinal"><span class="box"><i data-lucide="check" class="ico" aria-hidden="true"></i></span>Sinal</label>
+        <label class="cbx"><input type="checkbox" value="texto"><span class="box"><i data-lucide="check" class="ico" aria-hidden="true"></i></span>Texto sobre o visual</label>
+      </fieldset>
+      <p class="pf-note">Grupos fora do perfil ficam como estão quando ele é aplicado.</p>
+      <div class="pf-actions"><button type="button" class="btn btn-ghost" id="pfFormNo">Cancelar</button><button type="submit" class="btn btn-primary" id="pfFormOk">Salvar</button></div>
+    </form>
+  </div>
   <div class="body">
     <section>
       <h3><i data-lucide="audio-lines" class="ico" aria-hidden="true"></i>Sinal</h3>
+      <div class="line"><span class="ln"><span id="normLbl">Normalizar áudio</span><span class="num auto" id="normAuto" hidden>auto +5 dB</span></span>
+        <label class="switch"><input type="checkbox" id="normSw" aria-labelledby="normLbl"><span class="track"></span></label></div>
       <div class="field">
-        <div class="field-top"><label for="gain">Ganho</label><span class="val num" id="gainVal">+3 dB</span></div>
+        <div class="field-top"><label for="gain" id="gainLbl">Ganho</label><span class="val num" id="gainVal">+3 dB</span></div>
         <input type="range" id="gain" min="-12" max="12" step="1" value="0">
+        <p class="note" id="normNote" hidden>Iguala o volume entre faixas em alguns segundos. O som das caixas não muda.</p>
       </div>
     </section>
     <section>
-      <h3><i data-lucide="activity" class="ico" aria-hidden="true"></i>Expressividade</h3>
+      <div class="sec-head"><h3><i data-lucide="activity" class="ico" aria-hidden="true"></i>Expressividade</h3>
+        <button type="button" class="btn btn-ghost" id="xRst" title="Restaurar padrão" disabled><i data-lucide="rotate-ccw" class="ico" aria-hidden="true"></i>Restaurar padrão</button></div>
       <div class="field">
         <div class="field-top"><label for="exprSl">Nível</label><span class="val num" id="exprVal">0</span></div>
-        <input type="range" id="exprSl" min="-3" max="3" step="1" value="0">
+        <div class="sl0"><input type="range" id="exprSl" min="-3" max="3" step="1" value="0"></div>
       </div>
       <div class="field">
         <div class="field-top"><span id="charLbl">Caráter</span></div>
@@ -867,7 +1000,7 @@
         <label for="rColl" class="vh">Coleção</label>
         <select class="rsel" id="rColl"></select>
         <div class="gain" title="Ganho">
-          <label for="gainMini" class="vh">Ganho</label>
+          <label for="gainMini" class="vh" id="gainMiniLbl">Ganho</label>
           <i data-lucide="volume-2" class="ico"></i>
           <input type="range" id="gainMini" min="-12" max="12" step="1" value="0">
         </div>
@@ -885,7 +1018,7 @@
             <div class="tpanel" role="tabpanel" id="p-q" aria-labelledby="dtab-q"><ul class="queue" id="queue"></ul></div>
             <div class="tpanel" role="tabpanel" id="p-s" aria-labelledby="dtab-s" hidden>
               <div class="field">
-                <div class="fl"><label for="gainR">Ganho</label><output class="num" id="gainOut" for="gainR">+3 dB</output></div>
+                <div class="fl"><label for="gainR" id="gainRLbl">Ganho</label><output class="num" id="gainOut" for="gainR">+3 dB</output></div>
                 <input type="range" id="gainR" min="-12" max="12" step="1" value="0">
               </div>
               <div id="rackTrans"></div>
@@ -993,6 +1126,7 @@
 <div class="gtoast" id="gtoast" role="status" aria-live="polite"><span id="gtoastTx"></span></div>
 
 <div class="sbub" id="sbub" aria-hidden="true"><div class="b num" id="sbubTx"></div></div>
+<div class="restart-veil" id="restartVeil" aria-hidden="true"></div>
 <div class="closed-screen" id="closedScreen" hidden role="dialog" aria-label="App fechado"><p>App fechado (protótipo)</p><button type="button" class="btn btn-ghost" id="reopenApp">Abrir de novo</button></div>
 
 <div class="proto" role="group" aria-label="Estados do protótipo">
@@ -1008,6 +1142,7 @@
   <button id="importBtn">Importar .milk</button>
   <button id="pinUi" aria-pressed="false">Fixar controles</button>
   <button id="protoClean" aria-pressed="false">Modo limpo</button>
+  <span class="grp" role="group" aria-label="Atualização"><b>Atualização:</b><button data-upd="none" aria-pressed="true">Nenhuma</button><span aria-hidden="true">·</span><button data-upd="ready" aria-pressed="false">Pronta</button><span aria-hidden="true">·</span><button data-upd="portable" aria-pressed="false">Portátil</button></span>
   <span class="grp" role="group" aria-label="Telas"><b>Telas:</b><button data-screens="1" aria-pressed="false">1</button><span aria-hidden="true">·</span><button data-screens="2" aria-pressed="true">2</button></span>
 </div>
 
@@ -1355,11 +1490,26 @@
   // ── Sliders (ganho e blends sincronizados entre Ajustes e Rack) ──
   const fill = r => r.style.setProperty('--fill', ((r.value - r.min) / (r.max - r.min) * 100) + '%');
   const fmtS = v => (+v).toFixed(1).replace('.', ',') + ' s';
+  let NORM = false, GV = 0, AUTO = 5;
   function setGain(v) {
-    v = +v; const t = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' dB';
+    const lim = NORM ? 6 : 12; v = Math.max(-lim, Math.min(lim, +v)); GV = v; const t = (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' dB';
     ['gain', 'gainMini', 'gainR'].forEach(id => { $(id).value = v; fill($(id)); $(id).setAttribute('aria-valuetext', t); });
-    $('gainVal').textContent = t; $('gainOut').textContent = t; $('gainMini').title = 'Ganho: ' + t;
+    $('gainVal').textContent = t; $('gainOut').textContent = t; $('gainMini').title = (NORM ? 'Ajuste fino' : 'Ganho') + ': ' + t;
   }
+  // Normalizar áudio (spec 028): ligado, o slider vira Ajuste fino (±6); o valor atual fica preso em ±6. Desligado, volta a Ganho com o mesmo valor.
+  const autoTx = () => 'auto ' + (AUTO > 0 ? '+' : '') + AUTO + ' dB';
+  function setNorm(on) {
+    NORM = !!on; $('normSw').checked = NORM;
+    const lim = NORM ? 6 : 12;
+    ['gain', 'gainMini', 'gainR'].forEach(id => { $(id).min = -lim; $(id).max = lim; });
+    const lb = NORM ? 'Ajuste fino' : 'Ganho';
+    ['gainLbl', 'gainMiniLbl', 'gainRLbl'].forEach(id => { $(id).textContent = lb; });
+    $('gainMini').parentNode.title = lb;
+    $('normAuto').hidden = !NORM; $('normNote').hidden = !NORM; $('normAuto').textContent = autoTx();
+    setGain(GV);
+  }
+  $('normSw').onchange = e => setNorm(e.target.checked);
+  setInterval(() => { if (!NORM) return; AUTO = Math.max(3, Math.min(6, AUTO + (Math.random() < 0.5 ? -1 : 1))); $('normAuto').textContent = autoTx(); }, 2600);
   ['gain', 'gainMini', 'gainR'].forEach(id => $(id).oninput = e => setGain(e.target.value));
   setGain(0);
 
@@ -1368,7 +1518,8 @@
   const TBLK = [['manual', 'Quando você troca'], ['auto', 'Na troca automática']];
   const T = { manual: { type: 'random', sec: 1.0 }, auto: { type: 'crossfade', sec: 2.7 } };
   const CHARS = [['Contraste', 'Só amplia a diferença entre partes fortes e fracas.'], ['Energia', 'Amplia e sobe a base: tudo reage mais.'], ['Nervo', 'Energia com reação seca quando sobe e suave quando desce.']];
-  const MEMS = [['Curta', 'Compara com os últimos ~4 s, como o motor.'], ['Longa', 'Compara com os últimos ~30 s: as viradas da música aparecem mais.'], ['Fixa', 'Congela a referência agora: partes altas ficam sempre mais fortes.']];
+  const MEMS = [['Curta', 'Compara com os últimos ~4 s, como o motor.'], ['Longa', 'Compara com os últimos ~30 s: as viradas da música aparecem mais.'], ['Fixa', 'Congela a referência agora: partes altas ficam sempre mais fortes.'], ['Viva', 'Viva (em teste): compara com os últimos ~1,7 s, como o MilkDrop 2. Reage a cada batida.']];
+  const X_DEF = { chr: 1, mem: 0 }; // padrão: Nível 0, Energia, Curta, curva Plana
   const XS = { lvl: 0, chr: 1, mem: 0, curve16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvePreset: 'plana' };
   let eqWarnHook = null;
   /* ── EQ gráfico de 16 bandas (curva de expressividade) ── */
@@ -1413,9 +1564,9 @@
     $(id + 'Ty').onchange = e => { T[k].type = e.target.value; syncT(); };
     $(id + 'Sl').oninput = e => { T[k].sec = +e.target.value; syncT(); };
   }));
-  function segBuild(sid, arr, key) {
+  function segBuild(sid, arr, key, def) {
     const el = $(sid);
-    el.innerHTML = arr.map((a, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-i="' + i + '">' + a[0] + '</button>').join('');
+    el.innerHTML = arr.map((a, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-i="' + i + '"' + (i === def ? ' class="def"' : '') + '>' + a[0] + (i === def ? '<span class="vh"> (padrão)</span>' : '') + '</button>').join('');
     el.onclick = e => { const b = e.target.closest('button'); if (b) { XS[key] = +b.dataset.i; syncX(); } };
     el.onkeydown = e => {
       const n = arr.length, d = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
@@ -1424,20 +1575,25 @@
       e.preventDefault(); e.stopPropagation(); XS[key] = i; syncX(); el.querySelectorAll('button')[i].focus();
     };
   }
-  segBuild('charSeg', CHARS, 'chr'); segBuild('memSeg', MEMS, 'mem');
-  function segSet(sid, did, arr, i) {
+  segBuild('charSeg', CHARS, 'chr', X_DEF.chr); segBuild('memSeg', MEMS, 'mem', X_DEF.mem);
+  function segSet(sid, did, arr, i, def, over) {
     $(sid).querySelectorAll('button').forEach((b, k) => { b.setAttribute('aria-checked', k === i); b.tabIndex = k === i ? 0 : -1; });
-    $(did).textContent = arr[i][1];
+    $(did).textContent = over || (arr[i][1] + (i === def ? ' Padrão.' : ''));
   }
+  const xIsDef = () => XS.lvl === 0 && XS.chr === X_DEF.chr && XS.mem === X_DEF.mem && XS.curve16.every(v => v === 0);
+  function rstSync() { const b = $('xRst'); if (b) b.disabled = xIsDef(); }
   function syncX() {
     const sl = $('exprSl'); sl.value = XS.lvl; fill(sl); sl.setAttribute('aria-valuetext', fmtX(XS.lvl)); $('exprVal').textContent = fmtX(XS.lvl);
-    segSet('charSeg', 'charDesc', CHARS, XS.chr); segSet('memSeg', 'memDesc', MEMS, XS.mem);
+    segSet('charSeg', 'charDesc', CHARS, XS.chr, X_DEF.chr, XS.lvl === 0 ? 'Sem efeito no nível 0.' : null); segSet('memSeg', 'memDesc', MEMS, XS.mem, X_DEF.mem);
+    $('charSeg').classList.toggle('dim', XS.lvl === 0);
     if (eqWarnHook) eqWarnHook();
+    rstSync();
   }
   $('exprSl').oninput = e => { XS.lvl = +e.target.value; syncX(); };
+  $('xRst').onclick = () => { XS.lvl = 0; XS.chr = X_DEF.chr; XS.mem = X_DEF.mem; eqPreset('plana', false); syncX(); $('exprSl').focus(); gToast('Expressividade no padrão.', IMP); };
   function keyExpr(d) { XS.lvl = d === 0 ? 0 : Math.max(-3, Math.min(3, XS.lvl + d)); syncX(); gToast('Expressividade ' + fmtX(XS.lvl), IMP); }
-  function keyChar() { XS.chr = (XS.chr + 1) % CHARS.length; syncX(); gToast('Caráter ' + CHARS[XS.chr][0] + ' · ' + CHARS[XS.chr][1], IMP); }
-  function keyMem() { XS.mem = (XS.mem + 1) % MEMS.length; syncX(); gToast('Memória ' + MEMS[XS.mem][0] + ' · ' + MEMS[XS.mem][1], IMP); }
+  function keyChar() { XS.chr = (XS.chr + 1) % CHARS.length; syncX(); gToast('Caráter ' + CHARS[XS.chr][0] + (XS.chr === X_DEF.chr ? ' (padrão)' : '') + ' · ' + CHARS[XS.chr][1], IMP); }
+  function keyMem() { XS.mem = (XS.mem + 1) % MEMS.length; syncX(); gToast('Memória ' + MEMS[XS.mem][0] + (XS.mem === X_DEF.mem ? ' (padrão)' : '') + ' · ' + MEMS[XS.mem][1], IMP); }
   function keyTType(d) {
     const i = TTYPES.findIndex(t => t[0] === T.manual.type); T.manual.type = TTYPES[(i + d + TTYPES.length) % TTYPES.length][0]; syncT();
     gToast('Transição: ' + TTYPES.find(t => t[0] === T.manual.type)[1], IMP);
@@ -1550,7 +1706,7 @@
   function wake() {
     document.body.classList.remove('idle'); clearTimeout(idleT);
     if (mode !== 'stage') return;
-    idleT = setTimeout(() => { if (!pinned && !colOpen && !pOpen && !kOpen && !sOpen && !lOpen && !pop && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
+    idleT = setTimeout(() => { if (!pinned && !colOpen && !pOpen && !kOpen && !sOpen && !lOpen && !pop && !UPD.busy && !$('stripWrap').contains(document.activeElement)) document.body.classList.add('idle'); }, 2500);
   }
   const edge = $('edge');
   addEventListener('mousemove', e => {
@@ -1680,6 +1836,7 @@
     { name: 'Texto e controles', rows: [['Esconder controles', [['H']]], ['Modo limpo', [['T']]]] },
     { name: 'Transição', rows: [['Tipo da transição', [['B'], ['Shift', 'B']]], ['Tempo da transição', [['↑'], ['↓']]], ['Troca com corte seco', [['Shift', '←'], ['Shift', '→'], ['Shift', 'Espaço']]]] },
     { name: 'Expressividade', rows: [['Aumentar / diminuir expressividade', [['+'], ['−']]], ['Expressividade neutra', [['0']]], ['Caráter da expressividade', [['X']]], ['Memória da expressividade', [['Shift', 'X']]]] },
+    { name: 'Perfis', rows: [['Aplicar perfil 1 a 9', [['Alt', '1…9']]]] },
     { name: 'Janela', rows: [['Tela cheia', [['F'], ['F11']]], ['Fechar o app', [['Ctrl', 'W']]], ['Fechar painel ou gaveta', [['Esc']]], ['Mostrar atalhos', [['?']]]] },
     { name: 'Diagnóstico', rows: [['Painel de diagnóstico', [['Ctrl', 'Shift', 'D']]], ['Abrir o log', [['Ctrl', 'Shift', 'L']]]] },
     { name: 'Vídeo', phase: 'Fase 5', note: 'No Palco com vídeo', rows: [['Camada de vídeo', [['V']]], ['Opacidade do vídeo', [['[', ']']]], ['Modo de mistura', [['G']]], ['Clipe anterior / próximo', [['Shift', '←'], ['Shift', '→']]], ['Salvar cena', [['Ctrl', 'S']]], ['Modo performance', [['P']]]] },
@@ -1732,6 +1889,8 @@
     { label: 'Sugerir uma ideia', keys: [], icon: 'lightbulb', run: () => fbAct('idea') },
     { label: 'Fazer uma pergunta', keys: [], icon: 'circle-help', run: () => fbAct('ask') },
     { label: 'Copiar diagnóstico', keys: [], icon: 'clipboard-copy', run: () => fbAct('diag') },
+    { label: 'Verificar atualizações', keys: [], icon: 'refresh-cw', run: () => updCheck() },
+    { label: 'Reiniciar e atualizar', keys: [], icon: 'rotate-cw', when: () => UPD.kind === 'ready', run: () => updRestart() },
     { label: 'Tela cheia', keys: ['F'], icon: 'maximize', run: () => toggleFs() },
     { label: 'Favoritar preset atual', keys: [], icon: 'star', run: () => toggleFav() },
     { label: 'Adicionar à coleção…', keys: [], icon: 'folder-plus', stage: true, run: () => openCol() },
@@ -1740,7 +1899,7 @@
   ];
   function cmdList() {
     const f = norm(q);
-    return CMDS.filter(c => (mode === 'stage' || !c.stage) && (!f || norm(c.label + ' ' + c.keys.join(' ')).indexOf(f) > -1));
+    return CMDS.concat(pfCmds()).filter(c => (!c.when || c.when()) && (mode === 'stage' || !c.stage) && (!f || norm(c.label + ' ' + c.keys.join(' ')).indexOf(f) > -1));
   }
   function runCmd(c) { closePalette(); c.run(); }
 
@@ -1984,6 +2143,218 @@
   $('sheetSettings').onclick = () => { location.href = SETTINGS_URL; };
   document.addEventListener('pointerdown', e => { if (sOpen && !$('sheet').contains(e.target) && !$('sheetBtn').contains(e.target) && !$('fbMenu').contains(e.target) && !$('fbDialog').contains(e.target) && !$('fbScrim').contains(e.target)) setSheet(false, true); });
 
+  // ═══════════ Perfis (docs/v3-perfis.md) ═══════════
+  const PF_GR = [['expressividade', 'Expressividade'], ['transicoes', 'Transições'], ['rotacao', 'Rotação'], ['sinal', 'Sinal'], ['texto', 'Texto sobre o visual']];
+  const PF_CAR = ['contraste', 'energia', 'nervo'], PF_MEM = ['curta', 'longa', 'fixa', 'viva'];
+  const PF_CAR_L = { contraste: 'Contraste', energia: 'Energia', nervo: 'Nervo' }, PF_MEM_L = { curta: 'Curta', longa: 'Longa', fixa: 'Fixa', viva: 'Viva' };
+  const PF_TIPO = { cut: 'corte', crossfade: 'crossfade', sweep: 'varredura', plasma: 'plasma', radial: 'radial', random: 'aleatorio' };
+  const PF_TIPO_R = { corte: 'cut', crossfade: 'crossfade', varredura: 'sweep', plasma: 'plasma', radial: 'radial', aleatorio: 'random' };
+  const PF_TIPO_L = { corte: 'Corte seco', crossfade: 'Crossfade', varredura: 'Varredura', plasma: 'Plasma', radial: 'Radial', aleatorio: 'Aleatório' };
+  const PF_NP = { always: 'sempre', manual: 'manual', never: 'nunca' }, PF_NP_R = { sempre: 'always', manual: 'manual', nunca: 'never' }, PF_NP_L = { sempre: 'Sempre', manual: 'Só quando eu troco', nunca: 'Nunca' };
+  const PF_AV = { all: 'todos', important: 'importantes', none: 'nenhum' }, PF_AV_R = { todos: 'all', importantes: 'important', nenhum: 'none' }, PF_AV_L = { todos: 'Todos', importantes: 'Só importantes', nenhum: 'Nenhum' };
+  const pfR1 = v => Math.round(v * 10) / 10;
+  const pfInt = (x, a, b) => Number.isInteger(x) && x >= a && x <= b;
+  const pfNum = (x, a, b) => typeof x === 'number' && isFinite(x) && x >= a && x <= b;
+  // Valores canônicos de um grupo (ordem fixa das chaves, para comparar); null se inválido.
+  function pfNormG(g, v) {
+    if (!v || typeof v !== 'object') return null;
+    if (g === 'expressividade') {
+      if (!pfInt(v.nivel, -3, 3) || PF_CAR.indexOf(v.carater) < 0 || PF_MEM.indexOf(v.memoria) < 0 || !Array.isArray(v.curva) || v.curva.length !== 16 || !v.curva.every(x => pfInt(x, -12, 12))) return null;
+      return { nivel: v.nivel, carater: v.carater, memoria: v.memoria, curva: v.curva.slice() };
+    }
+    if (g === 'transicoes') {
+      const t = o => o && PF_TIPO_L[o.tipo] && pfNum(o.tempo, 0.1, 10) ? { tipo: o.tipo, tempo: o.tipo === 'corte' ? 1 : pfR1(Math.min(o.tempo, 5)) } : null;
+      const m = t(v.manual), a = t(v.auto); return m && a ? { manual: m, auto: a } : null;
+    }
+    if (g === 'rotacao') return typeof v.ligada === 'boolean' && pfNum(v.intervalo, 5, 120) && typeof v.noBeat === 'boolean' ? { ligada: v.ligada, intervalo: Math.round(v.intervalo), noBeat: v.noBeat } : null;
+    if (g === 'sinal') { if (!pfInt(v.ganho, -12, 12)) return null; const n = v.normalizar === true; return { ganho: n ? Math.max(-6, Math.min(6, v.ganho)) : v.ganho, normalizar: n }; }
+    if (g === 'texto') return PF_NP_L[v.nomePreset] && typeof v.titulo === 'boolean' && PF_AV_L[v.avisos] ? { nomePreset: v.nomePreset, titulo: v.titulo, avisos: v.avisos } : null;
+    return null;
+  }
+  // Lê os controles de verdade (mesmo estado que os sliders e botões dos Ajustes).
+  function pfRead(g) {
+    const raw = {
+      expressividade: () => ({ nivel: XS.lvl, carater: PF_CAR[XS.chr], memoria: PF_MEM[XS.mem], curva: XS.curve16.slice() }),
+      transicoes: () => ({ manual: { tipo: PF_TIPO[T.manual.type], tempo: T.manual.sec }, auto: { tipo: PF_TIPO[T.auto.type], tempo: T.auto.sec } }),
+      rotacao: () => ({ ligada: rotOn, intervalo: interval, noBeat: beatSync }),
+      sinal: () => ({ ganho: +$('gain').value, normalizar: NORM }),
+      texto: () => ({ nomePreset: PF_NP[overlayText.preset], titulo: overlayText.track, avisos: PF_AV[overlayText.toasts] })
+    }[g]();
+    return pfNormG(g, raw) || raw;
+  }
+  function pfApplyG(g, v) {
+    if (g === 'expressividade') {
+      XS.lvl = v.nivel; XS.chr = PF_CAR.indexOf(v.carater); XS.mem = PF_MEM.indexOf(v.memoria);
+      XS.curve16 = v.curva.slice(); XS.curvePreset = eqMatch(XS.curve16); syncX();
+    } else if (g === 'transicoes') {
+      ['manual', 'auto'].forEach(k => { T[k].type = PF_TIPO_R[v[k].tipo]; T[k].sec = Math.max(0.1, Math.min(5, v[k].tempo)); }); syncT();
+    } else if (g === 'rotacao') {
+      setRot(v.ligada); interval = baseInterval = v.intervalo; left = Math.min(left, interval); syncInterval();
+      $('beatSwitch').checked = v.noBeat; $('beatSwitch').dispatchEvent(new Event('change'));
+    } else if (g === 'sinal') {
+      setNorm(v.normalizar === true); setGain(v.ganho);
+    } else if (g === 'texto') {
+      [['otPreset', PF_NP_R[v.nomePreset]], ['otToasts', PF_AV_R[v.avisos]]].forEach(([id, val]) => { $(id).value = val; $(id).dispatchEvent(new Event('change')); });
+      $('otTrack').checked = v.titulo; $('otTrack').dispatchEvent(new Event('change'));
+    }
+  }
+  const PF_PRE = {}; EQ_PRE.forEach(p => { PF_PRE[p[0]] = p[2]; });
+  function pfBuilt(id, name, nivel, car, mem, curva, man, aut, lig, iv) {
+    return { id, name, builtIn: true, groups: ['expressividade', 'transicoes', 'rotacao'], values: {
+      expressividade: { nivel, carater: car, memoria: mem, curva: PF_PRE[curva].slice() },
+      transicoes: { manual: { tipo: man[0], tempo: man[1] }, auto: { tipo: aut[0], tempo: aut[1] } },
+      rotacao: { ligada: lig, intervalo: iv, noBeat: false } } };
+  }
+  const PF = { n: 0, active: 'padrao', list: [
+    pfBuilt('padrao', 'Padrão', 0, 'energia', 'curta', 'plana', ['aleatorio', 1], ['crossfade', 2.7], true, 30),
+    pfBuilt('calmo', 'Calmo', -2, 'contraste', 'longa', 'plana', ['crossfade', 5], ['crossfade', 5], true, 60),
+    pfBuilt('festa', 'Festa', 2, 'nervo', 'fixa', 'graves', ['corte', 1], ['radial', 1], true, 15),
+    pfBuilt('estudar', 'Estudar presets', 0, 'energia', 'curta', 'plana', ['crossfade', 1], ['crossfade', 1], false, 30)
+  ] };
+  const pfCur = () => PF.list.find(p => p.id === PF.active) || PF.list[0];
+  const pfT = s => String(pfR1(s)).replace('.', ',') + ' s';
+  const pfTr = o => o.tipo === 'corte' ? 'Corte seco' : PF_TIPO_L[o.tipo] + ' ' + pfT(o.tempo);
+  const pfLig = b => b ? 'ligada' : 'desligada', pfLigo = b => b ? 'ligado' : 'desligado';
+  function pfCurveName(c) { const p = EQ_PRE.find(x => x[0] === eqMatch(c)); return p ? p[1] : 'Personalizada'; }
+  function pfSummary(p) {
+    const a = [], v = p.values, has = g => p.groups.indexOf(g) > -1;
+    if (has('expressividade')) a.push(fmtX(v.expressividade.nivel), PF_CAR_L[v.expressividade.carater], PF_MEM_L[v.expressividade.memoria], pfCurveName(v.expressividade.curva));
+    if (has('transicoes')) a.push(v.transicoes.manual.tipo === 'corte' ? 'corte seco' : PF_TIPO_L[v.transicoes.manual.tipo].toLowerCase() + ' ' + pfT(v.transicoes.manual.tempo));
+    if (has('rotacao')) a.push(v.rotacao.ligada ? v.rotacao.intervalo + ' s' : 'sem rotação');
+    if (has('sinal')) a.push((v.sinal.normalizar ? 'normalizado ' : '') + eqFmtDb(v.sinal.ganho));
+    if (has('texto')) a.push('texto sobre o visual');
+    return a.join(' · ');
+  }
+  function pfDiffG(g, a, b) {
+    const o = [], add = (k, x, y) => { if (x !== y) o.push([k, x, y]); };
+    if (g === 'expressividade') {
+      add('Expressividade', fmtX(a.nivel), fmtX(b.nivel)); add('Caráter', PF_CAR_L[a.carater], PF_CAR_L[b.carater]); add('Memória', PF_MEM_L[a.memoria], PF_MEM_L[b.memoria]);
+      if (a.curva.join() !== b.curva.join()) { const x = pfCurveName(a.curva), y = pfCurveName(b.curva); o.push(['Curva por frequência', x, x === y ? y + ', ajustada' : y]); }
+    } else if (g === 'transicoes') {
+      add('Transição manual', pfTr(a.manual), pfTr(b.manual)); add('Transição automática', pfTr(a.auto), pfTr(b.auto));
+    } else if (g === 'rotacao') {
+      add('Rotação', pfLig(a.ligada), pfLig(b.ligada)); add('Trocar a cada', a.intervalo + ' s', b.intervalo + ' s'); add('Trocar no beat', pfLigo(a.noBeat), pfLigo(b.noBeat));
+    } else if (g === 'sinal') {
+      add('Normalizar áudio', pfLigo(!!a.normalizar), pfLigo(!!b.normalizar)); add(b.normalizar ? 'Ajuste fino' : 'Ganho', eqFmtDb(a.ganho), eqFmtDb(b.ganho));
+    } else if (g === 'texto') {
+      add('Nome do preset', PF_NP_L[a.nomePreset], PF_NP_L[b.nomePreset]); add('Título da faixa', pfLigo(a.titulo), pfLigo(b.titulo)); add('Avisos', PF_AV_L[a.avisos], PF_AV_L[b.avisos]);
+    }
+    return o;
+  }
+  // Diferenças entre o perfil aplicado e os controles agora (só dos grupos do perfil).
+  function pfDiffs(p) {
+    let out = [];
+    p.groups.forEach(g => { const now = pfRead(g); if (JSON.stringify(now) !== JSON.stringify(pfNormG(g, p.values[g]))) out = out.concat(pfDiffG(g, p.values[g], now).map(d => d.concat(g))); });
+    return out;
+  }
+
+  const pfSel = $('pfSel'), pfMenu = $('pfMenu'), pfForm = $('pfForm'), pfConf = $('pfConfirm');
+  let pfSig = '';
+  function pfRefresh(force) {
+    const p = pfCur(), d = pfDiffs(p), dirty = d.length > 0, sig = p.id + '|' + p.name + '|' + dirty + '|' + JSON.stringify(p.values);
+    if (!force && sig === pfSig) return; pfSig = sig;
+    $('pfName').textContent = p.name; pfSel.title = p.name; pfSel.setAttribute('aria-label', 'Perfil: ' + p.name + (dirty ? ', modificado' : ''));
+    $('pfDot').hidden = !dirty; $('pfMod').hidden = !dirty; $('pfActs').hidden = !dirty; $('pfUpd').hidden = p.builtIn;
+    const sm = $('pfSum'); sm.hidden = dirty; sm.textContent = pfSummary(p); sm.title = sm.textContent;
+    if (!dirty && !pfConf.hidden) pfHideConfirm(false);
+  }
+  let pfRaf = 0;
+  const pfSched = () => { if (!pfRaf) pfRaf = requestAnimationFrame(() => { pfRaf = 0; pfRefresh(); }); };
+  ['input', 'change', 'click', 'keyup', 'pointerup'].forEach(t => document.addEventListener(t, pfSched, true));
+  setInterval(pfRefresh, 400);
+
+  const pfOrder = () => PF.list.filter(p => p.builtIn).concat(PF.list.filter(p => !p.builtIn));
+  const pfKeyOf = p => { const i = pfOrder().indexOf(p); return i > -1 && i < 9 ? i + 1 : 0; };
+  function pfMenuHTML() {
+    const row = p => '<button type="button" role="menuitemradio" aria-checked="' + (p.id === PF.active) + '" data-pid="' + p.id + '"><span class="chk" aria-hidden="true"><i data-lucide="check" class="ico"></i></span><span class="grow">' + esc(p.name) + '</span>' + (p.builtIn ? '<span class="tag">do app</span>' : '') + (pfKeyOf(p) ? '<kbd aria-hidden="true">Alt+' + pfKeyOf(p) + '</kbd>' : '') + '</button>';
+    const app = PF.list.filter(p => p.builtIn), mine = PF.list.filter(p => !p.builtIn);
+    return app.map(row).join('') + (mine.length ? '<hr>' + mine.map(row).join('') : '') +
+      '<hr><button type="button" role="menuitem" data-pnew="1"><span class="chk" aria-hidden="true"><i data-lucide="bookmark-plus" class="ico"></i></span><span class="grow">Salvar como novo perfil…</span></button>';
+  }
+  function pfOpenMenu() {
+    pfHideForm(false); pfHideConfirm(false);
+    pfMenu.innerHTML = pfMenuHTML(); icons(); pfMenu.hidden = false; pfSel.setAttribute('aria-expanded', 'true');
+    (pfMenu.querySelector('[aria-checked="true"]') || pfMenu.querySelector('button')).focus();
+  }
+  function pfCloseMenu(refocus) {
+    if (pfMenu.hidden) return; pfMenu.hidden = true; pfSel.setAttribute('aria-expanded', 'false'); if (refocus) pfSel.focus();
+  }
+  function pfSelect(id) {
+    const p = PF.list.find(x => x.id === id); if (!p) return;
+    p.groups.forEach(g => pfApplyG(g, p.values[g])); PF.active = p.id;
+    pfRefresh(true); gToast('Perfil: ' + p.name, IMP);
+  }
+  pfSel.onclick = () => pfMenu.hidden ? pfOpenMenu() : pfCloseMenu(true);
+  pfMenu.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.pnew) { pfShowForm(); return; }
+    pfCloseMenu(true); pfSelect(b.dataset.pid);
+  });
+  document.addEventListener('pointerdown', e => { if (!pfMenu.hidden && !pfMenu.contains(e.target) && !pfSel.contains(e.target)) pfCloseMenu(false); });
+
+  // Desfazer e Atualizar
+  $('pfUndo').onclick = () => { const p = pfCur(); p.groups.forEach(g => pfApplyG(g, p.values[g])); pfRefresh(true); gToast('Valores de “' + p.name + '” restaurados.', IMP); };
+  function pfShowConfirm() {
+    const p = pfCur(), d = pfDiffs(p); if (!d.length || p.builtIn) return;
+    pfCloseMenu(false); pfHideForm(false);
+    $('pfConfT').textContent = 'Atualizar “' + p.name + '” com estes valores?';
+    $('pfDiff').innerHTML = d.map(x => '<li><span>' + esc(x[0]) + ':</span><span class="num">' + esc(x[1]) + ' → ' + esc(x[2]) + '</span></li>').join('');
+    pfConf.hidden = false; $('pfUpd').setAttribute('aria-expanded', 'true'); $('pfConfOk').focus();
+  }
+  function pfHideConfirm(refocus) {
+    if (pfConf.hidden) return; pfConf.hidden = true; $('pfUpd').setAttribute('aria-expanded', 'false'); if (refocus && !$('pfUpd').hidden) $('pfUpd').focus();
+  }
+  $('pfUpd').onclick = () => pfConf.hidden ? pfShowConfirm() : pfHideConfirm(true);
+  $('pfConfNo').onclick = () => pfHideConfirm(true);
+  $('pfConfOk').onclick = () => {
+    const p = pfCur(); pfDiffs(p).forEach(d => { p.values[d[3]] = pfRead(d[3]); });
+    pfHideConfirm(false); pfRefresh(true); pfSel.focus(); gToast('Perfil “' + p.name + '” atualizado.', IMP);
+  };
+
+  // Salvar como novo perfil
+  function pfNextName() { let n = PF.list.filter(p => !p.builtIn).length + 1; while (PF.list.some(p => p.name === 'Perfil ' + n)) n++; return 'Perfil ' + n; }
+  function pfFormSync() { $('pfFormOk').disabled = !pfForm.querySelector('input[type=checkbox]:checked'); }
+  function pfShowForm() {
+    pfCloseMenu(false); pfHideConfirm(false);
+    $('pfNameIn').value = ''; $('pfNameIn').placeholder = pfNextName();
+    pfForm.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = ['expressividade', 'transicoes', 'rotacao'].indexOf(c.value) > -1; });
+    pfFormSync(); pfForm.hidden = false; $('pfNameIn').focus();
+  }
+  function pfHideForm(refocus) { if (pfForm.hidden) return; pfForm.hidden = true; if (refocus) pfSel.focus(); }
+  pfForm.addEventListener('change', pfFormSync);
+  $('pfFormNo').onclick = () => pfHideForm(true);
+  pfForm.addEventListener('submit', e => {
+    e.preventDefault();
+    const gs = PF_GR.map(x => x[0]).filter(g => pfForm.querySelector('input[value="' + g + '"]').checked); if (!gs.length) return;
+    const name = $('pfNameIn').value.trim() || pfNextName(), p = { id: 'u' + (++PF.n), name, builtIn: false, groups: gs, values: {} };
+    gs.forEach(g => { p.values[g] = pfRead(g); }); PF.list.push(p); PF.active = p.id;
+    pfHideForm(false); pfRefresh(true); pfSel.focus(); gToast('Salvo como perfil “' + name + '”.', IMP);
+  });
+  function pfCmdSave() { setSheet(true, true); pfShowForm(); setTimeout(() => $('pfNameIn').focus(), 120); }
+  const pfCmds = () => PF.list.map(p => ({ label: 'Perfil: ' + p.name, keys: pfKeyOf(p) ? ['Alt', String(pfKeyOf(p))] : [], icon: 'bookmark', run: () => pfSelect(p.id) }))
+    .concat([{ label: 'Salvar como novo perfil…', keys: [], icon: 'bookmark-plus', stage: true, run: () => pfCmdSave() }]);
+
+  // Teclado dentro da barra: Esc fecha só o que está aberto; setas no menu; atalhos globais não vazam para campos.
+  $('pf').addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!pfMenu.hidden) { e.preventDefault(); e.stopPropagation(); pfCloseMenu(true); }
+      else if (!pfForm.hidden) { e.preventDefault(); e.stopPropagation(); pfHideForm(true); }
+      else if (!pfConf.hidden) { e.preventDefault(); e.stopPropagation(); pfHideConfirm(true); }
+      return;
+    }
+    if (pfMenu.contains(e.target)) {
+      const items = Array.from(pfMenu.querySelectorAll('button')), i = items.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i + items.length - 1) % items.length].focus(); }
+      else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+      else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+      else if (e.key === 'Tab') pfCloseMenu(false);
+      e.stopPropagation(); return;
+    }
+    if (pfForm.contains(e.target) || pfConf.contains(e.target)) e.stopPropagation();
+  });
+  pfRefresh(true);
+
   // ═══════════ Curva por frequência (EQ de 16 bandas) ═══════════
   function createEQ(o) {
     var N = 16, G = o.gutter || 0, H = o.h, PT = 8, PB = 8, BW = o.barW || 3, PH = H - PT - PB;
@@ -2117,11 +2488,11 @@
   const eq = createEQ({
     canvas: $('eqCv'), group: $('eqPlot'), bubble: $('eqBub'), freq: $('eqFreq'), readout: $('eqRead'), live: $('eqLive'),
     h: 96, gutter: 0, barW: 3, freqIdx: () => [2, 5, 8, 11, 14], freqLabels: ['', '', '50', '', '', '200', '', '', '800', '', '', '3k', '', '', '12k', ''],
-    get: () => XS.curve16, set: (i, v) => { XS.curve16[i] = v; XS.curvePreset = eqMatch(XS.curve16); eqSync(); },
+    get: () => XS.curve16, set: (i, v) => { XS.curve16[i] = v; XS.curvePreset = 'custom'; eqSync(); },
     level: () => viz.level(), silent: () => isSilent()
   });
   const EQ_SEG = EQ_PRE.concat([['custom', 'Personalizada']]);
-  $('eqSeg').innerHTML = EQ_SEG.map((p, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-id="' + p[0] + '"' + (p[0] === 'custom' ? ' hidden' : '') + '>' + p[1] + '</button>').join('');
+  $('eqSeg').innerHTML = EQ_SEG.map((p, i) => '<button type="button" role="radio" aria-checked="false" tabindex="-1" data-id="' + p[0] + '"' + (p[0] === 'custom' ? ' hidden' : '') + (p[0] === 'plana' ? ' class="def"' : '') + '>' + p[1] + (p[0] === 'plana' ? '<span class="vh"> (padrão)</span>' : '') + '</button>').join('');
   function eqSync() {
     const seg = $('eqSeg'), custom = XS.curvePreset === 'custom';
     seg.classList.toggle('has-custom', custom);
@@ -2131,7 +2502,7 @@
       b.setAttribute('aria-checked', on); b.tabIndex = on ? 0 : -1;
     });
     $('eqWarn').hidden = XS.mem === 2 || eqIsFlat(XS.curve16);
-    eq.refresh();
+    eq.refresh(); rstSync();
   }
   eqWarnHook = eqSync;
   function eqPreset(id, toast) {
@@ -2454,6 +2825,68 @@
   $('beatSwitch').onchange = e => { beatSync = e.target.checked; if (!beatSync && pend) { const r = pend.run; clearPend(); r(); } };
   addEventListener('resize', () => { clearTimeout(window.__rz); window.__rz = setTimeout(() => { if (mode === 'rack') measureMarquee(); }, 120); });
 
+  // ═══════════ Atualização automática (docs/v3-modelo-de-navegacao.md, spec 029) ═══════════
+  const REL_URL = 'https://github.com/atempel/sonic-obsidian/releases/tag/v0.6.1';
+  const UPD = { kind: 'none', dismissed: false, busy: false, ver: '0.6.0', dl: false }; // kind: none | ready (instalador) | portable (zip)
+  const updEl = $('upd'), updIn = $('updIn'), narrowMq = matchMedia('(max-width: 899.98px)');
+  const X_ICO = '<i data-lucide="external-link" class="ico" aria-hidden="true"></i>';
+  let updSig = '', updOff = true;
+  function updHTML() {
+    if (UPD.busy) return '<i data-lucide="loader-circle" class="ico spin" aria-hidden="true"></i><span class="upd-tx">Atualizando… o app reabre sozinho</span>';
+    if (UPD.kind === 'portable') return '<i data-lucide="circle-arrow-down" class="ico" aria-hidden="true"></i><span class="upd-tx">Versão <span class="num">0.6.1</span> disponível</span>' +
+      '<a class="btn btn-primary" id="updPage" href="' + REL_URL + '" target="_blank" rel="noopener">Abrir página da versão' + X_ICO + '</a><button type="button" class="btn btn-ghost" id="updLater">Depois</button>';
+    return '<i data-lucide="circle-arrow-down" class="ico" aria-hidden="true"></i><span class="upd-tx">Sonic Obsidian <span class="num">0.6.1</span> está pronta</span>' +
+      '<a class="btn btn-ghost" id="updWhat" href="' + REL_URL + '" target="_blank" rel="noopener">O que mudou' + X_ICO + '</a><button type="button" class="btn btn-primary" id="updGo">Reiniciar e atualizar</button><button type="button" class="btn btn-ghost" id="updLater">Depois</button>';
+  }
+  function updRender(force) {
+    if (UPD.kind === 'none') { updSig = ''; return; }
+    const sig = UPD.kind + (UPD.busy ? ':busy' : '');
+    if (!force && sig === updSig) return;
+    const swap = updSig && updSig !== sig && !updOff; updSig = sig;
+    updIn.innerHTML = updHTML(); icons();
+    if (swap) updIn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120, easing: EO }); // como o M13: o texto troca no lugar
+  }
+  // A plaquinha vive no .strip-wrap: some com a faixa (ocioso), no Modo limpo, com menus e painéis abertos, e cede ao aviso de preset pesado abaixo de 900 px.
+  function updSync() {
+    const c = document.body.classList;
+    const off = UPD.kind === 'none' || UPD.dismissed || mode !== 'stage' || (!UPD.busy && c.contains('idle')) || c.contains('clean') ||
+      c.contains('sheet-open') || c.contains('lib-open') || c.contains('palette-open') || c.contains('kbd-open') || c.contains('dlg-open') ||
+      colOpen || !!pop || (narrowMq.matches && !$('heavyChip').hidden);
+    updEl.classList.toggle('beside-heavy', !$('heavyChip').hidden);
+    if (!off && updOff) updRender(true); else updRender(false);
+    if (off !== updOff) { updOff = off; updEl.classList.toggle('off', off); }
+  }
+  (function loop() { updSync(); requestAnimationFrame(loop); })();
+  function syncProtoUpd() { document.querySelectorAll('.proto [data-upd]').forEach(b => b.setAttribute('aria-pressed', b.dataset.upd === UPD.kind)); }
+  function setUpdKind(k) {
+    UPD.kind = k; UPD.dismissed = false; UPD.busy = false; UPD.dl = false; UPD.ver = '0.6.0'; FB_INFO[0][2] = 'v0.6.0';
+    syncProtoUpd(); wake(); updSync();
+  }
+  document.querySelectorAll('.proto [data-upd]').forEach(b => b.onclick = () => setUpdKind(b.dataset.upd));
+  updEl.addEventListener('click', e => {
+    if (e.target.closest('#updLater')) { UPD.dismissed = true; updSync(); }
+    else if (e.target.closest('#updGo')) updRestart();
+  });
+  function updRestart() {
+    if (UPD.busy || UPD.kind !== 'ready') return;
+    UPD.busy = true; document.body.classList.remove('idle'); wake(); updRender(false);
+    setTimeout(() => { // simula o reinício: a tela escurece rápido, volta, avisa
+      const v = $('restartVeil'); v.classList.add('on');
+      setTimeout(() => {
+        UPD.ver = '0.6.1'; UPD.kind = 'none'; UPD.busy = false; FB_INFO[0][2] = 'v0.6.1'; syncProtoUpd(); updSync();
+        v.classList.remove('on');
+        setTimeout(() => gToast('Atualizado para 0.6.1.', { force: true }), 240);
+      }, 380);
+    }, 800);
+  }
+  function updCheck() {
+    if (UPD.kind !== 'none') { UPD.dismissed = false; updSync(); gToast(UPD.kind === 'ready' ? 'Versão 0.6.1 pronta.' : 'Versão 0.6.1 disponível.', { force: true }); return; }
+    if (UPD.ver === '0.6.1') { gToast('Você está na versão mais nova.', { force: true }); return; }
+    gToast('Baixando a versão 0.6.1…', { force: true });
+    if (UPD.dl) return; UPD.dl = true;
+    setTimeout(() => { if (!UPD.dl) return; UPD.dl = false; if (UPD.kind === 'none' && UPD.ver === '0.6.0') { UPD.kind = 'ready'; UPD.dismissed = false; syncProtoUpd(); wake(); updSync(); } }, 2000);
+  }
+
   // ═══════════ Estados do protótipo ═══════════
   function setState(s) {
     const overlay = s === 'file' || s === 'sc' || s === 'ai';
@@ -2693,6 +3126,10 @@
     if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); location.href = SETTINGS_URL; return; }
     if (e.key === 'Escape') { handleEsc(e); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); return; }
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
+      if (typing || (ae && ae.closest && ae.closest('#eqPlot'))) return;
+      e.preventDefault(); const p = pfOrder()[+e.code.slice(5) - 1]; if (p) pfSelect(p.id); return;
+    }
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === 'F11') { e.preventDefault(); toggleFs(); return; }
     if (e.key === '?' && !typing) { e.preventDefault(); kOpen ? closeShortcuts() : openShortcuts(); return; }
