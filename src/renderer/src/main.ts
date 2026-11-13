@@ -1,5 +1,6 @@
 import { captureSystemAudio } from './capture'
 import { Core, type CaptureCheck, type Origin, type WaitKey } from './core/commands'
+import { AutoGain, manualDb } from './agc'
 import { BeatTracker } from './beat'
 import {
   BLEND_TYPE_LABEL,
@@ -112,6 +113,8 @@ async function start(): Promise<void> {
     toggleFullScreen: () => window.so.window.toggleFullScreen()
   })
   const settings = core.state.settings
+  // Normalizar áudio (spec 028, P1): mede antes do ganho (o mesmo medidor do silêncio) e age no GainNode.
+  const agc = new AutoGain()
   // Spec 028: a Memória só semeia com som; no repouso do silêncio, os presets recebem zero.
   const exprProbe = hookExpression(
     viz.visualizer,
@@ -120,7 +123,7 @@ async function start(): Promise<void> {
   )
   {
     const ex = settings.expression
-    window.so.log(`expressividade carregada: nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${exprProbe ? '' : ' (indisponível no motor)'}`)
+    window.so.log(`expressividade carregada: nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${exprProbe ? '' : ' (indisponível no motor)'} · normalizar áudio ${settings.autoGain ? 'ligado' : 'desligado'}`)
   }
   // A cada 5 min (como a memória no main): bass médio e desvio com som, para "reagindo pouco" virar número.
   if (exprProbe)
@@ -131,7 +134,8 @@ async function start(): Promise<void> {
       else {
         const mean = p.sum / p.n
         const sd = Math.sqrt(Math.max(0, p.sumSq / p.n - mean * mean))
-        window.so.log(`reação: bass médio ${mean.toFixed(2)} · desvio ${sd.toFixed(2)} (${p.n} quadros com som; nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation})`)
+        const auto = settings.autoGain ? ` · normalizar ${agc.gainDb >= 0 ? '+' : ''}${agc.gainDb.toFixed(1)} dB (nível medido ${agc.levelDb.toFixed(1)} dBFS)` : ''
+        window.so.log(`reação: bass médio ${mean.toFixed(2)} · desvio ${sd.toFixed(2)} (${p.n} quadros com som; nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${auto})`)
       }
       p.n = 0
       p.sum = 0
@@ -288,6 +292,17 @@ async function start(): Promise<void> {
 
   // Efeitos dos eventos: o Core não toca o Butterchurn nem o áudio.
   let appliedGainDb = Number.NaN // ganho linear aplicado (0 no Respiro)
+  /** Ganho em vigor (dB): manual (ajuste fino com o AGC) + automático. */
+  const gainInEffectDb = (): number => manualDb(settings.gainDb, settings.autoGain) + (settings.autoGain ? agc.gainDb : 0)
+  const applyGain = (): void => {
+    // Respiro (Shift+Enter): o visual perde o áudio devagar (~1 s) e o recebe de volta rápido.
+    const targetGain = core.state.breath ? 0 : 10 ** (gainInEffectDb() / 20)
+    if (targetGain !== appliedGainDb) {
+      const back = appliedGainDb === 0 && targetGain > 0
+      appliedGainDb = targetGain
+      gain.gain.setTargetAtTime(targetGain, ctx.currentTime, core.state.breath ? 0.3 : back ? 0.04 : 0.02)
+    }
+  }
   let rotationKey = ''
   let renderKey = JSON.stringify(settings.render)
   const applyState = (): void => {
@@ -296,13 +311,13 @@ async function start(): Promise<void> {
       renderKey = rk
       viz.applyRender(settings.render)
     }
-    // Respiro (Shift+Enter): o visual perde o áudio devagar (~1 s) e o recebe de volta rápido.
-    const targetGain = core.state.breath ? 0 : 10 ** (settings.gainDb / 20)
-    if (targetGain !== appliedGainDb) {
-      const back = appliedGainDb === 0 && targetGain > 0
-      appliedGainDb = targetGain
-      gain.gain.setTargetAtTime(targetGain, ctx.currentTime, core.state.breath ? 0.3 : back ? 0.04 : 0.02)
+    // Desligar o Normalizar volta ao ganho manual puro; ligar de novo mede do zero.
+    if (!settings.autoGain && agc.gainDb !== 0) {
+      agc.reset()
+      core.state.autoGainDb = 0
+      core.events.emit('autoGainTick', { db: 0 })
     }
+    applyGain()
     beat.leadMs = settings.rotation.beatLeadMs
     // Ligar a rotação ou mudar o intervalo recomeça a contagem (teclado ou faixa).
     // Trocar no beat, compassos e segurar/soltar também recomeçam (spec 024).
@@ -815,6 +830,7 @@ async function start(): Promise<void> {
       lastFrame = now - lastFrame > frameInterval * 2 ? now : lastFrame + frameInterval
     }
     if (now - lastSilenceCheck >= 100) {
+      const sinceCheck = (now - lastSilenceCheck) / 1000
       lastSilenceCheck = now
       preGain.getFloatTimeDomainData(preSamples)
       let sq = 0
@@ -829,6 +845,15 @@ async function start(): Promise<void> {
       prePeakDb = pk > 0 ? 20 * Math.log10(pk) : -Infinity
       silence.update(rms, now)
       document.body.classList.toggle('silent', silence.resting)
+      if (settings.autoGain) {
+        // Congela no silêncio (já abaixo do limiar, sem esperar a carência) e no Respiro.
+        agc.step(rms, sinceCheck, silence.quiet || core.state.breath)
+        applyGain()
+        if (Math.abs(agc.gainDb - core.state.autoGainDb) >= 0.1) {
+          core.state.autoGainDb = agc.gainDb
+          core.events.emit('autoGainTick', { db: agc.gainDb })
+        }
+      }
       if (silence.resting !== lastResting || silence.showNotice !== lastNotice) {
         lastResting = silence.resting
         lastNotice = silence.showNotice
@@ -890,11 +915,12 @@ async function start(): Promise<void> {
         const p = exprProbe
         const f = (v: number, d = 2): string => (Number.isFinite(v) ? v.toFixed(d) : '—')
         const db = (v: number): string => (Number.isFinite(v) ? `${v.toFixed(1)}` : '−∞')
+        const dbSigned = (v: number): string => `${v > 0 ? '+' : ''}${v.toFixed(1)}`
         const mem = ex.adaptation === 'normal' ? '' : p.seeding ? ' · memória: semeando' : ` · média memória ${f(p.memLongAvg)}`
         const squelch = p.squelch < 1 ? ` · silêncio ${(p.squelch * 100).toFixed(0)} %` : ''
         state.expression =
           `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
-          `imm ${f(p.imm)} · média motor ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · pico ${db(prePeakDb)} dBFS (antes do ganho) · ganho em vigor ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb.toFixed(1)} dB (manual)`
+          `imm ${f(p.imm)} · média motor ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · pico ${db(prePeakDb)} dBFS (antes do ganho) · ganho em vigor ${dbSigned(gainInEffectDb())} dB (${settings.autoGain ? `manual ${dbSigned(manualDb(settings.gainDb, true))} + auto ${dbSigned(agc.gainDb)}, nível medido ${db(agc.levelDb)} dBFS` : 'manual'})`
       }
       const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} batidas (${rotation.barsRemaining()} c restantes)` : ''
       state.beat = `beat ${beat.locked ? 'estável' : 'procurando'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confiança ${beat.confidence.toFixed(2)}${bs} · detecção ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/quadro`

@@ -491,3 +491,12 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** a atualização automática entra no milestone aberto mais antigo com vaga (**v0.6.0**), e a primeira release com atualizador é a desse bloco. Pergunta pequena e reversível da spec 029, decidida pela opção recomendada nela.
 - **Descartado:** uma 0.5.1 só para o atualizador — o ciclo automático lança por bloco, não por feature.
 - **Fica em aberto para a implementação:** onde fica o aviso no design (se o protótipo não cobrir, a issue vai para `needs-design`).
+
+## 2026-11-13 — Spec 028 P1: Normalizar áudio e Memória Viva (rodada, `agent-decided`)
+- **Referência do AGC: −14 dBFS RMS**, medida antes do ganho numa janela de 10 s ponderada pelo tempo; ataque 1 s, soltura 8 s, de −12 a +12 dB. Por quê: é o nível de uma faixa atual tocando com a normalização do Spotify (−14 LUFS), o que a spec pede ("perto de uma faixa atual masterizada"). Reversível: uma constante (`AGC.targetDb` em `src/renderer/src/agc.ts`), a calibrar no Windows pelo HUD (critério 7).
+- **Congela com `silence.quiet`** (abaixo do limiar na hora), não só com o repouso de 3 s: os 3 s de silêncio digital antes do repouso puxariam a média para baixo e subiriam o ganho na volta.
+- **Lugar na interface:** sem desenho (entrada de 2026-11-11 em DIVERGENCIAS). Ajustes rápidos › Sinal: chave "Normalizar áudio" acima do ganho, com "auto +N dB" em mono ao lado do nome; ligada, o slider vira "Ajuste fino" (−6 a +6). Configurações: a seção que existe é **Captura** (a spec diz "Áudio"), grupo Nível, acima do Ganho padrão.
+- **Ganho manual com o AGC:** ligar traz o ganho em vigor para ±6 dB; o Ganho padrão (±12) continua salvo e é limitado a ±6 ao abrir com o AGC ligado. Desligar zera o automático (ligar de novo mede do zero).
+- **Memória Viva** (`live`, 4ª do `Shift+X`): média própria com constante de 1,7 s, semente de 0,25 s de som, nova semente na volta do silêncio/Respiro. Fica ou sai depois do teste A/B do usuário (critério 8).
+- **Descartado:** compressor (`DynamicsCompressorNode`) — achata o drop, que é o que move o visual; janela deslizante em leituras (não em segundos) — com a janela oculta o rAF para e a janela esticaria.
+- **Limite conhecido (simulador):** trocar de uma faixa alta para uma 12 dB mais baixa leva ~25 s para igualar (janela de 10 s + soltura de 8 s); no sentido contrário, ~2 s. É o preço de não bombear nos breaks.

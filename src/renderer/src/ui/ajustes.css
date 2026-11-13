@@ -27,6 +27,7 @@ body.sheet-open .sheet { transform: none; visibility: visible; transition: trans
 .note.hint { margin-top: -8px; }
 .line { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; color: var(--text-2); font-size: 13px; }
 .sheet .line kbd { margin-left: 6px; }
+.line .autodb { margin-left: 8px; font-size: 12px; color: var(--text-3); }
 select.sel { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); color-scheme: dark; font-size: 13px; }
 .phase { margin-left: 8px; padding: 1px 6px; border: 1px solid var(--line-3); border-radius: var(--r-1); font-size: 11px; color: var(--text-3); }
 .switch:has(input:disabled) { opacity: 0.55; cursor: default; }

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'preact/hooks'
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import {
   BLEND_TYPES,
@@ -10,6 +10,7 @@ import {
   EXPRESSION_DEFAULT,
   EXPRESSION_MAX,
   EXPRESSION_MIN,
+  FINE_GAIN_DB,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   ROTATION_STEPS_S,
@@ -106,6 +107,15 @@ export function Slider({ id, label, value, min, max, step, text, onInput }: Slid
       </div>
     </div>
   )
+}
+
+// ── Normalizar áudio (spec 028, P1) ───────────────────────────
+/** "auto +5 dB": o ganho automático em vigor, ao vivo (evento fora do store). */
+export function AutoGainReadout({ core }: { core: Core }) {
+  const [db, setDb] = useState(core.state.autoGainDb)
+  useEffect(() => core.events.on('autoGainTick', (e) => setDb(e.db)), [core])
+  const r = Math.round(db)
+  return <span class="num autodb">auto {r > 0 ? `+${r}` : r < 0 ? `−${Math.abs(r)}` : '0'} dB</span>
 }
 
 // ── Peças pequenas ────────────────────────────────────────────
@@ -206,7 +216,15 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
       <div class="body">
         <section>
           <h3>Sinal</h3>
-          <Slider id="gain" label="Ganho" value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
+          <Switch id="autoGain" label="Normalizar áudio" checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
+            {settings.autoGain && <AutoGainReadout core={core} />}
+          </Switch>
+          {settings.autoGain ? (
+            <Slider id="gain" label="Ajuste fino" value={settings.gainDb} min={-FINE_GAIN_DB} max={FINE_GAIN_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
+          ) : (
+            <Slider id="gain" label="Ganho" value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
+          )}
+          {settings.autoGain && <p class="note hint">Iguala o volume entre faixas em alguns segundos. O som das caixas não muda.</p>}
         </section>
 
         <section>

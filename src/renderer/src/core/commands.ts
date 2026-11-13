@@ -11,6 +11,7 @@ import {
   EXPRESSION_MIN,
   PRESET_NAME_MODES,
   TOAST_MODES,
+  FINE_GAIN_DB,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
   PRESET_FPS_MAX,
@@ -60,6 +61,8 @@ export interface CoreEvents extends Record<string, unknown> {
   /** Troca manual esperando a próxima batida (M23); `null` = nada esperando. */
   beatWait: { key: WaitKey | null }
   silenceChanged: { resting: boolean; notice: boolean }
+  /** Ganho automático em vigor (Normalizar áudio, spec 028), quando muda ≥ 0,1 dB. Não passa pelo store. */
+  autoGainTick: { db: number }
   captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
   saved: { store: 'settings' | 'library' }
@@ -90,6 +93,8 @@ export interface AppState {
   held: boolean
   /** Respiro (`Shift+Enter`): o visual deixa de receber o áudio, como se nada tocasse. Não é persistido. */
   breath: boolean
+  /** Ganho automático em vigor (dB) com "Normalizar áudio" ligado; 0 desligado. Não é persistido. */
+  autoGainDb: number
 }
 
 /** Efeitos fora do renderer (preload). */
@@ -137,7 +142,7 @@ export class Core {
     library: Library,
     private readonly effects: CoreEffects
   ) {
-    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false, autoGainDb: 0 }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -224,12 +229,23 @@ export class Core {
       this.events.emit('stateChanged', { origin })
       return this.state.breath
     },
+    /** Com "Normalizar áudio" ligado, o ganho manual é ajuste fino: −6 a +6 dB (spec 028). */
     'signal.set': (a, origin) => {
-      const gain = optNum(a.gainDb, 'gainDb', GAIN_MIN_DB, GAIN_MAX_DB)
+      const fine = this.state.settings.autoGain ? FINE_GAIN_DB : Infinity
+      const gain = optNum(a.gainDb, 'gainDb', Math.max(GAIN_MIN_DB, -fine), Math.min(GAIN_MAX_DB, fine))
       if (gain === undefined) fail('gainDb obrigatório')
       this.state.settings.gainDb = Math.round(gain!)
       this.changedSettings(origin)
       return this.state.settings.gainDb
+    },
+    /** Normalizar áudio (spec 028, P1): alterna, ou `{ value }`. Ligar traz o ganho manual para ±6 dB. */
+    'audio.autoGain': (a, origin) => {
+      const v = optBool(a.value, 'value')
+      const s = this.state.settings
+      s.autoGain = v ?? !s.autoGain
+      if (s.autoGain) s.gainDb = Math.max(-FINE_GAIN_DB, Math.min(FINE_GAIN_DB, s.gainDb))
+      this.changedSettings(origin)
+      return s.autoGain
     },
     /** `{ target: 'manual' | 'auto', type?, seconds? }` (spec 013). */
     'blend.set': (a, origin) => {
