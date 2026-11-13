@@ -101,10 +101,16 @@ function mainChecks() {
   ok('3f corrigir tira o selo', (await waitStatus(/^Compilado$/, 2500)) && !(await page.isVisible('.chip.warn')))
 
   // 4. laço sem fim não congela: recusado com mensagem
-  await page.fill(ta(2), 'while(1);')
-  await page.waitForTimeout(450)
-  const t4 = Date.now(); await page.evaluate(() => 1); const rt = Date.now() - t4
-  ok('4a interface responde durante o teste do laço (critério: não congela ~1 s)', rt < 800, `${rt} ms`)
+  // Mede a ida e volta à página contra uma linha de base do próprio run (o runner do CI varia), e repete
+  // uma vez antes de reprovar: um congelamento de verdade (laço na thread da página) se repete; um
+  // soluço do runner não (#85).
+  const rtt = async () => { const t = Date.now(); await page.evaluate(() => 1); return Date.now() - t }
+  const base = []; for (let i = 0; i < 5; i++) base.push(await rtt())
+  const rt0 = Math.min(...base)
+  const loopRt = async (code) => { await page.fill(ta(2), code); await page.waitForTimeout(450); return (await rtt()) - rt0 }
+  let rt = await loopRt('while(1);')
+  if (rt >= 800) { await page.fill(ta(2), 'x = 1;'); await waitStatus(/^Compilado$/, 3000); rt = await loopRt('while(1);') }
+  ok('4a interface responde durante o teste do laço (critério: não congela ~1 s)', rt < 800, `${rt} ms acima da base de ${rt0} ms`)
   ok('4b laço recusado com mensagem', await waitStatus(/^1 erro$/, 3000), await status())
   ok('4c mensagem fala do laço', /Laço sem fim|Lento demais/.test(await page.$eval('.perr p', e => e.textContent).catch(() => '')), await page.$eval('.perr p', e => e.textContent).catch(() => ''))
   // 4e. valor inválido (NaN/infinito) é recusado antes de chegar à imagem
@@ -162,16 +168,16 @@ function mainChecks() {
   await waitStatus(/^Compilado$/, 3000)
   ok('6a reaberto: título é o do meu preset', (await page.inputValue('#studio-name')) === saved)
   await page.fill(ta(1), 'zoom = 1.02;')
-  await waitStatus(/^Compilado$/, 2500)
-  await page.keyboard.press('Control+s'); await page.waitForTimeout(800)
+  await waitStatus(/^Compilado$/, 5000)
+  await page.keyboard.press('Control+s'); await H.poll(page, () => (window.__mineCalls || []).length >= 2, { timeout: 5000 })
   const calls2 = await page.evaluate(() => window.__mineCalls)
   ok('6b salvar de novo usa o id do meu preset', calls2.length === 2 && calls2[1].id === '000000000000000000000001' && !calls2[1].meta, JSON.stringify(calls2[1] && { id: calls2[1].id }))
   ok('6c sem pergunta de nome na segunda vez', !(await page.isVisible('.st-ask')))
-  await page.evaluate(() => document.activeElement?.blur()); await page.keyboard.press('Escape'); await page.waitForTimeout(400)
-  ok('6d saiu', !(await page.isVisible('.studio')))
+  await page.evaluate(() => document.activeElement?.blur()); await page.keyboard.press('Escape')
+  ok('6d saiu', await page.waitForSelector('.studio', { state: 'hidden', timeout: 3000 }).then(() => true, () => false))
 
   // 10. painel de atalhos
-  await page.keyboard.press('?'); await page.waitForTimeout(300)
+  await page.keyboard.press('?'); await page.waitForSelector('.kpanel', { timeout: 3000 }).catch(() => {})
   const kp = await page.$eval('.kpanel', e => e.innerText).catch(() => '')
   ok('10 painel ? lista "Abrir o Estúdio · E"', /Abrir o Estúdio\s*E\b/.test(kp), kp.slice(0, 80))
   await page.keyboard.press('Escape')

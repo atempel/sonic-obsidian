@@ -26,7 +26,8 @@ const R = H.createResults('021-pontos-onda'); const ok = R.ok
   ok('1 onda principal: vertex shader passa a escrever gl_PointSize = 1.0 e compila', /gl_PointSize = 1\.0;/.test(r.wave[0]) && r.wave[1] === true, r.wave[0].replace(/\s+/g, ' '))
   ok('2 shader que já escreve gl_PointSize não muda', (r.already[0].match(/gl_PointSize/g) || []).length === 1 && r.already[1] === true)
   ok('3 fragment shader não muda', !/gl_PointSize/.test(r.frag[0]) && r.frag[1] === true)
-  ok('4 o preset desenha (não fica preto no headless)', await page.evaluate(async () => { const c = document.getElementById('canvas'); await new Promise(f => requestAnimationFrame(f)); const t = document.createElement('canvas'); t.width = 40; t.height = 25; const x = t.getContext('2d'); x.drawImage(c, 0, 0, 40, 25); const d = x.getImageData(0, 0, 40, 25).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2]; return s / (d.length / 4) > 10 }))
+  // Sonda até 8 s: num runner lento o preset ainda pode estar nos primeiros quadros (#85).
+  ok('4 o preset desenha (não fica preto no headless)', await H.poll(page, async () => { const c = document.getElementById('canvas'); await new Promise(f => requestAnimationFrame(f)); const t = document.createElement('canvas'); t.width = 40; t.height = 25; const x = t.getContext('2d'); x.drawImage(c, 0, 0, 40, 25); const d = x.getImageData(0, 0, 40, 25).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += d[i] + d[i + 1] + d[i + 2]; return s / (d.length / 4) > 10 }))
   ok('5 sem erros na página', errs.length === 0, errs.join(' | '))
   await b.close(); srv.close()
   process.exit(await R.finish())

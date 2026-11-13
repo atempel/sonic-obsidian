@@ -66,6 +66,29 @@ async function mockAudio(page, { bpm = 124 } = {}) {
   }, bpm)
 }
 
+// Clique num controle da faixa, que some depois de 2,5 s sem mouse (body.idle; o canvas fica por cima).
+// Num runner lento, a faixa pode sumir entre o mouse.move e o clique, e o page.click esperaria 30 s sem
+// mover o mouse (#85). Aqui o mouse vai até o próprio elemento (o mousemove acorda a faixa), o clique
+// tem tempo próprio (10 s: num runner lento a espera de "estável" demora) e, se a faixa sumiu, tenta de novo.
+async function click(page, sel, { tries = 3 } = {}) {
+  for (let i = 1; ; i++) {
+    const box = await page.locator(sel).first().boundingBox().catch(() => null)
+    if (box) { const x = box.x + box.width / 2, y = box.y + box.height / 2; await page.mouse.move(x - 2, y); await page.mouse.move(x, y) }
+    try { await page.click(sel, { timeout: 10000 }); return } catch (e) { if (i >= tries) throw e }
+  }
+}
+
+// Espera `fn` (na página) ficar verdadeira, sondando a cada `every` ms até `timeout`. Devolve true/false.
+// Para critérios que dependem de o motor já ter desenhado alguns quadros (runner lento demora mais).
+async function poll(page, fn, { timeout = 8000, every = 250, arg } = {}) {
+  const end = Date.now() + timeout
+  for (;;) {
+    if (await page.evaluate(fn, arg)) return true
+    if (Date.now() > end) return false
+    await page.waitForTimeout(every)
+  }
+}
+
 // Resultados: ok(nome, condição, extra); `await finish()` imprime e devolve o código de saída (1 se algum FAIL).
 // Em FAIL, salva test-results/<arquivo>-<n>.png da página ligada por attach(page).
 function createResults(name) {
@@ -88,4 +111,4 @@ function createResults(name) {
   }
 }
 
-module.exports = { serve, launch, mockSo, mockAudio, createResults }
+module.exports = { serve, launch, mockSo, mockAudio, createResults, click, poll }
