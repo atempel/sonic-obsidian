@@ -23,7 +23,7 @@ const R = H.createResults('023-colecoes'); const ok = R.ok
   // pausa a rotação, se houver
   const c0 = await cur()
   // 1
-  await page.mouse.move(600, 400); await page.click(btn)
+  await H.click(page, btn)
   ok('1a painel abre', await page.isVisible(pop)); await page.screenshot({ path: path.join(os.tmpdir(), '023-pop.png') }); ok('1f painel não é cortado (clique acerta a linha)', await page.evaluate(() => { const b = document.querySelector('.menu.collect [role=menuitemcheckbox]').getBoundingClientRect(); return document.elementFromPoint(b.x + 20, b.y + b.height / 2)?.closest('.menu.collect') != null }))
   const rows = await page.$$eval(`${pop} [role=menuitemcheckbox]`, es => es.map(e => [e.textContent, e.getAttribute('aria-checked')]))
   ok('1b lista as 2 coleções, nenhuma marcada', rows.length === 2 && rows.every(r => r[1] === 'false'), JSON.stringify(rows))
@@ -40,9 +40,9 @@ const R = H.createResults('023-colecoes'); const ok = R.ok
   let last = await page.evaluate(() => window.__saves.at(-1))
   ok('2e salvo na library', !!last && last.collections.find(c => c.id === 'c1').presets.includes(c0), c0)
   // fechar e reabrir: já marcada
-  await page.click(btn); await page.waitForTimeout(150)
+  await H.click(page, btn); await page.waitForTimeout(150)
   ok('4a o próprio botão fecha', !(await page.isVisible(pop)))
-  await page.click(btn)
+  await H.click(page, btn)
   ok('1d reaberto: Calmos marcada', (await page.getAttribute(`${pop} [role=menuitemcheckbox]:has-text("Calmos")`, 'aria-checked')) === 'true')
   // desmarcar
   await page.click(`${pop} [role=menuitemcheckbox]:has-text("Calmos")`); await page.waitForTimeout(200)

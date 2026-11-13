@@ -93,7 +93,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5g Enter de novo solta e a contagem recomeça', !(await rotText()).includes('Segurado') && /(4|3) c$/.test((await rotText()).trim()), await rotText())
   // Depois de um clique, o foco fica no botão, mas o Enter volta a ser do Palco (só :focus-visible fica com ele).
-  await page.mouse.move(640, 700); await page.click('button[aria-label="Preset anterior"]'); await page.waitForTimeout(900)
+  await H.click(page, 'button[aria-label="Preset anterior"]'); await page.waitForTimeout(900)
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5h Enter depois de clicar num botão segura (não repete o clique)', (await rotText()).includes('Segurado'), await rotText())
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
