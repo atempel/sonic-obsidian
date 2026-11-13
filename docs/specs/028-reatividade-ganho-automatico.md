@@ -1,6 +1,6 @@
 # 028 — Reação ao áudio: corrigir a Memória, medir de verdade e ganho automático
 
-**Fase:** 3 · **Status:** Planejada (perguntas em aberto) · **Issue:** [#81](https://github.com/atempel/sonic-obsidian/issues/81) · **Personas:** Nostálgico do Winamp, DJ de Festa, Streamer de Set, Anfitrião de Ambiente ([personas](../research/mercado/personas.md)) · **Depende de:** [015](015-expressividade.md), [005](005-sinal-entrada.md)
+**Fase:** 3 · **Status:** Planejada · **Issue:** [#81](https://github.com/atempel/sonic-obsidian/issues/81) · **Personas:** Nostálgico do Winamp, DJ de Festa, Streamer de Set, Anfitrião de Ambiente ([personas](../research/mercado/personas.md)) · **Depende de:** [015](015-expressividade.md), [005](005-sinal-entrada.md)
 
 ## Problema
 Relatos do usuário (2026-11-10/11, Windows, Spotify):
@@ -106,7 +106,7 @@ Como funciona, para quem usa: o app ouve o nível médio dos últimos ~10 s e so
 - **Pedido novo:** marcar as opções padrão na interface (P0).
 
 ## Perguntas em aberto
-1. **Nível padrão:** manter 0 (o motor puro; o Caráter só age quando o usuário sobe ou desce o Nível, e a interface passa a dizer isso) ou abrir em +1 (contraste 1,4×, base um pouco mais alta e o Caráter já perceptível)? Proposta: manter 0 com a indicação na interface.
+Nenhuma. Nível padrão (2026-11-13, do usuário): **continua 0**, com o aviso "sem efeito no nível 0" no Caráter (P0, padrão visível).
 
 ## Referências
 - Pesquisa: [docs/research/reatividade/2026-11-11-destravar-reatividade.md](../research/reatividade/2026-11-11-destravar-reatividade.md) (seções 2, 3 e 4.A; itens A1–A4, A6).
