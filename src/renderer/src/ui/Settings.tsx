@@ -26,7 +26,7 @@ import {
 import { Icon, type IconName } from './icons'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
-import { dbText, secondsText } from './QuickSettings'
+import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
 import { importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
 
@@ -302,6 +302,15 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         </Row>
       </Grp>
       <Grp title="Nível">
+        <Row
+          id="st-autogain"
+          label="Normalizar áudio"
+          help={s.autoGain ? 'Iguala o volume entre faixas em alguns segundos, sem achatar a música. O ganho dos Ajustes rápidos vira ajuste fino de −6 a +6 dB.' : 'Iguala o volume entre faixas em alguns segundos, sem achatar a música. O som das caixas não muda.'}
+          kw="ganho automático agc volume nível normalizar"
+        >
+          {s.autoGain && <AutoGainReadout core={core} />}
+          <Sw id="st-autogain" checked={s.autoGain} label="Normalizar áudio" onChange={(value) => run('audio.autoGain', { value })} />
+        </Row>
         <Row id="st-gain" label="Ganho padrão" help="Aplicado ao abrir. Durante a música, use os Ajustes rápidos." kw="volume db">
           <Rng id="st-gain" value={s.gainDefaultDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(s.gainDefaultDb)} onInput={(v) => run('settings.set', { gainDefaultDb: v })} />
         </Row>

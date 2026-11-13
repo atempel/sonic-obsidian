@@ -78,14 +78,14 @@ const longestRun = (out, pred, fps = 60) => { let best = 0, cur = 0; for (const 
 const results = []
 const ok = (n, c, extra = '') => results.push(`${c ? 'PASS' : 'FAIL'} ${n}${extra ? ` (${extra})` : ''}`)
 const E = (adaptation, level = 0, curve = 'b') => ({ level, curve, adaptation })
-const NAMES = { normal: 'Curta', slow: 'Longa', locked: 'Fixa' }
+const NAMES = { normal: 'Curta', slow: 'Longa', locked: 'Fixa', live: 'Viva' }
 
 // Gancho ausente → null, sem quebrar.
 console.warn = () => {}
 ok('0 motor sem audioLevels: gancho devolve null', hookExpression({ renderer: {} }, () => E('normal')) === null)
 console.warn = origWarn
 
-for (const a of ['normal', 'slow', 'locked']) {
+for (const a of ['normal', 'slow', 'locked', 'live']) {
   // Critério 2: abrir em silêncio, dar play.
   const { out } = run([{ kind: 'silence', s: 6 }, { kind: 'music', s: 20 }], E(a))
   const w = between(out, 6 + 5, 6 + 15)

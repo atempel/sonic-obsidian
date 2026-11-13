@@ -4,11 +4,14 @@
  * sanitização: um JSON velho, editado à mão ou estranho nunca quebra o app —
  * campo inválido volta ao padrão.
  */
+import { AGC } from '../agc'
 
 /** Intervalos da lista dos Ajustes rápidos (spec 011); as Configurações aceitam 5–120 s. */
 export const ROTATION_STEPS_S = [15, 30, 45, 90]
 export const GAIN_MIN_DB = -12
 export const GAIN_MAX_DB = 12
+/** Ganho manual com "Normalizar áudio" ligado: ajuste fino de ±6 dB (spec 028). */
+export const FINE_GAIN_DB = AGC.fineDb
 export const RECENTS_MAX = 8
 /** Troca no beat (spec 024): compassos de 4 batidas. */
 export const BEAT_BARS = [1, 2, 4, 8, 16] as const
@@ -40,7 +43,8 @@ export const EXPRESSION_MIN = -3
 export const EXPRESSION_MAX = 3
 export const EXPRESSION_CURVES = ['a', 'b', 'c'] as const
 export type ExpressionCurve = (typeof EXPRESSION_CURVES)[number]
-export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked'] as const
+/** `live` = Memória Viva (spec 028, P1): janela curta do MilkDrop 2, em teste A/B contra a Curta. */
+export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked', 'live'] as const
 export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
 /** Padrão da Expressividade (spec 028: a interface marca e restaura). Nível 0 = o motor puro (DECISIONS 2026-11-13). */
 export const EXPRESSION_DEFAULT: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation } = { level: 0, curve: 'b', adaptation: 'normal' }
@@ -52,7 +56,8 @@ export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
 export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> = {
   normal: 'curta — se acostuma ao volume em ~4 s',
   slow: 'longa — o volume pesa por ~30 s',
-  locked: 'fixa — partes altas da música sempre mais fortes'
+  locked: 'fixa — partes altas da música sempre mais fortes',
+  live: 'viva — se acostuma em ~1,7 s, reação mais seca (em teste)'
 }
 
 /** Texto sobre o visual (spec 014). */
@@ -112,6 +117,8 @@ export interface Settings {
   gainDb: number
   /** Ganho padrão: o ganho ao abrir (Configurações › Captura). */
   gainDefaultDb: number
+  /** Normalizar áudio (spec 028, P1): ganho automático antes do motor; o manual vira ajuste fino de ±6 dB. */
+  autoGain: boolean
   rotation: {
     enabled: boolean
     intervalSeconds: number
@@ -173,6 +180,7 @@ export function defaultSettings(): Settings {
     version: 2,
     gainDb: 0,
     gainDefaultDb: 0,
+    autoGain: false,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { ...EXPRESSION_DEFAULT },
@@ -269,8 +277,10 @@ export function sanitizeSettings(raw: unknown): Settings {
   const gainDefaultDb = Math.round(num(raw.gainDefaultDb, GAIN_MIN_DB, GAIN_MAX_DB, num(raw.gainDb, GAIN_MIN_DB, GAIN_MAX_DB, d.gainDefaultDb)))
   return {
     version: 2,
-    gainDb: gainDefaultDb,
+    // Com "Normalizar áudio", o ganho ao abrir é o padrão limitado ao ajuste fino.
+    gainDb: raw.autoGain === true ? Math.max(-FINE_GAIN_DB, Math.min(FINE_GAIN_DB, gainDefaultDb)) : gainDefaultDb,
     gainDefaultDb,
+    autoGain: bool(raw.autoGain, d.autoGain),
     rotation: {
       enabled: bool(rot.enabled, d.rotation.enabled),
       intervalSeconds: num(rot.intervalSeconds, 5, 600, d.rotation.intervalSeconds),

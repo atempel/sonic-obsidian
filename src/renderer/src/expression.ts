@@ -22,6 +22,10 @@ import type { ExpressionAdaptation, ExpressionCurve } from './core/state'
  * - **Silêncio = zero**: com o app em repouso (`SilenceState.resting`), os presets
  *   recebem 0; a volta sai do zero em ~1 s, sem degrau.
  * - Saída sempre limitada a 0–4, também com Nível 0.
+ *
+ * Spec 028 (P1) — **Memória Viva** (`live`, teste A/B): a média própria segue `imm`
+ * com constante de ~1,7 s (a janela curta do MilkDrop 2), em vez dos ~4 s do motor.
+ * Semeia em 0,25 s de som e de novo ao voltar do silêncio/Respiro, como a Longa.
  */
 interface AudioLevelsInternals {
   updateAudioLevels(fps: number, frame: number): void
@@ -56,6 +60,9 @@ export const OUT_MAX = 4
 const ENGINE_WARMUP_FRAMES = 50
 /** Som contínuo antes de semear a Memória. */
 export const SEED_SECONDS = 2
+/** Memória Viva: semente curta (a média logo se ajusta) e constante de tempo da média. */
+export const LIVE_SEED_SECONDS = 0.25
+export const LIVE_TAU_S = 1.7
 /** Abaixo disto, `imm` (soma das raias da FFT) é zero na prática: a captura parou. */
 const IMM_EPS = 1e-3
 /** Rampa do silêncio: desce em ~0,3 s, volta em ~1 s. */
@@ -157,8 +164,8 @@ export function hookExpression(
     if (away) wasAway = true
     else if (wasAway) {
       wasAway = false
-      // Volta do silêncio/Respiro: a Longa não reaproveita a média de minutos atrás. A Fixa fica.
-      if (p.adaptation === 'slow') needSeed()
+      // Volta do silêncio/Respiro: a Longa e a Viva não reaproveitam a média de antes. A Fixa fica.
+      if (p.adaptation === 'slow' || p.adaptation === 'live') needSeed()
     }
     if (p.adaptation !== 'normal') {
       if (!seeded) {
@@ -166,7 +173,7 @@ export function hookExpression(
         if (sound && frame >= ENGINE_WARMUP_FRAMES) {
           for (let i = 0; i < 3; i++) seedSum[i]! += levels.imm[i]! * dt
           seedTime += dt
-          if (seedTime >= SEED_SECONDS) {
+          if (seedTime >= (p.adaptation === 'live' ? LIVE_SEED_SECONDS : SEED_SECONDS)) {
             for (let i = 0; i < 3; i++) memAvg[i] = seedSum[i]! / seedTime
             seeded = true
           }
@@ -177,6 +184,9 @@ export function hookExpression(
       } else {
         if (p.adaptation === 'slow' && sound) {
           const rate = adjustRate(0.999, fps) // ~33 s a 30 fps (o motor usa 0,992 ≈ 4 s)
+          for (let i = 0; i < 3; i++) memAvg[i] = memAvg[i]! * rate + levels.imm[i]! * (1 - rate)
+        } else if (p.adaptation === 'live' && sound) {
+          const rate = Math.exp(-dt / LIVE_TAU_S)
           for (let i = 0; i < 3; i++) memAvg[i] = memAvg[i]! * rate + levels.imm[i]! * (1 - rate)
         }
         for (let i = 0; i < 3; i++) {
