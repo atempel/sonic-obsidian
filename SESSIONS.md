@@ -4,7 +4,7 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
-### 2026-11-11 (tarde) — Claude Code (nuvem, claude.ai/code) — branch `claude/ecstatic-carson-9x3kh6`
+### 2026-11-11 a 13 — Claude Code (nuvem, claude.ai/code) — branch `claude/ecstatic-carson-9x3kh6`
 **Fez:**
 - **Design checado:** o artefato está em `1794352628-1d72`, o espelho em `1794281099-42d3`. Não sincronizado nesta sessão: a frente não tem tela desenhada, só o AGC precisa de interface no P1.
 - **Frente escolhida pelo usuário:** ganho automático + reação ao áudio. O usuário trouxe uma pesquisa própria (Cowork), copiada em `docs/research/reatividade/`.
@@ -12,11 +12,12 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 - **Spec 028** (corrigir a Memória, HUD/log, AGC, Memória "Viva" A/B), issue #81, TASKS e DECISIONS.
 - **Fila:** stub com o resto da pesquisa (curva de 16 bandas, build/break/drop, hardcut, fork etc.).
 **Deixou em:**
-- Branch com docs só (sem código), sem PR.
+- **PR #82 mergeado** (só docs) com o ok do usuário em 2026-11-13. Issue #81 aberta para a implementação. Nenhum código mudou nesta sessão.
+- Resumo da pesquisa no Claude Docs (https://claude.ai/artifact/T8VRDyCmsZyqWRQeSBdDUm) lido: é o mesmo estudo já copiado; os itens do MilkDrop 3 ficaram listados na fila.
 - **Respostas do usuário registradas na 028:** silêncio = zero, Normalizar áudio desligado, Memória salva, padrão visível na interface. HUD do build atual: Nervo + Fixa + Nível 0, `bass` antes = depois, 0,5–1,9 (trava em 1,00 não reproduzida).
 - **Nível padrão:** 0 com aviso (do usuário, 2026-11-13). Docs mergeados no PR #82; a issue #81 segue aberta para a implementação.
 - **Antes do build novo:** o usuário confere no HUD (`Ctrl+Shift+D`) a Memória salva e `bass x → y` (critério 1).
-- **Próximo:** implementar a 028 P0 (`executar-task`); sincronizar o design (`1d72`) antes do P1 de interface.
+- **Próximo:** sincronizar o design (`1d72`, o padrão visível é interface) e implementar a 028 P0 (`executar-task`).
 - **Não verificado:** nada rodou no app; a causa só se confirma no Windows.
 - **A refazer:** checagem de `electron`/`vite` depois de 19/11.
 
