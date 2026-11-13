@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/030-idiomas`
+**Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste): PR #102 (spec 030, idiomas; só docs, sem checks, sem conflito) mergeado com esta entrada. Issue #101 segue `ready` + `prioridade` no v0.7.0.
+**Deixou em:** fila do v0.7.0: #101 (030, `prioridade`) → #69 → #73 → #94. Nada novo atribuído ao usuário. Não verificado: nada de código mudou.
+
 ### 2026-11-13 — Claude Code (nuvem, a pedido do usuário) — branch `docs/release-0.6.0`
 **Fez:** Passo 1 da `rodada` com o ok do usuário na #91 ("quero liberar essa versão"): release **v0.6.0** publicada pelo workflow `release` na `rc/v0.6.0` (instalador, zip, SHA256SUMS), #91 e milestone v0.6.0 fechados. Lido o log do teste: viraram as issues `backlog` #96 (latência), #97 (Normalizar no teto), #98 (memória do renderer) e #99 (preset preto). README (versão atual e fase 3), spec 028 como feita, DECISIONS. A `rc/v0.6.0` não tem nada fora do `main`; sem PR de volta. Notion atualizado.
 **Deixou em:** PR desta branch. Próximo bloco: v0.7.0 (#94, #73, #69 `ready`).
