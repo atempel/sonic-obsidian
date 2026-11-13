@@ -45,7 +45,7 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 - `needs-decision` com resposta dele → incorporar à spec (branch `docs/…`, PR), tirar a atribuição, label `ready`.
 - PR com comentário dele não respondido → tratar no próprio PR.
 
-**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual), com todos os checks `success` e sem pedido de mudança do usuário:
+**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual), com todos os checks `success` (PR que o CI ignora por só mexer em `docs/`/`site/` e não tem check nenhum conta como verde) e sem pedido de mudança do usuário:
 - só `docs/`, `queue/`, testes, `site/`, `.claude/`, `.github/` → mergear. Pergunta pequena em aberto no PR → decidir pela sugestão (`agent-decided` na issue ligada, DECISIONS.md) antes; conflito (ex.: número de spec repetido) → corrigir na branch do PR;
 - mudança no app → mergear se o PR traz a tabela de critérios preenchida (verificado / "testar na release") e os testes headless passam. O teste no Windows **não** acontece aqui — acontece na release. Check vermelho → consertar na mesma rodada ou comentar o motivo e seguir.
 
