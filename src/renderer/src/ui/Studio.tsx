@@ -6,6 +6,7 @@ import { EQ_KEYS, type Block, type CompileResult, type StudioError } from '../st
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
+import { t } from '../i18n'
 import './studio.css'
 
 /**
@@ -156,7 +157,7 @@ function Studio({ api }: { api: StudioApi }) {
     if (status !== 'ok' || lastCompiled.current !== JSON.stringify(c)) {
       const ok = await compile(c)
       if (!ok) {
-        showToast('Corrija os erros antes de salvar.', { force: true })
+        showToast(t('toast.studio.fixErrors'), { force: true })
         return
       }
     }
@@ -167,11 +168,11 @@ function Studio({ api }: { api: StudioApi }) {
       setTitle(r.name)
       setDirty(false)
       setEscWarn(false)
-      showToast(saved ? 'Preset salvo.' : `"${r.name}" salvo na biblioteca, em Meus.`, { force: true })
+      showToast(saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }), { force: true })
     } catch (err) {
       const msg = err instanceof Error ? err.message.replace(/^.*Error: /, '') : String(err)
       api.log(`estúdio: salvar falhou: ${msg}`)
-      showToast(`Não salvou: ${msg}`, { force: true })
+      showToast(t('toast.studio.notSaved', { error: msg }), { force: true })
     }
   }
 
@@ -188,15 +189,15 @@ function Studio({ api }: { api: StudioApi }) {
     if (dirty && !(escWarn && now - escAt.current < ESC_WINDOW_MS)) {
       escAt.current = now
       setEscWarn(true)
-      showToast('Há mudanças não salvas. Esc de novo sai sem salvar.', { force: true })
+      showToast(t('toast.studio.unsaved'), { force: true })
       return
     }
     api.close(saved?.name ?? null)
   }
   const keyRef = useRef<(e: KeyboardEvent) => void>(() => {})
   keyRef.current = (e: KeyboardEvent) => {
-    const t = e.target as HTMLElement | null
-    const inField = !!t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT')
+    const tgt = e.target as HTMLElement | null
+    const inField = !!tgt && (tgt.tagName === 'TEXTAREA' || tgt.tagName === 'INPUT')
     if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
       e.preventDefault()
       e.stopImmediatePropagation()
@@ -206,7 +207,7 @@ function Studio({ api }: { api: StudioApi }) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault()
       e.stopImmediatePropagation()
-      void compile(latest.current).then((ok) => showToast(ok ? 'Compilado agora.' : 'Compilado com erros.', { force: true }))
+      void compile(latest.current).then((ok) => showToast(t(ok ? 'toast.studio.compiled' : 'toast.studio.compiledErrors'), { force: true }))
       return
     }
     if (e.key !== 'Escape') return
@@ -217,7 +218,7 @@ function Studio({ api }: { api: StudioApi }) {
       return
     }
     // Esc num campo só sai do campo; fora dele, volta ao Palco.
-    if (inField) t!.blur()
+    if (inField) tgt!.blur()
     else exit()
   }
   useLayoutEffect(() => {

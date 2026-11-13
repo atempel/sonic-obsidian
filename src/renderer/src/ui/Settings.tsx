@@ -9,7 +9,6 @@ import {
   BLEND_MAX_S,
   BLEND_MIN_S,
   BLEND_TYPES,
-  BLEND_TYPE_LABEL,
   CANVAS_SCALES,
   FPS_LIMITS,
   GAIN_MAX_DB,
@@ -21,9 +20,11 @@ import {
   type PixelRatio,
   type PresetNameMode,
   type StartupPreset,
-  type ToastMode
+  type ToastMode,
+  blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
+import { LANG_NAME, getLang, getSystemLang, fmtNum, t, type LanguagePref } from '../i18n'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
@@ -170,8 +171,29 @@ function Geral({ core, run }: { core: Core; run: Run }) {
     const { title, author } = splitPresetName(n)
     return [n, author ? `${title} · por ${author}` : title]
   })
+  const lang = s.language
   return (
     <>
+      <Grp>
+        {/* Idioma (spec 030; design 1794607492-78f0, Configurações › Geral): no topo, vale na hora. */}
+        <Row
+          id="st-lang"
+          label={t('settings.general.language')}
+          help={lang === 'auto' ? t('settings.general.languageHelpAuto', { lang: LANG_NAME[getSystemLang()] }) : t('settings.general.languageHelp')}
+          kw="idioma language english português inglês"
+        >
+          <Sel<LanguagePref>
+            id="st-lang"
+            value={lang}
+            options={[
+              ['auto', t('settings.general.languageAuto')],
+              ['en', LANG_NAME.en],
+              ['pt-BR', LANG_NAME['pt-BR']]
+            ]}
+            onChange={(language) => run('app.setLanguage', { language })}
+          />
+        </Row>
+      </Grp>
       <Grp title="Ao iniciar">
         <Row label="Abrir em" help="Tela mostrada quando o app inicia." phase="Fase 5" kw="rack palco">
           <Seg name="openIn" label="Abrir em" value="palco" options={[['palco', 'Palco'], ['rack', 'Rack']]} disabled onChange={() => {}} />
@@ -260,7 +282,7 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
     timer = window.setTimeout(() => finish('none'), 3200)
     testOff.current = () => (off(), window.clearTimeout(timer))
   }
-  const rate = `${(info.sampleRate / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kHz`
+  const rate = `${fmtNum(info.sampleRate / 1000, 1)} kHz`
   return (
     <>
       <div class="cap" data-search="captura saída padrão windows nível de entrada testar captura dispositivo">
@@ -327,7 +349,7 @@ function BlendRow({ core, run, target, label, help, available }: { core: Core; r
       <Sel<BlendType>
         id={`st-blend-${target}`}
         value={rule.type}
-        options={BLEND_TYPES.map((t) => [t, BLEND_TYPE_LABEL[t]])}
+        options={BLEND_TYPES.map((b) => [b, blendTypeLabel(b)])}
         onChange={(type) => run('blend.set', { target, type })}
       />
       {rule.type !== 'cut' && (

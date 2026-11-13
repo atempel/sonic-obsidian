@@ -5,6 +5,7 @@
  * campo inválido volta ao padrão.
  */
 import { AGC } from '../agc'
+import { LANGUAGE_PREFS, t, type LanguagePref } from '../i18n'
 
 /** Intervalos da lista dos Ajustes rápidos (spec 011); as Configurações aceitam 5–120 s. */
 export const ROTATION_STEPS_S = [15, 30, 45, 90]
@@ -22,14 +23,8 @@ export const BEAT_LEAD_MAX_MS = 200
 /** Tipos de transição (spec 013), na ordem que `B` percorre. */
 export const BLEND_TYPES = ['cut', 'crossfade', 'wipe', 'plasma', 'radial', 'random'] as const
 export type BlendType = (typeof BLEND_TYPES)[number]
-export const BLEND_TYPE_LABEL: Record<BlendType, string> = {
-  cut: 'Corte seco',
-  crossfade: 'Crossfade',
-  wipe: 'Varredura',
-  plasma: 'Plasma',
-  radial: 'Radial',
-  random: 'Aleatório'
-}
+/** Nome do tipo de transição no idioma do app (spec 030). */
+export const blendTypeLabel = (type: BlendType): string => t(`blend.type.${type}`)
 /** Tempos que `↑` / `↓` percorrem (troca manual). */
 export const BLEND_STEPS_S = [0.25, 0.5, 1, 2, 4, 8]
 export const BLEND_MIN_S = 0.1
@@ -48,17 +43,9 @@ export const EXPRESSION_ADAPTATIONS = ['normal', 'slow', 'locked', 'live'] as co
 export type ExpressionAdaptation = (typeof EXPRESSION_ADAPTATIONS)[number]
 /** Padrão da Expressividade (spec 028: a interface marca e restaura). Nível 0 = o motor puro (DECISIONS 2026-11-13). */
 export const EXPRESSION_DEFAULT: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation } = { level: 0, curve: 'b', adaptation: 'normal' }
-export const EXPRESSION_CURVE_LABEL: Record<ExpressionCurve, string> = {
-  a: 'Contraste — picos mais altos, vales mais fundos',
-  b: 'Energia — contraste e a base mais agitada',
-  c: 'Nervo — energia e reação seca (+) ou suave (−)'
-}
-export const EXPRESSION_ADAPTATION_LABEL: Record<ExpressionAdaptation, string> = {
-  normal: 'curta — se acostuma ao volume em ~4 s',
-  slow: 'longa — o volume pesa por ~30 s',
-  locked: 'fixa — partes altas da música sempre mais fortes',
-  live: 'viva — se acostuma em ~1,7 s, reação mais seca (em teste)'
-}
+/** "Nome — explicação" do Caráter e da Memória, no idioma do app (spec 030). */
+export const expressionCurveLabel = (c: ExpressionCurve): string => t(`expression.curve.${c}`)
+export const expressionAdaptationLabel = (a: ExpressionAdaptation): string => t(`expression.memory.${a}`)
 
 /** Texto sobre o visual (spec 014). */
 export const PRESET_NAME_MODES = ['always', 'manual', 'never'] as const
@@ -151,6 +138,8 @@ export interface Settings {
   authorName: string | null
   /** Desempenho por preset (spec 012, P2): mostrar o aviso de preset pesado abaixo de `minFps`. */
   perf: { skipSlow: boolean; minFps: number }
+  /** Idioma (spec 030): `auto` segue o Windows (`pt-*` → pt-BR; o resto → en). */
+  language: LanguagePref
 }
 
 export interface Collection {
@@ -195,7 +184,8 @@ export function defaultSettings(): Settings {
     render: defaultRender(),
     welcomeSeen: false,
     authorName: null,
-    perf: { skipSlow: true, minFps: 30 }
+    perf: { skipSlow: true, minFps: 30 },
+    language: 'auto'
   }
 }
 
@@ -318,7 +308,8 @@ export function sanitizeSettings(raw: unknown): Settings {
     perf: {
       skipSlow: bool(isObj(raw.perf) ? raw.perf.skipSlow : undefined, d.perf.skipSlow),
       minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5
-    }
+    },
+    language: oneOf(raw.language, LANGUAGE_PREFS, d.language)
   }
 }
 

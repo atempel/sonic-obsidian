@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-idiomas-base`
+**Fez:** Passo 4 da `rodada`: #101 (spec 030, `prioridade`) reivindicada. 1º PR da 030: base de idiomas (`src/renderer/src/i18n/`: `en.ts` fonte, `pt-BR.ts`, `t()`/`tn()`, `fmtNum`/`fmtSeconds` pelo `Intl`), `settings.language` (`auto` padrão), `app:systemLanguage` no main (`app.getPreferredSystemLanguages()`), comando `app.setLanguage` (vale na hora), linha Idioma no topo de Configurações › Geral; migração 1: faixa, assinatura, janela, preset pesado, menu de coleção e todos os toasts. `toLocaleString('pt-BR')` fixos trocados. Teste novo `030-idiomas` (24 itens: idioma pelo Windows, troca na hora e salva, números, nada cortado, chave sem uso); harness simula Windows em pt-BR por padrão. DECISIONS (`agent-decided`: Rest, Mine, "bars"), AGENTS.md.
+**Deixou em:** PR aberto que **não** fecha a #101 (volta a `ready` com a lista do que falta: Ajustes, Biblioteca/busca, Configurações, painel `?`, Setup/diagnóstico, Estúdio, log em inglês). Design citado `1794607492-78f0` (o espelho ainda está em `598c`; sincronizar numa rodada). Não verificado: o idioma do Windows real e a troca no app empacotado (vai para o bloco v0.7.0). Notion pendente (sem acesso nesta superfície).
+
 ### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/030-idiomas`
 **Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste): PR #102 (spec 030, idiomas; só docs, sem checks, sem conflito) mergeado com esta entrada. Issue #101 segue `ready` + `prioridade` no v0.7.0.
 **Deixou em:** fila do v0.7.0: #101 (030, `prioridade`) → #69 → #73 → #94. Nada novo atribuído ao usuário. Não verificado: nada de código mudou.

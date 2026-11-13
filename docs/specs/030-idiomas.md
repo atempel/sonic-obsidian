@@ -1,6 +1,6 @@
 # 030 — Idiomas: inglês e português (Brasil)
 
-**Fase:** Abertura · **Status:** A fazer · **Issue:** [#101](https://github.com/atempel/sonic-obsidian/issues/101) · **Personas:** todas (o app público precisa falar inglês); Nostálgico do Winamp e Anfitrião de Ambiente no Brasil (pt-BR)
+**Fase:** Abertura · **Status:** Em andamento (base + migração 1 no 1º PR) · **Issue:** [#101](https://github.com/atempel/sonic-obsidian/issues/101) · **Personas:** todas (o app público precisa falar inglês); Nostálgico do Winamp e Anfitrião de Ambiente no Brasil (pt-BR)
 
 ## Problema
 Todos os textos do app estão em pt-BR, escritos direto nos componentes, sem nenhuma estrutura de tradução. O repositório e a landing já são bilíngues, e o design system manda escrever o texto primeiro em inglês ("English first, pt-BR as a full translation"). Quem baixa o app fora do Brasil hoje recebe tudo em português.

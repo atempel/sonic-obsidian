@@ -7,6 +7,7 @@ import { Icon } from './icons'
 import { COLLECTION_INTERVALS, TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
 import { showToast } from './toast'
+import { fmtSeconds, t } from '../i18n'
 
 /**
  * Biblioteca em gaveta (spec 010) — protótipo "Palco integrado" (`#lib`), versão 1794165177-f126.
@@ -78,7 +79,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   const play = (name: string): void => void core.run('preset.play', { name }, 'ui')
   const fav = (name: string): void => {
     const r = core.run<boolean>('library.favorite', { name }, 'ui')
-    if (r.ok) say(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+    if (r.ok) say(t(r.value ? 'toast.favAdded' : 'toast.favRemoved'))
   }
 
   const onKey = (e: KeyboardEvent): void => {
@@ -249,7 +250,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
 }
 
 function restoreHidden(core: Core): void {
-  if (core.run('library.restore', { reason: 'user' }, 'ui').ok) say('Presets restaurados.')
+  if (core.run('library.restore', { reason: 'user' }, 'ui').ok) say(t('toast.restored'))
 }
 
 function PresetRow(props: { core: Core; name: string; q: string; imported: boolean; mine?: boolean; onPlay(): void; onFav(): void; onMore(el: HTMLElement): void }) {
@@ -323,7 +324,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
   const cols = core.state.library.collections
   const add = (c: Collection): void => {
     const r = core.run<boolean>('collection.add', { id: c.id, name: menu.name }, 'ui')
-    if (r.ok) say(r.value ? `Adicionado a ${c.name}.` : `Já está em ${c.name}.`)
+    if (r.ok) say(t(r.value ? 'toast.addedTo' : 'toast.alreadyIn', { name: c.name }))
     setMenu(null)
   }
   return (
@@ -363,7 +364,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
           <button
             role="menuitem"
             onClick={() => {
-              if (core.run('library.hide', { name: menu.name }, 'ui').ok) say('Preset oculto.')
+              if (core.run('library.hide', { name: menu.name }, 'ui').ok) say(t('toast.hidden'))
               setMenu(null)
             }}
           >
@@ -386,7 +387,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
               onClick={() => {
                 setMenu(null)
                 if (!window.confirm(`Remover "${menu.name}"? O preset some da biblioteca e do disco.`)) return
-                void imports.removeMine(menu.name).then(() => say('Seu preset foi removido.'))
+                void imports.removeMine(menu.name).then(() => say(t('toast.mineRemoved')))
               }}
             >
               <Icon name="trash-2" small />
@@ -398,7 +399,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
               role="menuitem"
               onClick={() => {
                 setMenu(null)
-                void imports.remove(menu.name).then(() => say('Preset importado removido.'))
+                void imports.remove(menu.name).then(() => say(t('toast.importedRemoved')))
               }}
             >
               <Icon name="trash-2" small />
@@ -470,7 +471,7 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
           class="btn btn-primary"
           disabled={col.presets.length === 0}
           onClick={() => {
-            if (core.run('collection.play', { id: col.id }, 'ui').ok) say(`Tocando ${col.name}.`)
+            if (core.run('collection.play', { id: col.id }, 'ui').ok) say(t('toast.playing', { name: col.name }))
           }}
         >
           <Icon name="play" small />
@@ -482,7 +483,7 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
             value={String(col.intervalSeconds)}
             onChange={(e) => {
               const v = Number((e.target as HTMLSelectElement).value)
-              if (core.run('collection.setInterval', { id: col.id, intervalSeconds: v }, 'ui').ok) say(`Troca a cada ${v} s.`)
+              if (core.run('collection.setInterval', { id: col.id, intervalSeconds: v }, 'ui').ok) say(t('toast.collectionInterval', { s: fmtSeconds(v) }))
             }}
           >
             {intervals.map((s) => (

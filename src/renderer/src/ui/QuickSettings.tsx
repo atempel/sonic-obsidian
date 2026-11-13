@@ -2,11 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import {
   BLEND_TYPES,
-  BLEND_TYPE_LABEL,
   EXPRESSION_ADAPTATIONS,
-  EXPRESSION_ADAPTATION_LABEL,
   EXPRESSION_CURVES,
-  EXPRESSION_CURVE_LABEL,
   EXPRESSION_DEFAULT,
   EXPRESSION_MAX,
   EXPRESSION_MIN,
@@ -18,7 +15,10 @@ import {
   type BeatBars,
   type BlendType,
   type PresetNameMode,
-  type ToastMode
+  type ToastMode,
+  blendTypeLabel,
+  expressionAdaptationLabel,
+  expressionCurveLabel
 } from '../core/state'
 import { Icon } from './icons'
 
@@ -163,7 +163,7 @@ export function BlendControl({ core, target, label, available, max = QUICK_BLEND
   const engineOnly = !available && rule.type !== 'cut' && rule.type !== 'random'
   return (
     <div class="group">
-      <Select<BlendType> id={`blend-${target}-type`} label={label} value={rule.type} options={BLEND_TYPES.map((t) => [t, BLEND_TYPE_LABEL[t]])} onChange={(type) => set({ type })} />
+      <Select<BlendType> id={`blend-${target}-type`} label={label} value={rule.type} options={BLEND_TYPES.map((b) => [b, blendTypeLabel(b)])} onChange={(type) => set({ type })} />
       {rule.type !== 'cut' && (
         <Slider
           id={`blend-${target}-s`}
@@ -202,8 +202,8 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
   const intervals = ROTATION_STEPS_S.includes(rot.intervalSeconds) ? ROTATION_STEPS_S : [...ROTATION_STEPS_S, rot.intervalSeconds].sort((a, b) => a - b)
   const expr = settings.expression
   const text = settings.overlayText
-  const [, curveHint] = splitLabel(EXPRESSION_CURVE_LABEL[expr.curve])
-  const [, memoryHint] = splitLabel(EXPRESSION_ADAPTATION_LABEL[expr.adaptation])
+  const [, curveHint] = splitLabel(expressionCurveLabel(expr.curve))
+  const [, memoryHint] = splitLabel(expressionAdaptationLabel(expr.adaptation))
 
   return (
     <aside class="sheet" ref={ref} tabIndex={-1} aria-label="Ajustes rápidos" aria-hidden={!open} inert={!open}>
@@ -243,7 +243,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             id="exprCurve"
             label="Caráter"
             value={expr.curve}
-            options={EXPRESSION_CURVES.map((c) => [c, withDefault(splitLabel(EXPRESSION_CURVE_LABEL[c])[0], c === EXPRESSION_DEFAULT.curve)])}
+            options={EXPRESSION_CURVES.map((c) => [c, withDefault(splitLabel(expressionCurveLabel(c))[0], c === EXPRESSION_DEFAULT.curve)])}
             onChange={(curve) => run('expression.set', { curve })}
           />
           <p class="note hint">{expr.level === 0 ? 'Sem efeito no nível 0. Suba o Nível para o Caráter agir.' : curveHint}</p>
@@ -251,7 +251,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             id="exprMemory"
             label="Memória"
             value={expr.adaptation}
-            options={EXPRESSION_ADAPTATIONS.map((a) => [a, withDefault(splitLabel(EXPRESSION_ADAPTATION_LABEL[a])[0], a === EXPRESSION_DEFAULT.adaptation)])}
+            options={EXPRESSION_ADAPTATIONS.map((a) => [a, withDefault(splitLabel(expressionAdaptationLabel(a))[0], a === EXPRESSION_DEFAULT.adaptation)])}
             onChange={(adaptation) => run('expression.set', { adaptation })}
           />
           <p class="note hint">{memoryHint}</p>

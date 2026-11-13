@@ -4,6 +4,7 @@ import type { Core } from '../core/commands'
 import { Icon } from './icons'
 import { presetsWord } from './library-data'
 import { showToast } from './toast'
+import { t } from '../i18n'
 
 /**
  * Adicionar o preset atual a coleções pelo Palco (spec 023). Botão ao lado da estrela, com um
@@ -22,8 +23,8 @@ export function CollectButton({ core }: { core: Core }) {
       <button
         ref={btn}
         class="ibtn"
-        aria-label="Adicionar à coleção"
-        title="Adicionar à coleção"
+        aria-label={t('strip.collect')}
+        title={t('strip.collect')}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
@@ -77,7 +78,7 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
 
   const toggle = (id: string, colName: string, has: boolean): void => {
     const r = has ? core.run('collection.remove', { id, name: current }, 'ui') : core.run('collection.add', { id, name: current }, 'ui')
-    if (r.ok) showToast(has ? `Removido de ${colName}.` : `Adicionado a ${colName}.`)
+    if (r.ok) showToast(t(has ? 'toast.removedFrom' : 'toast.addedTo', { name: colName }))
   }
   const create = (): void => {
     const trimmed = name.trim()
@@ -128,7 +129,7 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
     <div
       class="menu collect"
       role="menu"
-      aria-label="Adicionar à coleção"
+      aria-label={t('strip.collect')}
       ref={ref}
       onKeyDown={onKey}
       style={{ right: `${pos.right}px`, bottom: `${pos.bottom}px` }}
@@ -150,8 +151,8 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
         <div class="newname">
           <input
             type="text"
-            aria-label="Nome da nova coleção"
-            placeholder={`Coleção ${cols.length + 1}`}
+            aria-label={t('strip.collectNameLabel')}
+            placeholder={t('collection.defaultName', { n: cols.length + 1 })}
             maxLength={60}
             value={name}
             onInput={(e) => setName((e.target as HTMLInputElement).value)}
@@ -161,7 +162,7 @@ function CollectPop({ core, anchor, onClose }: { core: Core; anchor: HTMLElement
       ) : (
         <button role="menuitem" class="newcol" onClick={() => setNaming(true)}>
           <Icon name="plus" small />
-          <span class="grow">Nova coleção</span>
+          <span class="grow">{t('strip.collectNew')}</span>
         </button>
       )}
     </div>
