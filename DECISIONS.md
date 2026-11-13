@@ -511,3 +511,7 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Playwright continua só no CI** (`--no-save`), como o usuário aprovou em 2026-11-10; a pergunta da devDependency sai da spec.
 - **Por quê:** medir o pacote que o usuário instala, não o `dev`; rodar em todo PR iria contra o CI sob demanda (DECISIONS 2026-11-13) e somaria ~10 min ao Windows sem necessidade.
 - **Descartado:** job Windows de desempenho em todo PR; limites de falha já agora (sem histórico para calibrar); action de terceiros para baixar o artifact anterior.
+
+## 2026-11-13 — Release v0.6.0 publicada; Memória Viva fica
+- **Decisão:** o usuário testou o bloco v0.6.0 (#91), aprovou e pediu a release: `release.yml` disparado na `rc/v0.6.0` com `publicar=true` (mesmo commit testado, `cb9842b`). Milestone v0.6.0 fechado. A Memória Viva fica como 4ª opção do `Shift+X` (resposta ao critério 8 da 028: "senti diferença em alguns").
+- **Do teste e do log, para planejar (backlog):** latência do visual (#96), Normalizar no teto de +12 dB com o volume do usuário (nível medido −24 a −33 dBFS; #97), memória do renderer 184 → 300 MB em 15 min (#98), preset preto "martin - reflections on black tiles" (#99). Nenhum segurou a release: o usuário aprovou com eles.
