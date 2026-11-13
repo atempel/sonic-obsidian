@@ -164,3 +164,9 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Erros vêm do motor**, com bloco e linha. `bas_att` não é erro (avisos na 027). Um laço longo vira o erro "Laço sem fim ou longo demais" ou "Lento demais: N ms por quadro".
 - **Biblioteca:** rótulo "Meu preset", filtro "Meus" ao lado de "Importados", e no menu "…" os itens "Editar uma cópia no Estúdio" (ou "Editar no Estúdio", se for meu) e "Remover meu preset".
 **Status:** Aberta (aguarda a sessão de design).
+
+### 2026-11-11 — Expressividade: marcar o padrão e "Normalizar áudio" (spec 028, sem desenho)
+- **Pedido do usuário:** nos Ajustes rápidos › Expressividade, as opções padrão aparecem marcadas ("· padrão" em Energia e Curta; Nível 0), há um "Restaurar padrão" e, com Nível 0, o Caráter diz "sem efeito no nível 0". O toast de `X`/`Shift+X` diz "(padrão)".
+- **"Normalizar áudio"** (ganho automático, desligado por padrão): interruptor nos Ajustes rápidos, junto do Ganho, e em Configurações › Áudio, com o ganho aplicado em mono ("auto +5 dB"). O Ganho vira ajuste fino de ±6 dB.
+- **Silêncio:** os presets recebem zero (não neutro); o escurecimento e a desaceleração continuam como estão.
+- **Pedido à sessão de design:** desenhar as duas coisas na página Palco integrado › Ajustes rápidos, conferindo antes a versão `1794352628-1d72`, que o espelho ainda não tem.
