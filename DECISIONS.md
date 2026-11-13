@@ -500,3 +500,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Memória Viva** (`live`, 4ª do `Shift+X`): média própria com constante de 1,7 s, semente de 0,25 s de som, nova semente na volta do silêncio/Respiro. Fica ou sai depois do teste A/B do usuário (critério 8).
 - **Descartado:** compressor (`DynamicsCompressorNode`) — achata o drop, que é o que move o visual; janela deslizante em leituras (não em segundos) — com a janela oculta o rAF para e a janela esticaria.
 - **Limite conhecido (simulador):** trocar de uma faixa alta para uma 12 dB mais baixa leva ~25 s para igualar (janela de 10 s + soltura de 8 s); no sentido contrário, ~2 s. É o preço de não bombear nos breaks.
+
+## 2026-11-13 — Bloco v0.6.0 fecha sem o atualizador (rodada, `agent-decided`)
+- **Decisão:** o bloco v0.6.0 fecha com a reação ao áudio (spec 028 P0 e P1, #81 e #86) e a correção dos testes instáveis (#85). A atualização automática (#69, spec 029) está em `needs-design` e, pela regra da `rodada`, vai para o milestone seguinte (**v0.7.0**). Revê a entrada "Spec 029: versão da primeira release com atualizador": a primeira release com atualizador passa a ser a do bloco v0.7.0.
+- **Por quê:** a 028 está pronta e só falta o teste no Windows; segurar o bloco pelo desenho do aviso deixaria o usuário sem nada para testar, e a release 0.6.0 também leva 021–026, validadas no Windows desde 10/11 e ainda fora de uma release.
+- **Descartado:** esperar o desenho para fechar o bloco; encher o v0.6.0 até ~5 issues de app com o backlog (027 e 025 ainda sem planejamento pronto).
