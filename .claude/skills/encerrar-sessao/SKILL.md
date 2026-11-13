@@ -13,7 +13,7 @@ description: Use ao final de toda sessão de trabalho no Sonic Obsidian para reg
    **Deixou em:** estado da branch/PR, o que está pendente, o que não foi verificado.
    ```
    Só o handoff; o *porquê* de decisões vai para DECISIONS.md.
-2. **TASKS.md** — marcar o que foi concluído; adicionar o que surgiu.
+2. **TASKS.md** — só em sessão manual: marcar o que foi concluído. No ciclo automático (skill `rodada`) o estado fica nas issues; o que surgiu vira issue `backlog`.
 3. **DECISIONS.md** — registrar decisões tomadas na sessão, se ainda não estiverem lá.
 4. **queue/** — criar stubs para referências citadas e não incorporadas.
 5. **Commit** dessas mudanças (`docs: encerra sessão AAAA-MM-DD`) na branch atual e push.
