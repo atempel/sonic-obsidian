@@ -22,6 +22,11 @@ export class SilenceState {
     else if (this.quietSince === null) this.quietSince = now
   }
 
+  /** Abaixo do limiar agora, sem a carência (spec 028: a semente da Memória só conta som). */
+  get quiet(): boolean {
+    return this.quietSince !== null
+  }
+
   get resting(): boolean {
     return this.quietSince !== null && performance.now() - this.quietSince >= VISUAL_DELAY_MS
   }

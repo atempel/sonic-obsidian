@@ -7,6 +7,7 @@ import {
   EXPRESSION_ADAPTATION_LABEL,
   EXPRESSION_CURVES,
   EXPRESSION_CURVE_LABEL,
+  EXPRESSION_DEFAULT,
   EXPRESSION_MAX,
   EXPRESSION_MIN,
   GAIN_MAX_DB,
@@ -33,7 +34,9 @@ const QUICK_BLEND_MAX_S = 5
 const sign = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0')
 export const dbText = (db: number): string => `${sign(db)} dB`
 export const secondsText = (s: number): string => `${s.toFixed(1).replace('.', ',')} s`
-export const exprLevelText = (l: number): string => (l === 0 ? 'Neutra' : sign(l))
+export const exprLevelText = (l: number): string => (l === 0 ? 'Neutra' : sign(l)) + (l === EXPRESSION_DEFAULT.level ? ' · padrão' : '')
+/** Spec 028: a opção padrão leva "· padrão" no nome. */
+const withDefault = (name: string, isDefault: boolean): string => (isDefault ? `${name} · padrão` : name)
 /** "Contraste — picos…" → ["Contraste", "picos…"]. */
 const splitLabel = (label: string): [string, string] => {
   const [head, ...rest] = label.split(' — ')
@@ -218,16 +221,31 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             text={exprLevelText(expr.level)}
             onInput={(level) => run('expression.set', { level })}
           />
-          <Select id="exprCurve" label="Caráter" value={expr.curve} options={EXPRESSION_CURVES.map((c) => [c, splitLabel(EXPRESSION_CURVE_LABEL[c])[0]])} onChange={(curve) => run('expression.set', { curve })} />
-          <p class="note hint">{curveHint}</p>
+          <Select
+            id="exprCurve"
+            label="Caráter"
+            value={expr.curve}
+            options={EXPRESSION_CURVES.map((c) => [c, withDefault(splitLabel(EXPRESSION_CURVE_LABEL[c])[0], c === EXPRESSION_DEFAULT.curve)])}
+            onChange={(curve) => run('expression.set', { curve })}
+          />
+          <p class="note hint">{expr.level === 0 ? 'Sem efeito no nível 0. Suba o Nível para o Caráter agir.' : curveHint}</p>
           <Select
             id="exprMemory"
             label="Memória"
             value={expr.adaptation}
-            options={EXPRESSION_ADAPTATIONS.map((a) => [a, splitLabel(EXPRESSION_ADAPTATION_LABEL[a])[0]])}
+            options={EXPRESSION_ADAPTATIONS.map((a) => [a, withDefault(splitLabel(EXPRESSION_ADAPTATION_LABEL[a])[0], a === EXPRESSION_DEFAULT.adaptation)])}
             onChange={(adaptation) => run('expression.set', { adaptation })}
           />
           <p class="note hint">{memoryHint}</p>
+          <button
+            class="btn sheet-link"
+            id="exprReset"
+            disabled={expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation}
+            onClick={() => run('expression.set', { ...EXPRESSION_DEFAULT })}
+          >
+            <span>Restaurar padrão</span>
+            <span class="soon">Nível 0 · Energia · Curta</span>
+          </button>
           {!expressionAvailable && <p class="note">Indisponível neste motor.</p>}
         </section>
 

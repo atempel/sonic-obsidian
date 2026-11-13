@@ -7,6 +7,7 @@ import {
   EXPRESSION_ADAPTATION_LABEL,
   EXPRESSION_CURVES,
   EXPRESSION_CURVE_LABEL,
+  EXPRESSION_DEFAULT,
   cycleBlendType,
   sanitizeLibrary,
   sanitizeSettings,
@@ -111,7 +112,31 @@ async function start(): Promise<void> {
     toggleFullScreen: () => window.so.window.toggleFullScreen()
   })
   const settings = core.state.settings
-  const exprProbe = hookExpression(viz.visualizer, () => settings.expression)
+  // Spec 028: a Memória só semeia com som; no repouso do silêncio, os presets recebem zero.
+  const exprProbe = hookExpression(
+    viz.visualizer,
+    () => settings.expression,
+    () => ({ quiet: silence.quiet, resting: silence.resting, breath: core.state.breath })
+  )
+  {
+    const ex = settings.expression
+    window.so.log(`expressividade carregada: nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${exprProbe ? '' : ' (indisponível no motor)'}`)
+  }
+  // A cada 5 min (como a memória no main): bass médio e desvio com som, para "reagindo pouco" virar número.
+  if (exprProbe)
+    window.setInterval(() => {
+      const p = exprProbe
+      const ex = settings.expression
+      if (p.n < 30) window.so.log(`reação: sem som nos últimos 5 min (memória ${ex.adaptation})`)
+      else {
+        const mean = p.sum / p.n
+        const sd = Math.sqrt(Math.max(0, p.sumSq / p.n - mean * mean))
+        window.so.log(`reação: bass médio ${mean.toFixed(2)} · desvio ${sd.toFixed(2)} (${p.n} quadros com som; nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation})`)
+      }
+      p.n = 0
+      p.sum = 0
+      p.sumSq = 0
+    }, 5 * 60 * 1000)
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)
   // ── Batida (spec 024): só mudanças de estado vão para o log, nunca cada batida ──
@@ -514,7 +539,9 @@ async function start(): Promise<void> {
     return l === 0 ? 'neutra' : `${l > 0 ? '+' : '−'}${Math.abs(l)}`
   }
   const exprText = (): string =>
-    exprProbe ? `Expressividade ${exprLevel()}` : 'Expressividade indisponível (motor sem audioLevels)'
+    exprProbe
+      ? `Expressividade ${exprLevel()}${settings.expression.level === EXPRESSION_DEFAULT.level ? ' (padrão)' : ''}`
+      : 'Expressividade indisponível (motor sem audioLevels)'
   /** Toast da transição manual: "Transição: Plasma, 1 s" (spec 013). */
   const blendText = (): string => {
     const { type, seconds } = settings.blend.manual
@@ -670,11 +697,13 @@ async function start(): Promise<void> {
       if (e.shiftKey) {
         const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
         run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
-        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[settings.expression.adaptation]}`)
+        const a = settings.expression.adaptation
+        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[a]}${a === EXPRESSION_DEFAULT.adaptation ? ' (padrão)' : ''}`)
       } else {
         const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
         run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
-        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[settings.expression.curve]}`)
+        const c = settings.expression.curve
+        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[c]}${c === EXPRESSION_DEFAULT.curve ? ' (padrão)' : ''}${settings.expression.level === 0 ? ' · sem efeito no nível 0' : ''}`)
       }
     } else if (e.code === 'Space') {
       request('random', cut)
@@ -726,6 +755,8 @@ async function start(): Promise<void> {
   let lastNotice = false
   let lastRender = performance.now()
   let lastSilenceCheck = 0
+  let preRmsDb = -Infinity
+  let prePeakDb = -Infinity
   let lastLevelTick = 0
   let lastLoop = performance.now()
   let frames = 0
@@ -787,8 +818,16 @@ async function start(): Promise<void> {
       lastSilenceCheck = now
       preGain.getFloatTimeDomainData(preSamples)
       let sq = 0
-      for (const v of preSamples) sq += v * v
-      silence.update(Math.sqrt(sq / preSamples.length), now)
+      let pk = 0
+      for (const v of preSamples) {
+        sq += v * v
+        if (Math.abs(v) > pk) pk = Math.abs(v)
+      }
+      const rms = Math.sqrt(sq / preSamples.length)
+      // Spec 028: RMS e pico em dBFS antes do ganho, para o HUD.
+      preRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity
+      prePeakDb = pk > 0 ? 20 * Math.log10(pk) : -Infinity
+      silence.update(rms, now)
       document.body.classList.toggle('silent', silence.resting)
       if (silence.resting !== lastResting || silence.showNotice !== lastNotice) {
         lastResting = silence.resting
@@ -848,7 +887,14 @@ async function start(): Promise<void> {
       windowStart = now
       if (exprProbe) {
         const ex = settings.expression
-        state.expression = `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${exprProbe.bassIn.toFixed(2)} → ${exprProbe.bassOut.toFixed(2)}`
+        const p = exprProbe
+        const f = (v: number, d = 2): string => (Number.isFinite(v) ? v.toFixed(d) : '—')
+        const db = (v: number): string => (Number.isFinite(v) ? `${v.toFixed(1)}` : '−∞')
+        const mem = ex.adaptation === 'normal' ? '' : p.seeding ? ' · memória: semeando' : ` · média memória ${f(p.memLongAvg)}`
+        const squelch = p.squelch < 1 ? ` · silêncio ${(p.squelch * 100).toFixed(0)} %` : ''
+        state.expression =
+          `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
+          `imm ${f(p.imm)} · média motor ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · pico ${db(prePeakDb)} dBFS (antes do ganho) · ganho em vigor ${settings.gainDb > 0 ? '+' : ''}${settings.gainDb.toFixed(1)} dB (manual)`
       }
       const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} batidas (${rotation.barsRemaining()} c restantes)` : ''
       state.beat = `beat ${beat.locked ? 'estável' : 'procurando'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confiança ${beat.confidence.toFixed(2)}${bs} · detecção ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/quadro`
