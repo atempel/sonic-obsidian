@@ -515,3 +515,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 ## 2026-11-13 — Release v0.6.0 publicada; Memória Viva fica
 - **Decisão:** o usuário testou o bloco v0.6.0 (#91), aprovou e pediu a release: `release.yml` disparado na `rc/v0.6.0` com `publicar=true` (mesmo commit testado, `cb9842b`). Milestone v0.6.0 fechado. A Memória Viva fica como 4ª opção do `Shift+X` (resposta ao critério 8 da 028: "senti diferença em alguns").
 - **Do teste e do log, para planejar (backlog):** latência do visual (#96), Normalizar no teto de +12 dB com o volume do usuário (nível medido −24 a −33 dBFS; #97), memória do renderer 184 → 300 MB em 15 min (#98), preset preto "martin - reflections on black tiles" (#99). Nenhum segurou a release: o usuário aprovou com eles.
+
+## 2026-11-13 — Spec 030: idiomas (inglês e português)
+- **Do usuário (sessão de design):** o inglês é a fonte e o pt-BR é tradução completa; na primeira abertura o app segue o idioma do Windows (`pt-*` → pt-BR, o resto → English); troca em Configurações › Geral, na hora, sem reiniciar; o protótipo só ganha uma prova de layout PT/EN. "Avisos" em inglês é **Notifications** (não "Notices"; design system atualizado). É a próxima tarefa da fila (issue #101, `prioridade`).
+- **Abordagem:** catálogos tipados em TypeScript (`en.ts` fonte, `pt-BR.ts` com o mesmo tipo) + `Intl` para números, datas e plurais; chave faltando = erro de typecheck. **Descartado:** i18next/FormatJS (pesados para dois idiomas só no app); tradução automática sem revisão.
+- **Fica em inglês nos dois idiomas:** log, HUD de diagnóstico, descrições das ferramentas MCP. **Nunca traduzir:** nome e autor dos presets, nomes dados pela pessoa.
