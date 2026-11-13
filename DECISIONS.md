@@ -438,3 +438,11 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
   - patch no `node_modules` (some a cada `npm install`);
   - aumentar o ponto para N px (o MilkDrop desenha 1 px; muda o visual dos presets).
 - **Validado no Windows (2026-11-11):** os dois presets voltaram a desenhar ("os dois presets funcionaram").
+
+## 2026-11-13 — Ciclo automático: issues como estado, release como portão de teste
+- **Decisão:** uma tarefa agendada do Claude Code roda a skill `rodada` a cada 4 h; cada rodada faz uma unidade de trabalho (responder ao usuário → mergear o que está verde → fechar release → implementar → planejar → manutenção) e encerra.
+- **Estado nas issues, não no TASKS.md:** labels `backlog`, `needs-decision`, `needs-design`, `blocked`, `ready`, `in-progress`, `release-candidate` (+ `prioridade`, `agent-decided`); milestones = releases. A rodada reivindica a issue (label + comentário) antes de ler qualquer arquivo, para que duas rodadas sobrepostas nunca peguem a mesma tarefa.
+- **Teste por release, não por PR:** PRs do app mergeiam com CI verde, testes headless e a tabela de critérios; o que só se vê no Windows vai para a seção "Testar na release". Ao fechar um milestone, a rodada dispara o workflow `release` (rascunho) e abre a issue "Testar vX.Y.Z" com o roteiro consolidado. O usuário publica; problemas viram issues `bug`. No máximo 2 releases esperando teste — acima disso a rodada só planeja, mantém e corrige bugs.
+- **O usuário não é gargalo:** tudo que precisa dele é atribuído a ele; a rodada nunca espera, segue para outra issue. Decisões pequenas e reversíveis a rodada toma sozinha (`agent-decided`, revisadas na release); as da seção "Limites" do AGENTS.md e de direção ficam `needs-decision`.
+- **Mantidas as fricções:** teste no Windows antes de publicar (agora por release) e separação design × desenvolvimento (`needs-design`; a rodada nunca desenha).
+- **Descartado:** escolher trabalho pelo TASKS.md (duas rodadas sobrepostas pegariam a mesma tarefa); testar cada PR (o usuário virava o gargalo); merge só com "ok" do usuário em PRs do app (idem).

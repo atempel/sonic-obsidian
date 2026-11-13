@@ -30,6 +30,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - **Planejar:** skill `planejar-feature` → spec + entrada em TASKS + issue no GitHub.
 - **Executar:** skill `executar-task` → branch, implementação, verificação no app rodando, PR com `Closes #N`.
 - **Encerrar:** skill `encerrar-sessao` → SESSIONS.md, TASKS.md, DECISIONS.md e o estado no Notion.
+- **Ciclo automático:** skill `rodada` (tarefa agendada a cada 4 h). O estado do trabalho vive nas **issues do GitHub** (labels + milestones = releases), não no TASKS.md; o usuário testa releases em rascunho, não PRs. O que precisa dele fica atribuído a ele. Ver DECISIONS 2026-11-13.
 
 ## Design (protótipo)
 - O desenho da interface vive num artefato do Claude Design; `docs/design/v3/` é o espelho dele no repo, com a versão em `docs/design/v3/SYNC.md`. Ler `docs/design/v3/README.md` antes de qualquer trabalho de interface.

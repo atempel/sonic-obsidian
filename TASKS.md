@@ -1,5 +1,7 @@
 # Tarefas — Sonic Obsidian
 
+> **Desde 2026-11-13 o estado das tarefas vive nas issues do GitHub** (labels `backlog` → `ready` → `in-progress`, milestones = releases; skill `rodada`). Este arquivo fica como índice histórico e não é usado para escolher trabalho.
+
 Índice: cada item aponta para sua spec (`docs/specs/`) e issue. O detalhe vive na spec, não aqui. Roadmap completo em [docs/PRD.md](docs/PRD.md). Referências pendentes em `queue/`; histórico em [SESSIONS.md](SESSIONS.md).
 
 ## Agora — Fase 2 (Interface v3, protótipo `1794165177-f126`; UI do overlay em Preact)
