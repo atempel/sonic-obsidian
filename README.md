@@ -42,7 +42,7 @@ Sonic Obsidian is a desktop app that turns the audio you choose to play — Spot
 Under the hood it runs [Butterchurn](https://github.com/jberg/butterchurn), a WebGL 2 implementation of MilkDrop 2, with its library of community presets. On top of that sits the Sonic Obsidian interface: a quiet, exact shell around something alive.
 
 > [!NOTE]
-> **Status:** in active development. Phase 2 (the full interface) is done; the current version is **v0.5.0**. The code is MIT-licensed.
+> **Status:** in active development. Phase 2 (the full interface) is done; the current version is **v0.6.0**. The code is MIT-licensed.
 >
 > **Download (Windows 10/11, x64):** [installer](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (per user, no admin rights) · [portable zip](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [all releases](https://github.com/atempel/sonic-obsidian/releases). The app is not code-signed: if SmartScreen warns, click **More info → Run anyway**.
 
@@ -198,7 +198,7 @@ Each feature starts as a spec in [`docs/specs/`](docs/specs/), becomes an entry 
 | 0 — Spike | Prove loopback + Butterchurn in Electron | Done |
 | 1 — Core | Presets by keyboard, rotation, window, input signal | Done |
 | 2 — Interface v3 | Stage, Library, search, transitions, settings, setup, shortcuts | Done (v0.5.0) |
-| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | Planned |
+| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | In progress (v0.6.0: `.milk` import, Studio P0, beat switching, audio reaction) |
 | 4 — MCP | Live control and preset authoring from your AI tool | Planned |
 | 5 — Extras | Multi-monitor rack, beat/BPM, installer, start with Windows | Planned |
 

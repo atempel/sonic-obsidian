@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, a pedido do usuário) — branch `docs/release-0.6.0`
+**Fez:** Passo 1 da `rodada` com o ok do usuário na #91 ("quero liberar essa versão"): release **v0.6.0** publicada pelo workflow `release` na `rc/v0.6.0` (instalador, zip, SHA256SUMS), #91 e milestone v0.6.0 fechados. Lido o log do teste: viraram as issues `backlog` #96 (latência), #97 (Normalizar no teto), #98 (memória do renderer) e #99 (preset preto). README (versão atual e fase 3), spec 028 como feita, DECISIONS. A `rc/v0.6.0` não tem nada fora do `main`; sem PR de volta. Notion atualizado.
+**Deixou em:** PR desta branch. Próximo bloco: v0.7.0 (#94, #73, #69 `ready`).
+
 ### 2026-11-13 — Claude Code (nuvem, sessão com o usuário) — branch `docs/design-sync-598c`
 **Fez:** Passou ao usuário um prompt para o Claude Design desenhar a atualização automática (029) e corrigir a interface da 028. Com o design publicado (`1794603894-598c`), sincronizou o espelho: `Palco integrado`, `Configurações`, docs de navegação, modos, feedback, reatividade e os novos `v3-novidades.md` e `v3-perfis.md`. DIVERGENCIAS 2026-11-11 → aceita com 5 correções. Stub em `queue/`. #69 → `ready` (sem atribuição). Issue nova para as correções da 028.
 **Deixou em:** PR de sync. Specs a criar a partir do stub: Perfis, Modos (Simples), Feedback, curva de 16 bandas.
