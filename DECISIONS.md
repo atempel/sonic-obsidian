@@ -505,3 +505,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** o bloco v0.6.0 fecha com a reação ao áudio (spec 028 P0 e P1, #81 e #86) e a correção dos testes instáveis (#85). A atualização automática (#69, spec 029) está em `needs-design` e, pela regra da `rodada`, vai para o milestone seguinte (**v0.7.0**). Revê a entrada "Spec 029: versão da primeira release com atualizador": a primeira release com atualizador passa a ser a do bloco v0.7.0.
 - **Por quê:** a 028 está pronta e só falta o teste no Windows; segurar o bloco pelo desenho do aviso deixaria o usuário sem nada para testar, e a release 0.6.0 também leva 021–026, validadas no Windows desde 10/11 e ainda fora de uma release.
 - **Descartado:** esperar o desenho para fechar o bloco; encher o v0.6.0 até ~5 issues de app com o backlog (027 e 025 ainda sem planejamento pronto).
+
+## 2026-11-13 — Spec 025 P1: desempenho no Windows (rodada, `agent-decided`)
+- **Decisão:** o P1 (abertura, ms por quadro, memória) roda no **app empacotado**, como passo extra do job `build-windows`, só quando o build Windows roda (label, disparo manual, build de bloco). Amostra fixa de 20 presets em `tests/perf/presets.json`; resultado em `perf.json` (artifact de 90 dias) e no resumo do job, ao lado da execução anterior (`gh run download`, sem action nova). Nunca falha por número nesta fase; limites de piora numa spec futura, depois de ~10 execuções.
+- **Playwright continua só no CI** (`--no-save`), como o usuário aprovou em 2026-11-10; a pergunta da devDependency sai da spec.
+- **Por quê:** medir o pacote que o usuário instala, não o `dev`; rodar em todo PR iria contra o CI sob demanda (DECISIONS 2026-11-13) e somaria ~10 min ao Windows sem necessidade.
+- **Descartado:** job Windows de desempenho em todo PR; limites de falha já agora (sem histórico para calibrar); action de terceiros para baixar o artifact anterior.
