@@ -45,8 +45,8 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 - `needs-decision` com resposta dele → incorporar à spec (branch `docs/…`, PR), tirar a atribuição, label `ready`.
 - PR com comentário dele não respondido → tratar no próprio PR.
 
-**2. Mergear o que está verde.** PRs abertos pela rodada com todos os checks `success`:
-- só `docs/`, `queue/`, testes, `site/`, `.claude/`, `.github/` → mergear;
+**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual), com todos os checks `success` e sem pedido de mudança do usuário:
+- só `docs/`, `queue/`, testes, `site/`, `.claude/`, `.github/` → mergear. Pergunta pequena em aberto no PR → decidir pela sugestão (`agent-decided` na issue ligada, DECISIONS.md) antes; conflito (ex.: número de spec repetido) → corrigir na branch do PR;
 - mudança no app → mergear se o PR traz a tabela de critérios preenchida (verificado / "testar na release") e os testes headless passam. O teste no Windows **não** acontece aqui — acontece na release. Check vermelho → consertar na mesma rodada ou comentar o motivo e seguir.
 
 **3. Fechar release.** Milestone mais antigo aberto sem issues abertas (exceto `needs-design`/`blocked`, que vão para o próximo) **e** menos de 2 issues `release-candidate` abertas **e** nenhum PR aberto chamado `release: v…`:
@@ -56,6 +56,7 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 Com 2 RCs esperando, **não** fechar outra release: seguir para os passos 5–6 e só implementar `bug`.
 
 **4. Implementar.** Escolher a issue `ready`, sem `in-progress`, sem PR aberto que a cite: primeiro `prioridade`, depois o milestone mais antigo, depois o menor número. Com 2 RCs esperando, só `bug`.
+0. Spec ainda num PR aberto → tratar esse PR pelo passo 2 primeiro (é a unidade de trabalho desta rodada).
 1. **Reivindicar antes de ler qualquer arquivo:** label `in-progress` (tirar `ready`) e comentar `Reivindicada por <link da sessão> em <data/hora UTC>`. Reler os comentários: se outra reivindicação chegou primeiro, devolver e escolher outra.
 2. Seguir a skill `executar-task`, com estas diferenças: não esperar o teste do usuário; o PR leva `Closes #N`, a tabela de critérios e uma seção **"Testar na release"** com o que só se vê no Windows (áudio, fps, visual), escrito como passos que o usuário segue sem contexto. Tarefa de interface → `sincronizar-design` (checar) antes; se o desenho não cobre o caso, `needs-design` + atribuir ao usuário + comentário do que falta, tirar `in-progress`, e voltar ao passo 4 com outra issue.
 3. Implementar só a spec. Ideia nova → issue `backlog` (não fazer agora).
