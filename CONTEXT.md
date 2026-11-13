@@ -22,7 +22,7 @@ O que um agente precisa saber para trabalhar bem aqui: convenções, restriçõe
 
 ## Ambiente de desenvolvimento
 - **Código:** Claude Code na nuvem (claude.ai/code). O container é Linux: dá para instalar dependências, compilar, rodar typecheck/lint/testes — **não** dá para abrir a janela nem capturar áudio.
-- **Validação:** no Windows do usuário, com o build portátil gerado pelo GitHub Actions (`windows-latest`) e baixado como artifact. Não há Node/npm no host Windows — não peça para instalar.
+- **Validação:** no Windows do usuário, com a release em rascunho (ciclo automático) ou, sob demanda, com o build portátil de um PR marcado com a label `build-windows` (GitHub Actions, `windows-latest`), baixado como artifact. Não há Node/npm no host Windows — não peça para instalar.
 - Na nuvem, o hook `SessionStart` (`.claude/hooks/session-start.sh`) roda `npm ci`/`npm install` com `ELECTRON_SKIP_BINARY_DOWNLOAD=1` quando existe `package.json`.
 - O repo local fica no OneDrive; `node_modules/` está no `.gitignore` e não deve existir lá (sem Node no host).
 - Decisão completa em [DECISIONS.md](DECISIONS.md) (2026-11-08 — Ambiente de dev).

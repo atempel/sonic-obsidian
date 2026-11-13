@@ -33,6 +33,7 @@ Na nuvem não há GraphQL: `gh issue list`, `gh pr create` e afins **falham**. U
 - checks: `gh api …/commits/<sha>/check-runs --jq '.check_runs[]|{name,status,conclusion}'`
 - merge: `gh api -X PUT …/pulls/N/merge -f merge_method=squash`
 - release (tags não sobem da nuvem): `gh api -X POST …/actions/workflows/release.yml/dispatches -f ref=main -f 'inputs[version]=X.Y.Z'`
+- build Windows de um PR (só quando o usuário pedir um artifact daquele PR): `-X POST …/issues/<PR>/labels -f 'labels[]=build-windows'`
 - `scripts/ciclo-labels.sh` cria as labels que faltarem (idempotente).
 
 ## Procedimento — parar no primeiro passo que gerar trabalho
@@ -45,7 +46,7 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 - `needs-decision` com resposta dele → incorporar à spec (branch `docs/…`, PR), tirar a atribuição, label `ready`.
 - PR com comentário dele não respondido → tratar no próprio PR.
 
-**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual), com todos os checks `success` (PR que o CI ignora por só mexer em `docs/`/`site/` e não tem check nenhum conta como verde) e sem pedido de mudança do usuário:
+**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual), com todos os checks `success` ou `skipped` (o build Windows só roda com a label `build-windows`; PR que o CI ignora por só mexer em docs/markdown/`site/` e não tem check nenhum conta como verde) e sem pedido de mudança do usuário:
 - só `docs/`, `queue/`, testes, `site/`, `.claude/`, `.github/` → mergear. Pergunta pequena em aberto no PR → decidir pela sugestão (`agent-decided` na issue ligada, DECISIONS.md) antes; conflito (ex.: número de spec repetido) → corrigir na branch do PR;
 - mudança no app → mergear se o PR traz a tabela de critérios preenchida (verificado / "testar na release") e os testes headless passam. O teste no Windows **não** acontece aqui — acontece na release. Check vermelho → consertar na mesma rodada ou comentar o motivo e seguir.
 

@@ -17,7 +17,7 @@ A tarefa tem spec em `docs/specs/` e issue. Se não tiver, pare e use `planejar-
 5. **Implementar em fatias pequenas**, cada uma deixando o app rodando. Commits Conventional (`feat:`, `fix:`…) em português.
 6. **Verificar contra os critérios de aceite da spec**, um por um:
    - rodar typecheck/lint/testes que existirem;
-   - na nuvem não há janela nem áudio: fazer push, esperar o build Windows do GitHub Actions e pedir ao usuário para baixar o artifact, rodar no Windows e confirmar áudio, fps e visual critério por critério;
+   - na nuvem não há janela nem áudio. No ciclo automático, o que só se vê no Windows vai para a seção "Testar na release" do PR. Em sessão manual em que o usuário quer testar o PR em si: pôr a label `build-windows` no PR (o build Windows só roda com ela), esperar o artifact e pedir ao usuário para rodar no Windows e confirmar áudio, fps e visual critério por critério;
    - o que não puder ser verificado, marcar explicitamente como "não verificado" com o motivo.
 7. **Atualizar documentação:** comandos novos em `AGENTS.md`, decisões em `DECISIONS.md`, status no cabeçalho da spec, checkbox em `TASKS.md`.
 8. **PR:** `git push -u origin feat/<slug>` e `gh pr create` com: o que mudou, como testar, checklist dos critérios de aceite (verificado / não verificado) e `Closes #N`.

@@ -1,21 +1,24 @@
 name: build-windows
 
 on:
-  # Branches de trabalho buildam pelo PR (pull_request); push só no main.
-  # Antes, feat/** e fix/** rodavam duas vezes com PR aberto (push + pull_request).
-  push:
-    branches: [main]
-    paths-ignore: ['site/**', 'docs/**']
+  # Typecheck + testes headless em todo PR que mexe no app (barato, Ubuntu).
+  # Build Windows só sob demanda (DECISIONS 2026-11-13): label `build-windows` no PR ou disparo manual.
+  # O teste do usuário é por release, e o `release.yml` builda o Windows dela.
+  # Sem `push` no main: o PR já foi checado antes do merge e a release checa de novo.
   pull_request:
-    paths-ignore: ['site/**', 'docs/**']
+    types: [opened, synchronize, reopened, labeled]
+    paths-ignore: ['site/**', 'docs/**', 'queue/**', '**/*.md']
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  # Pôr uma label não cancela o typecheck que está rodando para o mesmo commit.
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
   cancel-in-progress: true
 
 jobs:
   typecheck:
+    # Label nova não é código novo: não repete o typecheck.
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
@@ -41,7 +44,11 @@ jobs:
           if-no-files-found: ignore
 
   build-windows:
-    needs: typecheck
+    # Só com a label `build-windows` (ao pôr a label, ou em push num PR que já a tem) ou disparo manual.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'build-windows') ||
+      (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build-windows'))
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4

@@ -20,4 +20,5 @@ release-candidate|5319e7|Teste de uma release em rascunho (atribuída ao usuári
 prioridade|e11d21|Fura a fila do ciclo
 agent-decided|bfdadc|A rodada decidiu algo reversível sozinha — revisar no teste da release
 bug|d73a4a|Algo não funciona
+build-windows|1d76db|Roda o build Windows deste PR (artifact para testar)
 EOF
