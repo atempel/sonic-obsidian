@@ -458,6 +458,16 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Leitura do HUD (build atual):** Nervo + Fixa + Nível 0, `bass` antes = depois, entre 0,5 e 1,9. O Caráter inerte no Nível 0 está confirmado; a trava em 1,00 não apareceu nesta abertura e falta reproduzir abrindo em silêncio.
 - **Nível padrão (2026-11-13, do usuário):** continua 0, o motor puro. Com Nível 0, o Caráter avisa "sem efeito no nível 0" (P0, padrão visível). **Descartado:** abrir em +1, que mudaria a reação de todos os presets sem o usuário pedir.
 
+## 2026-11-10 — Spec 029 (antes 024): atualização automática
+- **Decisão:** `electron-updater` com o provedor GitHub (`atempel/sonic-obsidian`), só no instalador NSIS. Checa uma vez por dia (30 s depois do primeiro quadro e a cada 24 h com o app aberto), baixa em segundo plano e mostra um aviso persistente; um clique roda `quitAndInstall` silencioso e reabre o app. O rascunho de release continua sendo o portão: o atualizador só vê releases publicadas, e pre-releases não são oferecidas.
+- **Do usuário:**
+  - checagem **ligada por padrão**, com chave nas Configurações; o README deixa de dizer "no network calls of its own" e passa a citar a checagem diária no GitHub como a única chamada de rede;
+  - **download em silêncio** antes do aviso (o clique só reinicia), com `autoInstallOnAppQuit: false`: sem o clique, nada é instalado;
+  - **zip portátil** só avisa e abre a página da release.
+- **Release:** o `electron-builder.yml` ganha o bloco `publish` (gera `app-update.yml` e `latest.yml`), mas o workflow segue com `--publish never` e anexa `latest.yml` + `.blockmap` pelo `gh`.
+- **Descartado:** baixar só depois do clique (mais espera para o usuário); atualizador próprio para o zip (troca de pasta, mais risco); assinatura de código (continua fora, spec 016).
+- **Consequência:** quem está na v0.5.0 precisa instalar a primeira versão com atualizador à mão uma vez; as notas da release dizem isso.
+
 ## 2026-11-13 — Ciclo automático: issues como estado, teste em blocos, release só com o ok do usuário
 - **Decisão:** uma tarefa agendada do Claude Code roda a skill `rodada` a cada 4 h; cada rodada faz uma unidade de trabalho (responder ao usuário → mergear o que está verde → fechar bloco de teste → implementar → planejar → manutenção) e encerra.
 - **Estado nas issues, não no TASKS.md:** labels `backlog`, `needs-decision`, `needs-design`, `blocked`, `ready`, `in-progress`, `test-block` (+ `prioridade`, `agent-decided`); milestone = bloco de teste = futura release. A rodada reivindica a issue (label + comentário) antes de ler qualquer arquivo, para que duas rodadas sobrepostas nunca peguem a mesma tarefa.
@@ -467,3 +477,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Mantidas as fricções:** teste no Windows antes de publicar (agora por bloco) e separação design × desenvolvimento (`needs-design`; a rodada nunca desenha).
 - **CI sob demanda:** typecheck e testes headless continuam em todo PR que mexe no app; o build Windows só roda com a label `build-windows` no PR ou por disparo manual (é assim que a rodada builda o bloco; artifact de 30 dias). O push no `main` não builda mais. O repo é público, então os minutos são gratuitos: o ganho é fila e ruído, não custo.
 - **Descartado:** escolher trabalho pelo TASKS.md (duas rodadas sobrepostas pegariam a mesma tarefa); testar cada PR (o usuário virava o gargalo); release em rascunho como build de teste (a release deve existir só depois do ok); testar direto do `main` (ele muda enquanto o usuário testa).
+
+## 2026-11-13 — Spec 029: versão da primeira release com atualizador (rodada, `agent-decided`)
+- **Decisão:** a atualização automática entra no milestone aberto mais antigo com vaga (**v0.6.0**), e a primeira release com atualizador é a desse bloco. Pergunta pequena e reversível da spec 029, decidida pela opção recomendada nela.
+- **Descartado:** uma 0.5.1 só para o atualizador — o ciclo automático lança por bloco, não por feature.
+- **Fica em aberto para a implementação:** onde fica o aviso no design (se o protótipo não cobrir, a issue vai para `needs-design`).

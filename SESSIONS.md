@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/atualizacao-automatica`
+**Fez:** Passo 2 da `rodada`: PR #70 (spec 029, atualização automática) estava em conflito com o `main` e com o `typecheck` vermelho (base antiga, antes do CI sob demanda). Trouxe o `main` para a branch por merge (sem reescrever histórico), mantendo as duas entradas do DECISIONS. Decidiu a pergunta pequena da 029 (versão: milestone v0.6.0, `agent-decided`). Issue #69 → `ready`, milestone v0.6.0.
+**Deixou em:** PR #70 mergeado se o CI ficou verde. Na fila `ready` do v0.6.0: #85 (teste 026 instável, `prioridade`), #81 (spec 028, `prioridade`), #69 (029). Nada novo atribuído ao usuário. Não verificado: nada de código mudou.
+
 ### 2026-11-11 a 13 — Claude Code (nuvem, claude.ai/code) — branch `claude/ecstatic-carson-9x3kh6`
 **Fez:**
 - **Design checado:** o artefato está em `1794352628-1d72`, o espelho em `1794281099-42d3`. Não sincronizado nesta sessão: a frente não tem tela desenhada, só o AGC precisa de interface no P1.
