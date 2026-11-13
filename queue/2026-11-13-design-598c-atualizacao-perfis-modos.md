@@ -1,0 +1,5 @@
+# Design 598c: atualização automática, correções da 028, Perfis, Modos decididos
+Status: Pending
+Fonte: docs/design/v3/ (versão `1794603894-598c`): `docs/v3-novidades.md`, `docs/v3-modelo-de-navegacao.md` (seções "Atualização automática" e "Sinal e Expressividade"), `docs/v3-perfis.md`, `docs/v3-modos.md`, `docs/v3-feedback.md`, `docs/v3-reatividade.md`
+Resumo: (1) **Spec 029** ganhou desenho completo: a #69 sai de `needs-design`; a spec cita a página e a versão ao implementar (a seção traz até a ordem de Tab e o comportamento abaixo de 900 px). (2) **028:** cinco correções de interface (DIVERGENCIAS 2026-11-11) → issue própria. (3) **Perfis de ajustes** aprovado (`Alt+1…9`, `profiles.json`) → precisa de spec. (4) **Modos** decididos (Simples primeiro, Completo na primeira abertura, Rack na Fase 5), **Feedback** e **curva de 16 bandas** aprovados para spec (o Feedback pede ligar o Discussions: ok do usuário).
+Destino provável: 029 (implementar), issue de correções da 028, specs novas de Perfis, Modos (Simples), Feedback e curva de 16 bandas (issues `backlog`).

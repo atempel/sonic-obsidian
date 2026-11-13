@@ -1,6 +1,6 @@
-# Sonic Obsidian v3 — Curva de expressividade (proposta)
+# Sonic Obsidian v3 — Curva de expressividade
 
-> Sessão de design, 10/11/2026. **Status: direção aprovada pelo usuário** ("bandas de um espectro, sem falar de instrumentos"). O detalhe ainda é proposta. Substitui a ideia anterior de "reatividade por instrumento", que vinha do SYQEL e foi descartada. Página: Palco integrado › Ajustes rápidos › Expressividade, e Configurações › Visual.
+> Sessão de design, 10/11/2026. **Status: aprovado para spec (10/11/2026), começando por um spike** ("bandas de um espectro, sem falar de instrumentos"). O detalhe ainda é proposta. Substitui a ideia anterior de "reatividade por instrumento", que vinha do SYQEL e foi descartada. Página: Palco integrado › Ajustes rápidos › Expressividade, e Configurações › Visual.
 
 ## A ideia
 É um **EQ gráfico de 16 bandas** que não mexe no som: ele muda o quanto cada faixa de frequência da música move o visual. Quem usa DAW ou mesa reconhece na hora: bandas em Hz, ganho em dB, uma curva plana como ponto de partida. Não há nomes de instrumento em lugar nenhum.
@@ -21,7 +21,7 @@ A interface diz isso sem jargão:
 
 ## Desenho
 **Ajustes rápidos › Expressividade** (depois de Nível, Caráter e Memória):
-- **Curva:** um segmentado com Plana · Graves · Médios · Agudos · Sorriso, e "Personalizada" aparece sozinha quando a pessoa edita.
+- **Curva:** um segmentado com Plana · Graves · Médios · Agudos · Sorriso, e "Personalizada" aparece sozinha quando a pessoa edita. Depois de uma edição à mão, o rótulo **continua Personalizada** mesmo que a curva volte a ser igual a uma predefinição, até a pessoa escolher uma (decisão do usuário, 10/11).
 - **O EQ:** 16 barras finas arrastáveis na vertical (um clique define o valor; duplo clique volta a 0 dB), com uma linha de 0 dB e o espectro ao vivo atrás em `text-3`. A curva é desenhada em violeta. O valor da banda sob o ponteiro aparece num balão mono ("80 Hz · +4 dB", M15).
 - Pelo teclado: as setas ←/→ escolhem a banda e ↑/↓ mudam ±1 dB (Shift: ±3).
 
@@ -47,3 +47,8 @@ A interface diz isso sem jargão:
 | Saída Spout | Configurações › Telas › Saídas | Médio |
 | MIDI Learn | Modo performance e Rack | Médio |
 | Gravar em 16:9 e 9:16 | Faixa e Configurações › Gravação | Médio–alto |
+
+## Roadmap das ideias do SYQEL (decisão do usuário, 10/11/2026)
+- **Entram:** troca no beat a cada N compassos com "segurar o visual" (`Enter`, depende do BPM, Fase 5); Spout e MIDI Learn (Modo performance e Rack).
+- **Janela de transmissão:** coberta pelo Rack em janela, com tamanho fixo (ver `docs/v3-modos.md`).
+- **Fica de fora por ora:** gravar em 16:9 e 9:16.

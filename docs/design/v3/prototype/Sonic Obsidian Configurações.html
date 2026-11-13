@@ -65,6 +65,30 @@
   .panel > .lead { margin: 4px 0 0; color: var(--text-2); }
   .grp { margin-top: 28px; }
   .grp h3 { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--text-2); }
+  .grp-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 2px; min-height: 28px; }
+  .grp-hd h3 { margin: 0; }
+  .grp-hd .btn { gap: 6px; }
+  .lbl .auto { margin-left: 8px; font-size: 12px; color: var(--cyan); white-space: nowrap; }
+  .sl0 { position: relative; flex: 1; min-width: 0; }
+  .sl0::before { content: ""; position: absolute; left: 50%; top: 50%; width: 2px; height: 9px; margin: -4.5px 0 0 -1px; border-radius: 1px; background: var(--text-3); }
+  .sl0 input { position: relative; z-index: 1; }
+  .seg span { position: relative; }
+  .seg .def::after { content: ""; position: absolute; left: 50%; bottom: 2px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--text-3); }
+  .seg.dim span, .seg.dim input:checked + span { color: var(--text-3); }
+  .seg.dim label:hover span { color: var(--text-2); }
+  /* Atualizações (spec 029) */
+  .upd-st { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+  .upd-st .ico { width: 15px; height: 15px; color: var(--text-2); flex: none; }
+  .upd-st .ico.warn { color: var(--warn); }
+  .upd-st .spin { animation: updspin 1s linear infinite; }
+  @keyframes updspin { to { transform: rotate(360deg); } }
+  .upd-st .cy { color: var(--cyan); }
+  .prog { display: block; height: 2px; margin-top: 10px; border-radius: 2px; background: var(--line-2); overflow: hidden; }
+  .prog i { display: block; height: 100%; width: 0; background: var(--violet); }
+  .upd-last { margin: 12px 0 0; font-size: 13px; color: var(--text-3); }
+  .sel.sm { height: 28px; font-size: 13px; padding-left: 10px; }
+  .proto-row .ctl label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  @media (prefers-reduced-motion: reduce) { .upd-st .spin { animation: none; } }
   .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 14px 12px; margin: 0 -12px; border-bottom: 1px solid var(--line-1); border-radius: var(--r-2); transition: background var(--t-med) var(--ease-out); }
   .row[hidden] { display: none; }
   .sub { margin: 18px 0 0; font-size: 13px; font-weight: 500; color: var(--text-1); }
@@ -215,6 +239,29 @@
   .lnk:hover { text-decoration-color: var(--violet); }
   .lnk .ico { width: 14px; height: 14px; color: var(--text-2); }
 
+  /* perfis */
+  .pf-lead { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+  .pfrow .pf-n { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+  .pf-tag { font-size: 12px; color: var(--text-3); }
+  .pf-use { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
+  .pf-use .ico { width: 14px; height: 14px; color: var(--violet); }
+  .pf-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--violet); }
+  .pf-sum { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+  .pf-ren { width: 100%; max-width: 280px; height: 30px; flex: none; font-size: 14px; }
+  .pf-ren:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; }
+  .pfrow .ctl { gap: 4px; }
+  .pf-act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .pfmenu { position: fixed; z-index: 50; width: 208px; padding: 4px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-3); box-shadow: var(--shadow-pop); animation: pfIn 160ms var(--ease-out); }
+  .pfmenu[hidden] { display: none; }
+  .pfmenu button { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; text-align: left; background: transparent; border: 0; border-radius: var(--r-1); color: var(--text-1); cursor: pointer; transition: background var(--t-fast); }
+  .pfmenu button:hover:not(:disabled) { background: var(--bg-03); }
+  .pfmenu button:focus-visible { outline-offset: -2px; background: var(--bg-03); }
+  .pfmenu button:disabled { opacity: 0.45; cursor: default; }
+  .pfmenu .ico { color: var(--text-2); }
+  .pfmenu hr { border: 0; border-top: 1px solid var(--line-2); margin: 4px 0; }
+  @keyframes pfIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .pfmenu { animation: none; } }
+
   /* ── Telas pequenas ── */
   @media (max-width: 899px) {
     .win { inset: 0; left: 0; top: 0; transform: none; width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; }
@@ -281,9 +328,9 @@
   /* ── Estado ── */
   var S = {
     abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
-    gain: 0, rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, trManual: 'aleatorio', tManual: 1, trAuto: 'crossfade', tAuto: 2.7, expr: 0, carater: 'energia', memoria: 'curta', curva16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvaPreset: 'plana', beat: false, silencio: false, imported: 8,
+    gain: 0, norm: false, updAuto: true, updSim: 'ok', rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, trManual: 'aleatorio', tManual: 1, trAuto: 'crossfade', tAuto: 2.7, expr: 0, carater: 'energia', memoria: 'curta', curva16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvaPreset: 'plana', beat: false, silencio: false, imported: 8,
     canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, nomePreset: 'sempre', avisos: 'todos', limpo: false, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
-    rackTop: true, rackPos: 'br', tela: '2'
+    rackTop: true, rackPos: 'br', tela: '2', perfilAbrir: 'ultimo'
   };
   var FMT = {
     gain: function (v) { return v === 0 ? '0 dB' : (v > 0 ? '+' : '\u2212') + Math.abs(v) + ' dB'; },
@@ -323,9 +370,10 @@
   function sw(id, on, dis) {
     return '<label class="switch"><input type="checkbox" id="' + id + '" data-k="' + id + '"' + (on ? ' checked' : '') + (dis ? ' disabled' : '') + '><span class="track"></span></label>';
   }
-  function seg(id, opts, cur, dis) {
+  function seg(id, opts, cur, dis, def) {
     return '<div class="seg" role="radiogroup" aria-labelledby="l-' + id + '">' + opts.map(function (o) {
-      return '<label><input type="radio" name="' + id + '" value="' + o[0] + '" data-k="' + id + '"' + (String(cur) === String(o[0]) ? ' checked' : '') + (dis ? ' disabled' : '') + '><span>' + o[1] + '</span></label>';
+      var d = def != null && String(def) === String(o[0]);
+      return '<label><input type="radio" name="' + id + '" value="' + o[0] + '" data-k="' + id + '"' + (String(cur) === String(o[0]) ? ' checked' : '') + (dis ? ' disabled' : '') + (d ? ' aria-label="' + o[1] + ' (padrão)"' : '') + '><span' + (d ? ' class="def"' : '') + '>' + o[1] + '</span></label>';
     }).join('') + '</div>';
   }
   function sel(id, opts, cur, dis) {
@@ -333,19 +381,22 @@
       return '<option value="' + o[0] + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
     }).join('') + '</select>';
   }
-  function rng(id, min, max, step, val) {
+  function rng(id, min, max, step, val, zero) {
     var fill = ((val - min) / (max - min)) * 100;
-    return '<div class="rng"><input type="range" id="' + id + '" data-k="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="--fill:' + fill + '%" aria-valuetext="' + FMT[id](val) + '"><span class="num val" id="v-' + id + '">' + FMT[id](val) + '</span></div>';
+    var inp = '<input type="range" id="' + id + '" data-k="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + val + '" style="--fill:' + fill + '%" aria-valuetext="' + FMT[id](val) + '">';
+    return '<div class="rng">' + (zero ? '<span class="sl0">' + inp + '</span>' : inp) + '<span class="num val" id="v-' + id + '">' + FMT[id](val) + '</span></div>';
   }
-  function grp(title, inner) { return '<section class="grp" aria-label="' + esc(title) + '"><h3>' + title + '</h3>' + inner + '</section>'; }
+  function grp(title, inner, head) { return '<section class="grp" aria-label="' + esc(title) + '">' + (head ? '<div class="grp-hd"><h3>' + title + '</h3>' + head + '</div>' : '<h3>' + title + '</h3>') + inner + '</section>'; }
 
   function par() { return Array.prototype.slice.call(arguments).map(function (x) { return '<span class="num par">' + x + '</span>'; }).join(' · '); }
   var favOpts = D.presets.filter(function (p) { return p.fav; }).map(function (p) { return [p.id, p.title + ' · por ' + p.author]; });
   var TROPTS = [['corte', 'Corte seco'], ['crossfade', 'Crossfade'], ['varredura', 'Varredura'], ['plasma', 'Plasma'], ['radial', 'Radial'], ['aleatorio', 'Aleatório']];
   var EXPR_HELP = {
     carater: { contraste: 'Só amplia a diferença entre partes fortes e fracas.', energia: 'Amplia e sobe a base: tudo reage mais.', nervo: 'Energia com reação seca quando sobe e suave quando desce.' },
-    memoria: { curta: 'Compara com os últimos ~4 s, como o motor.', longa: 'Compara com os últimos ~30 s: as viradas da música aparecem mais.', fixa: 'Congela a referência agora: partes altas ficam sempre mais fortes.' }
+    memoria: { curta: 'Compara com os últimos ~4 s, como o motor.', longa: 'Compara com os últimos ~30 s: as viradas da música aparecem mais.', fixa: 'Congela a referência agora: partes altas ficam sempre mais fortes.', viva: 'Viva (em teste): compara com os últimos ~1,7 s, como o MilkDrop 2. Reage a cada batida.' }
   };
+  var X_DEF = { carater: 'energia', memoria: 'curta' };
+  function exprHelp(k) { return (k === 'carater' && S.expr === 0) ? 'Sem efeito no nível 0.' : EXPR_HELP[k][S[k]] + (S[k] === X_DEF[k] ? ' Padrão.' : ''); }
   var collOpts = D.collections.map(function (c) { return [c.id, c.name]; });
 
   var TOOLS = [["get_status", "Preset atual, autor, fonte, rotação, fps e BPM."], ["get_audio_features", "bass, mid, treb, nível e BPM, instantâneo ou média de N segundos."], ["list_presets", "Busca com filtros: favoritos, recentes, importados, meus e coleção."], ["get_preset", "Código .milk e metadados de um preset."], ["play_preset", "Toca um preset específico."], ["next_preset", "Vai para o próximo preset."], ["previous_preset", "Volta ao preset anterior."], ["random_preset", "Toca um preset aleatório."], ["set_rotation", "Liga ou desliga a rotação; define intervalo e ordem."], ["set_signal", "Ajusta ganho e o tipo e o tempo das transições."], ["set_audio_source", "Troca a fonte: sistema, microfone, arquivo ou SoundCloud."], ["validate_preset", "Compila um .milk e devolve erros por seção e linha."], ["create_preset", "Cria um preset a partir de .milk; com preview toca sem salvar."], ["update_preset", "Edita presets seus; os de terceiros viram remix."], ["capture_frame", "PNG do quadro atual, para a IA ver o resultado."], ["show_text", "Mostra um texto no visual."], ["manage_collection", "Cria, renomeia, adiciona e remove itens de coleções."]];
@@ -381,6 +432,7 @@
     { act: 'Expressividade neutra', keys: ['0'] },
     { act: 'Caráter da expressividade', keys: ['X'] },
     { act: 'Memória da expressividade', keys: ['Shift+X'] },
+    { act: 'Aplicar perfil 1–9', keys: ['Alt+1…9'] },
     { act: 'Modo limpo', keys: ['T'] },
     { act: 'Painel de diagnóstico', keys: ['Ctrl+Shift+D'] },
     { act: 'Abrir o log', keys: ['Ctrl+Shift+L'] },
@@ -394,7 +446,7 @@
 
   function eqSeg() {
     var opts = EQ_PRE.map(function (p) { return [p[0], p[1]]; }).concat([['custom', 'Personalizada']]);
-    var h = seg('curvaPreset', opts, S.curvaPreset);
+    var h = seg('curvaPreset', opts, S.curvaPreset, false, 'plana');
     return h.replace(/<label>(<input[^>]*value="custom"[^>]*>)/, '<label id="eqCustomLb"' + (S.curvaPreset === 'custom' ? '' : ' hidden') + '>$1');
   }
 
@@ -430,7 +482,9 @@
         grp('Entrada',
           row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) })) +
         grp('Nível',
-          row({ id: 'gain', label: 'Ganho padrão', help: '0 dB é o sinal como chega. Aplicado ao abrir; durante a música, use os Ajustes rápidos.', kw: 'dB decibel', ctl: rng('gain', -12, 12, 1, S.gain) }));
+          row({ id: 'norm', label: 'Normalizar áudio<span class="num auto" id="normAuto" hidden>auto +5 dB</span>', help: 'Desligado por padrão.', kw: 'normalizar volume automático igualar faixas ganho auto', ctl: sw('norm', S.norm) }) +
+          row({ id: 'gain', label: 'Ganho padrão', help: '0 dB é o sinal como chega. Aplicado ao abrir; durante a música, use os Ajustes rápidos.', kw: 'dB decibel ajuste fino', ctl: rng('gain', -12, 12, 1, S.gain) }) +
+          '<p class="help" id="normNote" hidden>Iguala o volume entre faixas em alguns segundos. O som das caixas não muda.</p>');
     } },
     { id: 'visual', name: 'Visual', icon: 'sparkles', desc: 'Como os presets passam de um para o outro.', html: function () {
       return grp('Rotação',
@@ -447,9 +501,9 @@
         row({ id: 'tAuto', label: 'Tempo', kw: 'transição automática duração segundos blend', ctl: rng('tAuto', 0.1, 10, 0.1, S.tAuto) }) +
         row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', phase: 1, ctl: sw('beat', false, true) })) +
         grp('Expressividade',
-        row({ id: 'expr', label: 'Nível', kw: 'expressividade reação intensidade', ctl: rng('expr', -3, 3, 1, S.expr) }) +
-        row({ id: 'carater', group: 1, label: 'Caráter', help: EXPR_HELP.carater[S.carater], kw: 'expressividade Contraste Energia Nervo', ctl: seg('carater', [['contraste', 'Contraste'], ['energia', 'Energia'], ['nervo', 'Nervo']], S.carater) }) +
-        row({ id: 'memoria', group: 1, label: 'Memória', help: EXPR_HELP.memoria[S.memoria], kw: 'expressividade Curta Longa Fixa referência', ctl: seg('memoria', [['curta', 'Curta'], ['longa', 'Longa'], ['fixa', 'Fixa']], S.memoria) }) +
+        row({ id: 'expr', label: 'Nível', kw: 'expressividade reação intensidade', ctl: rng('expr', -3, 3, 1, S.expr, true) }) +
+        row({ id: 'carater', group: 1, label: 'Caráter', help: exprHelp('carater'), kw: 'expressividade Contraste Energia Nervo', ctl: seg('carater', [['contraste', 'Contraste'], ['energia', 'Energia'], ['nervo', 'Nervo']], S.carater, false, X_DEF.carater) }) +
+        row({ id: 'memoria', group: 1, label: 'Memória', help: exprHelp('memoria'), kw: 'expressividade Curta Longa Fixa Viva referência', ctl: seg('memoria', [['curta', 'Curta'], ['longa', 'Longa'], ['fixa', 'Fixa'], ['viva', 'Viva']], S.memoria, false, X_DEF.memoria) }) +
         '<p class="help" data-search="expressividade atalhos + − 0 X Shift+X nível caráter memória">+/− mudam o nível, 0 volta ao neutro, X troca o caráter, Shift+X a memória.</p>' +
         '<div class="row stack" data-search="curva por frequência equalizador eq bandas graves médios agudos sorriso plana personalizada hz db bass mid treb restaurar plana usar fixa expressividade"><div class="txt"><span class="lbl" id="l-curvaPreset">Curva por frequência</span><p class="help">Quanto cada faixa de frequência move o visual. Não muda o som que você ouve.</p></div>' +
         '<div class="ctl">' + eqSeg() + '<button class="btn sm eq-reset" type="button" id="eqReset"><i data-lucide="rotate-ccw" class="ico ico-sm"></i>Restaurar plana</button></div>' +
@@ -457,13 +511,22 @@
         '<div class="eq-plot" id="eqPlot" tabindex="0" role="group" aria-label="Curva por frequência" aria-describedby="eqHint"><canvas id="eqCv" aria-hidden="true"></canvas><div class="eq-bub num" id="eqBub" aria-hidden="true"></div></div>' +
         '<div class="eq-freq" id="eqFreq" aria-hidden="true"></div>' +
         '<span class="eq-sr" id="eqHint">Setas para a esquerda e para a direita escolhem a banda. Setas para cima e para baixo mudam o ganho em 1 dB, com Shift em 3 dB. Duplo clique volta a banda a 0 dB.</span><span class="eq-sr" id="eqLive" aria-live="polite"></span>' +
-        '<div class="eq-warn" id="eqWarn" hidden><span><i data-lucide="info" class="ico ico-sm"></i>Com a memória Fixa, a curva age por inteiro.</span><button class="btn sm" type="button" id="eqFixa">Usar Fixa</button></div></div></div>') +
+        '<div class="eq-warn" id="eqWarn" hidden><span><i data-lucide="info" class="ico ico-sm"></i>Com a memória Fixa, a curva age por inteiro.</span><button class="btn sm" type="button" id="eqFixa">Usar Fixa</button></div></div></div>', '<button class="btn btn-ghost sm" type="button" id="xRst" disabled><i data-lucide="rotate-ccw" class="ico ico-sm" aria-hidden="true"></i>Restaurar padrão</button>') +
         grp('Texto sobre o visual',
         row({ id: 'nomePreset', label: 'Nome do preset', help: 'Cartão com o nome e o autor que aparece a cada troca.', kw: 'texto sobre o visual crédito cartão autor', ctl: sel('nomePreset', [['sempre', 'Sempre'], ['manual', 'Só quando eu troco'], ['nunca', 'Nunca']], S.nomePreset) }) +
         row({ id: 'titulo', label: 'Título da faixa', help: 'Ao tocar um arquivo ou uma faixa do SoundCloud. ' + par('launchSongTitleAnim'), kw: 'texto sobre o visual', ctl: sw('titulo', S.titulo) }) +
         row({ id: 'avisos', label: 'Avisos', help: 'Importantes: ações da IA e falhas. Painéis de erro aparecem sempre.', kw: 'toast toasts notificações texto sobre o visual Todos Só importantes Nenhum', ctl: sel('avisos', [['todos', 'Todos'], ['importantes', 'Só importantes'], ['nenhum', 'Nenhum']], S.avisos) }) +
         row({ id: 'limpo', label: 'Modo limpo', help: 'Esconde tudo acima de uma vez, sem mudar estas escolhas. Atalho <kbd>T</kbd>.', kw: 'texto sobre o visual esconder', ctl: sw('limpo', S.limpo) }) +
         '<p class="note" style="color:var(--text-3)" data-search="texto sobre o visual crédito do autor faixa de controle Biblioteca">O crédito do autor continua na faixa de controle e na Biblioteca.</p>');
+    } },
+    { id: 'perfis', name: 'Perfis', icon: 'bookmark', desc: 'Combinações de ajustes para trocar com um clique.', html: function () {
+      return grp('Seus perfis',
+        '<p class="pf-lead">Um perfil guarda como o visual se comporta, não qual preset está tocando.</p>' +
+        '<div id="pfList"></div>' +
+        row({ id: 'pfImp', group: 1, label: 'Importar perfil', help: 'Arquivo .json exportado pelo Sonic Obsidian. Serve para trocar perfis com outras pessoas.', kw: 'perfil importar json arquivo', ctl: '<button class="btn sm" type="button" id="pfImpBtn"><i data-lucide="upload" class="ico ico-sm"></i>Importar perfil…</button>' }) +
+        '<p class="note" id="pfNote" role="status" hidden></p><input type="file" id="pfFile" accept=".json,application/json" class="sr" tabindex="-1" aria-hidden="true">') +
+        grp('Ao iniciar',
+        row({ id: 'perfilAbrir', label: 'Perfil ao abrir', help: 'Aplicado quando o app abre. “Último usado” continua de onde você parou.', kw: 'perfil ao iniciar último usado', ctl: '<select class="sel sel-w" id="perfilAbrir" data-k="perfilAbrir"></select>' }));
     } },
     { id: 'renderizacao', name: 'Renderização', icon: 'cpu', desc: 'Qualidade e custo do Butterchurn na sua GPU.', html: function () {
       return grp('Qualidade',
@@ -540,9 +603,15 @@
     } },
     { id: 'sobre', name: 'Sobre', icon: 'info', desc: 'Versão, créditos e links.', html: function () {
       return grp('Aplicativo',
-        row({ id: 'ver', group: 1, label: 'Sonic Obsidian', help: 'Versão', kw: 'versão 0.3.0 Electron', ctl: '<span class="num count">0.3.0</span>' }) +
+        row({ id: 'ver', group: 1, label: 'Sonic Obsidian', help: 'Versão', kw: 'versão 0.6.0 Electron', ctl: '<span class="num count" id="verNum">0.6.0</span>' }) +
         row({ id: 'plat', group: 1, label: 'Plataforma', help: 'Electron, para Windows.' }) +
         row({ id: 'eng', group: 1, label: 'Motor do visual', help: 'Butterchurn, licença MIT.' })) +
+        grp('Atualizações',
+        row({ id: 'updVer', group: 1, label: 'Versão instalada', kw: 'atualização atualizações versão instalada o que mudou release notas', ctl: '<span class="num count" id="updVerTx">Sonic Obsidian · 0.6.0</span><a class="lnk" id="updWhat" href="https://github.com/atempel/sonic-obsidian/releases/tag/v0.6.0" target="_blank" rel="noopener noreferrer">O que mudou<i data-lucide="external-link" class="ico"></i></a>' }) +
+        row({ id: 'updAuto', label: 'Buscar atualizações automaticamente', help: 'Uma checagem por dia no GitHub. É a única chamada de rede que o app faz por conta própria.', kw: 'atualização atualizações automática github rede checagem update', ctl: sw('updAuto', S.updAuto) }) +
+        row({ id: 'updNow', group: 1, label: 'Verificar agora', help: '<span class="upd-st" id="updSt" role="status" aria-live="polite"></span><span class="prog" id="updProg" hidden><i></i></span>', kw: 'atualização atualizações verificar baixar reiniciar atualizar versão nova', ctl: '<span id="updCtl"></span>' }) +
+        '<p class="upd-last num" id="updLast" data-search="última verificação atualizações">Última verificação: hoje, 14:32</p>' +
+        row({ id: 'updSimRow', group: 1, label: 'Protótipo', help: 'Mostra cada caminho da verificação. Fora do produto.', kw: 'protótipo simular atualização', ctl: '<label>Simular:<select class="sel sm" id="updSim" aria-label="Simular resultado da verificação"><option value="ok">Atualizada</option><option value="new">Nova versão</option><option value="portable">Portátil</option><option value="offline">Sem rede</option></select></label>' }).replace('class="row"', 'class="row proto-row"')) +
         grp('Créditos',
         row({ id: 'c1', group: 1, label: 'MilkDrop', help: 'Ryan Geiss' }) +
         row({ id: 'c2', group: 1, label: 'Butterchurn', help: 'Jordan Berg e contribuidores' }) +
@@ -593,6 +662,7 @@
     });
     secsel.value = s.id;
     moveInd();
+    if (s.id === 'perfis' && PF) pfRender();
     content.scrollTop = 0;
     if (focusNav) s.btn.focus();
     var h = $('.hit', s.panel); if (h) h.scrollIntoView({ block: 'nearest' });
@@ -733,7 +803,7 @@
     h: 160, gutter: 36, barW: 4,
     freqIdx: function (slot) { return slot >= 34 ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] : [0, 2, 4, 6, 8, 10, 12, 14]; },
     get: function () { return S.curva16; },
-    set: function (i, v) { S.curva16[i] = v; S.curvaPreset = eqMatch(S.curva16); eqSync(); markSaved(); },
+    set: function (i, v) { S.curva16[i] = v; S.curvaPreset = 'custom'; eqSync(); markSaved(); },
     level: function () { return viz ? viz.level() : 0.5 },
     silent: function () { return !!S.silencio }
   });
@@ -743,7 +813,7 @@
     $('#eqCustomLb').hidden = !custom;
     $('#eqWarn').hidden = S.memoria === 'fixa' || flat;
     $('#eqReset').disabled = flat;
-    eq.refresh();
+    eq.refresh(); paintExpr();
   }
   function eqPreset(id) {
     var p = EQ_PRE.filter(function (x) { return x[0] === id; })[0]; if (!p) return;
@@ -759,8 +829,7 @@
   $('#eqFixa').addEventListener('click', function () {
     S.memoria = 'fixa';
     var r = $('input[name="memoria"][value="fixa"]'); if (r) r.checked = true;
-    var hp = $('#l-memoria').closest('.txt').querySelector('.help'); if (hp) hp.textContent = EXPR_HELP.memoria.fixa;
-    eqSync(); markSaved();
+    paintExpr(); eqSync(); markSaved();
   });
   eqSync(); eq.start();
 
@@ -837,6 +906,78 @@
   });
 
 
+  /* ── Expressividade: padrão, nível 0, restaurar ── */
+  function exprIsDef() { return S.expr === 0 && S.carater === X_DEF.carater && S.memoria === X_DEF.memoria && eqIsFlat(S.curva16); }
+  function paintExpr() {
+    ['carater', 'memoria'].forEach(function (k) { var hp = $('#l-' + k).closest('.txt').querySelector('.help'); if (hp) hp.textContent = exprHelp(k); });
+    $('input[name="carater"]').closest('.seg').classList.toggle('dim', S.expr === 0);
+    var b = $('#xRst'); if (b) b.disabled = exprIsDef();
+  }
+  $('#xRst').addEventListener('click', function () {
+    pfRange('expr', 0); pfRadio('carater', X_DEF.carater); pfRadio('memoria', X_DEF.memoria); eqPreset('plana');
+    paintExpr(); $('#expr').focus(); flash('Expressividade no padrão.');
+  });
+
+  /* ── Normalizar áudio (spec 028) ── */
+  var AUTO = 5;
+  function autoTx() { return 'auto ' + (AUTO > 0 ? '+' : '') + AUTO + ' dB'; }
+  function paintNorm() {
+    var g = $('#gain'), lim = S.norm ? 6 : 12;
+    g.min = -lim; g.max = lim; S.gain = Math.max(-lim, Math.min(lim, S.gain)); g.value = S.gain;
+    g.style.setProperty('--fill', ((S.gain + lim) / (2 * lim) * 100) + '%');
+    var t = FMT.gain(S.gain); $('#v-gain').textContent = t; g.setAttribute('aria-valuetext', t);
+    $('#l-gain').textContent = S.norm ? 'Ajuste fino' : 'Ganho padrão';
+    $('#normAuto').hidden = !S.norm; $('#normAuto').textContent = autoTx(); $('#normNote').hidden = !S.norm;
+  }
+  setInterval(function () { if (!S.norm) return; AUTO = Math.max(3, Math.min(6, AUTO + (Math.random() < 0.5 ? -1 : 1))); $('#normAuto').textContent = autoTx(); }, 2600);
+
+  /* ── Atualizações (docs/v3-modelo-de-navegacao.md, spec 029) ── */
+  var REL = 'https://github.com/atempel/sonic-obsidian/releases/tag/v0.6.1';
+  var U = { st: 'idle', pct: 0, ver: '0.6.0', t: 0, keep: false };
+  function updIco(n, cls) { return '<i data-lucide="' + n + '" class="ico' + (cls ? ' ' + cls : '') + '" aria-hidden="true"></i>'; }
+  function paintUpd() {
+    var st = $('#updSt'), ctl = $('#updCtl'), pr = $('#updProg'), txt = '', btn = '';
+    var check = '<button class="btn sm" type="button" data-upd="check">Verificar agora</button>';
+    if (U.st === 'idle') { btn = check; }
+    else if (U.st === 'checking') { txt = 'Verificando…'; btn = '<button class="btn sm" type="button" disabled>' + updIco('loader-circle', 'spin') + 'Verificando…</button>'; }
+    else if (U.st === 'uptodate') { txt = updIco('check') + 'Você está na versão mais nova.'; btn = check; }
+    else if (U.st === 'down') { txt = '<span>Baixando <span class="num cy">' + U.pct + '%</span></span>'; btn = '<button class="btn sm" type="button" disabled>Verificar agora</button>'; }
+    else if (U.st === 'ready') { txt = updIco('check') + 'Versão 0.6.1 pronta.'; btn = '<button class="btn btn-primary sm" type="button" data-upd="restart">Reiniciar e atualizar</button>'; }
+    else if (U.st === 'avail') { txt = updIco('check') + 'Versão 0.6.1 disponível.'; btn = '<button class="btn btn-primary sm" type="button" data-upd="page">Abrir página da versão' + updIco('external-link', 'ico-sm') + '</button>'; }
+    else if (U.st === 'error') { txt = updIco('circle-alert', 'warn') + 'Não deu para verificar agora. Confira a conexão e tente de novo.'; btn = check; }
+    st.innerHTML = txt; ctl.innerHTML = btn;
+    pr.hidden = U.st !== 'down'; pr.firstChild.style.width = U.pct + '%';
+    icons();
+    if (U.keep) { var nb = ctl.querySelector('button:not(:disabled)'); if (nb) { nb.focus(); U.keep = false; } }
+  }
+  function updDone(st) { U.st = st; paintUpd(); }
+  function updRun() {
+    clearTimeout(U.t); U.st = 'checking'; paintUpd();
+    U.t = setTimeout(function () {
+      var m = S.updSim, d = new Date(), hh = ('0' + d.getHours()).slice(-2), mm = ('0' + d.getMinutes()).slice(-2);
+      $('#updLast').textContent = 'Última verificação: hoje, ' + hh + ':' + mm;
+      if (m === 'offline') { $('#updLast').textContent = 'Última verificação: hoje, 14:32'; updDone('error'); }
+      else if (m === 'portable') updDone('avail');
+      else if (m === 'new' && U.ver === '0.6.0') {
+        U.st = 'down'; U.pct = 0; paintUpd();
+        (function step() { U.pct = Math.min(100, U.pct + 7 + Math.round(Math.random() * 9)); if (U.pct >= 100) { U.pct = 100; paintUpd(); U.t = setTimeout(function () { updDone('ready'); }, 350); } else { paintUpd(); U.t = setTimeout(step, 260); } })();
+      } else updDone('uptodate');
+    }, 1100);
+  }
+  content.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-upd]'); if (!b || b.disabled) return;
+    var a = b.dataset.upd;
+    if (a === 'check') { U.keep = true; updRun(); }
+    else if (a === 'page') window.open(REL, '_blank', 'noopener');
+    else if (a === 'restart') {
+      U.ver = '0.6.1'; $('#verNum').textContent = '0.6.1'; $('#updVerTx').textContent = 'Sonic Obsidian · 0.6.1'; $('#updWhat').href = REL;
+      flash('Atualizado para 0.6.1.'); U.keep = true; updDone('uptodate');
+    }
+  });
+  content.addEventListener('focusin', function (e) { if (!e.target.closest('#updCtl')) U.keep = false; });
+  paintNorm(); paintUpd();
+  $('#updSim').addEventListener('change', function (e) { S.updSim = e.target.value; clearTimeout(U.t); U.st = 'idle'; U.pct = 0; U.ver = '0.6.0'; $('#verNum').textContent = '0.6.0'; $('#updVerTx').textContent = 'Sonic Obsidian · 0.6.0'; $('#updWhat').href = 'https://github.com/atempel/sonic-obsidian/releases/tag/v0.6.0'; paintUpd(); });
+
   /* ── Controles ── */
   function setDis(id, dis) { $$('[data-k="' + id + '"]').forEach(function (el) { el.disabled = !!dis; }); }
   function deps() {
@@ -857,6 +998,7 @@
     S[k] = v;
     el.style.setProperty('--fill', ((v - el.min) / (el.max - el.min) * 100) + '%');
     var t = FMT[k](v); $('#v-' + k).textContent = t; el.setAttribute('aria-valuetext', t);
+    if (k === 'expr') paintExpr();
     markSaved();
   });
   wrap.addEventListener('change', function (e) {
@@ -865,7 +1007,9 @@
     if (k === 'tela') paintScreens();
     if (k === 'fonte') paintSource();
     if (k === 'mcp') paintMcp();
-    if (k === 'carater' || k === 'memoria') { var hp = $('#l-' + k).closest('.txt').querySelector('.help'); if (hp) hp.textContent = EXPR_HELP[k][S[k]]; }
+    if (k === 'norm') paintNorm();
+    if (k === 'carater' || k === 'memoria') paintExpr();
+    if (k === 'updSim') return;
     deps(); markSaved();
   });
 
@@ -1061,6 +1205,235 @@
     r.readAsText(f); e.target.value = '';
   });
 
+  /* ── Perfis (docs/v3-perfis.md) ── */
+  var PF_GR = [['expressividade', 'Expressividade'], ['transicoes', 'Transições'], ['rotacao', 'Rotação'], ['sinal', 'Sinal'], ['texto', 'Texto sobre o visual']];
+  var PF_CAR = ['contraste', 'energia', 'nervo'], PF_MEM = ['curta', 'longa', 'fixa', 'viva'];
+  var PF_CAR_L = { contraste: 'Contraste', energia: 'Energia', nervo: 'Nervo' }, PF_MEM_L = { curta: 'Curta', longa: 'Longa', fixa: 'Fixa', viva: 'Viva' };
+  var PF_TIPO_L = { corte: 'Corte seco', crossfade: 'Crossfade', varredura: 'Varredura', plasma: 'Plasma', radial: 'Radial', aleatorio: 'Aleatório' };
+  var PF_NP_L = { sempre: 'Sempre', manual: 'Só quando eu troco', nunca: 'Nunca' }, PF_AV_L = { todos: 'Todos', importantes: 'Só importantes', nenhum: 'Nenhum' };
+  var pfR1 = function (v) { return Math.round(v * 10) / 10; };
+  var pfInt = function (x, a, b) { return typeof x === 'number' && isFinite(x) && Math.floor(x) === x && x >= a && x <= b; };
+  var pfNum = function (x, a, b) { return typeof x === 'number' && isFinite(x) && x >= a && x <= b; };
+  var pfBool = function (x) { return typeof x === 'boolean'; };
+  /* valores canônicos de um grupo (ordem fixa das chaves, para comparar); null se inválido */
+  function pfNormG(g, v) {
+    if (!v || typeof v !== 'object') return null;
+    if (g === 'expressividade') {
+      if (!pfInt(v.nivel, -3, 3) || PF_CAR.indexOf(v.carater) < 0 || PF_MEM.indexOf(v.memoria) < 0 || !Array.isArray(v.curva) || v.curva.length !== 16 || !v.curva.every(function (x) { return pfInt(x, -12, 12); })) return null;
+      return { nivel: v.nivel, carater: v.carater, memoria: v.memoria, curva: v.curva.slice() };
+    }
+    if (g === 'transicoes') {
+      var t = function (o) { return o && PF_TIPO_L[o.tipo] && pfNum(o.tempo, 0.1, 10) ? { tipo: o.tipo, tempo: o.tipo === 'corte' ? 1 : pfR1(o.tempo) } : null; };
+      var m = t(v.manual), a = t(v.auto); return m && a ? { manual: m, auto: a } : null;
+    }
+    if (g === 'rotacao') return pfBool(v.ligada) && pfNum(v.intervalo, 5, 120) && pfBool(v.noBeat) ? { ligada: v.ligada, intervalo: Math.round(v.intervalo / 5) * 5, noBeat: false } : null;
+    if (g === 'sinal') { if (!pfInt(v.ganho, -12, 12)) return null; var n = v.normalizar === true; return { ganho: n ? Math.max(-6, Math.min(6, v.ganho)) : v.ganho, normalizar: n }; }
+    if (g === 'texto') return PF_NP_L[v.nomePreset] && pfBool(v.titulo) && PF_AV_L[v.avisos] ? { nomePreset: v.nomePreset, titulo: v.titulo, avisos: v.avisos } : null;
+    return null;
+  }
+  function pfRead(g) {
+    var raw = {
+      expressividade: function () { return { nivel: S.expr, carater: S.carater, memoria: S.memoria, curva: S.curva16.slice() }; },
+      transicoes: function () { return { manual: { tipo: S.trManual, tempo: S.tManual }, auto: { tipo: S.trAuto, tempo: S.tAuto } }; },
+      rotacao: function () { return { ligada: S.rot, intervalo: S.interval, noBeat: false }; },
+      sinal: function () { return { ganho: S.gain, normalizar: S.norm }; },
+      texto: function () { return { nomePreset: S.nomePreset, titulo: S.titulo, avisos: S.avisos }; }
+    }[g]();
+    return pfNormG(g, raw) || raw;
+  }
+  /* aplica pelos próprios controles, disparando os mesmos eventos que o usuário (reaproveita deps, curva, "Salvo"…) */
+  function pfFire(el, type) { el.dispatchEvent(new Event(type, { bubbles: true })); }
+  function pfRange(id, v) { var el = $('#' + id); el.value = v; pfFire(el, 'input'); }
+  function pfSelect(id, v) { var el = $('#' + id); el.value = v; pfFire(el, 'change'); }
+  function pfSwitch(id, b) { var el = $('#' + id); el.checked = b; pfFire(el, 'change'); }
+  function pfRadio(name, v) { var el = $('input[name="' + name + '"][value="' + v + '"]'); el.checked = true; pfFire(el, 'change'); }
+  function pfApplyG(g, v) {
+    if (g === 'expressividade') {
+      pfRange('expr', v.nivel); pfRadio('carater', v.carater); pfRadio('memoria', v.memoria);
+      S.curva16 = v.curva.slice(); S.curvaPreset = eqMatch(S.curva16); eqSync();
+    } else if (g === 'transicoes') {
+      pfSelect('trManual', v.manual.tipo); pfRange('tManual', v.manual.tempo); pfSelect('trAuto', v.auto.tipo); pfRange('tAuto', v.auto.tempo);
+    } else if (g === 'rotacao') {
+      pfSwitch('rot', v.ligada); pfRange('interval', v.intervalo);
+    } else if (g === 'sinal') {
+      pfSwitch('norm', v.normalizar === true); pfRange('gain', v.ganho);
+    } else if (g === 'texto') {
+      pfSelect('nomePreset', v.nomePreset); pfSwitch('titulo', v.titulo); pfSelect('avisos', v.avisos);
+    }
+  }
+  var PF_PRE = {}; EQ_PRE.forEach(function (p) { PF_PRE[p[0]] = p[2]; });
+  function pfBuilt(id, name, nivel, car, mem, curva, man, aut, lig, iv) {
+    return { id: id, name: name, builtIn: true, groups: ['expressividade', 'transicoes', 'rotacao'], values: {
+      expressividade: { nivel: nivel, carater: car, memoria: mem, curva: PF_PRE[curva].slice() },
+      transicoes: { manual: { tipo: man[0], tempo: man[1] }, auto: { tipo: aut[0], tempo: aut[1] } },
+      rotacao: { ligada: lig, intervalo: iv, noBeat: false } } };
+  }
+  var PF = { n: 0, active: 'padrao', undo: null, list: [
+    pfBuilt('padrao', 'Padrão', 0, 'energia', 'curta', 'plana', ['aleatorio', 1], ['crossfade', 2.7], true, 30),
+    pfBuilt('calmo', 'Calmo', -2, 'contraste', 'longa', 'plana', ['crossfade', 5], ['crossfade', 5], true, 60),
+    pfBuilt('festa', 'Festa', 2, 'nervo', 'fixa', 'graves', ['corte', 1], ['radial', 1], true, 15),
+    pfBuilt('estudar', 'Estudar presets', 0, 'energia', 'curta', 'plana', ['crossfade', 1], ['crossfade', 1], false, 30)
+  ] };
+  function pfGet(id) { return PF.list.filter(function (p) { return p.id === id; })[0] || null; }
+  function pfT(s) { return String(pfR1(s)).replace('.', ',') + ' s'; }
+  function pfCurveName(c) { var p = EQ_PRE.filter(function (x) { return x[0] === eqMatch(c); })[0]; return p ? p[1] : 'Personalizada'; }
+  function pfKey(p) { var o = PF.list.filter(function (x) { return x.builtIn; }).concat(PF.list.filter(function (x) { return !x.builtIn; })), i = o.indexOf(p); return i > -1 && i < 9 ? i + 1 : 0; }
+  function pfSummary(p) {
+    var a = [], v = p.values, has = function (g) { return p.groups.indexOf(g) > -1; };
+    if (has('expressividade')) a.push(FMT.expr(v.expressividade.nivel), PF_CAR_L[v.expressividade.carater], PF_MEM_L[v.expressividade.memoria], pfCurveName(v.expressividade.curva));
+    if (has('transicoes')) a.push(v.transicoes.manual.tipo === 'corte' ? 'corte seco' : PF_TIPO_L[v.transicoes.manual.tipo].toLowerCase() + ' ' + pfT(v.transicoes.manual.tempo));
+    if (has('rotacao')) a.push(v.rotacao.ligada ? v.rotacao.intervalo + ' s' : 'sem rotação');
+    if (has('sinal')) a.push((v.sinal.normalizar ? 'normalizado ' : '') + FMT.gain(v.sinal.ganho));
+    if (has('texto')) a.push('texto sobre o visual');
+    return a.join(' · ');
+  }
+  function pfDirty(p) {
+    return !!p && p.groups.some(function (g) { return JSON.stringify(pfRead(g)) !== JSON.stringify(pfNormG(g, p.values[g])); });
+  }
+  function pfUse(p) {
+    if (p.id !== PF.active) return '';
+    return '<span class="pf-use"><i data-lucide="check" class="ico" aria-hidden="true"></i>Em uso' + (pfDirty(p) ? ' · modificado <span class="pf-dot" aria-hidden="true"></span>' : '') + '</span>';
+  }
+  var pfRen = null, pfMenuFor = null, pfTrig = null;
+  function pfRender(focusId, focusWhat) {
+    $('#pfList').innerHTML = PF.list.map(function (p) {
+      var name = pfRen === p.id
+        ? '<input class="inp pf-ren" id="pfRenIn" type="text" maxlength="40" value="' + esc(p.name) + '" aria-label="Novo nome do perfil ' + esc(p.name) + '" autocomplete="off" spellcheck="false">'
+        : '<span class="lbl">' + esc(p.name) + '</span>';
+      var sum = pfSummary(p);
+      return '<div class="row pfrow" data-pid="' + p.id + '" data-search="' + esc('perfil ' + p.name + (p.builtIn ? ' do app' : '') + ' ' + sum) + '">' +
+        '<div class="txt"><div class="pf-n">' + name + (p.builtIn ? '<span class="pf-tag">do app</span>' : '') + '<span class="pf-st">' + pfUse(p) + '</span></div>' +
+        '<p class="pf-sum num">' + esc(sum) + '</p></div>' +
+        '<div class="ctl">' + (pfKey(p) ? '<kbd aria-hidden="true">Alt+' + pfKey(p) + '</kbd>' : '') + '<button class="ibtn" type="button" data-pmore="' + p.id + '" aria-haspopup="menu" aria-expanded="false" aria-label="Mais ações para ' + esc(p.name) + '" title="Mais ações"><i data-lucide="more-horizontal" class="ico"></i></button></div></div>';
+    }).join('');
+    var sel = $('#perfilAbrir');
+    sel.innerHTML = '<option value="ultimo">Último usado</option>' + PF.list.map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + '</option>'; }).join('');
+    if (!pfGet(S.perfilAbrir)) S.perfilAbrir = 'ultimo';
+    sel.value = S.perfilAbrir;
+    icons(); filter();
+    if (pfRen) { var ri = $('#pfRenIn'); if (ri) { ri.focus(); ri.select(); } }
+    else if (focusId) { var b = $('[data-pmore="' + focusId + '"]'); if (b) b.focus(); }
+  }
+  function pfNote(ok, msg, undo) {
+    var n = $('#pfNote'); n.hidden = !msg; n.className = 'note' + (ok ? ' ok' : '');
+    n.innerHTML = msg ? '<i data-lucide="' + (ok ? 'check' : 'circle-alert') + '" class="ico"></i><span>' + esc(msg) + (undo ? ' <button class="btn btn-ghost sm" type="button" id="pfUndoDel">Desfazer</button>' : '') + '</span>' : ''; icons();
+  }
+  function pfApply(p) {
+    p.groups.forEach(function (g) { pfApplyG(g, p.values[g]); });
+    PF.active = p.id; pfRender(p.id); flash('Perfil: ' + p.name); pfNote(true, '');
+  }
+  function pfUniq(name) { var n = name, i = 2; while (PF.list.some(function (p) { return p.name === n; })) n = name + ' (' + (i++) + ')'; return n; }
+  function pfDup(p) {
+    var c = { id: 'u' + (++PF.n), name: pfUniq(p.name + ' (cópia)'), builtIn: false, groups: p.groups.slice(), values: JSON.parse(JSON.stringify(p.values)) };
+    PF.list.splice(PF.list.indexOf(p) + 1, 0, c); pfRender(c.id); flash('Duplicado como “' + c.name + '”.'); pfNote(true, '');
+  }
+  function pfExport(p) {
+    var obj = { version: 1, app: 'sonic-obsidian', profile: { name: p.name, groups: p.groups.slice(), values: p.values } };
+    var slug = norm(p.name).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'perfil', file = 'sonic-obsidian-perfil-' + slug + '.json';
+    var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    pfNote(true, 'Perfil “' + p.name + '” exportado para ' + file + '.'); flash('Perfil exportado.');
+  }
+  function pfDelete(p) {
+    if (p.builtIn) return;
+    var i = PF.list.indexOf(p); PF.list.splice(i, 1); PF.undo = { p: p, i: i, active: PF.active === p.id };
+    if (PF.active === p.id) PF.active = null;
+    pfRender(); pfNote(true, 'Perfil “' + p.name + '” apagado.', true); flash('Perfil apagado.');
+    var nb = $('[data-pmore]'); if (nb) nb.focus();
+  }
+  function pfRenameStart(p) { pfRen = p.id; pfRender(); }
+  function pfRenameEnd(commit) {
+    var id = pfRen; if (!id) return; var inp = $('#pfRenIn'), p = pfGet(id), v = inp ? inp.value.trim() : '';
+    pfRen = null;
+    if (commit && p && v && v !== p.name) { p.name = v; flash('Perfil renomeado para “' + v + '”.'); }
+    pfRender(id);
+  }
+  /* menu "…" */
+  var pfMenu = document.createElement('div');
+  pfMenu.className = 'pfmenu'; pfMenu.id = 'pfMenu'; pfMenu.setAttribute('role', 'menu'); pfMenu.hidden = true; document.body.appendChild(pfMenu);
+  function pfMenuClose(refocus) {
+    if (pfMenu.hidden) return; pfMenu.hidden = true;
+    if (pfTrig) { pfTrig.setAttribute('aria-expanded', 'false'); if (refocus && pfTrig.isConnected) pfTrig.focus(); }
+    pfMenuFor = null;
+  }
+  function pfMenuOpen(btn) {
+    var p = pfGet(btn.dataset.pmore); if (!p) return;
+    pfMenuClose(false); pfTrig = btn; pfMenuFor = p.id; btn.setAttribute('aria-expanded', 'true');
+    pfMenu.setAttribute('aria-label', 'Ações de ' + p.name);
+    pfMenu.innerHTML = '<button type="button" role="menuitem" data-pact="apply"><i data-lucide="check" class="ico"></i>Aplicar</button>' +
+      '<button type="button" role="menuitem" data-pact="rename"><i data-lucide="pencil" class="ico"></i>Renomear</button>' +
+      '<button type="button" role="menuitem" data-pact="dup"><i data-lucide="copy" class="ico"></i>Duplicar</button>' +
+      '<button type="button" role="menuitem" data-pact="export"><i data-lucide="download" class="ico"></i>Exportar .json</button><hr>' +
+      '<button type="button" role="menuitem" data-pact="del"' + (p.builtIn ? ' disabled title="Perfis do app não podem ser apagados"' : '') + '><i data-lucide="trash-2" class="ico"></i>Apagar</button>';
+    icons(); pfMenu.hidden = false;
+    var r = btn.getBoundingClientRect(), w = pfMenu.offsetWidth, h = pfMenu.offsetHeight;
+    pfMenu.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.right - w)) + 'px';
+    pfMenu.style.top = (r.bottom + 4 + h > innerHeight - 8 ? Math.max(8, r.top - 4 - h) : r.bottom + 4) + 'px';
+    pfMenu.querySelector('button').focus();
+  }
+  $('#pfList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pmore]'); if (!b) return;
+    if (!pfMenu.hidden && pfTrig === b) pfMenuClose(true); else pfMenuOpen(b);
+  });
+  pfMenu.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pact]'); if (!b || b.disabled) return;
+    var p = pfGet(pfMenuFor), a = b.dataset.pact; pfMenuClose(false); if (!p) return;
+    if (a === 'apply') pfApply(p); else if (a === 'rename') pfRenameStart(p); else if (a === 'dup') pfDup(p); else if (a === 'export') { pfExport(p); if (pfTrig && pfTrig.isConnected) pfTrig.focus(); } else if (a === 'del') pfDelete(p);
+  });
+  pfMenu.addEventListener('keydown', function (e) {
+    var items = $$('button:not(:disabled)', pfMenu), i = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i + items.length - 1) % items.length].focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); items[0].focus(); }
+    else if (e.key === 'End') { e.preventDefault(); items[items.length - 1].focus(); }
+    else if (e.key === 'Tab') pfMenuClose(false);
+  });
+  document.addEventListener('pointerdown', function (e) { if (!pfMenu.hidden && !pfMenu.contains(e.target) && !(pfTrig && pfTrig.contains(e.target))) pfMenuClose(false); });
+  content.addEventListener('scroll', function () { pfMenuClose(false); });
+  window.addEventListener('resize', function () { pfMenuClose(false); });
+  $('#pfList').addEventListener('keydown', function (e) {
+    if (e.target.id === 'pfRenIn' && e.key === 'Enter') { e.preventDefault(); pfRenameEnd(true); }
+  });
+  $('#pfList').addEventListener('focusout', function (e) { if (e.target.id === 'pfRenIn' && pfRen) pfRenameEnd(true); });
+  function pfEsc() {
+    if (!pfMenu.hidden) { pfMenuClose(true); return true; }
+    if (pfRen) { pfRenameEnd(false); return true; }
+    return false;
+  }
+  $('#pfNote').addEventListener('click', function (e) {
+    if (!e.target.closest('#pfUndoDel') || !PF.undo) return;
+    var u = PF.undo; PF.undo = null; PF.list.splice(u.i, 0, u.p); if (u.active) PF.active = u.p.id;
+    pfRender(u.p.id); pfNote(true, 'Perfil “' + u.p.name + '” restaurado.'); flash('Perfil restaurado.');
+  });
+  /* importar */
+  function pfParse(j) {
+    if (!j || typeof j !== 'object' || j.app !== 'sonic-obsidian' || j.version !== 1 || !j.profile || typeof j.profile !== 'object') return null;
+    var pr = j.profile, name = typeof pr.name === 'string' ? pr.name.trim().slice(0, 40) : '';
+    var known = PF_GR.map(function (x) { return x[0]; });
+    if (!name || !Array.isArray(pr.groups) || !pr.groups.length || !pr.values || typeof pr.values !== 'object') return null;
+    var groups = [], values = {};
+    for (var i = 0; i < pr.groups.length; i++) {
+      var g = pr.groups[i]; if (known.indexOf(g) < 0 || groups.indexOf(g) > -1) return null;
+      var v = pfNormG(g, pr.values[g]); if (!v) return null;
+      groups.push(g); values[g] = v;
+    }
+    return { name: name, groups: known.filter(function (g) { return groups.indexOf(g) > -1; }), values: values };
+  }
+  $('#pfImpBtn').addEventListener('click', function () { $('#pfFile').click(); });
+  $('#pfFile').addEventListener('change', function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var p = null; try { p = pfParse(JSON.parse(r.result)); } catch (err) { p = null; }
+      if (!p) { pfNote(false, 'Arquivo não é um perfil do Sonic Obsidian.'); return; }
+      var np = { id: 'u' + (++PF.n), name: pfUniq(p.name), builtIn: false, groups: p.groups, values: p.values };
+      PF.list.push(np); pfRender(np.id); pfNote(true, 'Perfil “' + np.name + '” importado.'); flash('Perfil importado.');
+    };
+    r.onerror = function () { pfNote(false, 'Arquivo não é um perfil do Sonic Obsidian.'); };
+    r.readAsText(f); e.target.value = '';
+  });
+
   /* ── Atalhos ── */
   function comboOf(e) {
     var k = e.key, name;
@@ -1109,6 +1482,7 @@
       renderKeys(i); return;
     }
     if (e.key === 'Escape') {
+      if (pfEsc()) { e.preventDefault(); return; }
       if (document.activeElement === q && q.value) { q.value = ''; filter(); return; }
       e.preventDefault(); location.href = CLOSE_HREF; return;
     }
@@ -1116,7 +1490,7 @@
   }, true);
 
   /* ── Início ── */
-  renderPerf(); renderHidden(); renderMcp(); renderClients(); paintMcp(); renderKeys();
+  renderPerf(); renderHidden(); renderMcp(); renderClients(); paintMcp(); renderKeys(); pfRender();
   deps(); paintSource(); icons();
   filter();
   function fromHash() { var h = (location.hash || '').slice(1); show(byId(h) ? h : 'geral'); }

@@ -65,3 +65,66 @@ Proposta em `docs/v3-modos.md` e na página "Modos" (não decidida).
 - Cada seção tem um ícone de 16 px em `text-2` antes do título (Sinal `audio-lines`, Expressividade `activity`, Transições `blend`, Rotação `repeat`, Texto `type`).
 - Ao fechar, a rolagem volta ao topo depois da animação de saída. A Biblioteca é a exceção: ela guarda a posição da lista, que a pessoa costuma retomar.
 - Curva por frequência (EQ de 16 bandas dentro da Expressividade): `docs/v3-reatividade.md`.
+
+## Atualização automática (13/11/2026, spec 029)
+O app baixa a versão nova em silêncio e só então avisa. O aviso não é um toast: é uma plaquinha **persistente** que vive junto com a faixa de controle.
+
+**Lugar: acima da faixa, à esquerda**, alinhada à borda esquerda dela (`bottom: 100% + 8px`, `left: 0`). Ela fica no `.strip-wrap`, então aparece e some com a faixa: some no ocioso, nunca aparece no Modo limpo (`T`) e nunca fica sozinha sobre o visual em tela cheia. Por que à esquerda:
+- a direita acima da faixa é dos avisos sobre **o visual agora** (preset pesado), que pedem ação rápida;
+- a esquerda fica sobre "agora tocando", a parte informativa da faixa, e é onde o olho começa a ler;
+- os dois avisos nunca se sobrepõem nem se empurram.
+
+**Os dois avisos juntos:**
+- Acima de 900 px de largura, cada um fica no seu canto.
+- Abaixo de 900 px, não cabem lado a lado. O de preset pesado tem prioridade, e o de versão **espera escondido** até o outro sumir. Ele não vira notificação nem perde a vez.
+- Enquanto um menu ou painel ancorado na faixa estiver aberto (coleções, IA, busca, Biblioteca, Ajustes), a plaquinha também se esconde.
+
+**Conteúdo** (superfície `overlay`, `line-2`, `r-3`, `shadow-pop`; ícone `circle-arrow-down` em `text-2`):
+| Estado | Texto (pt-BR / en) | Ações |
+| --- | --- | --- |
+| Pronta (instalador) | "Sonic Obsidian 0.6.1 está pronta" / "Sonic Obsidian 0.6.1 is ready" | link "O que mudou" / "What's new" (abre a release no navegador, ícone `external-link` 12 px) · primário **"Reiniciar e atualizar"** / "Restart and update" · fantasma "Depois" / "Later" |
+| Disponível (zip portátil) | "Versão 0.6.1 disponível" / "Version 0.6.1 available" | primário **"Abrir página da versão"** / "Open release page" (`external-link`) · "Depois". Nada é baixado. |
+| Atualizando | "Atualizando… o app reabre sozinho" / "Updating… the app will reopen on its own" | nenhuma; ícone `loader-circle` girando (parado com movimento reduzido). O texto troca no lugar (como o M13). A faixa fica presa visível. Dura ~800 ms e a janela fecha. |
+
+**Regras:**
+- "Depois" esconde o aviso **daquela versão** até a próxima abertura do app. Se sair uma versão mais nova nesse meio-tempo, o aviso volta com ela.
+- Sem barra de progresso e sem erro no aviso. Erros de checagem e de download nunca aparecem no Palco: vão para o log.
+- **Modo performance:** o aviso não aparece (show ao vivo) e espera a saída do modo. **Rack:** uma linha compacta no rodapé do rack ("0.6.1 pronta · Reiniciar") quando o rack existir (Fase 5).
+
+**Movimento:** a plaquinha entra com a faixa, como um quarto bloco do M01: sobe 6 px com fade, `t-med` `ease-out`, 40 ms depois do último bloco da faixa. Sai junto com a faixa, em fade de 150 ms. Quando a versão fica pronta com a faixa já visível, entra sozinha do mesmo jeito. Nada de pulso nem de animação para chamar atenção. Com movimento reduzido, só o fade.
+
+**Teclado e leitor de tela:**
+- A plaquinha tem `role="status"` e `aria-live="polite"`, e é anunciada uma vez quando fica pronta.
+- **Não rouba o foco.** Na ordem de Tab, vem **antes** dos controles da faixa: "O que mudou" → "Reiniciar e atualizar" → "Depois" → faixa. Assim, quem usa o teclado chega nela primeiro, sem precisar atravessar a faixa.
+- `Esc` não a dispensa (`Esc` fecha sobreposições, e ela não é uma). Sem tecla própria.
+
+**Configurações › Sobre › Atualizações** (grupo novo, logo depois de "Aplicativo"):
+- **Versão instalada:** "Sonic Obsidian · 0.6.0" (mono), com o link "O que mudou".
+- **Chave "Buscar atualizações automaticamente"** (en: "Check for updates automatically"), ligada por padrão. Ajuda: "Uma checagem por dia no GitHub. É a única chamada de rede que o app faz por conta própria." O "por conta própria" existe porque fontes como o SoundCloud, quando entrarem, também usam a rede, só que a pedido da pessoa.
+- **"Verificar agora"** (funciona com a chave desligada). A linha de status fica embaixo, em `text-2`:
+  - *Verificando…*: o botão fica desabilitado e mostra `loader-circle`.
+  - *Você está na versão mais nova.*: com `check`; o botão volta a "Verificar agora".
+  - *Baixando 42%*: o número em mono ciano, com uma linha fina de progresso embaixo. A barra é permitida aqui, porque nas Configurações foi a pessoa que pediu.
+  - *Versão 0.6.1 pronta.*: o botão vira o primário "Reiniciar e atualizar", o mesmo do aviso.
+  - No zip portátil: *Versão 0.6.1 disponível.* e o botão "Abrir página da versão".
+  - **Erro:** como foi a pessoa que pediu, o silêncio confundiria. Aparece "Não deu para verificar agora. Confira a conexão e tente de novo.", com o ícone `circle-alert` em `warn`, e o botão volta. Erros das checagens automáticas continuam silenciosos.
+- Uma linha "Última verificação: hoje, 14:32" (mono, `text-3`).
+
+**Busca rápida:**
+- O comando **"Verificar atualizações"** entra no grupo Comandos, sem tecla. Ele roda a checagem no lugar e responde por toast: "Você está na versão mais nova." · "Baixando a versão 0.6.1…" (e o aviso aparece quando terminar) · "Não deu para verificar agora.".
+- Quando há versão pronta, entra também o comando **"Reiniciar e atualizar"**.
+- Nada muda no painel `?`.
+
+## Sinal e Expressividade (respostas à divergência de 11/11, spec 028)
+**Confirmado:**
+- **"Normalizar áudio"**, desligado por padrão, acima do ganho, nos Ajustes rápidos › Sinal e em Configurações › Captura › Nível.
+- Ligado, o slider vira **"Ajuste fino" (−6 a +6 dB)** e aparece a nota "Iguala o volume entre faixas em alguns segundos. O som das caixas não muda.".
+- Ao ligar, o valor atual é preso dentro de ±6. Ao desligar, o slider volta a ser o Ganho com o mesmo valor.
+- "Restaurar padrão", "Sem efeito no nível 0" e a 4ª Memória.
+
+**Corrigido:**
+1. **"auto +5 dB" em ciano, não em `text-3`.** É um valor ao vivo, e valor ao vivo é ciano no sistema. Fica em mono 12 px, ao lado do nome "Normalizar áudio", nos dois lugares, inclusive nas Configurações (não à esquerda do switch). Desligado, some.
+2. **"· padrão" sai do rótulo das opções.** Em segmentados de 300 px o rótulo não cabe ("Energia · padrão"). O padrão ganha uma **marca de 4 px** (ponto em `text-3`) sob o rótulo da opção padrão, e a palavra vai para a linha de descrição: "Amplia e sobe a base: tudo reage mais. Padrão.". No Nível, a marca é um traço no 0 do slider. O toast de `X`/`Shift+X` continua dizendo "(padrão)".
+3. **Memória vira segmentado de 4: Curta · Longa · Fixa · Viva**, e não um select. "(em teste)" sai do rótulo e vai para a descrição: "Viva (em teste): compara com os últimos ~1,7 s, como o MilkDrop 2. Reage a cada batida.".
+4. **"Sem efeito no nível 0"** substitui a descrição do Caráter enquanto o Nível for 0. O segmentado fica em `text-3`, mas continua clicável: a escolha vale assim que o nível sair do 0.
+5. **"Restaurar padrão"** é um botão fantasma pequeno (ícone `rotate-ccw`) à direita do título da seção Expressividade. Fica desabilitado quando tudo já está no padrão. Restaura Nível 0, Energia, Curta e a curva Plana, e o toast diz "Expressividade no padrão.".
