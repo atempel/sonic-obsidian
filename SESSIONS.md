@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/025-p1-desempenho`
+**Fez:** Passo 5 da `rodada` (nada `ready`; bloco v0.6.0 esperando o usuário, sem resposta). Issue #73 (spec 025) reavaliada: P0 já entrou no #76; a P1 (desempenho no Windows) foi detalhada na spec — app empacotado, passo extra do `build-windows`, 20 presets fixos, comparação com a execução anterior, sem falhar por número — e a pergunta da devDependency fechada (Playwright segue só no CI, como aprovado). DECISIONS (`agent-decided`). #73 → `ready`, milestone v0.7.0.
+**Deixou em:** PR de docs (mergeado se não houver check). Fila: #73 `ready` (v0.7.0); `backlog` #75 (027, 3 perguntas pequenas). Com o usuário: bloco v0.6.0 (#91) e o desenho da #69. Não verificado: nada de código mudou. Notion pendente (sem acesso nesta superfície).
+
 ### 2026-11-13 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.6.0`
 **Fez:** Passo 3 da `rodada`: o milestone v0.6.0 ficou sem issues abertas além da #69 (`needs-design`), que foi para o novo milestone v0.7.0 (DECISIONS, `agent-decided`). PR `chore: versão 0.6.0` (`package.json`/lock e `.github/release-notes.md` com o que mudou desde a 0.5.0). Depois do merge: branch `rc/v0.6.0`, build Windows dela e a issue "Testar bloco v0.6.0" (atribuída ao usuário) com o roteiro da 028 (PRs #87 e #89) e uma checagem rápida do resto.
 **Deixou em:** bloco v0.6.0 esperando o teste do usuário; nenhuma release criada (só depois do "ok" na issue do bloco). Fila: nada `ready`; `backlog` #73 (025) e #75 (027) para planejar. Notion pendente (sem acesso nesta superfície).
