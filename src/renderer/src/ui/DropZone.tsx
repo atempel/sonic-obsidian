@@ -3,6 +3,7 @@ import { importSummary } from '../importer'
 import { Icon } from './icons'
 import type { PalcoBridge } from './Overlay'
 import { showToast } from './toast'
+import { t } from '../i18n'
 
 /**
  * Soltar `.milk` na janela (spec 022) — protótipo "Palco integrado" (`#dropzone`, M21), versão
@@ -17,11 +18,11 @@ export function DropZone({ bridge }: { bridge: PalcoBridge }) {
 
   useEffect(() => {
     const hasFiles = (e: DragEvent): boolean => !!e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')
-    let t = 0
+    let timer = 0
     const close = (): void => {
       setClosing(true)
-      window.clearTimeout(t)
-      t = window.setTimeout(() => {
+      window.clearTimeout(timer)
+      timer = window.setTimeout(() => {
         setOn(false)
         setClosing(false)
       }, 120)
@@ -30,7 +31,7 @@ export function DropZone({ bridge }: { bridge: PalcoBridge }) {
       if (!hasFiles(e)) return
       e.preventDefault()
       depth.current++
-      window.clearTimeout(t)
+      window.clearTimeout(timer)
       setClosing(false)
       setOn(true)
     }
@@ -51,7 +52,7 @@ export function DropZone({ bridge }: { bridge: PalcoBridge }) {
       close()
       const milk = Array.from(e.dataTransfer!.files).filter((f) => /\.milk$/i.test(f.name))
       if (!milk.length) {
-        showToast('Só arquivos .milk podem ser soltos aqui.', { force: true })
+        showToast(t('toast.dropOnlyMilk'), { force: true })
         return
       }
       if (busy.current) return
@@ -60,7 +61,7 @@ export function DropZone({ bridge }: { bridge: PalcoBridge }) {
         try {
           const files = await Promise.all(milk.map(async (f) => ({ name: f.name, text: f.size > 256 * 1024 ? 'x'.repeat(256 * 1024 + 1) : await f.text() })))
           const r = await bridge.importMilk(files, (done, total) => {
-            if (total > 3 && done < total) showToast(`Importando presets… ${done}/${total}`, { force: true })
+            if (total > 3 && done < total) showToast(t('toast.importing', { done, total }), { force: true })
           })
           if (r.added[0]) bridge.core.run('preset.play', { name: r.added[0] }, 'ui')
           showToast(importSummary(r), { force: true })
@@ -74,7 +75,7 @@ export function DropZone({ bridge }: { bridge: PalcoBridge }) {
     window.addEventListener('dragleave', leave)
     window.addEventListener('drop', drop)
     return () => {
-      window.clearTimeout(t)
+      window.clearTimeout(timer)
       window.removeEventListener('dragenter', enter)
       window.removeEventListener('dragover', over)
       window.removeEventListener('dragleave', leave)

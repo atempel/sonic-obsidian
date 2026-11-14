@@ -25,6 +25,7 @@ import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
 import { TextStack, coreRise, drainLine, nudgeIcon, shuffleIcon } from './motion'
 import { TOAST_MS, onToast, showToast } from './toast'
+import { onLanguage, t, tn } from '../i18n'
 
 /**
  * Interface v3 por cima do visual — spec 009 (Palco: faixa de controle e
@@ -136,7 +137,7 @@ function Credit({ core }: { core: Core }) {
   return (
     <div class="credit" ref={ref} aria-live="polite">
       <h1>{title}</h1>
-      {author && <p>por {author}</p>}
+      {author && <p>{t('credit.by', { author })}</p>}
       <div class="sweep">
         <i ref={sweep} />
       </div>
@@ -231,7 +232,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
       const bars = bridge.rotationBars()
       lineP.current = on ? bridge.rotationProgress() : 0
       if (line.current) line.current.style.transform = `scaleX(${lineP.current})`
-      if (time.current) time.current.textContent = core.state.held ? '' : !on ? 'off' : bars !== null ? `${bars} c` : mmss(bridge.rotationRemaining())
+      if (time.current) time.current.textContent = core.state.held ? '' : !on ? t('strip.rotationOff') : bars !== null ? tn('strip.bars', bars) : mmss(bridge.rotationRemaining())
       if (fpsEl.current) fpsEl.current.textContent = `${Math.round(bridge.fps())} fps`
     }
     tick()
@@ -262,40 +263,46 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   // M02 (título e autor trocam em pilha) e M03 (a linha esvazia) na troca de preset.
   useLayoutEffect(() => {
     if (!titleEl.current || !authorEl.current) return
-    const t = new TextStack(titleEl.current)
+    const ts = new TextStack(titleEl.current)
     const a = new TextStack(authorEl.current)
     const set = (name: string): void => {
       const p = splitPresetName(name)
-      t.set(p.title)
-      a.set(p.author ? `por ${p.author}` : '')
+      ts.set(p.title)
+      a.set(p.author ? t('credit.by', { author: p.author }) : '')
     }
     set(core.state.current)
-    return core.events.on('presetChanged', ({ name, origin }) => {
+    // Trocar o idioma (spec 030) refaz o "por"/"by" do autor na hora.
+    const offLang = onLanguage(() => set(core.state.current))
+    const offPreset = core.events.on('presetChanged', ({ name, origin }) => {
       if (origin === 'startup') return set(name)
       const p = splitPresetName(name)
-      t.swap(p.title, 0, true)
-      a.swap(p.author ? `por ${p.author}` : '', 40)
+      ts.swap(p.title, 0, true)
+      a.swap(p.author ? t('credit.by', { author: p.author }) : '', 40)
       if (line.current && core.state.settings.rotation.enabled) drainLine(line.current, lineP.current)
     })
+    return () => {
+      offLang()
+      offPreset()
+    }
   }, [core])
 
   const toggleFav = (btn: HTMLElement): void => {
     const r = core.run<boolean>('library.favorite', {}, 'ui')
     if (!r.ok) return
     if (r.value) coreRise(btn)
-    showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+    showToast(t(r.value ? 'toast.favAdded' : 'toast.favRemoved'))
   }
 
   return (
     <div class="strip-wrap">
       <SlowChip core={core} />
-      <div class="strip" role="toolbar" aria-label="Controles do visual">
+      <div class="strip" role="toolbar" aria-label={t('strip.toolbar')}>
         <i class="rot-line" ref={line} />
         <div class="now">
           <button
             class="ibtn"
-            aria-label="Abrir biblioteca"
-            title="Biblioteca (L)"
+            aria-label={t('strip.openLibrary')}
+            title={t('strip.libraryTitle')}
             aria-expanded={core.state.overlay === 'library'}
             onClick={() => toggleOverlay(core, 'library')}
           >
@@ -308,25 +315,25 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               <span
                 class={settings.overlayText.clean ? 'clean-ico on' : 'clean-ico'}
                 role="img"
-                aria-label="Modo limpo ligado"
+                aria-label={t('strip.cleanOn')}
                 aria-hidden={!settings.overlayText.clean}
-                title="Modo limpo ligado (T)"
+                title={t('strip.cleanOnTitle')}
               >
                 <Icon name="eye-off" small />
               </span>
             </div>
             <div class="now-author" ref={authorEl} />
             {core.state.breath && (
-              <div class="breath-tag" role="status" title="Respiro: o visual está sem o áudio (Shift+Enter volta)">
-                <Icon name="volume-x" small /> Respiro
+              <div class="breath-tag" role="status" title={t('strip.breathTitle')}>
+                <Icon name="volume-x" small /> {t('strip.breath')}
               </div>
             )}
           </div>
           <button
             class="ibtn fav favp"
             aria-pressed={fav}
-            aria-label={fav ? 'Desfavoritar' : 'Favoritar'}
-            title={fav ? 'Desfavoritar' : 'Favoritar'}
+            aria-label={t(fav ? 'strip.unfavorite' : 'strip.favorite')}
+            title={t(fav ? 'strip.unfavorite' : 'strip.favorite')}
             onClick={(e) => toggleFav(e.currentTarget)}
           >
             {/* M07: contorno + estrela cheia que cresce do centro + núcleo que sobe. */}
@@ -342,8 +349,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button
             class={wait === 'previous' ? 'ibtn wait' : 'ibtn'}
             aria-busy={wait === 'previous' || undefined}
-            aria-label="Preset anterior"
-            title="Anterior (←)"
+            aria-label={t('strip.previous')}
+            title={t('strip.previousTitle')}
             onClick={(e) => {
               if (e.detail > 0) nudgeIcon(e.currentTarget, -2)
               bridge.request('previous')
@@ -354,8 +361,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button
             class={wait === 'random' ? 'ibtn wait' : 'ibtn'}
             aria-busy={wait === 'random' || undefined}
-            aria-label="Preset aleatório"
-            title="Aleatório (Espaço)"
+            aria-label={t('strip.random')}
+            title={t('strip.randomTitle')}
             onClick={(e) => {
               if (e.detail > 0) shuffleIcon(e.currentTarget)
               bridge.request('random')
@@ -366,8 +373,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button
             class={wait === 'next' ? 'ibtn wait' : 'ibtn'}
             aria-busy={wait === 'next' || undefined}
-            aria-label="Próximo preset"
-            title="Próximo (→)"
+            aria-label={t('strip.next')}
+            title={t('strip.nextTitle')}
             onClick={(e) => {
               if (e.detail > 0) nudgeIcon(e.currentTarget, 2)
               bridge.request('next')
@@ -379,30 +386,30 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           <button
             class={held ? 'rot held' : 'rot'}
             aria-pressed={rotOn}
-            title={held ? 'Visual segurado: Enter solta (R liga e desliga a rotação)' : `Rotação automática (R)${onBeat ? ' · no beat' : ''}`}
+            title={held ? t('strip.heldTitle') : `${t('strip.rotationTitle')}${onBeat ? t('strip.rotationOnBeat') : ''}`}
             onClick={() => core.run('rotation.set', { enabled: !rotOn }, 'ui')}
           >
             <Icon name={held ? 'lock' : 'repeat'} />
-            <span>{held ? 'Segurado' : 'Rotação'}</span>
+            <span>{t(held ? 'strip.held' : 'strip.rotation')}</span>
             <span class="num" ref={time} hidden={held} />
-            {onBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label="Batida estável" title="Batida estável" />}
+            {onBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label={t('strip.beatLocked')} title={t('strip.beatLocked')} />}
           </button>
         </div>
         <div class="tail">
           <div class="level">
             <Meter core={core} />
-            {settings.showFps && <span class="fps num" ref={fpsEl} title="fps do visual" />}
+            {settings.showFps && <span class="fps num" ref={fpsEl} title={t('strip.fpsTitle')} />}
           </div>
-          <button class="ibtn" aria-label="Buscar presets" title="Buscar presets (/ ou Ctrl+K)" onClick={() => toggleOverlay(core, 'search')}>
+          <button class="ibtn" aria-label={t('strip.search')} title={t('strip.searchTitle')} onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
           </button>
-          <button class="ibtn" aria-label="Atalhos" title="Atalhos (?)" aria-haspopup="dialog" onClick={() => toggleShortcuts(core)}>
+          <button class="ibtn" aria-label={t('strip.shortcuts')} title={t('strip.shortcutsTitle')} aria-haspopup="dialog" onClick={() => toggleShortcuts(core)}>
             <Icon name="keyboard" />
           </button>
           <button
             class="ibtn"
-            aria-label="Ajustes rápidos"
-            title="Ajustes rápidos (,)"
+            aria-label={t('strip.quick')}
+            title={t('strip.quickTitle')}
             aria-expanded={core.state.overlay === 'quick'}
             onClick={() => toggleOverlay(core, 'quick')}
           >
@@ -410,8 +417,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           </button>
           <button
             class="ibtn"
-            aria-label={fullscreen ? 'Sair da tela cheia' : 'Tela cheia'}
-            title={`${fullscreen ? 'Sair da tela cheia' : 'Tela cheia'} (F ou F11)`}
+            aria-label={t(fullscreen ? 'strip.exitFullscreen' : 'strip.fullscreen')}
+            title={t('strip.fullscreenTitle', { label: t(fullscreen ? 'strip.exitFullscreen' : 'strip.fullscreen') })}
             onClick={() => core.run('window.fullscreen', {}, 'ui')}
           >
             <Icon name={fullscreen ? 'minimize' : 'maximize'} />
@@ -434,7 +441,7 @@ function Edge({ core }: { core: Core }) {
     return () => window.removeEventListener('mousemove', move)
   }, [])
   return (
-    <button class={on ? 'edge on' : 'edge'} aria-label="Abrir biblioteca" title="Abrir biblioteca (L)" onClick={() => core.run('ui.open', { overlay: 'library' }, 'ui')}>
+    <button class={on ? 'edge on' : 'edge'} aria-label={t('strip.openLibrary')} title={t('strip.openLibraryTitle')} onClick={() => core.run('ui.open', { overlay: 'library' }, 'ui')}>
       <Icon name="library" />
     </button>
   )
@@ -471,11 +478,11 @@ function WindowControls({ core }: { core: Core }) {
   // Some com a Biblioteca, a busca ou outro painel aberto sobre o canto.
   const blocked = core.state.overlay !== null
   return (
-    <div class={`winctl${on && !blocked ? ' on' : ''}${blocked ? ' blocked' : ''}`} role="group" aria-label="Janela">
-      <button class="ibtn" aria-label="Minimizar" title="Minimizar" onClick={() => void window.so.window.minimize()}>
+    <div class={`winctl${on && !blocked ? ' on' : ''}${blocked ? ' blocked' : ''}`} role="group" aria-label={t('window.group')}>
+      <button class="ibtn" aria-label={t('window.minimize')} title={t('window.minimize')} onClick={() => void window.so.window.minimize()}>
         <Icon name="minus" />
       </button>
-      <button class="ibtn win-close" aria-label="Fechar" title="Fechar (Ctrl+W)" onClick={() => void window.so.window.close()}>
+      <button class="ibtn win-close" aria-label={t('window.close')} title={t('window.closeTitle')} onClick={() => void window.so.window.close()}>
         <Icon name="x" />
       </button>
     </div>

@@ -30,7 +30,7 @@ interface Window {
       gpuInfo(): Promise<{ driver: string; ids: string }>
       testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
     }
-    app: { version(): Promise<string> }
+    app: { version(): Promise<string>; systemLanguage?(): Promise<'en' | 'pt-BR'> }
     presets: {
       convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }>
       listImported(): Promise<{ name: string; preset: Record<string, unknown> }[]>

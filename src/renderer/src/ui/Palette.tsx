@@ -6,6 +6,7 @@ import { TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data
 import { splitPresetName } from './preset-name'
 import { matchCommands, runAction, type Command } from './shortcuts'
 import { showToast } from './toast'
+import { t } from '../i18n'
 
 const MAX_RESULTS = 50
 
@@ -56,8 +57,8 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   }
   const playCollection = (id: string, name: string): void => {
     const r = core.run('collection.play', { id }, 'ui')
-    if (r.ok) showToast(`Tocando ${name}.`)
-    else showToast('Esta coleção está vazia.')
+    if (r.ok) showToast(t('toast.playing', { name }))
+    else showToast(t('toast.collectionEmpty'))
     close()
   }
   const runCmd = (c: Command): void => {
@@ -66,7 +67,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   }
   const fav = (name: string): void => {
     const r = core.run<boolean>('library.favorite', { name }, 'ui')
-    if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+    if (r.ok) showToast(t(r.value ? 'toast.favAdded' : 'toast.favRemoved'))
   }
 
   const onKey = (e: KeyboardEvent): void => {

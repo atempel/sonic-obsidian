@@ -50,7 +50,11 @@ contextBridge.exposeInMainWorld('so', {
     /** Flags de teste lidas de test-flags.json (spec 012). */
     testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean }> => ipcRenderer.invoke('system:testFlags')
   },
-  app: { version: (): Promise<string> => ipcRenderer.invoke('app:version') },
+  app: {
+    version: (): Promise<string> => ipcRenderer.invoke('app:version'),
+    /** Idioma do Windows já reduzido a 'en' ou 'pt-BR' (spec 030). */
+    systemLanguage: (): Promise<'en' | 'pt-BR'> => ipcRenderer.invoke('app:systemLanguage')
+  },
   /** .milk (texto) → preset do Butterchurn 3, convertido no main (spec 022). */
   presets: {
     convertMilk: (text: string): Promise<{ preset: Record<string, unknown>; ms: number }> => ipcRenderer.invoke('presets:convertMilk', String(text)),

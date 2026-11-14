@@ -1,5 +1,6 @@
 import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
 import type { PresetLibrary } from './presets'
+import { t, tn } from './i18n'
 
 /**
  * Importar `.milk` (spec 022). A conversão é no main (texto → preset 3.x); aqui cada preset é
@@ -146,12 +147,12 @@ export async function importMilks(
 export function importSummary(r: ImportResult): string {
   const parts: string[] = []
   const n = r.added.length
-  if (n) parts.push(n === 1 ? '1 preset adicionado à biblioteca' : `${n} presets adicionados à biblioteca`)
-  if (r.skipped.length) parts.push(r.skipped.length === 1 ? '1 já estava na biblioteca' : `${r.skipped.length} já estavam na biblioteca`)
+  if (n) parts.push(tn('toast.import.added', n))
+  if (r.skipped.length) parts.push(tn('toast.import.skipped', r.skipped.length))
   if (r.failed.length) {
     const names = r.failed.slice(0, 2).map((f) => f.name.split(' - ').pop()).join(', ')
-    parts.push(`${r.failed.length} não converte${r.failed.length === 1 ? 'u' : 'ram'} (${names}${r.failed.length > 2 ? '…' : ''})`)
+    parts.push(tn('toast.import.failed', r.failed.length, { names: `${names}${r.failed.length > 2 ? '…' : ''}` }))
   }
-  if (r.extra) parts.push(`${r.extra} além do limite de ${MAX_BATCH} ficaram de fora`)
-  return parts.join(' · ') || 'Nenhum arquivo .milk encontrado.'
+  if (r.extra) parts.push(t('toast.import.extra', { n: r.extra, max: MAX_BATCH }))
+  return parts.join(' · ') || t('toast.import.none')
 }

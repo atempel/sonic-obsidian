@@ -1,5 +1,6 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
+import { LANGUAGE_PREFS, applyLanguage, t, type LanguagePref } from '../i18n'
 import {
   cleanAuthor,
   BLEND_MAX_S,
@@ -320,6 +321,14 @@ export class Core {
       const { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps } = s
       return { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps }
     },
+    /** Idioma (spec 030): `{ language: 'auto' | 'en' | 'pt-BR' }`. Vale na hora, sem reiniciar; devolve o idioma em uso. */
+    'app.setLanguage': (a, origin) => {
+      if (!LANGUAGE_PREFS.includes(a.language as LanguagePref)) fail(`language: ${LANGUAGE_PREFS.join(', ')}`)
+      this.state.settings.language = a.language as LanguagePref
+      const active = applyLanguage(this.state.settings.language)
+      this.changedSettings(origin)
+      return { language: this.state.settings.language, active }
+    },
     /** Desempenho por preset (spec 012): `{ skipSlow?, minFps? }`. */
     'perf.set': (a, origin) => {
       const p = this.state.settings.perf
@@ -383,7 +392,8 @@ export class Core {
     // ── coleções ────────────────────────────────────────────
     'collection.create': (a, origin) => {
       const cols = this.state.library.collections
-      const name = a.name === undefined ? `Coleção ${cols.length + 1}` : str(a.name, 'name').trim()
+      // O nome que o app dá sai no idioma da hora; depois é um nome como outro qualquer (spec 030).
+      const name = a.name === undefined ? t('collection.defaultName', { n: cols.length + 1 }) : str(a.name, 'name').trim()
       const col: Collection = { id: `c${Date.now().toString(36)}${cols.length}`, name, presets: [], intervalSeconds: 30 }
       cols.push(col)
       this.changedLibrary(origin)

@@ -3,13 +3,13 @@ import { Core, type CaptureCheck, type Origin, type WaitKey } from './core/comma
 import { AutoGain, manualDb } from './agc'
 import { BeatTracker } from './beat'
 import {
-  BLEND_TYPE_LABEL,
   EXPRESSION_ADAPTATIONS,
-  EXPRESSION_ADAPTATION_LABEL,
   EXPRESSION_CURVES,
-  EXPRESSION_CURVE_LABEL,
   EXPRESSION_DEFAULT,
+  blendTypeLabel,
   cycleBlendType,
+  expressionAdaptationLabel,
+  expressionCurveLabel,
   sanitizeLibrary,
   sanitizeSettings,
   stepBlendSeconds
@@ -31,6 +31,7 @@ import { StudioCompiler } from './studio/compile'
 import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
+import { applyLanguage, fmtNum, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
@@ -52,6 +53,11 @@ async function start(): Promise<void> {
     window.so.library.load().catch(() => null)
   ])
   window.so.mark('ajustes lidos')
+  const initialSettings = sanitizeSettings(rawSettings)
+  // Idioma (spec 030): o main diz o do Windows; sem ele (testes), vale o do navegador.
+  const systemLang = await (window.so.app.systemLanguage?.() ?? Promise.resolve(null)).catch(() => null)
+  setSystemLang(systemLang ?? langFromTag(navigator.language))
+  applyLanguage(initialSettings.language)
 
   const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
   // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
@@ -83,7 +89,6 @@ async function start(): Promise<void> {
   gain.connect(meter)
   const samples = new Float32Array(meter.fftSize)
 
-  const initialSettings = sanitizeSettings(rawSettings)
   // Antes de criar o motor: os shaders são compilados na criação (onda em pontos, 2026-11-10).
   fixPointSize()
   const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
@@ -260,7 +265,7 @@ async function start(): Promise<void> {
       // 3. Formato.
       const ts = audioTrack.getSettings()
       captureInfo = { device: audioTrack.label || outName, sampleRate: ts.sampleRate ?? ctx.sampleRate }
-      const rate = `${(captureInfo.sampleRate / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} kHz`
+      const rate = `${fmtNum(captureInfo.sampleRate / 1000, 1)} kHz`
       setCheck(2, { state: 'ok', detail: ts.channelCount ? `${rate}, ${ts.channelCount} canais` : rate })
       const updateTrack = (): void => {
         state.audio = `${audioTrack.readyState}${audioTrack.muted ? ' (muted)' : ''}`
@@ -390,7 +395,7 @@ async function start(): Promise<void> {
         window.so.log(`preset com shader que não compila nesta GPU: ${name}: ${err}`)
         if (badShader.has(name)) return
         badShader.add(name)
-        showToast('Este preset não funciona nesta placa de vídeo e foi pulado.', { force: true })
+        showToast(t('toast.gpuSkipped'), { force: true })
         core.run('preset.next', { cut: true }, 'rotation')
       })
       .catch((err: unknown) => {
@@ -548,21 +553,19 @@ async function start(): Promise<void> {
     if (!result.ok) console.warn(`[core] ${name}: ${result.error}`)
     return result
   }
-  const secondsText = (s: number): string => `${String(s).replace('.', ',')} s`
+  const isDefault = (yes: boolean): string => (yes ? t('toast.default') : '')
   const exprLevel = (): string => {
     const l = settings.expression.level
-    return l === 0 ? 'neutra' : `${l > 0 ? '+' : '−'}${Math.abs(l)}`
+    return l === 0 ? t('expression.neutral') : `${l > 0 ? '+' : '−'}${Math.abs(l)}`
   }
   const exprText = (): string =>
-    exprProbe
-      ? `Expressividade ${exprLevel()}${settings.expression.level === EXPRESSION_DEFAULT.level ? ' (padrão)' : ''}`
-      : 'Expressividade indisponível (motor sem audioLevels)'
-  /** Toast da transição manual: "Transição: Plasma, 1 s" (spec 013). */
+    exprProbe ? `${t('toast.expression', { level: exprLevel() })}${isDefault(settings.expression.level === EXPRESSION_DEFAULT.level)}` : t('toast.expressionUnavailable')
+  /** Toast da transição manual: "Transition: Plasma, 1 s" (spec 013). */
   const blendText = (): string => {
     const { type, seconds } = settings.blend.manual
-    const label = BLEND_TYPE_LABEL[type]
-    const unavailable = !viz.blendTypesAvailable && type !== 'cut' && type !== 'random' ? ' (indisponível: sorteio do motor)' : ''
-    return type === 'cut' ? `Transição: ${label}` : `Transição: ${label}, ${secondsText(seconds)}${unavailable}`
+    const label = blendTypeLabel(type)
+    const unavailable = !viz.blendTypesAvailable && type !== 'cut' && type !== 'random' ? t('toast.blendUnavailable') : ''
+    return type === 'cut' ? t('toast.blend', { label }) : `${t('toast.blendTimed', { label, s: fmtSeconds(seconds) })}${unavailable}`
   }
 
   window.addEventListener('resize', () => viz.resize())
@@ -572,19 +575,19 @@ async function start(): Promise<void> {
   // Ações com nome (spec 020): as mesmas das teclas, com os mesmos toasts; a busca rápida executa por aqui.
   const toggleClean = (): void => {
     run('overlayText.set', { clean: !settings.overlayText.clean })
-    showToast(settings.overlayText.clean ? 'Modo limpo ligado' : 'Modo limpo desligado', { force: true })
+    showToast(t(settings.overlayText.clean ? 'toast.cleanOn' : 'toast.cleanOff'), { force: true })
   }
   const toggleHold = (): void => {
     const r = core.run<boolean>('preset.hold', {}, 'keyboard')
-    if (r.ok) showToast(r.value ? 'Visual segurado. Enter solta.' : 'Visual solto.', { force: true })
+    if (r.ok) showToast(t(r.value ? 'toast.held' : 'toast.released'), { force: true })
   }
   const toggleBreath = (): void => {
     const r = core.run<boolean>('audio.breath', {}, 'keyboard')
-    if (r.ok) showToast(r.value ? 'Respiro: o visual descansa sem o áudio. Shift+Enter volta.' : 'Áudio de volta no visual.', { force: true })
+    if (r.ok) showToast(t(r.value ? 'toast.breathOn' : 'toast.breathOff'), { force: true })
   }
   const toggleRotation = (): void => {
     run('rotation.set', { enabled: !settings.rotation.enabled })
-    showToast(settings.rotation.enabled ? `Rotação a cada ${core.rotationIntervalSeconds} s.` : 'Rotação desligada.')
+    showToast(settings.rotation.enabled ? t('toast.rotationOn', { s: fmtSeconds(core.rotationIntervalSeconds) }) : t('toast.rotationOff'))
   }
   const actions: Record<ActionId, () => void> = {
     clean: toggleClean,
@@ -603,7 +606,7 @@ async function start(): Promise<void> {
     studio: () => void openStudioFor(),
     favorite: () => {
       const r = core.run<boolean>('library.favorite', {}, 'ui')
-      if (r.ok) showToast(r.value ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.')
+      if (r.ok) showToast(t(r.value ? 'toast.favAdded' : 'toast.favRemoved'))
     }
   }
   setActionRunner((id) => actions[id]())
@@ -646,14 +649,14 @@ async function start(): Promise<void> {
       return
     }
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
-    const t = e.target as HTMLElement | null
+    const tgt = e.target as HTMLElement | null
     // Nos Ajustes rápidos, Esc fecha o painel mesmo com o foco num slider ou seletor.
-    if (e.key === 'Escape' && t?.closest('.sheet')) {
+    if (e.key === 'Escape' && tgt?.closest('.sheet')) {
       e.preventDefault()
       run('ui.close')
       return
     }
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return
+    if (tgt && (tgt.tagName === 'INPUT' || tgt.tagName === 'TEXTAREA' || tgt.tagName === 'SELECT' || tgt.isContentEditable)) return
     // Esc fecha o que estiver aberto; sem nada aberto, sai da tela cheia.
     if (e.key === 'Escape') {
       e.preventDefault()
@@ -677,20 +680,20 @@ async function start(): Promise<void> {
       return
     }
     // Dentro da Biblioteca, da busca ou de um menu, as setas e o Espaço são da lista.
-    if (t?.closest('.lib, .palette, .menu, .sheet, .settings')) return
+    if (tgt?.closest('.lib, .palette, .menu, .sheet, .settings')) return
     if (e.key === '/') {
       e.preventDefault()
       run('ui.open', { overlay: 'search' })
       return
     }
     // Espaço com foco num botão aciona o botão (acessibilidade), não o aleatório.
-    if (e.code === 'Space' && t?.closest('button, a')) return
+    if (e.code === 'Space' && tgt?.closest('button, a')) return
     // Enter segura o visual (spec 024), mas num botão ou link continua acionando o controle,
     // e com um painel aberto é dele.
     // Só um controle focado pelo teclado (:focus-visible) fica com o Enter: depois de um clique,
     // o foco continua no botão, mas o Enter volta a ser do Palco.
     if (e.key === 'Enter') {
-      const ctl = t?.closest('button, a, [role="button"], [role="menuitem"], [tabindex]')
+      const ctl = tgt?.closest('button, a, [role="button"], [role="menuitem"], [tabindex]')
       if ((ctl && ctl.matches(':focus-visible')) || core.state.overlay) return
       e.preventDefault()
       ;(ctl as HTMLElement | null)?.blur()
@@ -713,12 +716,12 @@ async function start(): Promise<void> {
         const i = EXPRESSION_ADAPTATIONS.indexOf(settings.expression.adaptation)
         run('expression.set', { adaptation: EXPRESSION_ADAPTATIONS[(i + 1) % EXPRESSION_ADAPTATIONS.length] })
         const a = settings.expression.adaptation
-        showToast(`Memória ${EXPRESSION_ADAPTATION_LABEL[a]}${a === EXPRESSION_DEFAULT.adaptation ? ' (padrão)' : ''}`)
+        showToast(`${t('toast.memory', { label: expressionAdaptationLabel(a) })}${isDefault(a === EXPRESSION_DEFAULT.adaptation)}`)
       } else {
         const i = EXPRESSION_CURVES.indexOf(settings.expression.curve)
         run('expression.set', { curve: EXPRESSION_CURVES[(i + 1) % EXPRESSION_CURVES.length] })
         const c = settings.expression.curve
-        showToast(`Caráter: ${EXPRESSION_CURVE_LABEL[c]}${c === EXPRESSION_DEFAULT.curve ? ' (padrão)' : ''}${settings.expression.level === 0 ? ' · sem efeito no nível 0' : ''}`)
+        showToast(`${t('toast.character', { label: expressionCurveLabel(c) })}${isDefault(c === EXPRESSION_DEFAULT.curve)}${settings.expression.level === 0 ? t('toast.noEffectLevel0') : ''}`)
       }
     } else if (e.code === 'Space') {
       request('random', cut)
@@ -730,7 +733,7 @@ async function start(): Promise<void> {
       // ↑ / ↓: tempo da troca manual (0,25 · 0,5 · 1 · 2 · 4 · 8 s).
       const seconds = stepBlendSeconds(settings.blend.manual.seconds, e.code === 'ArrowUp' ? 1 : -1)
       run('blend.set', { target: 'manual', seconds })
-      showToast(settings.blend.manual.type === 'cut' ? `Tempo da transição: ${secondsText(seconds)} (Corte seco ativo)` : blendText())
+      showToast(settings.blend.manual.type === 'cut' ? t('toast.blendTimeCut', { s: fmtSeconds(seconds) }) : blendText())
     } else if (e.code === 'KeyF') {
       // F = tela cheia (como F11), por decisão do usuário; ver DIVERGENCIAS.
       run('window.fullscreen')
@@ -789,14 +792,14 @@ async function start(): Promise<void> {
     try {
       viz.render(elapsed)
     } catch (err) {
-      const t = performance.now()
-      renderErrors = [...renderErrors.filter((x) => t - x < 1000), t]
+      const now = performance.now()
+      renderErrors = [...renderErrors.filter((x) => now - x < 1000), now]
       if (renderErrors.length < 3) return
       renderErrors = []
       // No Estúdio, a versão em edição que trava no motor volta ao original, sem pular o preset.
       if (studio) {
         window.so.log(`estúdio: a versão em edição travou no motor: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
-        showToast('A versão em edição travou no motor. Voltei ao preset de origem.', { force: true })
+        showToast(t('toast.studioFroze'), { force: true })
         if (library.has(studio.source)) void viz.load(library.get(studio.source), 'cut', 0)
         return
       }
@@ -804,7 +807,7 @@ async function start(): Promise<void> {
       if (!name || broken.has(name)) return
       broken.add(name)
       window.so.log(`preset travou e foi pulado: ${name}: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
-      showToast('Este preset travou e foi pulado.', { force: true })
+      showToast(t('toast.presetFroze'), { force: true })
       run('preset.next', { cut: true }, 'rotation')
     }
   }

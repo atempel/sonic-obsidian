@@ -42,6 +42,8 @@ function registerStores(): void {
   // URL fixa: o renderer não escolhe o que abrir.
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
   ipcMain.handle('app:version', () => app.getVersion())
+  // Idioma do Windows (spec 030): o primeiro preferido; `pt-*` vira pt-BR, o resto en (o renderer só recebe os dois).
+  ipcMain.handle('app:systemLanguage', () => (/^pt(-|_|$)/i.test(app.getPreferredSystemLanguages()[0] ?? app.getLocale()) ? 'pt-BR' : 'en'))
   // Créditos de terceiros: o arquivo vai ao lado do .exe (extraFiles); em dev, na raiz do projeto.
   ipcMain.handle('system:openNotices', () =>
     shell.openPath(join(app.isPackaged ? dirname(process.execPath) : app.getAppPath(), 'THIRD_PARTY_NOTICES.md'))

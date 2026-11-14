@@ -6,6 +6,7 @@ import { Icon } from './icons'
 import { openShortcuts } from './ShortcutsPanel'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
+import { t } from '../i18n'
 
 /**
  * Setup e diagnóstico (spec 012; protótipo "Setup" e "Palco integrado", design 1794178325-0fd0).
@@ -268,9 +269,9 @@ export function SlowChip({ core }: { core: Core }) {
   if (!slow || slow.name !== core.state.current) return null
   const { title } = splitPresetName(slow.name)
   return (
-    <span class="chip" role="status" title={`${title} roda abaixo do mínimo de fps`}>
+    <span class="chip" role="status" title={t('strip.slowTitle', { name: title })}>
       <Icon name="gauge" small />
-      <span class="num">{Math.round(slow.fps)} fps</span> · preset pesado
+      <span class="num">{Math.round(slow.fps)} fps</span> · {t('strip.slow')}
       <button
         class="btn btn-ghost"
         onClick={() => {
@@ -278,7 +279,7 @@ export function SlowChip({ core }: { core: Core }) {
           core.run('library.hide', { name: slow.name, reason: 'performance' }, 'ui')
         }}
       >
-        Pular e ocultar
+        {t('strip.slowSkip')}
       </button>
     </span>
   )
