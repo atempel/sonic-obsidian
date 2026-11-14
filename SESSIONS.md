@@ -4,6 +4,14 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — PR #106
+**Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste, nada do usuário a responder): PR #106 (030, 4º PR: Configurações) verde (`typecheck` + testes headless; `build-windows` pulado), com a tabela de critérios e "Testar no bloco" → mergeado com esta entrada. Não fecha a #101, que segue `ready` + `prioridade` no v0.7.0.
+**Deixou em:** `main` com a migração 4 da 030. Nada novo atribuído ao usuário. Próxima rodada: #101 (painel `?` com os rótulos de `shortcuts.ts`, Setup/diagnóstico, Estúdio, log em inglês, P1). Não verificado nesta rodada: só merge, sem código novo.
+
+### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-idiomas-configuracoes`
+**Fez:** Passo 4 da `rodada` (nada do usuário a responder, nenhum PR aberto, v0.7.0 com issues abertas): #101 (030, `prioridade`) reivindicada. 4º PR da 030: migração 4, **Configurações** — 171 chaves `settings.*` (as 8 seções, busca, estado vazio, "Salvo", Biblioteca/importar `.milk`/coleções, Sobre), rótulos iguais aos dos Ajustes reaproveitam `quick.*`; seções com chave em `SECTIONS`; busca das Configurações sem acento nem caixa pelo `includesText` (palavras extras de busca nos dois idiomas); números pelo `Intl` (escala `1,5×`/`1.5×`, `30 s`). Crédito dos meus presets ("based on"/"baseado em") e o autor padrão (`Me`/`Eu`) pelo catálogo (`credit.mine.*`, também no Estúdio). Teste `030-idiomas` +10 itens (48/48). Design `1794607492-78f0` (só a linha Idioma é desenhada; o resto é texto).
+**Deixou em:** PR aberto que **não** fecha a #101 (volta a `ready`). Falta: painel `?` (com os rótulos de `shortcuts.ts`, que a tabela de Atalhos das Configurações também usa), Setup/diagnóstico, Estúdio, log em inglês, P1. `026-estudio` e `023-colecoes` instáveis nesta máquina (passam e falham no `main` e na branch) — o CI decide. Não verificado: o app no Windows (vai para o bloco v0.7.0).
+
 ### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — PR #105
 **Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste, nada do usuário a responder): PR #105 (030, 3º PR: Biblioteca e busca) verde (`typecheck` + testes headless; `build-windows` pulado), com a tabela de critérios e "Testar no bloco" → mergeado com esta entrada. Não fecha a #101, que segue `ready` + `prioridade` no v0.7.0.
 **Deixou em:** `main` com a migração 3 da 030. Próxima rodada: #101 (resto das Configurações, painel `?`, Setup/diagnóstico, Estúdio, log em inglês, P1).

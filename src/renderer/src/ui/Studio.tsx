@@ -98,8 +98,8 @@ function Studio({ api }: { api: StudioApi }) {
   const root = useRef<HTMLDivElement>(null)
 
   const basedOn = api.mine ? api.mine.meta.basedOn : originalCredit(api.sourceName)
-  const author = settings.authorName || 'Eu'
-  const credit = `por ${mineCredit({ author: saved?.meta.author ?? author, basedOn })}`
+  const author = settings.authorName || t('credit.mine.defaultAuthor')
+  const credit = t('credit.by', { author: mineCredit({ author: saved?.meta.author ?? author, basedOn }) })
 
   // ── Compilar ────────────────────────────────────────────
   const compile = async (c: Code, load = true): Promise<boolean> => {
@@ -180,7 +180,7 @@ function Studio({ api }: { api: StudioApi }) {
     const v = authorDraft.trim()
     core.run('settings.set', { authorName: v }, 'ui')
     setAskAuthor(false)
-    void save(v || 'Eu')
+    void save(v || t('credit.mine.defaultAuthor'))
   }
 
   // ── Teclado: Ctrl+S, Ctrl+Enter, Esc ────────────────────

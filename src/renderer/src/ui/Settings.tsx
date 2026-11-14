@@ -24,7 +24,7 @@ import {
   blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
-import { LANG_NAME, getLang, getSystemLang, fmtNum, t, type LanguagePref } from '../i18n'
+import { LANG_NAME, getSystemLang, fmtNum, fmtSeconds, includesText, t, tn, type LanguagePref, type MessageKey } from '../i18n'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
@@ -39,26 +39,31 @@ import { useSlideIndicator } from './slide-indicator'
  */
 
 type SectionId = 'geral' | 'captura' | 'visual' | 'render' | 'desempenho' | 'biblioteca' | 'atalhos' | 'sobre'
-const SECTIONS: { id: SectionId; label: string; icon: IconName; lead: string }[] = [
-  { id: 'geral', label: 'Geral', icon: 'settings-2', lead: 'Como o Sonic Obsidian abre.' },
-  { id: 'captura', label: 'Captura', icon: 'audio-lines', lead: 'De onde vem o som que o visual escuta.' },
-  { id: 'visual', label: 'Visual', icon: 'sparkles', lead: 'Como os presets passam de um para o outro.' },
-  { id: 'render', label: 'Renderização', icon: 'cpu', lead: 'Qualidade e custo do Butterchurn na sua GPU.' },
-  { id: 'desempenho', label: 'Desempenho', icon: 'gauge', lead: 'Proteção contra presets lentos e leitura de fps.' },
-  { id: 'biblioteca', label: 'Biblioteca', icon: 'library', lead: 'Pacotes de presets, presets ocultos e coleções.' },
-  { id: 'atalhos', label: 'Atalhos', icon: 'keyboard', lead: 'Teclas globais do app.' },
-  { id: 'sobre', label: 'Sobre', icon: 'info', lead: 'Versão, créditos e links.' }
+// Rótulos por chave (spec 030): o texto sai de `t()` na hora de desenhar, então a troca de idioma vale na hora.
+const SECTIONS: { id: SectionId; label: MessageKey; icon: IconName; lead: MessageKey }[] = [
+  { id: 'geral', label: 'settings.section.geral', icon: 'settings-2', lead: 'settings.section.geralLead' },
+  { id: 'captura', label: 'settings.section.captura', icon: 'audio-lines', lead: 'settings.section.capturaLead' },
+  { id: 'visual', label: 'settings.section.visual', icon: 'sparkles', lead: 'settings.section.visualLead' },
+  { id: 'render', label: 'settings.section.render', icon: 'cpu', lead: 'settings.section.renderLead' },
+  { id: 'desempenho', label: 'settings.section.desempenho', icon: 'gauge', lead: 'settings.section.desempenhoLead' },
+  { id: 'biblioteca', label: 'settings.section.biblioteca', icon: 'library', lead: 'settings.section.bibliotecaLead' },
+  { id: 'atalhos', label: 'settings.section.atalhos', icon: 'keyboard', lead: 'settings.section.atalhosLead' },
+  { id: 'sobre', label: 'settings.section.sobre', icon: 'info', lead: 'settings.section.sobreLead' }
 ]
 
-/** Sem acento e minúsculo, para a busca. */
-const norm = (t: string): string => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+/** Busca sem acento nem caixa, no idioma do app (a vazia não destaca nada). */
+const matches = (text: string, q: string): boolean => q !== '' && includesText(text, q)
+/** "Fase 5" / "Phase 5": opções que chegam numa fase futura do roadmap. */
+const phase = (n: number): string => t('settings.phase', { n })
+/** Rótulo de leitor de tela do botão Restaurar de um preset oculto. */
+const restoreLabel = (title: string, author: string | null): string => (author ? t('settings.restoreItemBy', { title, author }) : t('settings.restoreItem', { title }))
 
 // ── Primitivas ────────────────────────────────────────────────
 interface RowProps {
   id?: string
   label: string
   help?: ComponentChildren
-  /** Palavras extras para a busca. */
+  /** Palavras extras para a busca (nos dois idiomas: não aparecem na tela). */
   kw?: string
   phase?: string
   stack?: boolean
@@ -161,6 +166,18 @@ function Grp({ title, children }: { title?: string; children: ComponentChildren 
   )
 }
 
+/** Texto com `{key}` no lugar de uma tecla: a tecla vira `<kbd>` (a ordem das palavras muda entre idiomas). */
+function withKey(text: string, key: string): ComponentChildren {
+  const [before, after = ''] = text.split('{key}')
+  return (
+    <>
+      {before}
+      <kbd>{key}</kbd>
+      {after}
+    </>
+  )
+}
+
 // ── Seções ────────────────────────────────────────────────────
 type Run = (name: string, args: Record<string, unknown>) => void
 
@@ -169,7 +186,7 @@ function Geral({ core, run }: { core: Core; run: Run }) {
   const favs = core.state.library.favorites
   const favOptions: [string, string][] = favs.map((n) => {
     const { title, author } = splitPresetName(n)
-    return [n, author ? `${title} · por ${author}` : title]
+    return [n, author ? `${title} · ${t('credit.by', { author })}` : title]
   })
   const lang = s.language
   return (
@@ -194,19 +211,29 @@ function Geral({ core, run }: { core: Core; run: Run }) {
           />
         </Row>
       </Grp>
-      <Grp title="Ao iniciar">
-        <Row label="Abrir em" help="Tela mostrada quando o app inicia." phase="Fase 5" kw="rack palco">
-          <Seg name="openIn" label="Abrir em" value="palco" options={[['palco', 'Palco'], ['rack', 'Rack']]} disabled onChange={() => {}} />
+      <Grp title={t('settings.general.onStart')}>
+        <Row label={t('settings.general.openIn')} help={t('settings.general.openInHelp')} phase={phase(5)} kw="rack palco stage">
+          <Seg
+            name="openIn"
+            label={t('settings.general.openIn')}
+            value="palco"
+            options={[
+              ['palco', t('settings.general.openStage')],
+              ['rack', t('settings.general.openRack')]
+            ]}
+            disabled
+            onChange={() => {}}
+          />
         </Row>
-        <Row label="Iniciar com o Windows" help="O app já abre tocando, sem nenhum clique." phase="Fase 5">
-          <Sw id="st-boot" label="Iniciar com o Windows" checked={false} disabled />
+        <Row label={t('settings.general.boot')} help={t('settings.general.bootHelp')} phase={phase(5)} kw="boot startup inicializar">
+          <Sw id="st-boot" label={t('settings.general.boot')} checked={false} disabled />
         </Row>
-        <Row id="st-full" label="Abrir em tela cheia" help="Mesmo efeito de F11 ao abrir." kw="fullscreen">
-          <Sw id="st-full" label="Abrir em tela cheia" checked={s.startFullscreen} onChange={(v) => run('settings.set', { startFullscreen: v })} />
+        <Row id="st-full" label={t('settings.general.fullscreen')} help={t('settings.general.fullscreenHelp')} kw="fullscreen tela cheia f11">
+          <Sw id="st-full" label={t('settings.general.fullscreen')} checked={s.startFullscreen} onChange={(v) => run('settings.set', { startFullscreen: v })} />
         </Row>
       </Grp>
-      <Grp title="Meus presets">
-        <Row id="st-author" label="Seu nome nos presets" help="Aparece no crédito dos presets salvos no Estúdio. Vazio = “Eu”." kw="autor estúdio crédito nome">
+      <Grp title={t('settings.general.mine')}>
+        <Row id="st-author" label={t('settings.general.author')} help={t('settings.general.authorHelp', { me: t('credit.mine.defaultAuthor') })} kw="autor estúdio crédito nome author studio credit name">
           <input
             class="sel sel-w txt"
             id="st-author"
@@ -214,21 +241,21 @@ function Geral({ core, run }: { core: Core; run: Run }) {
             maxLength={60}
             autocomplete="off"
             spellcheck={false}
-            placeholder="Eu"
+            placeholder={t('credit.mine.defaultAuthor')}
             value={s.authorName ?? ''}
             onChange={(e) => run('settings.set', { authorName: (e.target as HTMLInputElement).value })}
           />
         </Row>
       </Grp>
-      <Grp title="Preset inicial">
-        <Row id="st-preset" label="Preset ao abrir">
+      <Grp title={t('settings.general.startPreset')}>
+        <Row id="st-preset" label={t('settings.general.presetOnOpen')} kw="startup inicial">
           <Sel<StartupPreset>
             id="st-preset"
             value={s.startupPreset}
             options={[
-              ['last', 'Último usado'],
-              ['random', 'Aleatório'],
-              ['favorite', 'Um favorito']
+              ['last', t('settings.general.preset.last')],
+              ['random', t('settings.general.preset.random')],
+              ['favorite', t('settings.general.preset.favorite')]
             ]}
             onChange={(v) => {
               const args: Record<string, unknown> = { startupPreset: v }
@@ -238,9 +265,9 @@ function Geral({ core, run }: { core: Core; run: Run }) {
             }}
           />
         </Row>
-        <Row id="st-fav" label="Favorito ao abrir" help="Usado quando o preset ao abrir é “Um favorito”.">
+        <Row id="st-fav" label={t('settings.general.favOnOpen')} help={t('settings.general.favOnOpenHelp')}>
           {favOptions.length === 0 ? (
-            <span class="phase">Nenhum favorito ainda</span>
+            <span class="phase">{t('settings.general.noFavorites')}</span>
           ) : (
             <Sel<string>
               id="st-fav"
@@ -285,11 +312,11 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
   const rate = `${fmtNum(info.sampleRate / 1000, 1)} kHz`
   return (
     <>
-      <div class="cap" data-search="captura saída padrão windows nível de entrada testar captura dispositivo">
+      <div class="cap" data-search={`${t('settings.capture.listening')} ${t('settings.capture.level')} ${t('settings.capture.test')} captura saída capture output device dispositivo`}>
         <div class="cap-top">
           <span class="dot" style={capture === 'ok' ? undefined : `background: var(${capture === 'denied' ? '--beat' : '--warn'})`} />
           <div>
-            <b>{capture === 'ok' ? 'Ouvindo a saída padrão do Windows' : capture === 'denied' ? 'A captura foi recusada' : 'Conectando à saída padrão do Windows…'}</b>
+            <b>{capture === 'ok' ? t('settings.capture.listening') : capture === 'denied' ? t('settings.capture.denied') : t('settings.capture.connecting')}</b>
             <span>
               {info.device ? `${info.device} · ` : ''}
               <span class="num">{rate}</span>
@@ -297,43 +324,43 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           </div>
         </div>
         <div class="cap-lvl">
-          <span>Nível de entrada</span>
-          <span role="img" aria-label="Nível de entrada ao vivo">
+          <span>{t('settings.capture.level')}</span>
+          <span role="img" aria-label={t('settings.capture.levelLive')}>
             <Meter core={core} />
           </span>
         </div>
         <div class="cap-test">
           <button class="btn sm" disabled={test === 'running' || capture !== 'ok'} onClick={runTest}>
-            Testar captura
+            {t('settings.capture.test')}
           </button>
           <span class={test === 'ok' ? 'testres done' : 'testres'} role="status">
-            {test === 'running' && 'Detectando som…'}
+            {test === 'running' && t('settings.capture.testing')}
             {test === 'ok' && (
               <>
                 <Icon name="check" small />
-                Som detectado
+                {t('settings.capture.testOk')}
               </>
             )}
-            {test === 'none' && 'Nenhum som em 3 s. Toque algo no computador e tente de novo.'}
+            {test === 'none' && t('settings.capture.testNone')}
           </span>
         </div>
       </div>
-      <Grp title="Entrada">
-        <Row id="st-device" label="Dispositivo de captura" help="Por enquanto o app ouve sempre a saída padrão do Windows." phase="Fase 3">
-          <Sel<string> id="st-device" value="default" options={[['default', 'Saída padrão do Windows']]} disabled onChange={() => {}} />
+      <Grp title={t('settings.capture.input')}>
+        <Row id="st-device" label={t('settings.capture.device')} help={t('settings.capture.deviceHelp')} phase={phase(3)} kw="device dispositivo">
+          <Sel<string> id="st-device" value="default" options={[['default', t('settings.capture.deviceDefault')]]} disabled onChange={() => {}} />
         </Row>
       </Grp>
-      <Grp title="Nível">
+      <Grp title={t('settings.capture.levelGroup')}>
         <Row
           id="st-autogain"
-          label="Normalizar áudio"
-          help={s.autoGain ? 'Iguala o volume entre faixas em alguns segundos, sem achatar a música. O ganho dos Ajustes rápidos vira ajuste fino de −6 a +6 dB.' : 'Iguala o volume entre faixas em alguns segundos, sem achatar a música. O som das caixas não muda.'}
-          kw="ganho automático agc volume nível normalizar"
+          label={t('quick.normalize')}
+          help={s.autoGain ? t('settings.capture.normalizeHelpOn') : t('settings.capture.normalizeHelpOff')}
+          kw="ganho automático agc volume nível normalizar auto gain level normalize"
         >
           {s.autoGain && <AutoGainReadout core={core} />}
-          <Sw id="st-autogain" checked={s.autoGain} label="Normalizar áudio" onChange={(value) => run('audio.autoGain', { value })} />
+          <Sw id="st-autogain" checked={s.autoGain} label={t('quick.normalize')} onChange={(value) => run('audio.autoGain', { value })} />
         </Row>
-        <Row id="st-gain" label="Ganho padrão" help="Aplicado ao abrir. Durante a música, use os Ajustes rápidos." kw="volume db">
+        <Row id="st-gain" label={t('settings.capture.gain')} help={t('settings.capture.gainHelp')} kw="volume db ganho gain">
           <Rng id="st-gain" value={s.gainDefaultDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(s.gainDefaultDb)} onInput={(v) => run('settings.set', { gainDefaultDb: v })} />
         </Row>
       </Grp>
@@ -345,7 +372,7 @@ function BlendRow({ core, run, target, label, help, available }: { core: Core; r
   const rule = core.state.settings.blend[target]
   const engineOnly = !available && rule.type !== 'cut' && rule.type !== 'random'
   return (
-    <Row id={`st-blend-${target}`} label={label} help={engineOnly ? `${help} Indisponível neste motor: o tipo é sorteado.` : help} kw="blend transição corte crossfade plasma" stack>
+    <Row id={`st-blend-${target}`} label={label} help={engineOnly ? `${help} ${t('quick.blendEngineOnly')}` : help} kw="blend transição transition corte cut crossfade plasma" stack>
       <Sel<BlendType>
         id={`st-blend-${target}`}
         value={rule.type}
@@ -367,27 +394,27 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
   const text = s.overlayText
   return (
     <>
-      <Grp title="Rotação">
-        <Row id="st-rot" label="Rotação automática" help="Troca de preset sozinha enquanto toca.">
-          <Sw id="st-rot" label="Rotação automática" checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
+      <Grp title={t('quick.rotation')}>
+        <Row id="st-rot" label={t('quick.autoRotation')} help={t('settings.visual.rotationHelp')} kw="rotação rotation">
+          <Sw id="st-rot" label={t('quick.autoRotation')} checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
         </Row>
-        <Row id="st-int" label="Intervalo" help="Tempo até o próximo preset.">
-          <Rng id="st-int" value={rot.intervalSeconds} min={5} max={120} step={5} text={`${rot.intervalSeconds} s`} disabled={!rot.enabled} onInput={(v) => run('rotation.set', { intervalSeconds: v })} />
+        <Row id="st-int" label={t('settings.visual.interval')} help={t('settings.visual.intervalHelp')}>
+          <Rng id="st-int" value={rot.intervalSeconds} min={5} max={120} step={5} text={fmtSeconds(rot.intervalSeconds)} disabled={!rot.enabled} onInput={(v) => run('rotation.set', { intervalSeconds: v })} />
         </Row>
-        <Row label="Ordem">
+        <Row label={t('settings.visual.order')}>
           <Seg<'random' | 'collection'>
             name="st-order"
-            label="Ordem"
+            label={t('settings.visual.order')}
             value={rot.order}
             options={[
-              ['random', 'Aleatória'],
-              ['collection', 'Coleção']
+              ['random', t('settings.visual.order.random')],
+              ['collection', t('settings.visual.order.collection')]
             ]}
             disabled={!rot.enabled || cols.length === 0}
             onChange={(order) => run('rotation.set', order === 'collection' && !rot.collectionId ? { order, collectionId: cols[0]!.id } : { order })}
           />
         </Row>
-        <Row id="st-col" label="Coleção" help={cols.length ? 'Usada quando a ordem é Coleção.' : 'Crie uma coleção na Biblioteca para usar esta ordem.'}>
+        <Row id="st-col" label={t('settings.visual.collection')} help={cols.length ? t('settings.visual.collectionHelp') : t('settings.visual.collectionNone')}>
           {cols.length > 0 && (
             <Sel<string>
               id="st-col"
@@ -399,64 +426,60 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           )}
         </Row>
       </Grp>
-      <Grp title="Transição">
-        <BlendRow core={core} run={run} target="auto" label="Na troca automática" help="Tipo e tempo da mistura quando a rotação troca o preset." available={bridge.blendTypesAvailable} />
-        <BlendRow core={core} run={run} target="manual" label="Quando você troca" help="Teclado, faixa, Biblioteca e busca. Shift na troca faz corte seco." available={bridge.blendTypesAvailable} />
-        <Row id="st-beat" label="Trocar no beat" help="Muda de preset quando detectar uma batida forte." kw="bpm compasso batida segurar">
-          <Sw id="st-beat" label="Trocar no beat" checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+      <Grp title={t('settings.visual.transition')}>
+        <BlendRow core={core} run={run} target="auto" label={t('quick.blendAuto')} help={t('settings.visual.blendAutoHelp')} available={bridge.blendTypesAvailable} />
+        <BlendRow core={core} run={run} target="manual" label={t('quick.blendManual')} help={t('settings.visual.blendManualHelp')} available={bridge.blendTypesAvailable} />
+        <Row id="st-beat" label={t('quick.onBeat')} help={t('settings.visual.onBeatHelp')} kw="bpm compasso batida segurar beat bar hold">
+          <Sw id="st-beat" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
         </Row>
-        <Row id="st-lead" label="Adiantar o visual" help="Compensa o atraso da captura e do desenho: a troca e o ponto de beat saem um pouco antes da batida detectada.">
-          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${rot.beatLeadMs} ms`} disabled={!rot.onBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
+        <Row id="st-lead" label={t('settings.visual.lead')} help={t('settings.visual.leadHelp')} kw="latência latency atraso delay">
+          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${fmtNum(rot.beatLeadMs)} ms`} disabled={!rot.onBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
         </Row>
-        <Row id="st-bars" label="Compassos" help="Com batida estável, troca a cada tantos compassos de 4 batidas. Sem batida, vale o intervalo em segundos.">
-          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compasso${b > 1 ? 's' : ''}`])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
+        <Row id="st-bars" label={t('settings.visual.bars')} help={t('settings.visual.barsHelp')} kw="compassos bars">
+          <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
       </Grp>
-      <Grp title="Texto sobre o visual">
-        <Row id="st-name" label="Nome do preset" help="Cartão com o nome e o autor que aparece a cada troca." kw="assinatura crédito">
+      <Grp title={t('quick.text')}>
+        <Row id="st-name" label={t('quick.presetName')} help={t('settings.visual.presetNameHelp')} kw="assinatura crédito credit name">
           <Sel<PresetNameMode>
             id="st-name"
             value={text.presetName}
             options={[
-              ['always', 'Sempre'],
-              ['manual', 'Só quando eu troco'],
-              ['never', 'Nunca']
+              ['always', t('quick.presetName.always')],
+              ['manual', t('quick.presetName.manual')],
+              ['never', t('quick.presetName.never')]
             ]}
             onChange={(presetName) => run('overlayText.set', { presetName })}
           />
         </Row>
-        <Row id="st-track" label="Título da faixa" help="Ao tocar um arquivo ou uma faixa do SoundCloud (Fase 3).">
-          <Sw id="st-track" label="Título da faixa" checked={text.trackTitle} onChange={(trackTitle) => run('overlayText.set', { trackTitle })} />
+        <Row id="st-track" label={t('quick.trackTitle')} help={t('settings.visual.trackTitleHelp')} kw="soundcloud track faixa">
+          <Sw id="st-track" label={t('quick.trackTitle')} checked={text.trackTitle} onChange={(trackTitle) => run('overlayText.set', { trackTitle })} />
         </Row>
-        <Row id="st-toasts" label="Avisos" help="Importantes: ações da IA e falhas. Painéis de erro aparecem sempre." kw="toast">
+        <Row id="st-toasts" label={t('quick.toasts')} help={t('settings.visual.toastsHelp')} kw="toast avisos notifications">
           <Sel<ToastMode>
             id="st-toasts"
             value={text.toasts}
             options={[
-              ['all', 'Todos'],
-              ['important', 'Só importantes'],
-              ['none', 'Nenhum']
+              ['all', t('quick.toasts.all')],
+              ['important', t('quick.toasts.important')],
+              ['none', t('quick.toasts.none')]
             ]}
             onChange={(toasts) => run('overlayText.set', { toasts })}
           />
         </Row>
         <Row
           id="st-clean"
-          label="Modo limpo"
-          help={
-            <>
-              Esconde tudo acima de uma vez, sem mudar estas escolhas. Atalho <kbd>T</kbd>.
-            </>
-          }
-          kw="esconde tudo atalho t"
+          label={t('quick.clean')}
+          help={withKey(t('settings.visual.cleanHelp'), 'T')}
+          kw={`${t('settings.visual.cleanHelp')} esconde tudo atalho hide clean t`}
         >
-          <Sw id="st-clean" label="Modo limpo" checked={text.clean} onChange={(clean) => run('overlayText.set', { clean })} />
+          <Sw id="st-clean" label={t('quick.clean')} checked={text.clean} onChange={(clean) => run('overlayText.set', { clean })} />
         </Row>
-        <Row label="Mostrar crédito do preset" help="O crédito do autor é sempre exibido." kw="autor">
-          <Sw id="st-credit" label="Mostrar crédito do preset" checked disabled />
+        <Row label={t('settings.visual.credit')} help={t('settings.visual.creditHelp')} kw="autor author">
+          <Sw id="st-credit" label={t('settings.visual.credit')} checked disabled />
         </Row>
-        <p class="note fixed" data-search="crédito do autor faixa de controle biblioteca">
-          O crédito do autor continua na faixa de controle e na Biblioteca.
+        <p class="note fixed" data-search={t('quick.creditNote')}>
+          {t('quick.creditNote')}
         </p>
       </Grp>
     </>
@@ -467,12 +490,12 @@ function Render({ core, run }: { core: Core; run: Run }) {
   const s = core.state.settings
   const r = s.render
   const par = (t: string) => <span class="num par">{t}</span>
-  const fpsOptions: [number | 'monitor', string][] = FPS_LIMITS.map((v) => [v, v === 'monitor' ? 'Sem limite' : `${v} fps`])
+  const fpsOptions: [number | 'monitor', string][] = FPS_LIMITS.map((v) => [v, v === 'monitor' ? t('settings.render.noLimit') : `${v} fps`])
   if (!FPS_LIMITS.includes(s.fpsLimit as 60)) fpsOptions.splice(-1, 0, [s.fpsLimit, `${s.fpsLimit} fps`])
   return (
     <>
-      <Grp title="Qualidade">
-        <Row id="st-mesh" label="Malha de distorção" help={<>Mais detalhe nas distorções do preset, mais custo de GPU. {par('meshWidth × meshHeight · setInternalMeshSize')}</>} kw="mesh malha">
+      <Grp title={t('settings.render.quality')}>
+        <Row id="st-mesh" label={t('settings.render.mesh')} help={<>{t('settings.render.meshHelp')} {par('meshWidth × meshHeight · setInternalMeshSize')}</>} kw={`${t('settings.render.meshHelp')} mesh malha`}>
           <Sel<string>
             id="st-mesh"
             value={`${r.meshWidth}x${r.meshHeight}`}
@@ -483,27 +506,27 @@ function Render({ core, run }: { core: Core; run: Run }) {
             }}
           />
         </Row>
-        <Row id="st-pr" label="Escala de pixels" help={<>Automático segue a densidade da tela. {par('pixelRatio')}</>} kw="pixel ratio dpi">
-          <Sel<PixelRatio> id="st-pr" value={r.pixelRatio} options={PIXEL_RATIOS.map((v) => [v, v === 'auto' ? 'Automático' : `${String(v).replace('.', ',')}×`])} onChange={(pixelRatio) => run('render.set', { pixelRatio })} />
+        <Row id="st-pr" label={t('settings.render.pixelRatio')} help={<>{t('settings.render.pixelRatioHelp')} {par('pixelRatio')}</>} kw="pixel ratio dpi">
+          <Sel<PixelRatio> id="st-pr" value={r.pixelRatio} options={PIXEL_RATIOS.map((v) => [v, v === 'auto' ? t('settings.render.auto') : `${fmtNum(v)}×`])} onChange={(pixelRatio) => run('render.set', { pixelRatio })} />
         </Row>
-        <Row label="Resolução das texturas" help={<>Menos pixels nas texturas internas, mais fps. {par('textureRatio')}</>} kw="textura">
-          <Seg<number> name="st-tex" label="Resolução das texturas" value={r.textureRatio} options={TEXTURE_RATIOS.map((v) => [v, String(v).replace('.', ',')])} onChange={(textureRatio) => run('render.set', { textureRatio })} />
+        <Row label={t('settings.render.texture')} help={<>{t('settings.render.textureHelp')} {par('textureRatio')}</>} kw="textura texture">
+          <Seg<number> name="st-tex" label={t('settings.render.texture')} value={r.textureRatio} options={TEXTURE_RATIOS.map((v) => [v, fmtNum(v)])} onChange={(textureRatio) => run('render.set', { textureRatio })} />
         </Row>
-        <Row id="st-fxaa" label="Suavização (FXAA)" help={<>Suaviza as bordas da imagem final. {par('outputFXAA · setOutputAA')}</>} kw="antialiasing fxaa">
-          <Sw id="st-fxaa" label="Suavização (FXAA)" checked={r.fxaa} onChange={(fxaa) => run('render.set', { fxaa })} />
+        <Row id="st-fxaa" label={t('settings.render.fxaa')} help={<>{t('settings.render.fxaaHelp')} {par('outputFXAA · setOutputAA')}</>} kw="antialiasing fxaa">
+          <Sw id="st-fxaa" label={t('settings.render.fxaa')} checked={r.fxaa} onChange={(fxaa) => run('render.set', { fxaa })} />
         </Row>
       </Grp>
-      <Grp title="Quadros e tamanho">
-        <Row id="st-fps" label="Limite de quadros" help="Teto de fps do visual. Sem limite segue a taxa do monitor." kw="fps hz">
+      <Grp title={t('settings.render.frames')}>
+        <Row id="st-fps" label={t('settings.render.fps')} help={t('settings.render.fpsHelp')} kw="fps hz">
           <Sel<number | 'monitor'> id="st-fps" value={s.fpsLimit} options={fpsOptions} onChange={(fpsLimit) => run('settings.set', { fpsLimit })} />
         </Row>
-        <Row label="Tamanho do canvas" help="Menos pixels, mais fps. Afeta só o visual." kw="resolução">
-          <Seg<number> name="st-canvas" label="Tamanho do canvas" value={r.canvasScale} options={CANVAS_SCALES.map((v) => [v, v === 1 ? 'Nativo' : `${v * 100}%`])} onChange={(canvasScale) => run('render.set', { canvasScale })} />
+        <Row label={t('settings.render.canvas')} help={t('settings.render.canvasHelp')} kw="resolução resolution canvas">
+          <Seg<number> name="st-canvas" label={t('settings.render.canvas')} value={r.canvasScale} options={CANVAS_SCALES.map((v) => [v, v === 1 ? t('settings.render.native') : `${fmtNum(v * 100)}%`])} onChange={(canvasScale) => run('render.set', { canvasScale })} />
         </Row>
       </Grp>
-      <Grp title="Texturas">
-        <Row id="st-img" label="Carregar pacote de imagens extras" help={<>Alguns presets usam essas imagens. Desligar vale na próxima abertura. {par('loadExtraImages')}</>} kw="imagens">
-          <Sw id="st-img" label="Carregar pacote de imagens extras" checked={r.extraImages} onChange={(extraImages) => run('render.set', { extraImages })} />
+      <Grp title={t('settings.render.textures')}>
+        <Row id="st-img" label={t('settings.render.images')} help={<>{t('settings.render.imagesHelp')} {par('loadExtraImages')}</>} kw="imagens images">
+          <Sw id="st-img" label={t('settings.render.images')} checked={r.extraImages} onChange={(extraImages) => run('render.set', { extraImages })} />
         </Row>
       </Grp>
     </>
@@ -516,41 +539,41 @@ function Desempenho({ core, run }: { core: Core; run: Run }) {
   const listRef = useRef<HTMLDivElement>(null)
   return (
     <>
-      <Grp title="Proteção">
-        <Row id="st-skip" label="Pular presets lentos" help="Avisa na faixa quando um preset fica abaixo do mínimo de fps, com “Pular e ocultar”." kw="lento pesado fps">
-          <Sw id="st-skip" label="Pular presets lentos" checked={perf.skipSlow} onChange={(skipSlow) => run('perf.set', { skipSlow })} />
+      <Grp title={t('settings.perf.protection')}>
+        <Row id="st-skip" label={t('settings.perf.skip')} help={t('settings.perf.skipHelp')} kw="lento pesado slow heavy fps">
+          <Sw id="st-skip" label={t('settings.perf.skip')} checked={perf.skipSlow} onChange={(skipSlow) => run('perf.set', { skipSlow })} />
         </Row>
-        <Row id="st-minfps" label="Mínimo de fps" help="Abaixo disso, o preset é marcado como pesado." kw="fps">
-          <Rng id="st-minfps" value={perf.minFps} min={15} max={60} step={5} text={`${perf.minFps} fps`} disabled={!perf.skipSlow} onInput={(minFps) => run('perf.set', { minFps })} />
+        <Row id="st-minfps" label={t('settings.perf.minFps')} help={t('settings.perf.minFpsHelp')} kw="fps">
+          <Rng id="st-minfps" value={perf.minFps} min={15} max={60} step={5} text={`${fmtNum(perf.minFps)} fps`} disabled={!perf.skipSlow} onInput={(minFps) => run('perf.set', { minFps })} />
         </Row>
       </Grp>
-      <Grp title="Ocultos por desempenho">
+      <Grp title={t('settings.perf.hidden')}>
         <div class="hlist" ref={listRef} tabIndex={-1}>
           {lib.hiddenPerf.length === 0 ? (
-            <p class="help" style="padding:14px 0" data-search="ocultos por desempenho">
-              Nenhum preset oculto por desempenho. Presets que ficarem abaixo do mínimo de fps aparecem aqui.
+            <p class="help" style="padding:14px 0" data-search={t('settings.perf.hidden')}>
+              {t('settings.perf.hiddenNone')}
             </p>
           ) : (
             lib.hiddenPerf.map((n) => {
               const { title, author } = splitPresetName(n)
               const fps = lib.presetFps[n]
               return (
-                <div class="row hrow" key={n} data-search={`${title} ${author} desempenho`}>
+                <div class="row hrow" key={n} data-search={`${title} ${author ?? ''} ${t('settings.perf.hidden')}`}>
                   <div class="txt">
                     <div class="nm">{title}</div>
-                    {author && <div class="by">por {author}</div>}
+                    {author && <div class="by">{t('credit.by', { author })}</div>}
                   </div>
                   <div class="ctl">
-                    {fps !== undefined && <span class="num count warn">{fps} fps</span>}
+                    {fps !== undefined && <span class="num count warn">{fmtNum(fps)} fps</span>}
                     <button
                       class="btn sm"
-                      aria-label={`Restaurar ${title}${author ? `, por ${author}` : ''}`}
+                      aria-label={restoreLabel(title, author)}
                       onClick={() => {
                         run('library.restore', { name: n, reason: 'performance' })
                         listRef.current?.focus()
                       }}
                     >
-                      Restaurar
+                      {t('settings.restore')}
                     </button>
                   </div>
                 </div>
@@ -559,9 +582,9 @@ function Desempenho({ core, run }: { core: Core; run: Run }) {
           )}
         </div>
       </Grp>
-      <Grp title="Faixa de controle">
-        <Row id="st-showfps" label="Mostrar fps na faixa" help="Exibe o valor ao vivo ao lado do nível de entrada." kw="fps">
-          <Sw id="st-showfps" label="Mostrar fps na faixa" checked={showFps} onChange={(v) => run('settings.set', { showFps: v })} />
+      <Grp title={t('settings.perf.strip')}>
+        <Row id="st-showfps" label={t('settings.perf.showFps')} help={t('settings.perf.showFpsHelp')} kw="fps">
+          <Sw id="st-showfps" label={t('settings.perf.showFps')} checked={showFps} onChange={(v) => run('settings.set', { showFps: v })} />
         </Row>
       </Grp>
     </>
@@ -581,29 +604,28 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
     if (!picked.files.length && !picked.tooBig.length) return
     setMilkBusy(true)
     try {
-      const r = await bridge.importMilk(picked.files, (done, total) => setMilk({ ok: true, text: `Importando… ${done}/${total}`, fails: [] }))
+      const r = await bridge.importMilk(picked.files, (done, total) => setMilk({ ok: true, text: t('settings.library.importing', { done, total }), fails: [] }))
       r.extra += picked.extra
-      for (const n of picked.tooBig) r.failed.push({ name: n.replace(/\.milk$/i, ''), reason: 'arquivo maior que 256 KB' })
+      for (const n of picked.tooBig) r.failed.push({ name: n.replace(/\.milk$/i, ''), reason: t('settings.library.tooBig') })
       setMilk({ ok: r.failed.length === 0, text: importSummary(r), fails: r.failed.map((f) => `${f.name}: ${f.reason}`) })
     } finally {
       setMilkBusy(false)
     }
   }
   const listRef = useRef<HTMLDivElement>(null)
-  const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
 
   const exportCollections = async (): Promise<void> => {
     const n = lib.collections.length
     const res = await window.so.collections.export(JSON.stringify({ version: 1, collections: lib.collections }, null, 2))
-    if (res.ok) setIo({ ok: true, text: `${plural(n, 'coleção exportada', 'coleções exportadas')} para ${res.name}.` })
-    else if (!res.canceled) setIo({ ok: false, text: 'Não foi possível salvar o arquivo. Tente de novo.' })
+    if (res.ok) setIo({ ok: true, text: tn('settings.library.exported', n, { file: res.name ?? t('settings.library.theFile') }) })
+    else if (!res.canceled) setIo({ ok: false, text: t('settings.library.saveFailed') })
   }
   const importCollections = async (): Promise<void> => {
     const res = await window.so.collections.import()
     if (res.canceled) return
-    const name = res.name ?? 'o arquivo'
+    const file = res.name ?? t('settings.library.theFile')
     if (!res.ok || res.text === undefined) {
-      setIo({ ok: false, text: `Não foi possível abrir ${name}. Tente de novo.` })
+      setIo({ ok: false, text: t('settings.library.openFailed', { file }) })
       return
     }
     let data: unknown
@@ -613,20 +635,20 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
       data = null
     }
     const r = core.run<number>('collection.import', { data }, 'ui')
-    if (r.ok) setIo({ ok: true, text: `${plural(r.value, 'coleção importada', 'coleções importadas')} de ${name}.` })
-    else setIo({ ok: false, text: `Não foi possível ler ${name}. Escolha um arquivo .json exportado pelo Sonic Obsidian.` })
+    if (r.ok) setIo({ ok: true, text: tn('settings.library.importedFrom', r.value, { file }) })
+    else setIo({ ok: false, text: t('settings.library.readFailed', { file }) })
   }
 
   return (
     <>
-      <Grp title="Pacotes">
-        <Row label="Base" help="butterchurn-presets e os pacotes extras que vêm com o app." kw="pacote presets">
-          <span class="count num">{bridge.presetCount() - bridge.importedCount()} presets</span>
+      <Grp title={t('settings.library.packs')}>
+        <Row label={t('settings.library.base')} help={t('settings.library.baseHelp')} kw="pacote pack presets">
+          <span class="count num">{tn('library.presets', bridge.presetCount() - bridge.importedCount())}</span>
         </Row>
-        <Row label="Importar presets .milk" help="Ou arraste arquivos .milk para a janela. Eles são convertidos e ficam marcados como importados." kw="milk arquivos importar importados">
-          {bridge.importedCount() > 0 && <span class="count num">{bridge.importedCount()} importados</span>}
+        <Row label={t('settings.library.importMilk')} help={t('settings.library.importMilkHelp')} kw="milk arquivos importar importados files import imported">
+          {bridge.importedCount() > 0 && <span class="count num">{tn('settings.library.imported', bridge.importedCount())}</span>}
           <button class="btn sm" disabled={milkBusy} onClick={() => void importMilk()}>
-            Escolher arquivos…
+            {t('settings.library.chooseFiles')}
           </button>
         </Row>
         {milk && (
@@ -639,43 +661,43 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
                   {milk.fails.slice(0, 10).map((f) => (
                     <li key={f}>{f}</li>
                   ))}
-                  {milk.fails.length > 10 && <li>e mais {milk.fails.length - 10} (detalhes no log)</li>}
+                  {milk.fails.length > 10 && <li>{t('settings.library.moreFails', { n: milk.fails.length - 10 })}</li>}
                 </ul>
               )}
             </span>
           </div>
         )}
       </Grp>
-      <Grp title="Presets ocultos">
-        <Row label="Presets ocultos" help="Escondidos por você com “Não mostrar mais”." kw="ocultos restaurar gerenciar">
-          <span class="count">{plural(lib.hidden.length, 'preset', 'presets')}</span>
+      <Grp title={t('settings.library.hidden')}>
+        <Row label={t('settings.library.hidden')} help={t('settings.library.hiddenHelp')} kw="ocultos restaurar gerenciar hidden restore manage">
+          <span class="count">{tn('library.presets', lib.hidden.length)}</span>
           <button class="btn sm" aria-expanded={open} onClick={() => setOpen(!open)}>
-            {open ? 'Fechar lista' : 'Gerenciar'}
+            {open ? t('settings.library.closeList') : t('settings.library.manage')}
           </button>
         </Row>
         {open && (
           <div class="hlist" ref={listRef} tabIndex={-1}>
             {lib.hidden.length === 0 ? (
-              <p class="lead-empty">Nenhum preset oculto. Use “Não mostrar mais” no menu de um preset para esconder.</p>
+              <p class="lead-empty">{t('settings.library.hiddenNone')}</p>
             ) : (
               lib.hidden.map((n) => {
                 const { title, author } = splitPresetName(n)
                 return (
-                  <div class="row hrow" key={n} data-search={`${title} ${author}`}>
+                  <div class="row hrow" key={n} data-search={`${title} ${author ?? ''}`}>
                     <div class="txt">
                       <div class="nm">{title}</div>
-                      {author && <div class="by">por {author}</div>}
+                      {author && <div class="by">{t('credit.by', { author })}</div>}
                     </div>
                     <div class="ctl">
                       <button
                         class="btn sm"
-                        aria-label={`Restaurar ${title}${author ? `, por ${author}` : ''}`}
+                        aria-label={restoreLabel(title, author)}
                         onClick={() => {
                           run('library.restore', { name: n, reason: 'user' })
                           listRef.current?.focus()
                         }}
                       >
-                        Restaurar
+                        {t('settings.restore')}
                       </button>
                     </div>
                   </div>
@@ -685,15 +707,15 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           </div>
         )}
       </Grp>
-      <Grp title="Coleções">
-        <Row label="Exportar e importar coleções" help="Arquivo .json com todas as suas coleções." kw="backup json" stack>
+      <Grp title={t('settings.library.collections')}>
+        <Row label={t('settings.library.io')} help={t('settings.library.ioHelp')} kw="backup json coleções collections" stack>
           <button class="btn sm" onClick={() => void exportCollections()} disabled={lib.collections.length === 0}>
             <Icon name="download" small />
-            Exportar coleções
+            {t('settings.library.export')}
           </button>
           <button class="btn sm" onClick={() => void importCollections()}>
             <Icon name="upload" small />
-            Importar coleções
+            {t('settings.library.import')}
           </button>
         </Row>
         {io && (
@@ -712,11 +734,11 @@ function Atalhos() {
     <>
       <div class="tbl">
         <table>
-          <caption class="vh">Atalhos de teclado</caption>
+          <caption class="vh">{t('settings.keys.caption')}</caption>
           <thead>
             <tr>
-              <th scope="col">Ação</th>
-              <th scope="col">Tecla</th>
+              <th scope="col">{t('settings.keys.action')}</th>
+              <th scope="col">{t('settings.keys.key')}</th>
             </tr>
           </thead>
           <tbody>
@@ -732,10 +754,10 @@ function Atalhos() {
         </table>
       </div>
       <div class="keys-foot">
-        <p class="note">Trocar uma tecla chega numa próxima versão.</p>
+        <p class="note">{t('settings.keys.rebindSoon')}</p>
         <button class="btn btn-ghost sm" disabled>
           <Icon name="rotate-ccw" small />
-          Restaurar padrões
+          {t('settings.keys.restoreDefaults')}
         </button>
       </div>
     </>
@@ -762,25 +784,25 @@ function Sobre() {
   )
   return (
     <>
-      <Grp title="Aplicativo">
-        <Row label="Sonic Obsidian" help="Versão" kw="versão">
+      <Grp title={t('settings.about.app')}>
+        <Row label="Sonic Obsidian" help={t('settings.about.version')} kw="versão version">
           <span class="count num">{version}</span>
         </Row>
-        <Row label="Plataforma" help="Electron, para Windows." />
-        <Row label="Motor do visual" help="Butterchurn, licença MIT." />
+        <Row label={t('settings.about.platform')} help={t('settings.about.platformHelp')} />
+        <Row label={t('settings.about.engine')} help={t('settings.about.engineHelp')} kw="engine motor" />
       </Grp>
-      <Grp title="Créditos">
+      <Grp title={t('settings.about.credits')}>
         <Row label="MilkDrop" help="Ryan Geiss" />
-        <Row label="Butterchurn" help="Jordan Berg e contribuidores" />
-        <Row label="Presets" help="Artistas da comunidade MilkDrop, creditados no nome de cada preset." kw="autores" />
-        <Row label="Licenças de terceiros" help="THIRD_PARTY_NOTICES.md, ao lado do app." kw="licença notices">
+        <Row label="Butterchurn" help={t('settings.about.butterchurnBy')} />
+        <Row label={t('settings.about.presets')} help={t('settings.about.presetsHelp')} kw="autores authors" />
+        <Row label={t('settings.about.licenses')} help={t('settings.about.licensesHelp')} kw="licença license notices">
           <button class="btn sm" onClick={() => void window.so.system.openNotices()}>
-            Abrir
+            {t('settings.about.open')}
           </button>
         </Row>
       </Grp>
-      <Grp title="Links">
-        <Row label="Repositório no GitHub" help={link('https://github.com/atempel/sonic-obsidian', 'github.com/atempel/sonic-obsidian')} kw="github" />
+      <Grp title={t('settings.about.links')}>
+        <Row label={t('settings.about.repo')} help={link('https://github.com/atempel/sonic-obsidian', 'github.com/atempel/sonic-obsidian')} kw="github" />
         <Row label="Butterchurn" help={link('https://github.com/jberg/butterchurn', 'github.com/jberg/butterchurn')} kw="github" />
         <Row label="Butterchurn Visualizer" help={link('https://butterchurnviz.com', 'butterchurnviz.com')} />
       </Grp>
@@ -845,17 +867,17 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
   useLayoutEffect(() => {
     const host = root.current
     if (!host) return
-    const q = norm(query)
+    const q = query.trim()
     const next: SectionId[] = []
     for (const sec of SECTIONS) {
       const panel = host.querySelector<HTMLElement>(`[data-panel="${sec.id}"]`)
       let hits = 0
       panel?.querySelectorAll<HTMLElement>('[data-search]').forEach((el) => {
-        const hit = q !== '' && norm(el.dataset.search ?? '').includes(q)
+        const hit = matches(el.dataset.search ?? '', q)
         el.classList.toggle('hit', hit)
         if (hit) hits++
       })
-      if (!q || hits > 0 || norm(sec.label).includes(q)) next.push(sec.id)
+      if (!q || hits > 0 || matches(t(sec.label), q)) next.push(sec.id)
     }
     setVisible((prev) => (prev.join() === next.join() ? prev : next))
     if (next.length && !next.includes(section)) setSection(next[0]!)
@@ -897,16 +919,16 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
     <div class="settings" ref={root} aria-hidden={!open} inert={!open} onKeyDown={onKey}>
       <div class="win" role="dialog" aria-modal="true" aria-labelledby="st-title">
         <div class="hd">
-          <h1 id="st-title">Configurações</h1>
+          <h1 id="st-title">{t('settings.title')}</h1>
           <span class={saved ? 'saved on' : 'saved'} role="status">
             {saved && (
               <>
                 <Icon name="check" small />
-                Salvo
+                {t('settings.saved')}
               </>
             )}
           </span>
-          <button class="ibtn" aria-label="Fechar" title="Fechar (Esc)" onClick={() => core.run('ui.close', {}, 'ui')}>
+          <button class="ibtn" aria-label={t('settings.close')} title={t('settings.closeTitle')} onClick={() => core.run('ui.close', {}, 'ui')}>
             <Icon name="x" />
           </button>
         </div>
@@ -915,25 +937,25 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
             <div class={query ? 'search has-val' : 'search'}>
               <Icon name="search" />
               <label class="vh" for="st-search">
-                Buscar configuração
+                {t('settings.search')}
               </label>
-              <input id="st-search" ref={search} type="search" placeholder="Buscar" autocomplete="off" spellcheck={false} value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
+              <input id="st-search" ref={search} type="search" placeholder={t('settings.searchPlaceholder')} autocomplete="off" spellcheck={false} value={query} onInput={(e) => setQuery((e.target as HTMLInputElement).value)} />
               <kbd>Ctrl+F</kbd>
             </div>
-            <select class="sel" id="secsel" aria-label="Seção" value={section} onChange={(e) => show((e.target as HTMLSelectElement).value as SectionId)}>
+            <select class="sel" id="secsel" aria-label={t('settings.sectionSelect')} value={section} onChange={(e) => show((e.target as HTMLSelectElement).value as SectionId)}>
               {SECTIONS.filter((s) => visible.includes(s.id)).map((s) => (
                 <option value={s.id} key={s.id}>
-                  {s.label}
+                  {t(s.label)}
                 </option>
               ))}
             </select>
-            <nav aria-label="Seções">
+            <nav aria-label={t('settings.sections')}>
               <ul id="navlist" ref={nav} onKeyDown={onNavKey}>
                 {SECTIONS.map((s) => (
                   <li key={s.id} hidden={!visible.includes(s.id)}>
                     <button data-sec={s.id} aria-current={s.id === section ? 'page' : undefined} tabIndex={s.id === section ? 0 : -1} onClick={() => show(s.id)}>
                       <Icon name={s.icon} />
-                      {s.label}
+                      {t(s.label)}
                     </button>
                   </li>
                 ))}
@@ -945,10 +967,8 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
             <div class="wrap">
               {empty && (
                 <div class="panel">
-                  <h2>Nada encontrado</h2>
-                  <p class="lead-empty">
-                    Nenhuma configuração corresponde a “{query.trim()}”. Tente outro termo, como “fps” ou “atalho”.
-                  </p>
+                  <h2>{t('settings.noMatch')}</h2>
+                  <p class="lead-empty">{t('settings.noMatchHint', { q: query.trim() })}</p>
                   <button
                     class="btn sm"
                     style="margin-top:16px"
@@ -957,14 +977,14 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
                       search.current?.focus()
                     }}
                   >
-                    Limpar busca
+                    {t('settings.clearSearch')}
                   </button>
                 </div>
               )}
               {SECTIONS.map((s) => (
                 <section class="panel" key={s.id} data-panel={s.id} hidden={empty || s.id !== current.id} aria-labelledby={`st-h-${s.id}`}>
-                  <h2 id={`st-h-${s.id}`}>{s.label}</h2>
-                  <p class="lead">{s.lead}</p>
+                  <h2 id={`st-h-${s.id}`}>{t(s.label)}</h2>
+                  <p class="lead">{t(s.lead)}</p>
                   {s.id === 'geral' && <Geral core={core} run={run} />}
                   {s.id === 'captura' && <Captura bridge={bridge} run={run} />}
                   {s.id === 'visual' && <Visual bridge={bridge} run={run} />}
