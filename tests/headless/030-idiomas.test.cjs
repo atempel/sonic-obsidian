@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados e Ajustes rápidos: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -66,6 +66,44 @@ async function checkSheet(page) {
 }
 const toastText = (page) => page.$eval('.gtoast span', e => e.textContent)
 
+// Biblioteca e busca: textos da interface, sem nomes/autores de preset (créditos) nem nomes de coleção.
+const libTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.lib, .lib *, .palette, .palette *')) {
+    if (el.closest('.tt, .r-title, .au, .r-author, .p-coll > span:first-child')) continue
+    for (const a of ['aria-label', 'title', 'placeholder']) {
+      const v = el.getAttribute(a)
+      if (v && !el.matches('.row-main, .r-btn, .crow, .lib .row .ibtn')) out.push(v)
+    }
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const clippedLib = () => [...document.querySelectorAll('.lib .brand, .lib .ltabs button, .lib .chips button, .lib .hiddenbar span, .lib .hiddenbar button, .lib .empty .h, .lib .newcoll, .palette .p-tabs button, .palette .p-foot span, .palette .r-hint')]
+  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+const libOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(library|palette)\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+// Abre a Biblioteca (Todos e Coleções) e a busca rápida com "flêxi" (sem acento no nome: a busca ignora acentos).
+async function checkLib(page) {
+  await page.mouse.click(640, 200); await page.keyboard.press('KeyL'); await page.waitForTimeout(500)
+  const tabs = await page.$$eval('.lib [role=tab]', (b) => b.map((e) => e.childNodes[0].textContent.trim()))
+  const chips = await page.$$eval('.lib .chips button', (b) => b.map((e) => e.textContent.trim()))
+  let texts = await page.evaluate(libTexts)
+  let cut = await page.evaluate(clippedLib)
+  await page.click('.lib [role=tab]:nth-of-type(4)'); await page.waitForTimeout(300)
+  texts = texts.concat(await page.evaluate(libTexts))
+  cut = cut.concat(await page.evaluate(clippedLib))
+  await page.click('.lib [role=tab]:nth-of-type(1)'); await page.waitForTimeout(200)
+  await page.keyboard.press('Escape'); await page.waitForTimeout(400)
+  await page.keyboard.press('Control+KeyK'); await page.waitForTimeout(500)
+  await page.keyboard.type('flêxi'); await page.waitForTimeout(300)
+  const hits = await page.$$eval('.palette .prow:not(.cmd)', (r) => r.length)
+  const marked = await page.$$eval('.palette .prow mark', (m) => m.map((e) => e.textContent))
+  texts = texts.concat(await page.evaluate(libTexts))
+  cut = cut.concat(await page.evaluate(clippedLib))
+  await page.keyboard.press('Escape'); await page.waitForTimeout(400)
+  return { tabs, chips, texts, cut, hits, marked }
+}
+
 const srv = H.serve(5230)
 ;(async () => {
   const b = await H.launch()
@@ -103,6 +141,15 @@ const srv = H.serve(5230)
   ok('3c Ajustes rápidos em English ("Quick settings", "4 bars")', qEn.title === 'Quick settings' && qEn.bars.includes('4 bars') && qEn.bars.includes('1 bar'), `${qEn.title} · ${qEn.bars.join(', ')}`)
   ok('3d Ajustes rápidos sem texto em português', qEn.texts.every(s => !ptQuick.some(p => hasWord(s, p))), qEn.texts.filter(s => ptQuick.some(p => hasWord(s, p))).join(' | '))
   ok('6e nada cortado nos Ajustes rápidos (en)', qEn.cut.length === 0, qEn.cut.join(' | '))
+  await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+
+  // Biblioteca e busca em English.
+  const lEn = await checkLib(page)
+  const ptLib = libOnly(pt, en)
+  ok('3g Biblioteca em English (abas e filtros)', lEn.tabs.join() === 'All,Favorites,Recent,Collections' && lEn.chips.join() === 'Imported,Mine', `${lEn.tabs} · ${lEn.chips}`)
+  ok('3h Biblioteca e busca sem texto em português', lEn.texts.every(s => !ptLib.some(p => hasWord(s, p))), lEn.texts.filter(s => ptLib.some(p => hasWord(s, p))).join(' | '))
+  ok('3i busca ignora acentos ("flêxi" acha Flexi, com destaque)', lEn.hits > 0 && lEn.marked.length > 0 && lEn.marked.every(m => m.toLowerCase() === 'flexi'), `${lEn.hits} · ${lEn.marked.slice(0, 3)}`)
+  ok('6g nada cortado na Biblioteca e na busca (en)', lEn.cut.length === 0, lEn.cut.join(' | '))
   await page.mouse.move(600, 380); await page.mouse.move(640, 400)
 
   // 2. Configurações › Geral › Idioma: no topo, ajuda do Automático, troca na hora.
@@ -144,6 +191,15 @@ const srv = H.serve(5230)
   ok('3e Ajustes rápidos em português ("Ajustes rápidos", "4 compassos")', qPt.title === 'Ajustes rápidos' && qPt.bars.includes('4 compassos') && qPt.bars.includes('1 compasso'), `${qPt.title} · ${qPt.bars.join(', ')}`)
   ok('3f Ajustes rápidos sem texto em inglês', qPt.texts.every(s => !enQuick.some(p => hasWord(s, p))), qPt.texts.filter(s => enQuick.some(p => hasWord(s, p))).join(' | '))
   ok('6f nada cortado nos Ajustes rápidos (pt-BR)', qPt.cut.length === 0, qPt.cut.join(' | '))
+
+  // Biblioteca e busca em pt-BR.
+  await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+  const lPt = await checkLib(page)
+  const enLib = libOnly(en, pt)
+  ok('3j Biblioteca em português (abas e filtros)', lPt.tabs.join() === 'Todos,Favoritos,Recentes,Coleções' && lPt.chips.join() === 'Importados,Meus', `${lPt.tabs} · ${lPt.chips}`)
+  ok('3k Biblioteca e busca sem texto em inglês', lPt.texts.every(s => !enLib.some(p => hasWord(s, p))), lPt.texts.filter(s => enLib.some(p => hasWord(s, p))).join(' | '))
+  ok('3l busca ignora acentos em pt-BR também', lPt.hits === lEn.hits && lPt.marked.length > 0, `${lPt.hits}`)
+  ok('6h nada cortado na Biblioteca e na busca (pt-BR)', lPt.cut.length === 0, lPt.cut.join(' | '))
   ok('sem erros na página', errs.length === 0, JSON.stringify(errs.slice(0, 5)))
 
   // 1. Windows em português (outra página) → pt-BR; idioma salvo em English vence o Windows.

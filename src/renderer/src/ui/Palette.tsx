@@ -2,11 +2,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/ho
 import type { Core } from '../core/commands'
 import { Highlight } from './Highlight'
 import { Icon } from './icons'
-import { TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data'
+import { TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
 import { matchCommands, runAction, type Command } from './shortcuts'
 import { showToast } from './toast'
-import { t } from '../i18n'
+import { fmtSeconds, t } from '../i18n'
 
 const MAX_RESULTS = 50
 
@@ -35,7 +35,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   }, [open])
 
   const items = tab === 'collections' ? [] : listFor(core, presets, allSet, tab, q.trim()).slice(0, MAX_RESULTS)
-  const cols = tab === 'collections' ? lib.collections.filter((c) => c.name.toLocaleLowerCase().includes(q.trim().toLocaleLowerCase())) : []
+  const cols = tab === 'collections' ? lib.collections.filter((c) => matches(c.name, q.trim())) : []
   // Comandos (spec 020): só na aba Todos e com texto, abaixo dos presets; Enter executa.
   const cmds = tab === 'all' ? matchCommands(q) : []
   const count = tab === 'collections' ? cols.length : items.length + cmds.length
@@ -90,7 +90,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
     } else if (e.key === 'Tab') {
       e.preventDefault()
       e.stopPropagation()
-      const i = TABS.findIndex((t) => t.id === tab)
+      const i = TABS.findIndex((x) => x.id === tab)
       setTab(TABS[(i + (e.shiftKey ? TABS.length - 1 : 1)) % TABS.length]!.id)
       setActive(0)
     } else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyF') {
@@ -103,14 +103,14 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   return (
     <>
       <div class="scrim p" onClick={close} />
-      <div class="palette" role="dialog" aria-modal="true" aria-label="Buscar presets" aria-hidden={!open} onKeyDown={onKey}>
+      <div class="palette" role="dialog" aria-modal="true" aria-label={t('palette.label')} aria-hidden={!open} onKeyDown={onKey}>
         <div class="p-search">
           <Icon name="search" />
           <input
             ref={input}
             type="text"
-            placeholder="Buscar preset ou autor"
-            aria-label="Buscar preset ou autor"
+            placeholder={t('library.search')}
+            aria-label={t('library.search')}
             value={q}
             tabIndex={open ? 0 : -1}
             onInput={(e) => {
@@ -120,25 +120,25 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
           />
           <kbd>Esc</kbd>
         </div>
-        <div class="p-tabs" role="tablist" aria-label="Seções da busca">
-          {TABS.map((t) => (
+        <div class="p-tabs" role="tablist" aria-label={t('palette.sections')}>
+          {TABS.map((x) => (
             <button
-              key={t.id}
+              key={x.id}
               role="tab"
-              aria-selected={tab === t.id}
+              aria-selected={tab === x.id}
               tabIndex={-1}
               onClick={() => {
-                setTab(t.id)
+                setTab(x.id)
                 setActive(0)
                 input.current?.focus()
               }}
             >
-              {t.label}
-              <span class="num">{counts[t.id]}</span>
+              {t(x.label)}
+              <span class="num">{counts[x.id]}</span>
             </button>
           ))}
         </div>
-        <div class="p-list" ref={listEl} role="listbox" aria-label="Resultados">
+        <div class="p-list" ref={listEl} role="listbox" aria-label={t('palette.results')}>
           {tab === 'collections'
             ? cols.map((c, i) => (
                 <button key={c.id} class={i === active ? 'p-coll active' : 'p-coll'} tabIndex={-1} onClick={() => playCollection(c.id, c.name)}>
@@ -146,12 +146,12 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                     {c.name}
                     <br />
                     <small>
-                      {presetsWord(c.presets.length)} · troca a cada {c.intervalSeconds} s
+                      {t('library.collectionMeta', { presets: presetsWord(c.presets.length), s: fmtSeconds(c.intervalSeconds) })}
                     </small>
                   </span>
                   <span class="btn btn-ghost">
                     <Icon name="play" small />
-                    Tocar
+                    {t('palette.play')}
                   </span>
                 </button>
               ))
@@ -169,13 +169,13 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                         </div>
                         {author && (
                           <div class="r-author">
-                            por <Highlight text={author} q={q.trim()} />
+                            {t('library.byPrefix')} <Highlight text={author} q={q.trim()} />
                           </div>
                         )}
                       </span>
                     </button>
-                    <span class="r-hint">Enter tocar</span>
-                    <button class="ibtn star" tabIndex={-1} aria-pressed={isFav} aria-label={isFav ? 'Desfavoritar' : 'Favoritar'} onClick={() => fav(name)}>
+                    <span class="r-hint">{t('palette.hintPlay')}</span>
+                    <button class="ibtn star" tabIndex={-1} aria-pressed={isFav} aria-label={t(isFav ? 'strip.unfavorite' : 'strip.favorite')} onClick={() => fav(name)}>
                       <Icon name="star" small />
                     </button>
                   </div>
@@ -183,7 +183,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
               })}
           {cmds.length > 0 && (
             <div class="p-grp" role="presentation">
-              Comandos
+              {t('palette.commands')}
             </div>
           )}
           {cmds.map((c, j) => {
@@ -198,7 +198,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                     <Highlight text={c.label} q={q.trim()} />
                   </span>
                 </button>
-                <span class="r-hint">Enter executar</span>
+                <span class="r-hint">{t('palette.hintRun')}</span>
                 <span class="k-keys">
                   {c.keys.map((k) => (
                     <kbd key={k}>{k}</kbd>
@@ -212,17 +212,17 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
         <div class="p-foot">
           <span>
             <kbd>↑</kbd>
-            <kbd>↓</kbd> navegar
+            <kbd>↓</kbd> {t('palette.footNavigate')}
           </span>
           <span>
-            <kbd>Enter</kbd> tocar
+            <kbd>Enter</kbd> {t('palette.footPlay')}
           </span>
           <span>
             <kbd>Ctrl</kbd>
-            <kbd>F</kbd> favoritar
+            <kbd>F</kbd> {t('palette.footFavorite')}
           </span>
           <span>
-            <kbd>Tab</kbd> trocar aba
+            <kbd>Tab</kbd> {t('palette.footTab')}
           </span>
         </div>
       </div>
@@ -234,20 +234,20 @@ function PaletteEmpty({ tab, q }: { tab: Tab; q: string }) {
   let h: string
   let s: string
   if (q) {
-    h = `Nenhum preset com “${q}”.`
-    s = 'Tente o nome de um autor, como Geiss ou Flexi.'
+    h = t('library.noMatch', { q })
+    s = t('library.noMatchHint')
   } else if (tab === 'favorites') {
-    h = 'Nenhum favorito ainda.'
-    s = 'Toque na estrela de um preset para guardá-lo aqui.'
+    h = t('library.noFavorites')
+    s = t('library.noFavoritesHint')
   } else if (tab === 'recents') {
-    h = 'Nada tocado ainda.'
-    s = 'Os presets que você tocar aparecem aqui.'
+    h = t('library.noRecents')
+    s = t('library.noRecentsHint')
   } else if (tab === 'collections') {
-    h = 'Nenhuma coleção ainda.'
-    s = 'Crie coleções na Biblioteca (L).'
+    h = t('library.noCollections')
+    s = t('palette.noCollectionsHint')
   } else {
-    h = 'Todos os presets estão ocultos.'
-    s = 'Restaure os ocultos na Biblioteca (L).'
+    h = t('library.allHidden')
+    s = t('palette.allHiddenHint')
   }
   return (
     <div class="p-empty">

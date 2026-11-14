@@ -44,6 +44,7 @@ export function applyLanguage(pref: LanguagePref): Lang {
   if (next !== lang) {
     lang = next
     cache.clear()
+    folds.clear()
     for (const fn of listeners) fn(lang)
   }
   if (typeof document !== 'undefined') document.documentElement.lang = lang
@@ -107,3 +108,46 @@ export const fmtSeconds = (s: number): string => `${fmtNum(s)} s`
 export function compareText(a: string, b: string): number {
   return cached('collator', () => new Intl.Collator(lang, { sensitivity: 'base', numeric: true })).compare(a, b)
 }
+
+// ── Busca sem acento nem caixa ("musica" acha "Música") ────────────
+interface Folded {
+  text: string
+  /** Índice no texto original de cada caractere de `text` (mais um no fim). */
+  at: number[]
+}
+const folds = new Map<string, Folded>()
+const foldChar = (c: string): string => c.normalize('NFD').replace(/\p{M}+/gu, '').toLocaleLowerCase(lang)
+
+function fold(s: string): Folded {
+  let f = folds.get(s)
+  if (f) return f
+  let text = ''
+  const at: number[] = []
+  let i = 0
+  for (const c of s) {
+    const x = foldChar(c)
+    for (let k = 0; k < x.length; k++) at.push(i)
+    text += x
+    i += c.length
+  }
+  at.push(i)
+  f = { text, at }
+  if (folds.size > 20000) folds.clear()
+  folds.set(s, f)
+  return f
+}
+
+/** Onde `q` aparece em `text`, ignorando acentos e caixa no idioma ativo: `[início, fim)` no texto original, ou `null`. */
+export function findText(text: string, q: string): [number, number] | null {
+  const nq = fold(q).text
+  if (!nq) return null
+  const f = fold(text)
+  const j = f.text.indexOf(nq)
+  if (j < 0) return null
+  const last = f.at[j + nq.length - 1]!
+  const cp = text.codePointAt(last) ?? 0
+  return [f.at[j]!, last + (cp > 0xffff ? 2 : 1)]
+}
+
+/** `text` contém `q`, ignorando acentos e caixa (busca vazia casa com tudo). */
+export const includesText = (text: string, q: string): boolean => !q.trim() || findText(text, q) !== null
