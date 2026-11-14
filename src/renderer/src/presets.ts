@@ -1,4 +1,5 @@
 import type { Preset } from 'butterchurn'
+import { compareText } from './i18n'
 
 /**
  * Biblioteca de presets: lista única ordenada por nome (o nome carrega o autor
@@ -143,8 +144,6 @@ export class PresetLibrary {
     for (const [name, preset] of Object.entries(map)) {
       if (!this.presets.has(name)) this.presets.set(name, preset)
     }
-    this.names = [...this.presets.keys()].sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true })
-    )
+    this.names = [...this.presets.keys()].sort(compareText)
   }
 }

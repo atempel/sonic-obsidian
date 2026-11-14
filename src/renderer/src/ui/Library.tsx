@@ -4,10 +4,10 @@ import type { Collection } from '../core/state'
 import { Highlight } from './Highlight'
 import { useSlideIndicator } from './slide-indicator'
 import { Icon } from './icons'
-import { COLLECTION_INTERVALS, TABS, listFor, presetsWord, thumbStyle, type Tab } from './library-data'
+import { COLLECTION_INTERVALS, TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
 import { showToast } from './toast'
-import { fmtSeconds, t } from '../i18n'
+import { fmtSeconds, t, tn } from '../i18n'
 
 /**
  * Biblioteca em gaveta (spec 010) — protótipo "Palco integrado" (`#lib`), versão 1794165177-f126.
@@ -65,16 +65,16 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
     if (!el) return
     el.querySelectorAll<HTMLElement>('.rows > li, .collist > li, .corder > li').forEach((li, i) => li.style.setProperty('--i', String(Math.min(i, 8))))
     el.classList.add('enter')
-    const t = window.setTimeout(() => el.classList.remove('enter'), 600)
-    return () => window.clearTimeout(t)
+    const timer = window.setTimeout(() => el.classList.remove('enter'), 600)
+    return () => window.clearTimeout(timer)
   }, [open])
 
   const close = (): void => void core.run('ui.close', {}, 'ui')
-  const selectTab = (t: Tab): void => {
-    setTab(t)
+  const selectTab = (next: Tab): void => {
+    setTab(next)
     setDetail(null)
     // Recentes é um retrato do momento em que a aba abre (como no protótipo).
-    if (t === 'recents') setRecents([...lib.recents])
+    if (next === 'recents') setRecents([...lib.recents])
   }
   const play = (name: string): void => void core.run('preset.play', { name }, 'ui')
   const fav = (name: string): void => {
@@ -97,7 +97,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   }
 
   const onTabKey = (e: KeyboardEvent): void => {
-    const i = TABS.findIndex((t) => t.id === tab)
+    const i = TABS.findIndex((x) => x.id === tab)
     let next = -1
     if (e.key === 'ArrowRight') next = (i + 1) % TABS.length
     else if (e.key === 'ArrowLeft') next = (i + TABS.length - 1) % TABS.length
@@ -126,17 +126,17 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   } else {
     const names =
       tab === 'recents'
-        ? recents.filter((n) => allSet.has(n) && !core.isHidden(n) && n.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
+        ? recents.filter((n) => allSet.has(n) && !core.isHidden(n) && matches(n, query))
         : listFor(core, presets, allSet, tab === 'collections' ? 'all' : tab, query).filter((n) => !(tab === 'all' && impOnly) || imports.is(n))
             .filter((n) => !(tab === 'all' && mineOnly) || imports.isMine(n))
     const chips =
       tab === 'all' && !detail ? (
         <div class="chips">
           <button aria-pressed={impOnly} onClick={() => setImpOnly(!impOnly)}>
-            Importados
+            {t('library.filterImported')}
           </button>
           <button aria-pressed={mineOnly} onClick={() => setMineOnly(!mineOnly)}>
-            Meus
+            {t('library.filterMine')}
           </button>
         </div>
       ) : null
@@ -147,14 +147,14 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
           {tab === 'all' && mineOnly && !query ? (
             <div class="empty">
               <Icon name="file-plus-2" />
-              <span class="h">Nenhum preset seu ainda.</span>
-              <span class="s">Aperte E no Palco para editar uma cópia do preset atual no Estúdio.</span>
+              <span class="h">{t('library.noMine')}</span>
+              <span class="s">{t('library.noMineHint')}</span>
             </div>
           ) : tab === 'all' && impOnly && !query ? (
             <div class="empty">
               <Icon name="file-plus-2" />
-              <span class="h">Nenhum preset importado.</span>
-              <span class="s">Arraste arquivos .milk para a janela para adicioná-los.</span>
+              <span class="h">{t('library.noImported')}</span>
+              <span class="s">{t('library.noImportedHint')}</span>
             </div>
           ) : (
             <LibEmpty tab={tab} q={query} allHidden={allHidden} onClear={() => setQ('')} onRestore={() => restoreHidden(core)} />
@@ -188,13 +188,13 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   return (
     <>
       <div class="lib-scrim" onClick={close} />
-      <aside class="lib" ref={panel} tabIndex={-1} aria-label="Biblioteca de presets" aria-hidden={!open} onKeyDown={onKey}>
+      <aside class="lib" ref={panel} tabIndex={-1} aria-label={t('library.label')} aria-hidden={!open} onKeyDown={onKey}>
         <div class="lib-head">
           <div class="brand">
             <Icon name="library" />
-            Biblioteca
+            {t('library.title')}
           </div>
-          <button class="ibtn" aria-label="Fechar biblioteca" title="Fechar (Esc ou L)" onClick={close}>
+          <button class="ibtn" aria-label={t('library.close')} title={t('library.closeTitle')} onClick={close}>
             <Icon name="x" />
           </button>
         </div>
@@ -205,8 +205,8 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
           <input
             ref={input}
             type="text"
-            placeholder="Buscar preset ou autor"
-            aria-label="Buscar preset ou autor"
+            placeholder={t('library.search')}
+            aria-label={t('library.search')}
             value={q}
             onInput={(e) => {
               const v = (e.target as HTMLInputElement).value
@@ -215,18 +215,18 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
             }}
           />
           {q ? (
-            <button class="ibtn clear" aria-label="Limpar busca" title="Limpar busca (Esc)" onClick={() => setQ('')}>
+            <button class="ibtn clear" aria-label={t('library.clearSearch')} title={t('library.clearSearchTitle')} onClick={() => setQ('')}>
               <Icon name="x" small />
             </button>
           ) : (
             <kbd>/</kbd>
           )}
         </div>
-        <div class="ltabs" ref={tabsRef} role="tablist" aria-label="Seções da biblioteca" onKeyDown={onTabKey}>
-          {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={tab === t.id} tabIndex={tab === t.id ? 0 : -1} onClick={() => selectTab(t.id)}>
-              {t.label}
-              {t.id !== 'collections' && <span class="num">{counts[t.id]}</span>}
+        <div class="ltabs" ref={tabsRef} role="tablist" aria-label={t('library.sections')} onKeyDown={onTabKey}>
+          {TABS.map((x) => (
+            <button key={x.id} role="tab" aria-selected={tab === x.id} tabIndex={tab === x.id ? 0 : -1} onClick={() => selectTab(x.id)}>
+              {t(x.label)}
+              {x.id !== 'collections' && <span class="num">{counts[x.id]}</span>}
             </button>
           ))}
           <i class="ind" aria-hidden="true" />
@@ -237,9 +237,9 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
         {hiddenCount > 0 && (
           <div class="hiddenbar">
             <Icon name="eye-off" small />
-            <span>{hiddenCount === 1 ? '1 oculto' : `${hiddenCount} ocultos`} ·</span>
+            <span>{tn('library.hidden', hiddenCount)} ·</span>
             <button class="btn btn-ghost" onClick={() => restoreHidden(core)}>
-              Restaurar
+              {t('library.restore')}
             </button>
           </div>
         )}
@@ -277,19 +277,19 @@ function PresetRow(props: { core: Core; name: string; q: string; imported: boole
             <span class="a">
               {author && (
                 <span class="au">
-                  por <Highlight text={author} q={q} />
+                  {t('library.byPrefix')} <Highlight text={author} q={q} />
                 </span>
               )}
-              {props.imported && <span class="imp-tag">Importado</span>}
-              {props.mine && <span class="imp-tag mine-tag">Meu preset</span>}
+              {props.imported && <span class="imp-tag">{t('library.tagImported')}</span>}
+              {props.mine && <span class="imp-tag mine-tag">{t('library.tagMine')}</span>}
             </span>
           )}
         </span>
       </button>
-      <button class="ibtn star" aria-pressed={isFav} aria-label={isFav ? `Desfavoritar ${title}` : `Favoritar ${title}`} onClick={props.onFav}>
+      <button class="ibtn star" aria-pressed={isFav} aria-label={t(isFav ? 'library.unfavorite' : 'library.favorite', { title })} onClick={props.onFav}>
         <Icon name="star" small />
       </button>
-      <button class="ibtn" aria-label={`Mais ações para ${title}`} aria-haspopup="menu" onClick={(e) => props.onMore(e.currentTarget as HTMLElement)}>
+      <button class="ibtn" aria-label={t('library.more', { title })} aria-haspopup="menu" onClick={(e) => props.onMore(e.currentTarget as HTMLElement)}>
         <Icon name="ellipsis" small />
       </button>
     </li>
@@ -333,7 +333,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
         <>
           <button role="menuitem" onClick={() => setMenu({ ...menu, sub: false })}>
             <Icon name="arrow-left" small />
-            <span class="grow">Voltar</span>
+            <span class="grow">{t('library.menu.back')}</span>
           </button>
           <hr />
           {cols.map((c) => (
@@ -351,14 +351,14 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
             }}
           >
             <Icon name="plus" small />
-            <span class="grow">Nova coleção</span>
+            <span class="grow">{t('library.newCollection')}</span>
           </button>
         </>
       ) : (
         <>
           <button role="menuitem" aria-haspopup="menu" onClick={() => setMenu({ ...menu, sub: true })}>
             <Icon name="folder-plus" small />
-            <span class="grow">Adicionar à coleção</span>
+            <span class="grow">{t('library.menu.addTo')}</span>
             <Icon name="chevron-right" small />
           </button>
           <button
@@ -369,7 +369,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
             }}
           >
             <Icon name="eye-off" small />
-            <span class="grow">Não mostrar mais</span>
+            <span class="grow">{t('library.menu.hide')}</span>
           </button>
           <button
             role="menuitem"
@@ -379,19 +379,19 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
             }}
           >
             <Icon name="pencil" small />
-            <span class="grow">{imports.isMine(menu.name) ? 'Editar no Estúdio' : 'Editar uma cópia no Estúdio'}</span>
+            <span class="grow">{t(imports.isMine(menu.name) ? 'library.menu.editMine' : 'library.menu.editCopy')}</span>
           </button>
           {imports.isMine(menu.name) && (
             <button
               role="menuitem"
               onClick={() => {
                 setMenu(null)
-                if (!window.confirm(`Remover "${menu.name}"? O preset some da biblioteca e do disco.`)) return
+                if (!window.confirm(t('library.menu.removeMineConfirm', { name: menu.name }))) return
                 void imports.removeMine(menu.name).then(() => say(t('toast.mineRemoved')))
               }}
             >
               <Icon name="trash-2" small />
-              <span class="grow">Remover meu preset</span>
+              <span class="grow">{t('library.menu.removeMine')}</span>
             </button>
           )}
           {imports.is(menu.name) && (
@@ -403,7 +403,7 @@ function RowMenu({ core, menu, setMenu, imports }: { core: Core; menu: MenuState
               }}
             >
               <Icon name="trash-2" small />
-              <span class="grow">Remover importado</span>
+              <span class="grow">{t('library.menu.removeImported')}</span>
             </button>
           )}
         </>
@@ -424,7 +424,7 @@ function Collections({ core, onOpen }: { core: Core; onOpen(id: string): void })
               <span class="meta" style="flex:1">
                 <span class="tt">{c.name}</span>
                 <span class="a">
-                  {presetsWord(c.presets.length)} · troca a cada {c.intervalSeconds} s
+                  {t('library.collectionMeta', { presets: presetsWord(c.presets.length), s: fmtSeconds(c.intervalSeconds) })}
                 </span>
               </span>
               <span class="chev">
@@ -437,8 +437,8 @@ function Collections({ core, onOpen }: { core: Core; onOpen(id: string): void })
       {collections.length === 0 && (
         <div class="empty">
           <Icon name="list-music" />
-          <span class="h">Nenhuma coleção ainda.</span>
-          <span class="s">Crie uma e adicione presets pelo menu de cada um.</span>
+          <span class="h">{t('library.noCollections')}</span>
+          <span class="s">{t('library.noCollectionsHint')}</span>
         </div>
       )}
       <button
@@ -449,7 +449,7 @@ function Collections({ core, onOpen }: { core: Core; onOpen(id: string): void })
         }}
       >
         <Icon name="plus" small />
-        Nova coleção
+        {t('library.newCollection')}
       </button>
     </>
   )
@@ -461,7 +461,7 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
   return (
     <>
       <div class="chead">
-        <button class="ibtn" aria-label="Voltar às coleções" title="Voltar às coleções (Esc)" onClick={onBack}>
+        <button class="ibtn" aria-label={t('library.backToCollections')} title={t('library.backToCollectionsTitle')} onClick={onBack}>
           <Icon name="arrow-left" />
         </button>
         <h2>{col.name}</h2>
@@ -475,10 +475,10 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
           }}
         >
           <Icon name="play" small />
-          Tocar coleção
+          {t('library.playCollection')}
         </button>
         <label class="ivl">
-          A cada
+          {t('library.every')}
           <select
             value={String(col.intervalSeconds)}
             onChange={(e) => {
@@ -488,7 +488,7 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
           >
             {intervals.map((s) => (
               <option key={s} value={String(s)}>
-                {s} s
+                {fmtSeconds(s)}
               </option>
             ))}
           </select>
@@ -497,8 +497,8 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
       {col.presets.length === 0 ? (
         <div class="empty">
           <Icon name="list-music" />
-          <span class="h">Esta coleção está vazia.</span>
-          <span class="s">No menu de um preset, escolha Adicionar à coleção.</span>
+          <span class="h">{t('library.collectionEmpty')}</span>
+          <span class="s">{t('library.collectionEmptyHint')}</span>
         </div>
       ) : (
         <ol class="corder">
@@ -520,17 +520,17 @@ function CollectionDetail({ core, col, allSet, onBack }: { core: Core; col: Coll
                 }}
               >
                 <button class="crow" title={name} disabled={missing} onClick={() => core.run('preset.play', { name }, 'ui')}>
-                  <span class="grip" title="Arraste para reordenar">
+                  <span class="grip" title={t('library.dragToReorder')}>
                     <Icon name="grip-vertical" small />
                   </span>
                   <span class="ord num">{i + 1}</span>
                   <i class="thumb" style={thumbStyle(name)} />
                   <span class="meta">
                     <span class="tt">{title}</span>
-                    {author && <span class="a">por {author}</span>}
+                    {author && <span class="a">{t('credit.by', { author })}</span>}
                   </span>
                 </button>
-                <button class="ibtn" aria-label={`Tirar ${title} da coleção`} title="Tirar da coleção" onClick={() => core.run('collection.remove', { id: col.id, name }, 'ui')}>
+                <button class="ibtn" aria-label={t('library.removeFromCollection', { title })} title={t('library.removeFromCollectionTitle')} onClick={() => core.run('collection.remove', { id: col.id, name }, 'ui')}>
                   <Icon name="x" small />
                 </button>
               </li>
@@ -548,10 +548,10 @@ function LibEmpty(props: { tab: Tab; q: string; allHidden: boolean; onClear(): v
     return (
       <div class="empty">
         <Icon name="search-x" />
-        <span class="h">Nenhum preset com “{q}”.</span>
-        <span class="s">Tente o nome de um autor, como Geiss ou Flexi.</span>
+        <span class="h">{t('library.noMatch', { q })}</span>
+        <span class="s">{t('library.noMatchHint')}</span>
         <button class="btn" onClick={props.onClear}>
-          Limpar busca
+          {t('library.clearSearch')}
         </button>
       </div>
     )
@@ -560,17 +560,17 @@ function LibEmpty(props: { tab: Tab; q: string; allHidden: boolean; onClear(): v
     return (
       <div class="empty">
         <Icon name="eye-off" />
-        <span class="h">Todos os presets estão ocultos.</span>
+        <span class="h">{t('library.allHidden')}</span>
         <button class="btn" onClick={props.onRestore}>
-          Restaurar ocultos
+          {t('library.restoreHidden')}
         </button>
       </div>
     )
   }
   const [h, s] =
     tab === 'favorites'
-      ? ['Nenhum favorito ainda.', 'Toque na estrela de um preset para guardá-lo aqui.']
-      : ['Nada tocado ainda.', 'Os presets que você tocar aparecem aqui.']
+      ? [t('library.noFavorites'), t('library.noFavoritesHint')]
+      : [t('library.noRecents'), t('library.noRecentsHint')]
   return (
     <div class="empty">
       <Icon name={tab === 'favorites' ? 'star' : 'audio-lines'} />

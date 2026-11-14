@@ -1,21 +1,20 @@
 import type { Core } from '../core/commands'
+import { includesText, tn, type MessageKey } from '../i18n'
 
 /** Busca rápida e Biblioteca leem os mesmos dados (spec 010). */
 export type Tab = 'all' | 'favorites' | 'recents' | 'collections'
 
-export const TABS: { id: Tab; label: string }[] = [
-  { id: 'all', label: 'Todos' },
-  { id: 'favorites', label: 'Favoritos' },
-  { id: 'recents', label: 'Recentes' },
-  { id: 'collections', label: 'Coleções' }
+export const TABS: { id: Tab; label: MessageKey }[] = [
+  { id: 'all', label: 'library.tab.all' },
+  { id: 'favorites', label: 'library.tab.favorites' },
+  { id: 'recents', label: 'library.tab.recents' },
+  { id: 'collections', label: 'library.tab.collections' }
 ]
 
 export const COLLECTION_INTERVALS = [15, 30, 45, 90]
 
-/** Filtro por trecho do nome completo (autor + título), sem diferenciar maiúsculas. */
-export function matches(name: string, q: string): boolean {
-  return !q || name.toLocaleLowerCase().includes(q.toLocaleLowerCase())
-}
+/** Filtro por trecho do nome completo (autor + título), sem diferenciar acentos nem maiúsculas (spec 030). */
+export const matches = (name: string, q: string): boolean => includesText(name, q)
 
 /** Presets visíveis (existentes e não ocultos) de uma lista de nomes, filtrados pela busca. */
 export function visible(core: Core, all: ReadonlySet<string>, names: readonly string[], q: string): string[] {
@@ -41,4 +40,4 @@ export function thumbStyle(name: string): string {
   return `background: radial-gradient(circle at 30% 35%, hsl(${h} 85% 55% / 0.9), transparent 60%), linear-gradient(135deg, hsl(${(h + 40) % 360} 70% 22%), hsl(${(h + 200) % 360} 60% 10%))`
 }
 
-export const presetsWord = (n: number): string => `${n} ${n === 1 ? 'preset' : 'presets'}`
+export const presetsWord = (n: number): string => tn('library.presets', n)

@@ -1,13 +1,15 @@
-/** Destaca o trecho buscado (`<mark>`), sem diferenciar maiúsculas. */
+import { findText } from '../i18n'
+
+/** Destaca o trecho buscado (`<mark>`), sem diferenciar acentos nem maiúsculas (spec 030). */
 export function Highlight({ text, q }: { text: string; q: string }) {
-  if (!q) return <>{text}</>
-  const i = text.toLocaleLowerCase().indexOf(q.toLocaleLowerCase())
-  if (i < 0) return <>{text}</>
+  const hit = q ? findText(text, q) : null
+  if (!hit) return <>{text}</>
+  const [i, j] = hit
   return (
     <>
       {text.slice(0, i)}
-      <mark>{text.slice(i, i + q.length)}</mark>
-      {text.slice(i + q.length)}
+      <mark>{text.slice(i, j)}</mark>
+      {text.slice(j)}
     </>
   )
 }
