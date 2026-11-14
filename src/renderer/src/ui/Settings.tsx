@@ -1,7 +1,7 @@
 import type { ComponentChildren } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import { KeyCaps, takeSettingsSection } from './ShortcutsPanel'
-import { SHORTCUT_GROUPS, keysText } from './shortcuts'
+import { SHORTCUT_GROUPS, rowText } from './shortcuts'
 import type { Core } from '../core/commands'
 import {
   BEAT_BARS,
@@ -743,8 +743,8 @@ function Atalhos() {
           </thead>
           <tbody>
             {SHORTCUT_GROUPS.flatMap((g) => g.rows).map((r) => (
-              <tr key={r.label} data-search={`${r.label} ${keysText(r.keys)}`}>
-                <th scope="row">{r.label}</th>
+              <tr key={r.label} data-search={rowText(r)}>
+                <th scope="row">{t(r.label)}</th>
                 <td>
                   <KeyCaps keys={r.keys} />
                 </td>
