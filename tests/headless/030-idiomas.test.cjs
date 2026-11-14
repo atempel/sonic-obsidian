@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -104,6 +104,47 @@ async function checkLib(page) {
   return { tabs, chips, texts, cut, hits, marked }
 }
 
+// Configurações: textos de todas as seções (rótulos, ajudas, opções, aria), sem nomes de preset/autor/coleção
+// e sem a tabela de atalhos (os rótulos dela vêm de shortcuts.ts, que migra com o painel `?`).
+const settingsTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.settings, .settings *')) {
+    if (el.closest('.settings .tbl tbody, .hrow .nm, .hrow .by, #st-col, #st-fav, .cap-top span span, .par, kbd')) continue
+    for (const a of ['aria-label', 'title', 'placeholder']) if (el.getAttribute(a) && !el.closest('.hrow')) out.push(el.getAttribute(a))
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const clippedSettings = () => [...document.querySelectorAll('.settings .lbl, .settings .help, .settings button, .settings h2, .settings h3, .settings .seg span, .settings .phase, .settings .count, .settings .testres')]
+  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+const settingsOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(settings|quick|credit)\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+// Percorre as seções pelo menu (com a lista de ocultos aberta e o teste de captura rodado) e devolve textos, cortados e nomes do menu.
+async function checkSettings(page) {
+  const nav = await page.$$eval('.settings nav button', (b) => b.map((e) => e.textContent.trim()))
+  let texts = [], cut = []
+  for (let i = 0; i < nav.length; i++) {
+    await page.click(`.settings nav li:nth-child(${i + 1}) button`); await page.waitForTimeout(120)
+    if (await page.isVisible('[data-panel="biblioteca"]')) {
+      const btn = page.locator('[data-panel="biblioteca"] button[aria-expanded]')
+      if ((await btn.getAttribute('aria-expanded')) !== 'true') await btn.click()
+      await page.waitForTimeout(100)
+    }
+    texts = texts.concat(await page.evaluate(settingsTexts))
+    cut = cut.concat(await page.evaluate(clippedSettings))
+  }
+  await page.click('.settings nav li:nth-child(1) button'); await page.waitForTimeout(100)
+  return { nav, texts, cut }
+}
+// Busca das Configurações: devolve as seções que sobram no menu.
+async function settingsSearch(page, q) {
+  await page.fill('#st-search', q); await page.waitForTimeout(200)
+  const vis = await page.$$eval('.settings nav li:not([hidden]) button', (b) => b.map((e) => e.textContent.trim()))
+  const hits = await page.$$eval('.settings .hit', (e) => e.length)
+  await page.fill('#st-search', ''); await page.waitForTimeout(100)
+  await page.click('.settings nav li:nth-child(1) button'); await page.waitForTimeout(100)
+  return { vis, hits }
+}
+
 const srv = H.serve(5230)
 ;(async () => {
   const b = await H.launch()
@@ -160,6 +201,19 @@ const srv = H.serve(5230)
   ok('2b ajuda do Automático cita o idioma do Windows', helpAuto === 'Now: English, the Windows language.', helpAuto)
   const clipEnSet = await page.evaluate(clipped)
   ok('6b nada cortado em Configurações › Geral (en)', clipEnSet.length === 0, clipEnSet.join(' | '))
+  // Configurações inteiras em English (passo 4 da migração).
+  const sEn = await checkSettings(page)
+  const ptSet = settingsOnly(pt, en)
+  ok('3m Configurações em English (menu)', sEn.nav.join() === 'General,Capture,Visual,Rendering,Performance,Library,Shortcuts,About', sEn.nav.join())
+  ok('3n Configurações sem texto em português', sEn.texts.every(s => !ptSet.some(p => hasWord(s, p))), sEn.texts.filter(s => ptSet.some(p => hasWord(s, p))).join(' | '))
+  ok('6i nada cortado nas Configurações (en)', sEn.cut.length === 0, sEn.cut.join(' | '))
+  const qGain = await settingsSearch(page, 'gain'), qGanho = await settingsSearch(page, 'ganho'), qNone = await settingsSearch(page, 'zzzz')
+  ok('2f busca das Configurações em English ("gain" acha Capture; "ganho" também)', qGain.vis.includes('Capture') && qGain.hits > 0 && qGanho.vis.includes('Capture'), `${qGain.vis} · ${qGanho.vis}`)
+  ok('2g busca sem resultado mostra "Nothing found"', qNone.vis.length === 0, qNone.vis.join())
+  await page.fill('#st-search', 'zzzz'); await page.waitForTimeout(150)
+  ok('2h estado vazio em English', (await page.textContent('.settings .wrap .panel:not([hidden]) h2')) === 'Nothing found')
+  await page.fill('#st-search', ''); await page.waitForTimeout(150)
+  await page.click('.settings nav li:nth-child(1) button'); await page.waitForTimeout(100)
   await page.selectOption('#st-lang', 'pt-BR'); await page.waitForTimeout(300)
   ok('2c a troca vale na hora (faixa em português)', (await page.getAttribute('.strip', 'aria-label')) === 'Controles do visual' && (await page.textContent('.rot span')) === 'Rotação')
   const lbl = await page.$eval('.settings [data-panel="geral"] .row .lbl', e => e.textContent)
@@ -170,6 +224,13 @@ const srv = H.serve(5230)
   ok('1c <html lang="pt-BR">', (await page.getAttribute('html', 'lang')) === 'pt-BR')
   const clipPtSet = await page.evaluate(clipped)
   ok('6c nada cortado em Configurações › Geral (pt-BR)', clipPtSet.length === 0, clipPtSet.join(' | '))
+  const sPt = await checkSettings(page)
+  const enSet = settingsOnly(en, pt)
+  ok('3o Configurações em português (menu)', sPt.nav.join() === 'Geral,Captura,Visual,Renderização,Desempenho,Biblioteca,Atalhos,Sobre', sPt.nav.join())
+  ok('3p Configurações sem texto em inglês (fora a tabela de atalhos)', sPt.texts.every(s => !enSet.some(p => hasWord(s, p))), sPt.texts.filter(s => enSet.some(p => hasWord(s, p))).join(' | '))
+  ok('6j nada cortado nas Configurações (pt-BR)', sPt.cut.length === 0, sPt.cut.join(' | '))
+  const qGanhoPt = await settingsSearch(page, 'ganho padrao')
+  ok('2i busca em pt-BR ignora acento ("ganho padrao" acha Captura)', qGanhoPt.vis.join() === 'Captura' && qGanhoPt.hits > 0, qGanhoPt.vis.join())
   await page.keyboard.press('Escape'); await page.waitForTimeout(400)
   await page.mouse.move(600, 380); await page.mouse.move(640, 400)
 

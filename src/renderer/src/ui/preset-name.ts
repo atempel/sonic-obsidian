@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 /**
  * Separa "Autor - Título" para exibir; o nome completo continua sendo a
  * identidade do preset e o crédito nunca é removido: sem separador, o nome
@@ -19,11 +20,11 @@ export function setMineLookup(fn: (name: string) => SoMineMeta | null): void {
   mineLookup = fn
 }
 
-/** "Alexandre · baseado em Star Ornament, por Zylot" (sem o "por" inicial, que a interface põe). */
+/** "Alexandre · based on Star Ornament, by Zylot" / "Alexandre · baseado em Star Ornament, por Zylot" (sem o "por" inicial, que a interface põe). */
 export function mineCredit(m: Pick<SoMineMeta, 'author' | 'basedOn'>): string {
-  const me = m.author || 'Eu'
+  const me = m.author || t('credit.mine.defaultAuthor')
   if (!m.basedOn) return me
   const i = m.basedOn.name.indexOf(' - ')
   const title = i > 0 ? m.basedOn.name.slice(i + 3).trim() || m.basedOn.name : m.basedOn.name
-  return `${me} · baseado em ${title}${m.basedOn.author ? `, por ${m.basedOn.author}` : ''}`
+  return m.basedOn.author ? t('credit.mine.basedOnBy', { me, title, author: m.basedOn.author }) : t('credit.mine.basedOn', { me, title })
 }
