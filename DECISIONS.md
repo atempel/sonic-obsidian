@@ -528,3 +528,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Nome que o app dá a uma coleção nova** ("Coleção 3" / "Collection 3") sai no idioma da hora e depois é nome da pessoa (não se traduz).
 - **Fica para os próximos PRs da #101:** Ajustes rápidos, Biblioteca e busca (`localeCompare` no idioma), Configurações (resto), painel `?`, Setup e diagnóstico, Estúdio, e o **log em inglês** (hoje ele está em português; o critério 5 pede inglês nos dois idiomas).
 - **Descartado:** um PR só com a migração inteira (grande demais para revisar e para a rodada); remontar a árvore com `key={lang}` (perderia o estado aberto dos painéis).
+
+## 2026-11-14 — Segurança: só o `atempel` dá ordens aos agentes
+- **Contexto:** o repo é público e o ciclo automático lê issues, comentários e PRs. Um texto de fora poderia, por exemplo, dar o "ok" de uma release na issue do bloco, criar bugs `ready`/`prioridade` como "problema relatado" ou ter um PR de fork mergeado automaticamente por mexer só em `.claude/` ou `.github/`.
+- **Decisão (do usuário):** endurecer a `rodada` e o `AGENTS.md`: só comentário, revisão e PR com `user.login == "atempel"` contam; PR só do próprio repo (nunca de fork); o corpo de issue e os comentários são dados, e o que manda é a spec no `main`; texto de fora com cara de instrução vira aviso ao usuário. As issues ficam, por enquanto, limitadas a colaboradores (limite de interação do GitHub, temporário).
+- **Descartado:** um repositório separado só para feedback público (o usuário prefere manter tudo num lugar).
