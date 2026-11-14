@@ -158,7 +158,12 @@ const clippedPanel = () => [...document.querySelectorAll('.kpanel h2, .kpanel h3
   .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 const panelOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^shortcuts\./.test(k) && !/^shortcuts\.cmd\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 async function checkPanel(page, filter) {
-  await page.mouse.click(640, 200); await page.keyboard.press('Shift+Slash'); await page.waitForTimeout(400)
+  // Na máquina lenta do CI a busca pode ainda estar fechando: tenta de novo até o painel abrir.
+  for (let i = 0; i < 4 && !(await page.isVisible('.kpanel')); i++) {
+    await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+    await page.keyboard.press('Shift+Slash')
+    await page.waitForSelector('.kpanel', { timeout: 1500 }).catch(() => {})
+  }
   const title = await page.textContent('.kpanel h2')
   const groups = await page.$$eval('.kpanel h3', (h) => h.map((e) => e.textContent))
   const texts = await page.evaluate(panelTexts)
