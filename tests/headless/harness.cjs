@@ -24,21 +24,22 @@ function launch() {
 // window.so simulado. `settings` e `library` são objetos serializáveis; `logs` (padrão true) guarda
 // window.__logs / window.__logT. window.__saves recebe cada library.save (ou, com saveSettings, cada settings.save).
 // `systemLanguage` = o idioma do Windows simulado (spec 030); pt-BR por padrão, porque os testes antigos conferem textos em português.
-async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = true, saveSettings = false, systemLanguage = 'pt-BR' } = {}) {
+// `testFlags` = o test-flags.json simulado (spec 012: captureFail, noWebgl2). window.__copied recebe cada system.copyText.
+async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = true, saveSettings = false, systemLanguage = 'pt-BR', testFlags = {} } = {}) {
   const lib = library || { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [] }
-  await page.addInitScript(({ settings, lib, logs, saveSettings, systemLanguage }) => {
-    window.__saves = []; window.__logs = []; window.__logT = []
+  await page.addInitScript(({ settings, lib, logs, saveSettings, systemLanguage, testFlags }) => {
+    window.__saves = []; window.__logs = []; window.__logT = []; window.__copied = []
     window.so = {
       settings: { load: async () => settings, save: async (d) => { if (saveSettings) window.__saves.push(JSON.parse(JSON.stringify(d))) } },
       library: { load: async () => lib, save: async (d) => { if (!saveSettings) window.__saves.push(JSON.parse(JSON.stringify(d))) } },
       window: { toggleFullScreen: async () => {}, minimize: async () => {}, close: async () => {} },
-      system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async () => {}, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false }) },
+      system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async (t) => { window.__copied.push(t) }, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false, ...testFlags }) },
       app: { version: async () => '0.5.0', systemLanguage: async () => systemLanguage },
       presets: { convertMilk: async () => ({ preset: {}, ms: 0 }), listImported: async () => [], saveImported: async () => {}, removeImported: async () => {}, pickMilk: async () => ({ files: [], tooBig: [], extra: 0 }), listMine: async () => [], saveMine: async () => ({ id: '0'.repeat(24), meta: {} }), removeMine: async () => {} },
       collections: { export: async () => ({ ok: true }), import: async () => ({ ok: false, canceled: true }) },
       log: (m) => { if (logs) { window.__logs.push(m); window.__logT.push([performance.now(), m]) } console.log('[so.log]', m) }, mark: () => {}, showLog: async () => {}
     }
-  }, { settings, lib, logs, saveSettings, systemLanguage })
+  }, { settings, lib, logs, saveSettings, systemLanguage, testFlags })
 }
 
 // getDisplayMedia simulado: bumbo sintético em `bpm` (buffer em loop: tempo exato).

@@ -1,6 +1,6 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
-import { LANGUAGE_PREFS, applyLanguage, t, type LanguagePref } from '../i18n'
+import { LANGUAGE_PREFS, applyLanguage, t, type LanguagePref, type MessageKey, type Msg } from '../i18n'
 import {
   cleanAuthor,
   BLEND_MAX_S,
@@ -77,11 +77,12 @@ export interface CoreEvents extends Record<string, unknown> {
 export type WaitKey = 'next' | 'previous' | 'random'
 
 export type CheckState = 'ok' | 'fail' | 'busy' | 'pending'
+/** Uma linha do diagnóstico de captura; os textos ficam como chave e se traduzem ao mostrar (spec 030). */
 export interface CaptureCheck {
-  label: string
+  label: MessageKey
   state: CheckState
-  detail: string
-  help?: string
+  detail: Msg
+  help?: MessageKey
 }
 
 export interface AppState {

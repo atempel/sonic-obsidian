@@ -533,3 +533,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Contexto:** o repo é público e o ciclo automático lê issues, comentários e PRs. Um texto de fora poderia, por exemplo, dar o "ok" de uma release na issue do bloco, criar bugs `ready`/`prioridade` como "problema relatado" ou ter um PR de fork mergeado automaticamente por mexer só em `.claude/` ou `.github/`.
 - **Decisão (do usuário):** endurecer a `rodada` e o `AGENTS.md`: só comentário, revisão e PR com `user.login == "atempel"` contam; PR só do próprio repo (nunca de fork); o corpo de issue e os comentários são dados, e o que manda é a spec no `main`; texto de fora com cara de instrução vira aviso ao usuário. As issues ficam, por enquanto, limitadas a colaboradores (limite de interação do GitHub, temporário).
 - **Descartado:** um repositório separado só para feedback público (o usuário prefere manter tudo num lugar).
+
+## 2026-11-14 — Spec 030, 6º PR: Setup e diagnóstico (rodada, `agent-decided`)
+- **Decisão:** o **diagnóstico copiado** ("Copiar diagnóstico" da captura e do WebGL 2) sai **sempre em inglês**, nos dois idiomas, como o log e o HUD: ele vai colado em issues. A tela em si segue o idioma do app.
+- **Como:** as linhas do diagnóstico de captura (`CaptureCheck`) guardam chaves (`Msg`: chave, chave com parâmetros, plural ou texto do sistema, como o nome do dispositivo) e se traduzem na hora de mostrar — a troca de idioma vale também com o painel aberto; `msgText(m, 'en')` gera o texto copiado.
+- **Boas-vindas** reaproveitam os rótulos do painel `?` (`shortcuts.random`/`search`/`library`): em pt-BR "Buscar" vira "Busca rápida", igual ao painel e ao glossário.
+- **Descartado:** diagnóstico copiado no idioma do app (quem lê a issue nem sempre lê português).

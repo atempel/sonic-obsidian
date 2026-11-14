@@ -58,11 +58,11 @@ export function onLanguage(fn: (l: Lang) => void): () => void {
 
 export type Params = Record<string, string | number>
 
-function fill(text: string, params?: Params): string {
+function fill(text: string, params?: Params, l: Lang = lang): string {
   if (!params) return text
   return text.replace(/\{(\w+)\}/g, (m, k: string) => {
     const v = params[k]
-    return v === undefined ? m : typeof v === 'number' ? fmtNum(v) : v
+    return v === undefined ? m : typeof v === 'number' ? (l === lang ? fmtNum(v) : new Intl.NumberFormat(l, { maximumFractionDigits: 2 }).format(v).replace(/-/g, '−')) : v
   })
 }
 
@@ -78,6 +78,22 @@ export function tn(base: PluralBase, n: number, params?: Params): string {
   const rule = pluralRules().select(n)
   const key = (rule === 'one' ? `${base}.one` : `${base}.other`) as MessageKey
   return t(key, { n, ...params })
+}
+
+/**
+ * Texto guardado como dado e traduzido só na hora de mostrar (a troca de idioma vale também para ele):
+ * uma chave, uma chave com parâmetros, um plural ou um texto que veio do sistema (nome do dispositivo).
+ */
+export type Msg = MessageKey | { key: MessageKey; params?: Params } | { plural: PluralBase; n: number; params?: Params } | { raw: string }
+
+/** O texto de uma `Msg` no idioma ativo, ou em `l` (o diagnóstico copiado sai sempre em inglês, como o log). */
+export function msgText(m: Msg, l: Lang = lang): string {
+  if (typeof m === 'string') return fill(catalogs[l][m] ?? en[m], undefined, l)
+  if ('raw' in m) return m.raw
+  if ('key' in m) return fill(catalogs[l][m.key] ?? en[m.key], m.params, l)
+  const rule = (l === lang ? pluralRules() : new Intl.PluralRules(l)).select(m.n)
+  const key = (rule === 'one' ? `${m.plural}.one` : `${m.plural}.other`) as MessageKey
+  return fill(catalogs[l][key] ?? en[key], { n: m.n, ...m.params }, l)
 }
 
 // ── Formatos ──────────────────────────────────────────────
