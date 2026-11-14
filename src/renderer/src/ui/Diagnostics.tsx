@@ -6,11 +6,13 @@ import { Icon } from './icons'
 import { openShortcuts } from './ShortcutsPanel'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
-import { t } from '../i18n'
+import { keyName } from './shortcuts'
+import { msgText, t, type MessageKey } from '../i18n'
 
 /**
  * Setup e diagnóstico (spec 012; protótipo "Setup" e "Palco integrado", design 1794178325-0fd0).
  * Superfícies não-modais: as teclas do visual continuam valendo enquanto aparecem.
+ * Textos pelo catálogo (spec 030); o diagnóstico copiado sai sempre em inglês, como o log, porque vai para issues.
  */
 
 // ── Esc fecha o cartão de boas-vindas e o aviso de silêncio antes de tudo ──
@@ -49,7 +51,7 @@ function useFloat(visible: boolean): { mounted: boolean; cls: string } {
 
 /** "Copiar diagnóstico" → "Copiado" por 2 s. */
 function CopyButton({ text, ghost = true }: { text: () => Promise<string>; ghost?: boolean }) {
-  const [label, setLabel] = useState('Copiar diagnóstico')
+  const [label, setLabel] = useState<MessageKey>('setup.copy')
   const timer = useRef(0)
   useEffect(() => () => window.clearTimeout(timer.current), [])
   return (
@@ -58,16 +60,16 @@ function CopyButton({ text, ghost = true }: { text: () => Promise<string>; ghost
       onClick={async () => {
         try {
           await window.so.system.copyText(await text())
-          setLabel('Copiado')
+          setLabel('setup.copied')
         } catch {
-          setLabel('Não foi possível copiar')
+          setLabel('setup.copyFailed')
         }
         window.clearTimeout(timer.current)
-        timer.current = window.setTimeout(() => setLabel('Copiar diagnóstico'), 2000)
+        timer.current = window.setTimeout(() => setLabel('setup.copy'), 2000)
       }}
     >
       <Icon name="copy" small />
-      <span role="status">{label}</span>
+      <span role="status">{t(label)}</span>
     </button>
   )
 }
@@ -87,32 +89,36 @@ export function WelcomeCard({ core }: { core: Core }) {
   useDismiss(() => (show ? (close(), true) : false))
   const { mounted, cls } = useFloat(show)
   if (!mounted) return null
+  // "Aperte {key} para ver…": a tecla vira <kbd> no lugar certo da frase em cada idioma.
+  const [hintBefore = '', hintAfter = ''] = t('setup.welcome.hint').split('{key}')
   return (
     <section class={`float card${cls}`} aria-labelledby="wTitle">
       <div class="head">
-        <h2 id="wTitle">Já está ouvindo o seu computador</h2>
+        <h2 id="wTitle">{t('setup.welcome.title')}</h2>
       </div>
-      <p class="body-text">Toque música em qualquer app e o visual reage. Nada para configurar.</p>
+      <p class="body-text">{t('setup.welcome.body')}</p>
       <ul class="shortcuts">
         <li>
-          <kbd>Espaço</kbd>
-          <span>Preset aleatório</span>
+          <kbd>{keyName('Space')}</kbd>
+          <span>{t('shortcuts.random')}</span>
         </li>
         <li>
           <kbd>/</kbd>
-          <span>Buscar</span>
+          <span>{t('shortcuts.search')}</span>
         </li>
         <li>
           <kbd>L</kbd>
-          <span>Biblioteca</span>
+          <span>{t('shortcuts.library')}</span>
         </li>
       </ul>
       <button type="button" class="k-hint" onClick={() => openShortcuts(core)}>
-        Aperte <kbd>?</kbd> para ver todos os atalhos
+        {hintBefore}
+        <kbd>?</kbd>
+        {hintAfter}
       </button>
       <div class="actions">
         <button class="btn btn-primary" onClick={close}>
-          Entendi
+          {t('setup.welcome.ok')}
         </button>
         <button
           class="btn btn-ghost"
@@ -121,7 +127,7 @@ export function WelcomeCard({ core }: { core: Core }) {
             core.run('ui.open', { overlay: 'settings' }, 'ui')
           }}
         >
-          Abrir configurações
+          {t('setup.welcome.settings')}
         </button>
       </div>
     </section>
@@ -159,13 +165,13 @@ export function SilenceNotice({ core }: { core: Core }) {
     <div class={`float notice${cls}`} role="status">
       <Icon name="volume-x" />
       <div class="txt">
-        <div class="t">Nenhum som chegando</div>
-        <div class="d">A captura está ligada. Toque algo ou confira se o som está saindo pela saída padrão do Windows.</div>
+        <div class="t">{t('setup.silence.title')}</div>
+        <div class="d">{t('setup.silence.body')}</div>
       </div>
       {testing ? (
         <div class="testing">
           <Meter core={core} />
-          <span class="num">{signal ? 'sinal' : 'sem sinal'}</span>
+          <span class="num">{t(signal ? 'setup.silence.signal' : 'setup.silence.noSignal')}</span>
         </div>
       ) : (
         <button
@@ -175,7 +181,7 @@ export function SilenceNotice({ core }: { core: Core }) {
             setTesting(true)
           }}
         >
-          Testar captura
+          {t('setup.silence.test')}
         </button>
       )}
     </div>
@@ -183,8 +189,9 @@ export function SilenceNotice({ core }: { core: Core }) {
 }
 
 // ── Captura falhou ───────────────────────────────────────────
-const STATE_LABEL: Record<CaptureCheck['state'], string> = { ok: 'Ok', fail: 'Falhou', busy: 'Verificando', pending: 'Pendente' }
-const STATE_TEXT: Record<CaptureCheck['state'], string> = { ok: 'ok', fail: 'falhou', busy: 'verificando', pending: 'não executado' }
+const STATE_LABEL: Record<CaptureCheck['state'], MessageKey> = { ok: 'setup.check.state.ok', fail: 'setup.check.state.fail', busy: 'setup.check.state.busy', pending: 'setup.check.state.pending' }
+/** Estado no diagnóstico copiado (sempre em inglês, como o log). */
+const STATE_TEXT: Record<CaptureCheck['state'], string> = { ok: 'ok', fail: 'failed', busy: 'checking', pending: 'not run' }
 
 export function CaptureDiag({ bridge }: { bridge: PalcoBridge }) {
   const { core } = bridge
@@ -214,29 +221,29 @@ export function CaptureDiag({ bridge }: { bridge: PalcoBridge }) {
   const diagText = async (): Promise<string> => {
     const version = await window.so.app.version().catch(() => '?')
     return [
-      `Sonic Obsidian ${version} — diagnóstico de captura`,
-      `Data: ${new Date().toISOString()}`,
-      'Fonte: Saída padrão do Windows',
-      ...checks.map((c) => `${c.label}: ${STATE_TEXT[c.state]} (${c.detail})${c.help ? ` — ${c.help}` : ''}`)
+      `Sonic Obsidian ${version} — capture diagnostics`,
+      `Date: ${new Date().toISOString()}`,
+      'Source: Windows default output',
+      ...checks.map((c) => `${msgText(c.label, 'en')}: ${STATE_TEXT[c.state]} (${msgText(c.detail, 'en')})${c.help ? ` — ${msgText(c.help, 'en')}` : ''}`)
     ].join('\n')
   }
   return (
     <section class={`float panel${cls}`} role="alert" aria-labelledby="dTitle">
       <div class="head">
         <Icon name="triangle-alert" />
-        <h2 id="dTitle">Não foi possível capturar o áudio</h2>
+        <h2 id="dTitle">{t('setup.capture.title')}</h2>
       </div>
       <ul class="checks">
         {checks.map((c) => (
           <li key={c.label}>
             <span class="st" data-s={c.state}>
               <Icon name={c.state === 'ok' ? 'check' : c.state === 'fail' ? 'x' : 'loader'} />
-              <span class="vh">{STATE_LABEL[c.state]}</span>
+              <span class="vh">{t(STATE_LABEL[c.state])}</span>
             </span>
             <div>
-              <div class="lbl">{c.label}</div>
-              <div class="det">{c.detail}</div>
-              {c.help && <div class="help">{c.help}</div>}
+              <div class="lbl">{t(c.label)}</div>
+              <div class="det">{msgText(c.detail)}</div>
+              {c.help && <div class="help">{t(c.help)}</div>}
             </div>
           </li>
         ))}
@@ -244,17 +251,17 @@ export function CaptureDiag({ bridge }: { bridge: PalcoBridge }) {
       <div class="actions">
         <button class="btn btn-primary" disabled={retrying} onClick={() => void retry()}>
           <Icon name="rotate-cw" small />
-          <span>Tentar de novo</span>
+          <span>{t('setup.capture.retry')}</span>
         </button>
         {/* Botões com borda: quando quebram linha, ficam alinhados pela caixa (o ghost parecia recuado). */}
         <CopyButton text={diagText} ghost={false} />
         <button class="btn" onClick={() => bridge.openSoundSettings()}>
-          Abrir configurações de som do Windows
+          {t('setup.capture.soundSettings')}
         </button>
         {okLine && (
           <span class="okline" role="status">
             <Icon name="check" />
-            Captura funcionando
+            {t('setup.capture.working')}
           </span>
         )}
       </div>
@@ -287,7 +294,8 @@ export function SlowChip({ core }: { core: Core }) {
 
 // ── WebGL 2 indisponível: o visual não existe, só este painel ──
 function WebglError() {
-  const [gpu, setGpu] = useState({ renderer: '', driver: '' })
+  // Vazio = ainda lendo; `null` = desconhecido (o texto sai no idioma do app, e em inglês no diagnóstico).
+  const [gpu, setGpu] = useState<{ renderer: string | null; driver: string | null; read: boolean }>({ renderer: null, driver: null, read: false })
   useEffect(() => {
     let renderer = ''
     try {
@@ -299,41 +307,40 @@ function WebglError() {
     }
     window.so.system
       .gpuInfo()
-      .then((g) => setGpu({ renderer: renderer || (g.ids ? `GPU ${g.ids}` : 'desconhecida'), driver: g.driver || 'desconhecido' }))
-      .catch(() => setGpu({ renderer: renderer || 'desconhecida', driver: 'desconhecido' }))
+      .then((g) => setGpu({ renderer: renderer || (g.ids ? `GPU ${g.ids}` : null), driver: g.driver || null, read: true }))
+      .catch(() => setGpu({ renderer: renderer || null, driver: null, read: true }))
   }, [])
   const diagText = async (): Promise<string> => {
     const version = await window.so.app.version().catch(() => '?')
     return [
-      `Sonic Obsidian ${version} — diagnóstico de vídeo`,
-      `Data: ${new Date().toISOString()}`,
-      `GPU: ${gpu.renderer}`,
-      `Driver: ${gpu.driver}`,
-      'WebGL 2: indisponível',
-      'Motor visual: Butterchurn (requer WebGL 2)'
+      `Sonic Obsidian ${version} — video diagnostics`,
+      `Date: ${new Date().toISOString()}`,
+      `GPU: ${gpu.renderer ?? 'unknown'}`,
+      `Driver: ${gpu.driver ?? 'unknown'}`,
+      'WebGL 2: unavailable',
+      'Visual engine: Butterchurn (requires WebGL 2)'
     ].join('\n')
   }
+  const shown = (v: string | null, unknown: MessageKey): string => (!gpu.read ? '…' : (v ?? t(unknown)))
   return (
     <section class="float panel gl in" role="alert" aria-labelledby="gTitle">
       <div class="big">
         <Icon name="monitor-x" />
       </div>
-      <h2 id="gTitle">Este computador não suporta WebGL 2</h2>
-      <p style="margin-top:8px">
-        O motor visual (Butterchurn) precisa de WebGL 2 para desenhar os presets. Normalmente isso se resolve atualizando o driver de vídeo.
-      </p>
+      <h2 id="gTitle">{t('setup.webgl.title')}</h2>
+      <p style="margin-top:8px">{t('setup.webgl.body')}</p>
       <details>
         <summary>
           <Icon name="chevron-right" />
-          Detalhes técnicos
+          {t('setup.webgl.details')}
         </summary>
         <dl class="tech">
           <dt>GPU</dt>
-          <dd class="num">{gpu.renderer || '…'}</dd>
+          <dd class="num">{shown(gpu.renderer, 'setup.webgl.unknownGpu')}</dd>
           <dt>Driver</dt>
-          <dd class="num">{gpu.driver || '…'}</dd>
+          <dd class="num">{shown(gpu.driver, 'setup.webgl.unknownDriver')}</dd>
           <dt>WebGL 2</dt>
-          <dd class="num bad">indisponível</dd>
+          <dd class="num bad">{t('setup.webgl.unavailable')}</dd>
         </dl>
       </details>
       <div class="actions">

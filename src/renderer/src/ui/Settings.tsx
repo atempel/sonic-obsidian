@@ -318,7 +318,7 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           <div>
             <b>{capture === 'ok' ? t('settings.capture.listening') : capture === 'denied' ? t('settings.capture.denied') : t('settings.capture.connecting')}</b>
             <span>
-              {info.device ? `${info.device} · ` : ''}
+              {info.device ? `${info.device} · ` : capture === 'ok' ? `${t('setup.check.defaultOutput')} · ` : ''}
               <span class="num">{rate}</span>
             </span>
           </div>

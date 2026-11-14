@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -181,6 +181,58 @@ async function checkPanel(page, filter) {
   return { title, groups, texts, cut, rows, empty, cmds }
 }
 
+
+// Setup e diagnóstico: boas-vindas, captura falhou, sem som, WebGL 2 (textos, cortados).
+const floatTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.float, .float *')) {
+    if (el.closest('.det.raw, dd.num')) continue
+    for (const a of ['aria-label', 'title']) if (el.getAttribute(a)) out.push(el.getAttribute(a))
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const clippedFloat = () => [...document.querySelectorAll('.float h2, .float .t, .float .lbl, .float .det, .float .help, .float button, .float kbd, .float summary, .float .okline')]
+  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+const setupOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^setup\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+// Abre o app com a captura recusada (test-flags) e a primeira abertura: boas-vindas + diagnóstico de captura.
+async function checkSetup(b, lang) {
+  const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
+  await H.mockSo(p, { systemLanguage: lang, settings: {}, testFlags: { captureFail: true } }); await H.mockAudio(p)
+  await p.goto('http://localhost:5230/')
+  await p.waitForSelector('.float.panel.in', { timeout: 30000, state: 'attached' })
+  await p.waitForSelector('.float.card.in', { timeout: 15000, state: 'attached' })
+  await p.waitForTimeout(300)
+  const welcome = await p.textContent('#wTitle')
+  const capture = await p.textContent('#dTitle')
+  const labels = await p.$$eval('.float.panel .lbl', (e) => e.map((x) => x.textContent))
+  const kbd = await p.$eval('.float.card .shortcuts kbd', (e) => e.textContent)
+  const texts = await p.evaluate(floatTexts)
+  const cut = await p.evaluate(clippedFloat)
+  await p.click('.float.panel .actions .btn:nth-child(2)'); await p.waitForTimeout(150)
+  const copiedLabel = await p.textContent('.float.panel .actions .btn:nth-child(2) span')
+  const copied = await p.evaluate(() => window.__copied.at(-1) || '')
+  await p.click('.float.panel .btn-primary'); await p.waitForTimeout(400)
+  const okLine = await p.textContent('.float.panel .okline').catch(() => '')
+  await p.close()
+  return { welcome, capture, labels, kbd, texts, cut, copiedLabel, copied, okLine }
+}
+async function checkWebgl(b, lang) {
+  const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
+  await H.mockSo(p, { systemLanguage: lang, testFlags: { noWebgl2: true } })
+  await p.goto('http://localhost:5230/')
+  await p.waitForSelector('#gTitle', { timeout: 30000 })
+  await p.click('.float.gl summary'); await p.waitForTimeout(200)
+  const title = await p.textContent('#gTitle')
+  const texts = await p.evaluate(floatTexts)
+  const cut = await p.evaluate(clippedFloat)
+  const bad = await p.textContent('.float.gl dd.bad')
+  await p.click('.float.gl .actions .btn'); await p.waitForTimeout(150)
+  const copied = await p.evaluate(() => window.__copied.at(-1) || '')
+  await p.close()
+  return { title, texts, cut, bad, copied }
+}
+
 const srv = H.serve(5230)
 ;(async () => {
   const b = await H.launch()
@@ -334,6 +386,42 @@ const srv = H.serve(5230)
   await p3.goto('http://localhost:5230/')
   await p3.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
   ok('1e Windows em português abre em pt-BR', (await p3.getAttribute('.strip', 'aria-label')) === 'Controles do visual')
+
+  const ptSetup = setupOnly(pt, en), enSetup = setupOnly(en, pt)
+  // Sem som por 10 s (pt-BR, a página do Windows em português): aviso, e a troca para English vale na hora.
+  await p3.evaluate(() => window.__audio('silence'))
+  await p3.bringToFront(); await p3.waitForSelector('.float.notice.in', { timeout: 20000, state: 'attached' })
+  const nPt = await p3.textContent('.float.notice .t')
+  await p3.click('.float.notice .btn'); await p3.waitForTimeout(200)
+  const sigPt = await p3.textContent('.float.notice .testing .num')
+  const cutSPt = await p3.evaluate(clippedFloat)
+  ok('7i "Nenhum som chegando" e "sem sinal" em português', nPt === 'Nenhum som chegando' && sigPt === 'sem sinal', `${nPt} · ${sigPt}`)
+  ok('6o nada cortado no aviso de silêncio (pt-BR)', cutSPt.length === 0, cutSPt.join(' | '))
+  await p3.keyboard.press('Control+Comma'); await p3.waitForTimeout(500)
+  await p3.selectOption('#st-lang', 'en'); await p3.waitForTimeout(300)
+  const nEn = await p3.textContent('.float.notice .t')
+  const nTexts = await p3.$$eval('.float.notice, .float.notice *', (els) => els.flatMap((e) => [...e.childNodes].filter((n) => n.nodeType === 3 && n.textContent.trim()).map((n) => n.textContent.trim())))
+  ok('7j a troca de idioma vale no aviso aberto ("No sound coming in")', nEn === 'No sound coming in' && nTexts.every(s => !ptSetup.some(p => hasWord(s, p))), `${nEn} · ${nTexts.join(' | ')}`)
+  await p3.close()
+  // Setup e diagnóstico (passo 6 da migração): primeira abertura com a captura recusada, nos dois idiomas.
+  const suEn = await checkSetup(b, 'en')
+  ok('7a boas-vindas e captura recusada em English', suEn.welcome === 'Already listening to your computer' && suEn.capture === "Couldn't capture the audio" && suEn.kbd === 'Space', `${suEn.welcome} · ${suEn.capture} · ${suEn.kbd}`)
+  ok('7b checagens em English', suEn.labels.join() === 'Default output found,System capture permission,Audio format,Signal test', suEn.labels.join())
+  ok('7c Setup sem texto em português', suEn.texts.every(s => !ptSetup.some(p => hasWord(s, p))), suEn.texts.filter(s => ptSetup.some(p => hasWord(s, p))).join(' | '))
+  ok('7d "Copied" e "Capture working" em English', suEn.copiedLabel === 'Copied' && /Capture working/.test(suEn.okLine), `${suEn.copiedLabel} · ${suEn.okLine}`)
+  ok('6m nada cortado no Setup (en)', suEn.cut.length === 0, suEn.cut.join(' | '))
+  const suPt = await checkSetup(b, 'pt-BR')
+  ok('7e boas-vindas e captura recusada em português', suPt.welcome === 'Já está ouvindo o seu computador' && suPt.capture === 'Não foi possível capturar o áudio' && suPt.kbd === 'Espaço', `${suPt.welcome} · ${suPt.capture} · ${suPt.kbd}`)
+  ok('7f Setup sem texto em inglês', suPt.texts.every(s => !enSetup.some(p => hasWord(s, p))), suPt.texts.filter(s => enSetup.some(p => hasWord(s, p))).join(' | '))
+  ok('7g "Copiado" e "Captura funcionando" em português', suPt.copiedLabel === 'Copiado' && /Captura funcionando/.test(suPt.okLine), `${suPt.copiedLabel} · ${suPt.okLine}`)
+  ok('6n nada cortado no Setup (pt-BR)', suPt.cut.length === 0, suPt.cut.join(' | '))
+  ok('7h diagnóstico copiado em inglês nos dois idiomas (vai para issues, como o log)', /capture diagnostics/.test(suPt.copied) && /System capture permission: failed \(Refused by Windows\)/.test(suPt.copied) && suPt.copied === suEn.copied.replace(/Date: .*/, suPt.copied.match(/Date: .*/)[0]), suPt.copied)
+  // WebGL 2 indisponível (test-flags), nos dois idiomas.
+  const glEn = await checkWebgl(b, 'en'), glPt = await checkWebgl(b, 'pt-BR')
+  ok('7k WebGL 2 em English', glEn.title === "This computer doesn't support WebGL 2" && glEn.bad === 'unavailable' && glEn.texts.every(s => !ptSetup.some(p => hasWord(s, p))), `${glEn.title} · ${glEn.bad}`)
+  ok('7l WebGL 2 em português', glPt.title === 'Este computador não suporta WebGL 2' && glPt.bad === 'indisponível' && glPt.texts.every(s => !enSetup.some(p => hasWord(s, p))), `${glPt.title} · ${glPt.bad}`)
+  ok('7m diagnóstico de vídeo copiado em inglês', /video diagnostics/.test(glPt.copied) && /WebGL 2: unavailable/.test(glPt.copied), glPt.copied)
+  ok('6p nada cortado no aviso de WebGL 2 (en e pt-BR)', glEn.cut.length === 0 && glPt.cut.length === 0, glEn.cut.concat(glPt.cut).join(' | '))
 
   const code = await R.finish()
   await b.close(); srv.close(); process.exit(code)

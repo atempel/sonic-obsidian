@@ -31,7 +31,7 @@ import { StudioCompiler } from './studio/compile'
 import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
-import { applyLanguage, fmtNum, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
+import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
@@ -197,7 +197,7 @@ async function start(): Promise<void> {
   let capturing = false
   // Flag de teste: a primeira tentativa falha como se o Windows recusasse; "Tentar de novo" é real.
   let simulateFail = testFlags.captureFail
-  const PERMISSION_HELP = 'Outro app pode estar usando a saída em modo exclusivo (ex.: players com WASAPI exclusivo).'
+  const PERMISSION_HELP = 'setup.check.exclusiveHelp'
   let checks: CaptureCheck[] = []
   const setCheck = (i: number, c: Partial<CaptureCheck>): void => {
     checks = checks.map((x, j) => (j === i ? { ...x, ...c } : x))
@@ -226,18 +226,18 @@ async function start(): Promise<void> {
     source?.disconnect()
     source = null
     checks = [
-      { label: 'Saída padrão encontrada', state: 'busy', detail: 'verificando…' },
-      { label: 'Permissão de captura do sistema', state: 'busy', detail: 'verificando…' },
-      { label: 'Formato de áudio', state: 'busy', detail: 'verificando…' },
-      { label: 'Teste de sinal', state: 'busy', detail: 'verificando…' }
+      { label: 'setup.check.output', state: 'busy', detail: 'setup.check.checking' },
+      { label: 'setup.check.permission', state: 'busy', detail: 'setup.check.checking' },
+      { label: 'setup.check.audioFormat', state: 'busy', detail: 'setup.check.checking' },
+      { label: 'setup.check.signal', state: 'busy', detail: 'setup.check.checking' }
     ]
     core.events.emit('captureChecks', { checks })
     try {
       // 1. Saída padrão: o Chromium lista a saída "default" do Windows.
       const outputs = await navigator.mediaDevices.enumerateDevices().catch(() => [] as MediaDeviceInfo[])
       const out = outputs.find((d) => d.kind === 'audiooutput' && d.deviceId === 'default') ?? outputs.find((d) => d.kind === 'audiooutput')
-      const outName = out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '') || 'Saída padrão do Windows'
-      setCheck(0, out ? { state: 'ok', detail: outName } : { state: 'fail', detail: 'Nenhuma saída de áudio encontrada' })
+      const outName = out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '') || ''
+      setCheck(0, out ? { state: 'ok', detail: outName ? { raw: outName } : 'setup.check.defaultOutput' } : { state: 'fail', detail: 'setup.check.noOutput' })
       // 2. Permissão (getDisplayMedia com loopback).
       let cap: Awaited<ReturnType<typeof captureSystemAudio>>
       try {
@@ -251,22 +251,23 @@ async function start(): Promise<void> {
         window.so.mark('captura')
         console.error('[capture] captura recusada ou indisponível', err)
         window.so.log(`captura recusada: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
-        setCheck(1, { state: 'fail', detail: 'Recusada pelo Windows', help: PERMISSION_HELP })
-        setCheck(2, { state: 'pending', detail: 'Aguardando a permissão' })
-        setCheck(3, { state: 'pending', detail: 'Aguardando a permissão' })
+        setCheck(1, { state: 'fail', detail: 'setup.check.denied', help: PERMISSION_HELP })
+        setCheck(2, { state: 'pending', detail: 'setup.check.waiting' })
+        setCheck(3, { state: 'pending', detail: 'setup.check.waiting' })
         state.audio = 'recusada'
         core.setCapture('denied')
         return false
       }
       const { stream, audioTrack } = cap
-      setCheck(1, { state: 'ok', detail: 'Concedida', help: undefined })
+      setCheck(1, { state: 'ok', detail: 'setup.check.granted', help: undefined })
       // A captura funcionou: a saída existe, mesmo que o sistema não a tenha listado.
-      if (checks[0]!.state !== 'ok') setCheck(0, { state: 'ok', detail: audioTrack.label || 'Saída padrão do Windows' })
+      if (checks[0]!.state !== 'ok') setCheck(0, { state: 'ok', detail: audioTrack.label ? { raw: audioTrack.label } : 'setup.check.defaultOutput' })
       // 3. Formato.
       const ts = audioTrack.getSettings()
+      // device vazio = a saída padrão (as Configurações dizem isso no idioma do app).
       captureInfo = { device: audioTrack.label || outName, sampleRate: ts.sampleRate ?? ctx.sampleRate }
-      const rate = `${fmtNum(captureInfo.sampleRate / 1000, 1)} kHz`
-      setCheck(2, { state: 'ok', detail: ts.channelCount ? `${rate}, ${ts.channelCount} canais` : rate })
+      const rate = Math.round(captureInfo.sampleRate / 100) / 10
+      setCheck(2, { state: 'ok', detail: ts.channelCount ? { plural: 'setup.check.channels', n: ts.channelCount, params: { rate } } : { key: 'setup.check.rate', params: { rate } } })
       const updateTrack = (): void => {
         state.audio = `${audioTrack.readyState}${audioTrack.muted ? ' (muted)' : ''}`
       }
@@ -279,7 +280,7 @@ async function start(): Promise<void> {
         window.so.log('captura: a track de áudio terminou')
         source?.disconnect()
         source = null
-        setCheck(1, { state: 'fail', detail: 'A captura parou', help: PERMISSION_HELP })
+        setCheck(1, { state: 'fail', detail: 'setup.check.stopped', help: PERMISSION_HELP })
         core.setCapture('denied')
       })
       source = ctx.createMediaStreamSource(stream)
@@ -288,7 +289,7 @@ async function start(): Promise<void> {
       core.setCapture('ok')
       // 4. Sinal: até 3 s; sem música, a captura funciona do mesmo jeito.
       const signal = await waitSignal(3000)
-      setCheck(3, signal ? { state: 'ok', detail: 'Sinal detectado' } : { state: 'pending', detail: 'Sem som agora: toque algo para testar' })
+      setCheck(3, signal ? { state: 'ok', detail: 'setup.check.signalFound' } : { state: 'pending', detail: 'setup.check.noSignal' })
       return true
     } finally {
       capturing = false
