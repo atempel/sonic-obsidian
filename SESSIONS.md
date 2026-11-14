@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-idiomas-ajustes`
+**Fez:** Passo 4 da `rodada`: #101 (030, `prioridade`) reivindicada de novo. 2º PR da 030: migração 2, **Ajustes rápidos** — 45 chaves `quick.*` em `en.ts`/`pt-BR.ts` (inglês do protótipo `1794607492-78f0`, Palco integrado › dicionário PT·EN), compassos com `tn()`, segundos e intervalos pelo `Intl` (`fmtFixed` novo no `i18n`; `secondsText` também serve às Configurações). Teste `030-idiomas` +6 itens (Ajustes em English e pt-BR: título, "4 bars"/"4 compassos", nenhum texto do outro idioma, nada cortado).
+**Deixou em:** PR aberto que **não** fecha a #101 (volta a `ready`). Falta: Biblioteca/busca, Configurações, painel `?`, Setup/diagnóstico, Estúdio, log em inglês, P1. O `028-normalizar` falhou uma vez na suíte completa (bumbo simulado sob carga) e passou sozinho — instável, não relacionado. Não verificado: o app empacotado no Windows (vai para o bloco v0.7.0).
+
 ### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-idiomas-base`
 **Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste, nada do usuário a responder): PR #103 (030, 1º PR: base de idiomas + faixa, toasts e estados) verde (`typecheck` + testes headless; `build-windows` pulado), com a tabela de critérios e "Testar no bloco" → mergeado com esta entrada. Não fecha a #101, que segue `ready` + `prioridade` no v0.7.0.
 **Deixou em:** fila do v0.7.0: #101 (030, próximos PRs: Ajustes rápidos, Biblioteca/busca, Configurações, painel `?`, Setup, Estúdio, log em inglês) → #69 → #73 → #94. Nada novo atribuído ao usuário. Não verificado nesta rodada: só merge, sem código novo.
