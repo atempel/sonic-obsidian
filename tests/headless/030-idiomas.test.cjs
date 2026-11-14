@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -104,12 +104,12 @@ async function checkLib(page) {
   return { tabs, chips, texts, cut, hits, marked }
 }
 
-// Configurações: textos de todas as seções (rótulos, ajudas, opções, aria), sem nomes de preset/autor/coleção
-// e sem a tabela de atalhos (os rótulos dela vêm de shortcuts.ts, que migra com o painel `?`).
+// Configurações: textos de todas as seções (rótulos, ajudas, opções, aria), sem nomes de preset/autor/coleção.
+// A tabela de atalhos entra (rótulos de shortcuts.ts); as teclas (`kbd`) não.
 const settingsTexts = () => {
   const out = []
   for (const el of document.querySelectorAll('.settings, .settings *')) {
-    if (el.closest('.settings .tbl tbody, .hrow .nm, .hrow .by, #st-col, #st-fav, .cap-top span span, .par, kbd')) continue
+    if (el.closest('.hrow .nm, .hrow .by, #st-col, #st-fav, .cap-top span span, .par, kbd')) continue
     for (const a of ['aria-label', 'title', 'placeholder']) if (el.getAttribute(a) && !el.closest('.hrow')) out.push(el.getAttribute(a))
     for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
   }
@@ -117,7 +117,7 @@ const settingsTexts = () => {
 }
 const clippedSettings = () => [...document.querySelectorAll('.settings .lbl, .settings .help, .settings button, .settings h2, .settings h3, .settings .seg span, .settings .phase, .settings .count, .settings .testres')]
   .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
-const settingsOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(settings|quick|credit)\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+const settingsOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(settings|quick|credit|shortcuts)\./.test(k) && !/^shortcuts\.(group|cmd|key|or$|title$|filter$|close|empty$|customize$|lib)/.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 // Percorre as seções pelo menu (com a lista de ocultos aberta e o teste de captura rodado) e devolve textos, cortados e nomes do menu.
 async function checkSettings(page) {
   const nav = await page.$$eval('.settings nav button', (b) => b.map((e) => e.textContent.trim()))
@@ -143,6 +143,42 @@ async function settingsSearch(page, q) {
   await page.fill('#st-search', ''); await page.waitForTimeout(100)
   await page.click('.settings nav li:nth-child(1) button'); await page.waitForTimeout(100)
   return { vis, hits }
+}
+
+// Painel `?`: textos (títulos, rótulos, aria, placeholder, teclas), cortados, o filtro e o estado vazio.
+const panelTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.kpanel, .kpanel *')) {
+    for (const a of ['aria-label', 'title', 'placeholder']) if (el.getAttribute(a)) out.push(el.getAttribute(a))
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const clippedPanel = () => [...document.querySelectorAll('.kpanel h2, .kpanel h3, .kpanel .k-row > span:first-child, .kpanel kbd, .kpanel .k-foot a, .kpanel input')]
+  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+const panelOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^shortcuts\./.test(k) && !/^shortcuts\.cmd\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+async function checkPanel(page, filter) {
+  // Na máquina lenta do CI a busca pode ainda estar fechando: tenta de novo até o painel abrir.
+  for (let i = 0; i < 4 && !(await page.isVisible('.kpanel')); i++) {
+    await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+    await page.keyboard.press('Shift+Slash')
+    await page.waitForSelector('.kpanel', { timeout: 1500 }).catch(() => {})
+  }
+  const title = await page.textContent('.kpanel h2')
+  const groups = await page.$$eval('.kpanel h3', (h) => h.map((e) => e.textContent))
+  const texts = await page.evaluate(panelTexts)
+  const cut = await page.evaluate(clippedPanel)
+  await page.fill('.kpanel input', filter); await page.waitForTimeout(200)
+  const rows = await page.$$eval('.kpanel .k-row', (r) => r.map((e) => e.innerText.replace(/\s+/g, ' ')))
+  await page.fill('.kpanel input', 'zzzz'); await page.waitForTimeout(150)
+  const empty = await page.textContent('.kpanel .k-empty')
+  await page.keyboard.press('Escape'); await page.waitForTimeout(300)
+  // Comandos da busca rápida.
+  await page.keyboard.press('Control+KeyK'); await page.waitForTimeout(400)
+  await page.keyboard.type(filter); await page.waitForTimeout(250)
+  const cmds = await page.$$eval('.palette .prow.cmd', (r) => r.map((e) => e.innerText.replace(/\s+/g, ' ')))
+  await page.keyboard.press('Escape'); await page.waitForTimeout(400)
+  return { title, groups, texts, cut, rows, empty, cmds }
 }
 
 const srv = H.serve(5230)
@@ -193,6 +229,17 @@ const srv = H.serve(5230)
   ok('6g nada cortado na Biblioteca e na busca (en)', lEn.cut.length === 0, lEn.cut.join(' | '))
   await page.mouse.move(600, 380); await page.mouse.move(640, 400)
 
+  // Painel `?` e comandos da busca em English ("space" acha o aleatório pela tecla traduzida).
+  const kEn = await checkPanel(page, 'space')
+  const ptPanel = panelOnly(pt, en)
+  ok('3q painel ? em English (título e grupos)', kEn.title === 'Shortcuts' && kEn.groups.join() === 'Now · Stage,Playback,Expressiveness,Navigation,Text and controls,Window,Diagnostics', `${kEn.title} · ${kEn.groups}`)
+  ok('3r painel ? sem texto em português', kEn.texts.every(s => !ptPanel.some(p => hasWord(s, p))), kEn.texts.filter(s => ptPanel.some(p => hasWord(s, p))).join(' | '))
+  ok('3s filtro "space" acha "Random preset" com a tecla Space', kEn.rows.some(r => r.startsWith('Random preset') && r.includes('Space')), kEn.rows.join(' | '))
+  ok('3t estado vazio do painel em English', kEn.empty === 'No shortcuts for “zzzz”.', kEn.empty)
+  ok('3u comandos da busca em English', kEn.cmds.some(c => c.includes('Random preset') && c.includes('Space')), kEn.cmds.join(' | '))
+  ok('6k nada cortado no painel ? (en)', kEn.cut.length === 0, kEn.cut.join(' | '))
+  await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+
   // 2. Configurações › Geral › Idioma: no topo, ajuda do Automático, troca na hora.
   await page.keyboard.press('Control+Comma'); await page.waitForTimeout(500)
   const first = await page.$eval('.settings [data-panel="geral"] .row .lbl', e => e.textContent)
@@ -227,7 +274,7 @@ const srv = H.serve(5230)
   const sPt = await checkSettings(page)
   const enSet = settingsOnly(en, pt)
   ok('3o Configurações em português (menu)', sPt.nav.join() === 'Geral,Captura,Visual,Renderização,Desempenho,Biblioteca,Atalhos,Sobre', sPt.nav.join())
-  ok('3p Configurações sem texto em inglês (fora a tabela de atalhos)', sPt.texts.every(s => !enSet.some(p => hasWord(s, p))), sPt.texts.filter(s => enSet.some(p => hasWord(s, p))).join(' | '))
+  ok('3p Configurações sem texto em inglês', sPt.texts.every(s => !enSet.some(p => hasWord(s, p))), sPt.texts.filter(s => enSet.some(p => hasWord(s, p))).join(' | '))
   ok('6j nada cortado nas Configurações (pt-BR)', sPt.cut.length === 0, sPt.cut.join(' | '))
   const qGanhoPt = await settingsSearch(page, 'ganho padrao')
   ok('2i busca em pt-BR ignora acento ("ganho padrao" acha Captura)', qGanhoPt.vis.join() === 'Captura' && qGanhoPt.hits > 0, qGanhoPt.vis.join())
@@ -261,6 +308,17 @@ const srv = H.serve(5230)
   ok('3k Biblioteca e busca sem texto em inglês', lPt.texts.every(s => !enLib.some(p => hasWord(s, p))), lPt.texts.filter(s => enLib.some(p => hasWord(s, p))).join(' | '))
   ok('3l busca ignora acentos em pt-BR também', lPt.hits === lEn.hits && lPt.marked.length > 0, `${lPt.hits}`)
   ok('6h nada cortado na Biblioteca e na busca (pt-BR)', lPt.cut.length === 0, lPt.cut.join(' | '))
+
+  // Painel `?` e comandos em pt-BR ("espaco" sem acento acha o aleatório).
+  await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+  const kPt = await checkPanel(page, 'espaco')
+  const enPanel = panelOnly(en, pt)
+  ok('3v painel ? em português (título e grupos)', kPt.title === 'Atalhos' && kPt.groups.join() === 'Agora · Palco,Reprodução,Expressividade,Navegação,Texto e controles,Janela,Diagnóstico', `${kPt.title} · ${kPt.groups}`)
+  ok('3w painel ? sem texto em inglês', kPt.texts.every(s => !enPanel.some(p => hasWord(s, p))), kPt.texts.filter(s => enPanel.some(p => hasWord(s, p))).join(' | '))
+  ok('3x filtro "espaco" acha "Preset aleatório" com a tecla Espaço', kPt.rows.some(r => r.startsWith('Preset aleatório') && r.includes('Espaço')), kPt.rows.join(' | '))
+  ok('3y estado vazio do painel em português', kPt.empty === 'Nenhum atalho para “zzzz”.', kPt.empty)
+  ok('3z comandos da busca em português', kPt.cmds.some(c => c.includes('Preset aleatório') && c.includes('Espaço')), kPt.cmds.join(' | '))
+  ok('6l nada cortado no painel ? (pt-BR)', kPt.cut.length === 0, kPt.cut.join(' | '))
   ok('sem erros na página', errs.length === 0, JSON.stringify(errs.slice(0, 5)))
 
   // 1. Windows em português (outra página) → pt-BR; idioma salvo em English vence o Windows.

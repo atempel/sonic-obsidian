@@ -4,7 +4,7 @@ import { Highlight } from './Highlight'
 import { Icon } from './icons'
 import { TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
-import { matchCommands, runAction, type Command } from './shortcuts'
+import { keyName, matchCommands, runAction, type Command } from './shortcuts'
 import { showToast } from './toast'
 import { fmtSeconds, t } from '../i18n'
 
@@ -195,13 +195,13 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                     <Icon name={c.icon} />
                   </span>
                   <span class="r-title">
-                    <Highlight text={c.label} q={q.trim()} />
+                    <Highlight text={t(c.label)} q={q.trim()} />
                   </span>
                 </button>
                 <span class="r-hint">{t('palette.hintRun')}</span>
                 <span class="k-keys">
                   {c.keys.map((k) => (
-                    <kbd key={k}>{k}</kbd>
+                    <kbd key={k}>{keyName(k)}</kbd>
                   ))}
                 </span>
               </div>

@@ -3,98 +3,102 @@
  * grupo "Comandos" da busca rápida leem daqui. Só teclas que existem no app: tecla nova no
  * `keydown` de `main.ts` entra também nesta lista.
  */
+import { includesText, t, type MessageKey } from '../i18n'
 import type { IconName } from './icons'
 
-/** Alternativas de uma ação; cada alternativa é uma sequência de teclas (um `kbd` por tecla). */
+/**
+ * Alternativas de uma ação; cada alternativa é uma sequência de teclas (um `kbd` por tecla).
+ * Teclas com nome traduzível ficam aqui em inglês (`Space`) e saem pelo `keyName`.
+ */
 export type Keys = string[][]
 export interface ShortcutRow {
-  label: string
+  label: MessageKey
   keys: Keys
 }
 export interface ShortcutGroup {
-  name: string
+  name: MessageKey
   rows: ShortcutRow[]
   now?: boolean
 }
 
 export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
-    name: 'Reprodução',
+    name: 'shortcuts.group.playback',
     rows: [
-      { label: 'Preset aleatório', keys: [['Espaço']] },
-      { label: 'Preset anterior', keys: [['←']] },
-      { label: 'Próximo preset', keys: [['→']] },
-      { label: 'Trocar com corte seco', keys: [['Shift', '←'], ['Shift', '→'], ['Shift', 'Espaço']] },
-      { label: 'Tipo da transição', keys: [['B'], ['Shift', 'B']] },
-      { label: 'Tempo da transição', keys: [['↑'], ['↓']] },
-      { label: 'Rotação automática', keys: [['R']] },
-      { label: 'Segurar visual', keys: [['Enter']] },
-      { label: 'Respiro (visual sem áudio)', keys: [['Shift', 'Enter']] }
+      { label: 'shortcuts.random', keys: [['Space']] },
+      { label: 'shortcuts.previous', keys: [['←']] },
+      { label: 'shortcuts.next', keys: [['→']] },
+      { label: 'shortcuts.hardCut', keys: [['Shift', '←'], ['Shift', '→'], ['Shift', 'Space']] },
+      { label: 'shortcuts.blendType', keys: [['B'], ['Shift', 'B']] },
+      { label: 'shortcuts.blendTime', keys: [['↑'], ['↓']] },
+      { label: 'shortcuts.rotation', keys: [['R']] },
+      { label: 'shortcuts.hold', keys: [['Enter']] },
+      { label: 'shortcuts.breath', keys: [['Shift', 'Enter']] }
     ]
   },
   {
-    name: 'Expressividade',
+    name: 'shortcuts.group.expression',
     rows: [
-      { label: 'Mais ou menos expressividade', keys: [['+'], ['−']] },
-      { label: 'Expressividade neutra', keys: [['0']] },
-      { label: 'Caráter da reação', keys: [['X']] },
-      { label: 'Memória da reação', keys: [['Shift', 'X']] }
+      { label: 'shortcuts.expressionMoreLess', keys: [['+'], ['−']] },
+      { label: 'shortcuts.expressionNeutral', keys: [['0']] },
+      { label: 'shortcuts.character', keys: [['X']] },
+      { label: 'shortcuts.memory', keys: [['Shift', 'X']] }
     ]
   },
   {
-    name: 'Navegação',
+    name: 'shortcuts.group.navigation',
     rows: [
-      { label: 'Busca rápida', keys: [['/'], ['Ctrl', 'K']] },
-      { label: 'Biblioteca', keys: [['L']] },
-      { label: 'Ajustes rápidos', keys: [[',']] },
-      { label: 'Configurações', keys: [['Ctrl', ',']] },
-      { label: 'Abrir o Estúdio', keys: [['E']] }
+      { label: 'shortcuts.search', keys: [['/'], ['Ctrl', 'K']] },
+      { label: 'shortcuts.library', keys: [['L']] },
+      { label: 'shortcuts.quick', keys: [[',']] },
+      { label: 'shortcuts.settings', keys: [['Ctrl', ',']] },
+      { label: 'shortcuts.studio', keys: [['E']] }
     ]
   },
   {
-    name: 'Texto e controles',
+    name: 'shortcuts.group.text',
     rows: [
-      { label: 'Esconder controles', keys: [['H']] },
-      { label: 'Modo limpo', keys: [['T']] }
+      { label: 'shortcuts.hide', keys: [['H']] },
+      { label: 'shortcuts.clean', keys: [['T']] }
     ]
   },
   {
-    name: 'Janela',
+    name: 'shortcuts.group.window',
     rows: [
-      { label: 'Tela cheia', keys: [['F'], ['F11']] },
-      { label: 'Fechar o app', keys: [['Ctrl', 'W']] },
-      { label: 'Fechar painel ou gaveta', keys: [['Esc']] },
-      { label: 'Mostrar atalhos', keys: [['?']] }
+      { label: 'shortcuts.fullscreen', keys: [['F'], ['F11']] },
+      { label: 'shortcuts.quit', keys: [['Ctrl', 'W']] },
+      { label: 'shortcuts.closePanel', keys: [['Esc']] },
+      { label: 'shortcuts.show', keys: [['?']] }
     ]
   },
   {
-    name: 'Diagnóstico',
+    name: 'shortcuts.group.diagnostics',
     rows: [
-      { label: 'Painel de depuração (fps, áudio)', keys: [['Ctrl', 'Shift', 'D']] },
-      { label: 'Abrir a pasta do log', keys: [['Ctrl', 'Shift', 'L']] }
+      { label: 'shortcuts.debug', keys: [['Ctrl', 'Shift', 'D']] },
+      { label: 'shortcuts.logFolder', keys: [['Ctrl', 'Shift', 'L']] }
     ]
   }
 ]
 
 /** Grupo "Agora" do painel: o lugar onde se está (protótipo `0fd0`, `ctxGroup`). */
 export const NOW_STAGE: ShortcutGroup = {
-  name: 'Agora · Palco',
+  name: 'shortcuts.group.nowStage',
   now: true,
   rows: [
-    { label: 'Preset aleatório', keys: [['Espaço']] },
-    { label: 'Anterior / próximo', keys: [['←'], ['→']] },
-    { label: 'Esconder controles', keys: [['H']] },
-    { label: 'Biblioteca', keys: [['L']] }
+    { label: 'shortcuts.random', keys: [['Space']] },
+    { label: 'shortcuts.prevNext', keys: [['←'], ['→']] },
+    { label: 'shortcuts.hide', keys: [['H']] },
+    { label: 'shortcuts.library', keys: [['L']] }
   ]
 }
 export const NOW_LIBRARY: ShortcutGroup = {
-  name: 'Agora · Biblioteca',
+  name: 'shortcuts.group.nowLibrary',
   now: true,
   rows: [
-    { label: 'Mover entre as linhas', keys: [['↑'], ['↓']] },
-    { label: 'Tocar o preset', keys: [['Enter']] },
-    { label: 'Buscar presets', keys: [['/']] },
-    { label: 'Limpar a busca ou fechar', keys: [['Esc']] }
+    { label: 'shortcuts.libMove', keys: [['↑'], ['↓']] },
+    { label: 'shortcuts.libPlay', keys: [['Enter']] },
+    { label: 'shortcuts.libSearch', keys: [['/']] },
+    { label: 'shortcuts.libClear', keys: [['Esc']] }
   ]
 }
 
@@ -117,44 +121,43 @@ export type ActionId =
 
 export interface Command {
   id: ActionId
-  label: string
+  label: MessageKey
   keys: string[]
   icon: IconName
 }
 
 /** Comandos da busca rápida (aba Todos, abaixo dos presets). */
 export const COMMANDS: Command[] = [
-  { id: 'clean', label: 'Modo limpo', keys: ['T'], icon: 'eye-off' },
-  { id: 'library', label: 'Abrir biblioteca', keys: ['L'], icon: 'library' },
-  { id: 'shortcuts', label: 'Mostrar atalhos', keys: ['?'], icon: 'keyboard' },
-  { id: 'quick', label: 'Ajustes rápidos', keys: [','], icon: 'sliders-horizontal' },
-  { id: 'settings', label: 'Configurações', keys: ['Ctrl', ','], icon: 'settings' },
-  { id: 'fullscreen', label: 'Tela cheia', keys: ['F'], icon: 'maximize' },
-  { id: 'rotation', label: 'Rotação automática', keys: ['R'], icon: 'repeat' },
-  { id: 'hold', label: 'Segurar visual', keys: ['Enter'], icon: 'lock' },
-  { id: 'breath', label: 'Respiro (visual sem áudio)', keys: ['Shift', 'Enter'], icon: 'volume-x' },
-  { id: 'random', label: 'Preset aleatório', keys: ['Espaço'], icon: 'shuffle' },
-  { id: 'next', label: 'Próximo preset', keys: ['→'], icon: 'skip-forward' },
-  { id: 'previous', label: 'Preset anterior', keys: ['←'], icon: 'skip-back' },
-  { id: 'hide', label: 'Esconder controles', keys: ['H'], icon: 'eye-off' },
-  { id: 'studio', label: 'Abrir o Estúdio', keys: ['E'], icon: 'pencil' },
+  { id: 'clean', label: 'shortcuts.clean', keys: ['T'], icon: 'eye-off' },
+  { id: 'library', label: 'shortcuts.cmd.library', keys: ['L'], icon: 'library' },
+  { id: 'shortcuts', label: 'shortcuts.show', keys: ['?'], icon: 'keyboard' },
+  { id: 'quick', label: 'shortcuts.quick', keys: [','], icon: 'sliders-horizontal' },
+  { id: 'settings', label: 'shortcuts.settings', keys: ['Ctrl', ','], icon: 'settings' },
+  { id: 'fullscreen', label: 'shortcuts.fullscreen', keys: ['F'], icon: 'maximize' },
+  { id: 'rotation', label: 'shortcuts.rotation', keys: ['R'], icon: 'repeat' },
+  { id: 'hold', label: 'shortcuts.hold', keys: ['Enter'], icon: 'lock' },
+  { id: 'breath', label: 'shortcuts.breath', keys: ['Shift', 'Enter'], icon: 'volume-x' },
+  { id: 'random', label: 'shortcuts.random', keys: ['Space'], icon: 'shuffle' },
+  { id: 'next', label: 'shortcuts.next', keys: ['→'], icon: 'skip-forward' },
+  { id: 'previous', label: 'shortcuts.previous', keys: ['←'], icon: 'skip-back' },
+  { id: 'hide', label: 'shortcuts.hide', keys: ['H'], icon: 'eye-off' },
+  { id: 'studio', label: 'shortcuts.studio', keys: ['E'], icon: 'pencil' },
   // Sem tecla no Palco: F é tela cheia (decisão do usuário; DIVERGENCIAS 2026-11-09).
-  { id: 'favorite', label: 'Favoritar preset atual', keys: [], icon: 'star' }
+  { id: 'favorite', label: 'shortcuts.cmd.favorite', keys: [], icon: 'star' }
 ]
 
-/** Minúsculas e sem acento, para o filtro do painel e a busca. */
-export const norm = (t: string): string =>
-  t
-    .toLocaleLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+/** Nome da tecla no idioma do app (`Space` / `Espaço`); as outras saem como estão. */
+const KEY_NAMES: Record<string, MessageKey> = { Space: 'shortcuts.key.space' }
+export const keyName = (k: string): string => (KEY_NAMES[k] ? t(KEY_NAMES[k]) : k)
 
-export const keysText = (keys: Keys): string => keys.map((a) => a.join(' ')).join(' ')
+export const keysText = (keys: Keys): string => keys.map((a) => a.map(keyName).join(' ')).join(' ')
+
+/** Texto de uma linha para o filtro (rótulo e teclas, no idioma do app). */
+export const rowText = (r: ShortcutRow): string => `${t(r.label)} ${keysText(r.keys)}`
 
 export function matchCommands(q: string): Command[] {
-  const f = norm(q.trim())
-  if (!f) return []
-  return COMMANDS.filter((c) => norm(`${c.label} ${c.keys.join(' ')}`).includes(f))
+  if (!q.trim()) return []
+  return COMMANDS.filter((c) => includesText(`${t(c.label)} ${c.keys.map(keyName).join(' ')}`, q.trim()))
 }
 
 // Quem executa as ações é o `main.ts` (as mesmas funções das teclas, com os mesmos toasts).

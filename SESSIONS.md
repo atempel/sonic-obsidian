@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-idiomas-atalhos`
+**Fez:** Issue #101 (spec 030), migração 5: painel `?`, a tabela de Configurações › Atalhos e os comandos da busca rápida saem de `shortcuts.ts` com chaves `shortcuts.*` (49 chaves). A tecla Espaço vira `Space`/`Espaço` pelo `keyName`; o filtro do painel e os comandos usam `includesText` (sem acento, no idioma do app: "espaco" acha). Teste `030-idiomas` 60/60 (+12: painel nos dois idiomas, filtro pela tecla traduzida, estado vazio, comandos, nada cortado; a tabela de atalhos agora entra na checagem das Configurações). `020`, `010`, `011`, `024-beat` passam.
+**Deixou em:** PR desta branch (não fecha a #101; a issue volta a `ready`). Falta na #101: Setup e diagnóstico (inclui o `<kbd>Espaço</kbd>` de `Diagnostics.tsx`) · Estúdio · log e HUD em inglês (o `hud.ts` ainda tem a linha de teclas em português) · P1. Não verificado: Windows (vai para o bloco v0.7.0).
+
 ### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — PR #106
 **Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste, nada do usuário a responder): PR #106 (030, 4º PR: Configurações) verde (`typecheck` + testes headless; `build-windows` pulado), com a tabela de critérios e "Testar no bloco" → mergeado com esta entrada. Não fecha a #101, que segue `ready` + `prioridade` no v0.7.0.
 **Deixou em:** `main` com a migração 4 da 030. Nada novo atribuído ao usuário. Próxima rodada: #101 (painel `?` com os rótulos de `shortcuts.ts`, Setup/diagnóstico, Estúdio, log em inglês, P1). Não verificado nesta rodada: só merge, sem código novo.

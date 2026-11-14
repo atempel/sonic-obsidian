@@ -1,7 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import { Icon } from './icons'
-import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, keysText, norm, type Keys } from './shortcuts'
+import { includesText, t } from '../i18n'
+import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, keyName, rowText, type Keys } from './shortcuts'
 
 /**
  * Painel de atalhos `?` (spec 020) — protótipo "Palco integrado" (`#kPanel`), versão 1794178325-0fd0.
@@ -60,9 +61,9 @@ export function KeyCaps({ keys }: { keys: Keys }) {
     <span class="k-keys">
       {keys.map((alt, i) => (
         <>
-          {i > 0 && <span class="k-or">ou</span>}
+          {i > 0 && <span class="k-or">{t('shortcuts.or')}</span>}
           {alt.map((k) => (
-            <kbd key={k}>{k}</kbd>
+            <kbd key={k}>{keyName(k)}</kbd>
           ))}
         </>
       ))}
@@ -98,10 +99,10 @@ export function ShortcutsPanel({ core }: { core: Core }) {
 
   if (!open) return null
 
-  const f = norm(q.trim())
+  const f = q.trim()
   const now = core.state.overlay === 'library' ? NOW_LIBRARY : NOW_STAGE
   const groups = [now, ...SHORTCUT_GROUPS]
-    .map((g) => ({ ...g, rows: g.rows.filter((r) => !f || norm(`${r.label} ${keysText(r.keys)}`).includes(f)) }))
+    .map((g) => ({ ...g, rows: g.rows.filter((r) => !f || includesText(rowText(r), f)) }))
     .filter((g) => g.rows.length > 0)
 
   const onKey = (e: KeyboardEvent): void => {
@@ -133,34 +134,34 @@ export function ShortcutsPanel({ core }: { core: Core }) {
       <div class="scrim k" onClick={closeShortcuts} />
       <div class="kpanel" ref={panel} role="dialog" aria-modal="true" aria-labelledby="kTitle" onKeyDown={onKey}>
         <div class="k-head">
-          <h2 id="kTitle">Atalhos</h2>
+          <h2 id="kTitle">{t('shortcuts.title')}</h2>
           <input
             ref={input}
             type="text"
-            placeholder="Filtrar atalhos"
-            aria-label="Filtrar atalhos"
+            placeholder={t('shortcuts.filter')}
+            aria-label={t('shortcuts.filter')}
             autocomplete="off"
             spellcheck={false}
             value={q}
             onInput={(e) => setQ((e.target as HTMLInputElement).value)}
           />
-          <button type="button" class="ibtn" aria-label="Fechar atalhos" title="Fechar (Esc)" onClick={closeShortcuts}>
+          <button type="button" class="ibtn" aria-label={t('shortcuts.close')} title={t('shortcuts.closeTitle')} onClick={closeShortcuts}>
             <Icon name="x" />
           </button>
         </div>
         <div class="k-body">
           {groups.map((g) => (
             <section key={g.name} class={g.now ? 'k-g k-now' : 'k-g'}>
-              <h3>{g.name}</h3>
+              <h3>{t(g.name)}</h3>
               {g.rows.map((r) => (
                 <div key={r.label} class="k-row">
-                  <span>{r.label}</span>
+                  <span>{t(r.label)}</span>
                   <KeyCaps keys={r.keys} />
                 </div>
               ))}
             </section>
           ))}
-          {groups.length === 0 && <p class="k-empty">Nenhum atalho para “{q.trim()}”.</p>}
+          {groups.length === 0 && <p class="k-empty">{t('shortcuts.empty', { q: q.trim() })}</p>}
         </div>
         <div class="k-foot">
           <a
@@ -172,7 +173,7 @@ export function ShortcutsPanel({ core }: { core: Core }) {
               core.run('ui.open', { overlay: 'settings' }, 'ui')
             }}
           >
-            Personalizar em Configurações › Atalhos
+            {t('shortcuts.customize')}
           </a>
         </div>
       </div>
