@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts e estados: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados e Ajustes rápidos: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -34,10 +34,35 @@ const stripTexts = () => {
 }
 // Botões e rótulos cortados (critério 6): scrollWidth > clientWidth.
 const clipped = () => {
-  const sel = '.strip button, .strip .rot span, .breath-tag, .chip, .gtoast span, .settings .lbl, .settings .help, .settings button'
+  const sel = '.strip button, .strip .rot span, .breath-tag, .chip, .gtoast span, .settings .lbl, .settings .help, .settings button, .sheet h2, .sheet h3, .sheet label, .sheet .line > span, .sheet button, .sheet .val, .sheet select'
   return [...document.querySelectorAll(sel)]
     .filter(e => e.offsetParent && !e.closest('.now-title, .now-author') && e.scrollWidth > e.clientWidth + 1)
     .map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+}
+// Textos dos Ajustes rápidos (rótulos, dicas, opções e texto visível).
+const sheetTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.sheet, .sheet *')) {
+    for (const a of ['aria-label', 'title']) if (el.getAttribute(a)) out.push(el.getAttribute(a))
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const quickOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^quick\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').trim()).filter(v => v.length > 3)
+// Palavra inteira ("Neutra" não conta dentro de "Neutral").
+const hasWord = (s, p) => new RegExp(`(^|[^\\p{L}])${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'u').test(s)
+// Abre os Ajustes, liga o "Trocar no beat" e o Normalizar (mostram as dicas), devolve os textos e os cortados.
+async function checkSheet(page) {
+  await page.keyboard.press('Comma'); await page.waitForTimeout(400)
+  if (!(await page.isChecked('#beatSwitch'))) await page.click('#beatSwitch + .track')
+  if (!(await page.isChecked('#autoGain'))) await page.click('#autoGain + .track')
+  await page.waitForTimeout(250)
+  const texts = await page.evaluate(sheetTexts)
+  const cut = await page.evaluate(clipped)
+  const title = await page.textContent('.sheet h2')
+  const bars = await page.$$eval('#interval option', (o) => o.map((e) => e.textContent))
+  await page.keyboard.press('Escape'); await page.waitForTimeout(400)
+  return { texts, cut, title, bars }
 }
 const toastText = (page) => page.$eval('.gtoast span', e => e.textContent)
 
@@ -72,6 +97,14 @@ const srv = H.serve(5230)
   const clipEnStrip = await page.evaluate(clipped)
   ok('6a nada cortado na faixa e no toast (en)', clipEnStrip.length === 0, clipEnStrip.join(' | '))
 
+  // Ajustes rápidos em English.
+  const qEn = await checkSheet(page)
+  const ptQuick = quickOnly(pt, en)
+  ok('3c Ajustes rápidos em English ("Quick settings", "4 bars")', qEn.title === 'Quick settings' && qEn.bars.includes('4 bars') && qEn.bars.includes('1 bar'), `${qEn.title} · ${qEn.bars.join(', ')}`)
+  ok('3d Ajustes rápidos sem texto em português', qEn.texts.every(s => !ptQuick.some(p => hasWord(s, p))), qEn.texts.filter(s => ptQuick.some(p => hasWord(s, p))).join(' | '))
+  ok('6e nada cortado nos Ajustes rápidos (en)', qEn.cut.length === 0, qEn.cut.join(' | '))
+  await page.mouse.move(600, 380); await page.mouse.move(640, 400)
+
   // 2. Configurações › Geral › Idioma: no topo, ajuda do Automático, troca na hora.
   await page.keyboard.press('Control+Comma'); await page.waitForTimeout(500)
   const first = await page.$eval('.settings [data-panel="geral"] .row .lbl', e => e.textContent)
@@ -104,6 +137,13 @@ const srv = H.serve(5230)
   ok('4e toast da rotação em português', (await toastText(page)) === 'Rotação desligada.', await toastText(page))
   const clipPtStrip = await page.evaluate(clipped)
   ok('6d nada cortado na faixa e no toast (pt-BR)', clipPtStrip.length === 0, clipPtStrip.join(' | '))
+
+  // Ajustes rápidos em pt-BR (a troca vale também para eles).
+  const qPt = await checkSheet(page)
+  const enQuick = quickOnly(en, pt)
+  ok('3e Ajustes rápidos em português ("Ajustes rápidos", "4 compassos")', qPt.title === 'Ajustes rápidos' && qPt.bars.includes('4 compassos') && qPt.bars.includes('1 compasso'), `${qPt.title} · ${qPt.bars.join(', ')}`)
+  ok('3f Ajustes rápidos sem texto em inglês', qPt.texts.every(s => !enQuick.some(p => hasWord(s, p))), qPt.texts.filter(s => enQuick.some(p => hasWord(s, p))).join(' | '))
+  ok('6f nada cortado nos Ajustes rápidos (pt-BR)', qPt.cut.length === 0, qPt.cut.join(' | '))
   ok('sem erros na página', errs.length === 0, JSON.stringify(errs.slice(0, 5)))
 
   // 1. Windows em português (outra página) → pt-BR; idioma salvo em English vence o Windows.

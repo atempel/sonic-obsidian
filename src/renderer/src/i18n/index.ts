@@ -94,6 +94,12 @@ export function fmtNum(n: number, maxDigits = 2, signed = false): string {
   return f.format(n).replace(/-/g, '−')
 }
 
+/** Número com casas fixas no formato do idioma (`2.0` / `2,0`). */
+export function fmtFixed(n: number, digits = 1): string {
+  const f = cached(`fixed:${digits}`, () => new Intl.NumberFormat(lang, { minimumFractionDigits: digits, maximumFractionDigits: digits }))
+  return f.format(n).replace(/-/g, '−')
+}
+
 /** Segundos com espaço antes da unidade: `2.7 s` / `2,7 s`. */
 export const fmtSeconds = (s: number): string => `${fmtNum(s)} s`
 

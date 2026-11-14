@@ -21,6 +21,7 @@ import {
   expressionCurveLabel
 } from '../core/state'
 import { Icon } from './icons'
+import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
 
 /**
  * Ajustes rápidos (spec 011, PR 1): painel à direita com o que se mexe com a
@@ -34,14 +35,14 @@ const QUICK_BLEND_MAX_S = 5
 
 const sign = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0')
 export const dbText = (db: number): string => `${sign(db)} dB`
-export const secondsText = (s: number): string => `${s.toFixed(1).replace('.', ',')} s`
-export const exprLevelText = (l: number): string => (l === 0 ? 'Neutra' : sign(l)) + (l === EXPRESSION_DEFAULT.level ? ' · padrão' : '')
+export const secondsText = (s: number): string => `${fmtFixed(s, 1)} s`
+export const exprLevelText = (l: number): string => (l === 0 ? t('quick.levelNeutral') : sign(l)) + (l === EXPRESSION_DEFAULT.level ? t('quick.default') : '')
 /** Spec 028: a opção padrão leva "· padrão" no nome. */
-const withDefault = (name: string, isDefault: boolean): string => (isDefault ? `${name} · padrão` : name)
+const withDefault = (name: string, isDefault: boolean): string => (isDefault ? `${name}${t('quick.default')}` : name)
 /** "Contraste — picos…" → ["Contraste", "picos…"]. */
 const splitLabel = (label: string): [string, string] => {
   const [head, ...rest] = label.split(' — ')
-  const cap = (t: string): string => t.charAt(0).toUpperCase() + t.slice(1)
+  const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
   return [cap(head!), cap(rest.join(' — '))]
 }
 
@@ -167,7 +168,7 @@ export function BlendControl({ core, target, label, available, max = QUICK_BLEND
       {rule.type !== 'cut' && (
         <Slider
           id={`blend-${target}-s`}
-          label="Tempo"
+          label={t('quick.blendDuration')}
           value={rule.seconds}
           min={0.1}
           max={Math.max(max, Math.ceil(rule.seconds))}
@@ -176,7 +177,7 @@ export function BlendControl({ core, target, label, available, max = QUICK_BLEND
           onInput={(seconds) => set({ seconds })}
         />
       )}
-      {engineOnly && <p class="note">Indisponível neste motor: o tipo é sorteado.</p>}
+      {engineOnly && <p class="note">{t('quick.blendEngineOnly')}</p>}
     </div>
   )
 }
@@ -206,32 +207,32 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
   const [, memoryHint] = splitLabel(expressionAdaptationLabel(expr.adaptation))
 
   return (
-    <aside class="sheet" ref={ref} tabIndex={-1} aria-label="Ajustes rápidos" aria-hidden={!open} inert={!open}>
+    <aside class="sheet" ref={ref} tabIndex={-1} aria-label={t('quick.title')} aria-hidden={!open} inert={!open}>
       <header>
-        <h2>Ajustes rápidos</h2>
-        <button class="ibtn" aria-label="Fechar ajustes" title="Fechar (Esc)" onClick={() => core.run('ui.close', {}, 'ui')}>
+        <h2>{t('quick.title')}</h2>
+        <button class="ibtn" aria-label={t('quick.close')} title={t('quick.closeTitle')} onClick={() => core.run('ui.close', {}, 'ui')}>
           <Icon name="x" />
         </button>
       </header>
       <div class="body">
         <section>
-          <h3>Sinal</h3>
-          <Switch id="autoGain" label="Normalizar áudio" checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
+          <h3>{t('quick.signal')}</h3>
+          <Switch id="autoGain" label={t('quick.normalize')} checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
             {settings.autoGain && <AutoGainReadout core={core} />}
           </Switch>
           {settings.autoGain ? (
-            <Slider id="gain" label="Ajuste fino" value={settings.gainDb} min={-FINE_GAIN_DB} max={FINE_GAIN_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
+            <Slider id="gain" label={t('quick.fineAdjust')} value={settings.gainDb} min={-FINE_GAIN_DB} max={FINE_GAIN_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           ) : (
-            <Slider id="gain" label="Ganho" value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
+            <Slider id="gain" label={t('quick.gain')} value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           )}
-          {settings.autoGain && <p class="note hint">Iguala o volume entre faixas em alguns segundos. O som das caixas não muda.</p>}
+          {settings.autoGain && <p class="note hint">{t('quick.normalizeNote')}</p>}
         </section>
 
         <section>
-          <h3>Expressividade</h3>
+          <h3>{t('quick.expression')}</h3>
           <Slider
             id="expr"
-            label="Nível"
+            label={t('quick.level')}
             value={expr.level}
             min={EXPRESSION_MIN}
             max={EXPRESSION_MAX}
@@ -241,15 +242,15 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           />
           <Select
             id="exprCurve"
-            label="Caráter"
+            label={t('quick.character')}
             value={expr.curve}
             options={EXPRESSION_CURVES.map((c) => [c, withDefault(splitLabel(expressionCurveLabel(c))[0], c === EXPRESSION_DEFAULT.curve)])}
             onChange={(curve) => run('expression.set', { curve })}
           />
-          <p class="note hint">{expr.level === 0 ? 'Sem efeito no nível 0. Suba o Nível para o Caráter agir.' : curveHint}</p>
+          <p class="note hint">{expr.level === 0 ? t('quick.noEffect') : curveHint}</p>
           <Select
             id="exprMemory"
-            label="Memória"
+            label={t('quick.memory')}
             value={expr.adaptation}
             options={EXPRESSION_ADAPTATIONS.map((a) => [a, withDefault(splitLabel(expressionAdaptationLabel(a))[0], a === EXPRESSION_DEFAULT.adaptation)])}
             onChange={(adaptation) => run('expression.set', { adaptation })}
@@ -261,67 +262,67 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             disabled={expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation}
             onClick={() => run('expression.set', { ...EXPRESSION_DEFAULT })}
           >
-            <span>Restaurar padrão</span>
-            <span class="soon">Nível 0 · Energia · Curta</span>
+            <span>{t('quick.restoreDefault')}</span>
+            <span class="soon">{t('quick.restoreDefaultValues')}</span>
           </button>
-          {!expressionAvailable && <p class="note">Indisponível neste motor.</p>}
+          {!expressionAvailable && <p class="note">{t('quick.unavailable')}</p>}
         </section>
 
         <section>
-          <h3>Rotação</h3>
-          <Switch id="rotSwitch" label="Rotação automática" checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
+          <h3>{t('quick.rotation')}</h3>
+          <Switch id="rotSwitch" label={t('quick.autoRotation')} checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
           {rot.onBeat ? (
-            <Select<BeatBars> id="interval" label="Trocar a cada" value={rot.bars} options={BEAT_BARS.map((b) => [b, `${b} compasso${b > 1 ? 's' : ''}`])} onChange={(bars) => run('rotation.set', { bars })} />
+            <Select<BeatBars> id="interval" label={t('quick.switchEvery')} value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} onChange={(bars) => run('rotation.set', { bars })} />
           ) : (
-            <Select<number> id="interval" label="Trocar a cada" value={rot.intervalSeconds} options={intervals.map((s) => [s, `${s} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
+            <Select<number> id="interval" label={t('quick.switchEvery')} value={rot.intervalSeconds} options={intervals.map((s) => [s, `${fmtNum(s)} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
           )}
-          {rot.order === 'collection' && <p class="note">Tocando uma coleção: {rot.onBeat ? 'em compassos; sem batida, vale o intervalo dela.' : 'vale o intervalo dela.'}</p>}
-          <Switch id="beatSwitch" label="Trocar no beat" checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
-          {rot.onBeat && <p class="note hint">Sem batida estável, troca a cada {core.rotationIntervalSeconds} s. Enter segura o visual.</p>}
+          {rot.order === 'collection' && <p class="note">{rot.onBeat ? t('quick.collectionBars') : t('quick.collectionInterval')}</p>}
+          <Switch id="beatSwitch" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+          {rot.onBeat && <p class="note hint">{t('quick.onBeatNote', { s: fmtSeconds(core.rotationIntervalSeconds) })}</p>}
         </section>
 
         <section>
-          <h3>Transições</h3>
-          <BlendControl core={core} target="manual" label="Quando você troca" available={blendTypesAvailable} />
-          <BlendControl core={core} target="auto" label="Na troca automática" available={blendTypesAvailable} />
+          <h3>{t('quick.transitions')}</h3>
+          <BlendControl core={core} target="manual" label={t('quick.blendManual')} available={blendTypesAvailable} />
+          <BlendControl core={core} target="auto" label={t('quick.blendAuto')} available={blendTypesAvailable} />
         </section>
 
         <section>
-          <h3>Texto sobre o visual</h3>
+          <h3>{t('quick.text')}</h3>
           <Select<PresetNameMode>
             id="otPreset"
-            label="Nome do preset"
+            label={t('quick.presetName')}
             value={text.presetName}
             options={[
-              ['always', 'Sempre'],
-              ['manual', 'Só quando eu troco'],
-              ['never', 'Nunca']
+              ['always', t('quick.presetName.always')],
+              ['manual', t('quick.presetName.manual')],
+              ['never', t('quick.presetName.never')]
             ]}
             onChange={(presetName) => run('overlayText.set', { presetName })}
           />
-          <Switch id="otTrack" label="Título da faixa" checked={text.trackTitle} onChange={(trackTitle) => run('overlayText.set', { trackTitle })} />
+          <Switch id="otTrack" label={t('quick.trackTitle')} checked={text.trackTitle} onChange={(trackTitle) => run('overlayText.set', { trackTitle })} />
           <Select<ToastMode>
             id="otToasts"
-            label="Avisos"
+            label={t('quick.toasts')}
             value={text.toasts}
             options={[
-              ['all', 'Todos'],
-              ['important', 'Só importantes'],
-              ['none', 'Nenhum']
+              ['all', t('quick.toasts.all')],
+              ['important', t('quick.toasts.important')],
+              ['none', t('quick.toasts.none')]
             ]}
             onChange={(toasts) => run('overlayText.set', { toasts })}
           />
-          <Switch id="otClean" label="Modo limpo" checked={text.clean} onChange={(clean) => run('overlayText.set', { clean })}>
+          <Switch id="otClean" label={t('quick.clean')} checked={text.clean} onChange={(clean) => run('overlayText.set', { clean })}>
             <kbd>T</kbd>
           </Switch>
-          <p class="note">O crédito do autor continua na faixa de controle e na Biblioteca.</p>
+          <p class="note">{t('quick.creditNote')}</p>
         </section>
 
         <section>
           <button class="btn sheet-link" onClick={() => core.run('ui.open', { overlay: 'settings' }, 'ui')}>
             <span>
               <Icon name="settings" />
-              Todas as configurações
+              {t('quick.allSettings')}
             </span>
             <kbd>Ctrl+,</kbd>
           </button>
