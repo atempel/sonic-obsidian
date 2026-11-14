@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — PR #105
+**Fez:** Passo 2 da `rodada` (nada em `in-progress`, nenhum bloco em teste, nada do usuário a responder): PR #105 (030, 3º PR: Biblioteca e busca) verde (`typecheck` + testes headless; `build-windows` pulado), com a tabela de critérios e "Testar no bloco" → mergeado com esta entrada. Não fecha a #101, que segue `ready` + `prioridade` no v0.7.0.
+**Deixou em:** `main` com a migração 3 da 030. Próxima rodada: #101 (resto das Configurações, painel `?`, Setup/diagnóstico, Estúdio, log em inglês, P1).
+
 ### 2026-11-14 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/030-biblioteca-busca`
 **Fez:** Passo 4 da `rodada` (nada do usuário a responder, nenhum PR aberto, v0.7.0 com issues abertas): #101 (030, `prioridade`) reivindicada. 3º PR da 030: migração 3, **Biblioteca e busca** — 72 chaves `library.*`/`palette.*` (Biblioteca, menu da linha, coleções, estados vazios, busca rápida), abas com chave em `TABS`, `presetsWord` com `tn()` (serve também ao menu de coleção da faixa), segundos das coleções pelo `Intl`. Busca e destaque ignoram acento e caixa no idioma ativo (`findText`/`includesText` no `i18n`: "flêxi" acha Flexi, "musica" acha "Música"); ordem dos presets com `compareText`. Teste `030-idiomas` +8 itens (38/38). Inglês escrito pela rodada (o protótipo só traduz faixa/Ajustes); termos do glossário.
 **Deixou em:** PR aberto que **não** fecha a #101 (volta a `ready`). Falta: resto das Configurações, painel `?`, Setup/diagnóstico, Estúdio, log em inglês, P1. `026-estudio` falha neste ambiente também no `main` (compilação passa de 1 s com a máquina lenta) — não relacionado; o CI decide. Não verificado: o app no Windows (vai para o bloco v0.7.0).
