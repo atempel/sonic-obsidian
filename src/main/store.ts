@@ -30,7 +30,7 @@ export class JsonStore {
     try {
       return JSON.parse(text) as unknown
     } catch (err) {
-      console.error(`[store] ${this.name}.json ilegível; movido para .bak e usando os padrões`, err)
+      console.error(`[store] ${this.name}.json unreadable; moved to .bak, using defaults`, err)
       await rename(this.path, `${this.path}.bak`).catch(() => undefined)
       return null
     }

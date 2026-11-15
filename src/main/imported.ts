@@ -49,7 +49,7 @@ export async function listImported(): Promise<CacheFile[]> {
       const c = JSON.parse(await readFile(join(dir(), f), 'utf8')) as CacheFile
       if (typeof c.name === 'string' && c.preset && typeof c.preset === 'object') out.push(c)
     } catch (err) {
-      log('main', `importado ilegível: ${f}: ${err instanceof Error ? err.message : String(err)}`)
+      log('main', `unreadable imported preset: ${f}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
   for (const f of files.filter((x) => x.endsWith('.milk'))) {

@@ -106,7 +106,7 @@ export async function listMine(): Promise<MineEntry[]> {
       const preset = sanitizePreset(JSON.parse(await readFile(join(dir(), id, 'preset.json'), 'utf8')))
       out.push({ id, meta: sanitizeMeta(meta, typeof meta.createdAt === 'string' ? meta.createdAt : ''), preset })
     } catch (err) {
-      log('main', `meu preset ilegível: ${id}: ${err instanceof Error ? err.message : String(err)}`)
+      log('main', `unreadable Mine preset: ${id}: ${err instanceof Error ? err.message : String(err)}`)
     }
   }
   return out

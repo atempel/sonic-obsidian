@@ -89,7 +89,7 @@ function registerStores(): void {
   ipcMain.handle('presets:listMine', () => listMine())
   ipcMain.handle('presets:saveMine', async (_e, data: unknown) => {
     const r = await saveMine(data)
-    log('main', `estúdio: salvo ${r.meta.title} (${r.id})`)
+    log('main', `studio: saved ${r.meta.title} (${r.id})`)
     return r
   })
   ipcMain.handle('presets:removeMine', (_e, id: unknown) => removeMine(id))
@@ -105,7 +105,7 @@ async function readTestFlags(): Promise<TestFlags> {
   try {
     const raw = JSON.parse(await readFile(join(app.getPath('userData'), 'test-flags.json'), 'utf8')) as Record<string, unknown>
     const flags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }
-    if (flags.captureFail || flags.noWebgl2) log('main', `flags de teste: ${JSON.stringify(flags)}`)
+    if (flags.captureFail || flags.noWebgl2) log('main', `test flags: ${JSON.stringify(flags)}`)
     return flags
   } catch {
     return { captureFail: false, noWebgl2: false }
@@ -194,17 +194,17 @@ function createWindow(): void {
     }
   })
 
-  mark('janela')
-  win.webContents.once('did-finish-load', () => mark('página carregada'))
+  mark('window')
+  win.webContents.once('did-finish-load', () => mark('page loaded'))
 
   // Queda do renderer (WebGL, memória): registra e recarrega, em vez de ficar uma janela preta.
   win.webContents.on('render-process-gone', (_e, details) => {
-    log('main', `renderer caiu: ${details.reason} (exit ${details.exitCode})`)
+    log('main', `renderer gone: ${details.reason} (exit ${details.exitCode})`)
     logMetrics()
     if (details.reason !== 'clean-exit' && !win.isDestroyed()) setTimeout(() => !win.isDestroyed() && win.reload(), 1000)
   })
-  win.webContents.on('unresponsive', () => log('main', 'renderer sem responder'))
-  win.webContents.on('responsive', () => log('main', 'renderer voltou a responder'))
+  win.webContents.on('unresponsive', () => log('main', 'renderer unresponsive'))
+  win.webContents.on('responsive', () => log('main', 'renderer responsive again'))
 
   // Nenhuma janela nova dentro do app: links externos vão para o navegador.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -236,7 +236,7 @@ function createWindow(): void {
 
 // Processo da GPU ou utilitário caiu (ex.: o Windows reiniciou o driver de vídeo).
 app.on('child-process-gone', (_e, details) => {
-  log('main', `processo ${details.type}${details.name ? ` (${details.name})` : ''} caiu: ${details.reason} (exit ${details.exitCode})`)
+  log('main', `process ${details.type}${details.name ? ` (${details.name})` : ''} gone: ${details.reason} (exit ${details.exitCode})`)
   logMetrics()
 })
 
@@ -244,8 +244,8 @@ app.on('child-process-gone', (_e, details) => {
 if (process.platform === 'win32') app.setAppUserModelId('dev.atempel.sonic-obsidian')
 
 app.whenReady().then(() => {
-  mark('pronto')
-  log('main', `abriu ${app.getVersion()} · Electron ${process.versions.electron} · log em ${logPath()}`)
+  mark('ready')
+  log('main', `started ${app.getVersion()} · Electron ${process.versions.electron} · log at ${logPath()}`)
   logMetrics()
   // Memória a cada 5 min: mostra se algum processo (GPU, renderer) cresce sem parar.
   setInterval(logMetrics, 5 * 60 * 1000).unref()

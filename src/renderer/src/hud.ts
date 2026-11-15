@@ -18,22 +18,23 @@ export interface HudState {
   error?: string
 }
 
+/** HUD de diagnóstico (Ctrl+Shift+D): sempre em inglês, como o log (spec 030) — vai para issues. */
 export class Hud {
   constructor(private readonly el: HTMLElement) {}
 
   show(s: HudState): void {
     if (s.error) {
-      this.el.textContent = `ERRO: ${s.error}`
+      this.el.textContent = `ERROR: ${s.error}`
       return
     }
     const bars = '█'.repeat(Math.min(20, Math.round(s.level * 40))).padEnd(20, '·')
     this.el.textContent =
-      `${s.fps.toFixed(0)} fps (${s.fpsMode})${s.heapMb ? ` · heap ${s.heapMb} MB` : ''} · áudio: ${s.audio} · nível ${bars}\n` +
+      `${s.fps.toFixed(0)} fps (${s.fpsMode})${s.heapMb ? ` · heap ${s.heapMb} MB` : ''} · audio: ${s.audio} · level ${bars}\n` +
       `${s.preset}\n` +
-      `${s.presetCount} presets · rotação ${s.rotation} · ganho ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
-      `${s.expression ?? 'expressividade indisponível'}\n` +
-      `${s.beat ?? 'beat: aguardando'}\n` +
+      `${s.presetCount} presets · rotation ${s.rotation} · gain ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
+      `${s.expression ?? 'expressiveness unavailable'}\n` +
+      `${s.beat ?? 'beat: waiting'}\n` +
       (s.studio ? `${s.studio}\n` : '') +
-      `→ ← presets · + − 0 expressividade · X caráter · Shift+X memória · B ↑↓ transição · T modo limpo · Espaço aleatório · Enter segurar`
+      `→ ← presets · + − 0 expressiveness · X character · Shift+X memory · B ↑↓ transition · T clean mode · Space random · Enter hold`
   }
 }

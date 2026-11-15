@@ -114,7 +114,7 @@ export function hookExpression(
     !(al.val instanceof Float32Array) ||
     !(al.att instanceof Float32Array)
   ) {
-    console.warn('[expr] audioLevels do Butterchurn não encontrado: expressividade indisponível')
+    console.warn('[expr] Butterchurn audioLevels not found: expressiveness unavailable')
     return null
   }
   const levels = al as AudioLevelsInternals

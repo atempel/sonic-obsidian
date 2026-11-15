@@ -6,7 +6,7 @@ import { EQ_KEYS, type Block, type CompileResult, type StudioError, type StudioI
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
-import { getLang, onLanguage, t, tn, type MessageKey } from '../i18n'
+import { getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey } from '../i18n'
 import './studio.css'
 
 /**
@@ -51,30 +51,32 @@ type Code = Record<Block, string>
 /** Hora da última compilação no formato do idioma do app (`2:32:05 PM` / `14:32:05`). */
 const clock = (d: Date): string => new Intl.DateTimeFormat(getLang(), { hour: getLang() === 'en' ? 'numeric' : '2-digit', minute: '2-digit', second: '2-digit' }).format(d)
 const errKey = (e: StudioError): string => `${e.block}:${e.line ?? '-'}:${JSON.stringify(e.issue)}`
-/** Log e HUD ficam fora da tradução (passo próprio da spec 030): seguem como estavam. */
-const count = (n: number): string => `${n} ${n === 1 ? 'erro' : 'erros'}`
+/** Log e HUD ficam sempre em inglês (spec 030): vão para issues. */
+const count = (n: number): string => `${n} ${n === 1 ? 'error' : 'errors'}`
 
-/** A frase do problema no idioma do app. */
-function issueText(i: StudioIssue): string {
+/** A frase do problema no idioma do app, ou em `l` (o log usa `'en'`). */
+function issueText(i: StudioIssue, l: Lang = getLang()): string {
   switch (i.kind) {
     case 'syntax': {
-      const got = i.got ?? t('studio.err.end')
-      return i.want.length ? t('studio.err.expected', { want: new Intl.ListFormat(getLang(), { type: 'disjunction' }).format(i.want), got }) : t('studio.err.near', { got })
+      const got = i.got ?? msgText('studio.err.end', l)
+      return i.want.length
+        ? msgText({ key: 'studio.err.expected', params: { want: new Intl.ListFormat(l, { type: 'disjunction' }).format(i.want), got } }, l)
+        : msgText({ key: 'studio.err.near', params: { got } }, l)
     }
     case 'undefined':
-      return t('studio.err.undefined', { fn: i.fn })
+      return msgText({ key: 'studio.err.undefined', params: { fn: i.fn } }, l)
     case 'args':
-      return tn('studio.err.args', i.expected, { fn: i.fn, got: i.got })
+      return msgText({ plural: 'studio.err.args', n: i.expected, params: { fn: i.fn, got: i.got } }, l)
     case 'invalid':
-      return t('studio.err.invalid', { name: i.name })
+      return msgText({ key: 'studio.err.invalid', params: { name: i.name } }, l)
     case 'slow':
-      return t('studio.err.slow', { ms: i.ms })
+      return msgText({ key: 'studio.err.slow', params: { ms: i.ms } }, l)
     case 'timeout':
-      return t('studio.err.timeout')
+      return msgText('studio.err.timeout', l)
     case 'equations':
-      return t('studio.err.equations', { detail: i.detail })
+      return msgText({ key: 'studio.err.equations', params: { detail: i.detail } }, l)
     case 'shader':
-      return t('studio.err.shader', { which: i.which, detail: i.detail })
+      return msgText({ key: 'studio.err.shader', params: { which: i.which, detail: i.detail } }, l)
     case 'raw':
       return i.text
   }
@@ -149,15 +151,15 @@ function Studio({ api }: { api: StudioApi }) {
       setErrors([])
       setHadValid(true)
       lastErrs.current = new Set()
-      api.reportCost(`estúdio: compilação ${r.ms.toFixed(0)} ms (quadro de teste ${r.frameMs.toFixed(1)} ms)`)
+      api.reportCost(`studio: compile ${r.ms.toFixed(0)} ms (test frame ${r.frameMs.toFixed(1)} ms)`)
       return true
     }
     setStatus('err')
     setErrors(r.errors)
-    api.reportCost(`estúdio: compilação ${r.ms.toFixed(0)} ms · ${count(r.errors.length)}`)
+    api.reportCost(`studio: compile ${r.ms.toFixed(0)} ms · ${count(r.errors.length)}`)
     // Log: só erros novos, nunca por tecla.
     const keys = new Set(r.errors.map(errKey))
-    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`estúdio: erro em ${BLOCK_TITLE[e.block]}${e.line ? `, linha ${e.line}` : ''}: ${issueText(e.issue)}`)
+    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`studio: error in ${BLOCK_TITLE[e.block]}${e.line ? `, line ${e.line}` : ''}: ${issueText(e.issue, 'en')}`)
     lastErrs.current = keys
     return false
   }
@@ -203,7 +205,7 @@ function Studio({ api }: { api: StudioApi }) {
       showToast(saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }), { force: true })
     } catch (err) {
       const msg = err instanceof Error ? err.message.replace(/^.*Error: /, '') : String(err)
-      api.log(`estúdio: salvar falhou: ${msg}`)
+      api.log(`studio: save failed: ${msg}`)
       showToast(t('toast.studio.notSaved', { error: msg }), { force: true })
     }
   }
