@@ -24,13 +24,15 @@ import {
   blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
-import { LANG_NAME, getSystemLang, fmtNum, fmtSeconds, includesText, t, tn, type LanguagePref, type MessageKey } from '../i18n'
+import { LANG_NAME, getLang, getSystemLang, fmtNum, fmtSeconds, includesText, t, tn, type LanguagePref, type MessageKey } from '../i18n'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
 import { failReason, importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
 import { Kbd } from './Kbd'
+import { useUpdateState } from './UpdateNotice'
+import { checkUpdates, installUpdate, openReleasePage, releaseUrl } from '../update'
 
 /**
  * Configurações (spec 011, PR 2): tela por cima do Palco, com o visual a 25% atrás.
@@ -765,7 +767,7 @@ function Atalhos() {
   )
 }
 
-function Sobre() {
+function Sobre({ core, run }: { core: Core; run: Run }) {
   const [version, setVersion] = useState('')
   useEffect(() => {
     window.so.app.version().then(setVersion, () => setVersion('—'))
@@ -792,6 +794,7 @@ function Sobre() {
         <Row label={t('settings.about.platform')} help={t('settings.about.platformHelp')} />
         <Row label={t('settings.about.engine')} help={t('settings.about.engineHelp')} kw="engine motor" />
       </Grp>
+      <Atualizacoes core={core} run={run} version={version} link={link} />
       <Grp title={t('settings.about.credits')}>
         <Row label="MilkDrop" help="Ryan Geiss" />
         <Row label="Butterchurn" help={t('settings.about.butterchurnBy')} />
@@ -809,6 +812,139 @@ function Sobre() {
       </Grp>
     </>
   )
+}
+
+/**
+ * Configurações › Sobre › Atualizações (spec 029; design 1794603894-598c, v3-modelo-de-navegacao.md).
+ * "Verificar agora" funciona com a chave desligada. Erro só aparece aqui (foi a pessoa que pediu).
+ */
+function Atualizacoes({ core, run, version, link }: { core: Core; run: Run; version: string; link: (url: string, text: string) => ComponentChildren }) {
+  const u = useUpdateState()
+  const ctl = useRef<HTMLSpanElement>(null)
+  const auto = core.state.settings.updatesAuto
+  const check = (): void => {
+    void checkUpdates().then(() => ctl.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus())
+  }
+  const v = u.version ?? ''
+  const checkBtn = (disabled = false) => (
+    <button class="btn sm" type="button" disabled={disabled} onClick={check}>
+      {t('update.checkNow')}
+    </button>
+  )
+  let status: ComponentChildren = null
+  let button: ComponentChildren = checkBtn()
+  switch (u.phase) {
+    case 'checking':
+      status = t('update.checking')
+      button = (
+        <button class="btn sm" type="button" disabled>
+          <span class="spin-ico">
+            <Icon name="loader" small />
+          </span>
+          {t('update.checking')}
+        </button>
+      )
+      break
+    case 'latest':
+      status = (
+        <>
+          <Icon name="check" small />
+          {t('update.latest')}
+        </>
+      )
+      break
+    case 'downloading': {
+      const [a, b = ''] = t('update.downloading', { percent: '\u0000' }).split('\u0000')
+      status = (
+        <span>
+          {a}
+          <span class="num cy">{`${fmtNum(u.percent, 0)}%`}</span>
+          {b}
+        </span>
+      )
+      button = checkBtn(true)
+      break
+    }
+    case 'ready':
+    case 'installing':
+      status = (
+        <>
+          <Icon name="check" small />
+          {u.phase === 'installing' ? t('update.installing') : t('update.readyShort', { version: v })}
+        </>
+      )
+      button = (
+        <button class="btn btn-primary sm" type="button" disabled={u.phase === 'installing'} onClick={installUpdate}>
+          {t('update.restart')}
+        </button>
+      )
+      break
+    case 'available':
+      status = (
+        <>
+          <Icon name="check" small />
+          {t('update.availableShort', { version: v })}
+        </>
+      )
+      button = (
+        <button class="btn btn-primary sm" type="button" onClick={openReleasePage}>
+          {t('update.openPage')}
+          <Icon name="external-link" small />
+        </button>
+      )
+      break
+    case 'error':
+      status = (
+        <>
+          <span class="warn-ico">
+            <Icon name="circle-alert" small />
+          </span>
+          {t('update.error')}
+        </>
+      )
+      break
+  }
+  const help = (
+    <>
+      <span class="upd-st" role="status" aria-live="polite">
+        {status}
+      </span>
+      {u.phase === 'downloading' && (
+        <span class="prog" aria-hidden="true">
+          <i style={{ width: `${u.percent}%` }} />
+        </span>
+      )}
+    </>
+  )
+  return (
+    <Grp title={t('update.group')}>
+      <Row label={t('update.installed')} kw="atualização atualizações update updates versão version o que mudou what's new release">
+        <span class="upd-ver">
+          <span class="count num">{`Sonic Obsidian · ${version}`}</span>
+          {version && link(releaseUrl(version), t('update.whatsNew'))}
+        </span>
+      </Row>
+      <Row id="st-upd-auto" label={t('update.auto')} help={t('update.autoHelp')} kw="atualização atualizações update updates automática automatic github rede network">
+        <Sw id="st-upd-auto" label={t('update.auto')} checked={auto} onChange={(on) => run('settings.set', { updatesAuto: on })} />
+      </Row>
+      <Row label={t('update.checkNow')} help={help} kw="atualização atualizações update updates verificar check baixar download reiniciar restart">
+        <span ref={ctl}>{button}</span>
+      </Row>
+      <p class="upd-last num" data-search={`${t('update.never')} ${t('update.group')}`}>
+        {lastCheckText(u.lastCheckAt)}
+      </p>
+    </Grp>
+  )
+}
+
+/** "Última verificação: hoje, 14:32" ou com a data, no formato do idioma do app. */
+function lastCheckText(at: number | null): string {
+  if (at === null) return t('update.never')
+  const d = new Date(at)
+  const now = new Date()
+  const lang = getLang()
+  if (d.toDateString() === now.toDateString()) return t('update.lastToday', { time: d.toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }) })
+  return t('update.lastOn', { date: d.toLocaleString(lang, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })
 }
 
 // ── Tela ──────────────────────────────────────────────────────
@@ -993,7 +1129,7 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
                   {s.id === 'desempenho' && <Desempenho core={core} run={run} />}
                   {s.id === 'biblioteca' && <Biblioteca bridge={bridge} run={run} />}
                   {s.id === 'atalhos' && <Atalhos />}
-                  {s.id === 'sobre' && <Sobre />}
+                  {s.id === 'sobre' && <Sobre core={core} run={run} />}
                 </section>
               ))}
             </div>

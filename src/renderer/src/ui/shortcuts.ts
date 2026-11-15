@@ -3,6 +3,7 @@
  * grupo "Comandos" da busca rápida leem daqui. Só teclas que existem no app: tecla nova no
  * `keydown` de `main.ts` entra também nesta lista.
  */
+import { updateState } from '../update'
 import { includesText, t, type MessageKey } from '../i18n'
 import type { IconName } from './icons'
 
@@ -118,12 +119,16 @@ export type ActionId =
   | 'hold'
   | 'breath'
   | 'studio'
+  | 'updateCheck'
+  | 'updateInstall'
 
 export interface Command {
   id: ActionId
   label: MessageKey
   keys: string[]
   icon: IconName
+  /** Só aparece quando vale (ex.: "Reiniciar e atualizar" com versão pronta). */
+  when?: () => boolean
 }
 
 /** Comandos da busca rápida (aba Todos, abaixo dos presets). */
@@ -143,7 +148,10 @@ export const COMMANDS: Command[] = [
   { id: 'hide', label: 'shortcuts.hide', keys: ['H'], icon: 'eye-off' },
   { id: 'studio', label: 'shortcuts.studio', keys: ['E'], icon: 'pencil' },
   // Sem tecla no Palco: F é tela cheia (decisão do usuário; DIVERGENCIAS 2026-11-09).
-  { id: 'favorite', label: 'shortcuts.cmd.favorite', keys: [], icon: 'star' }
+  { id: 'favorite', label: 'shortcuts.cmd.favorite', keys: [], icon: 'star' },
+  // Atualização automática (spec 029): sem tecla; nada muda no painel `?`.
+  { id: 'updateCheck', label: 'shortcuts.cmd.checkUpdates', keys: [], icon: 'refresh-cw' },
+  { id: 'updateInstall', label: 'shortcuts.cmd.installUpdate', keys: [], icon: 'rotate-cw', when: () => updateState().phase === 'ready' }
 ]
 
 /** Nome da tecla no idioma do app (`Space` / `Espaço`); as outras saem como estão. */
@@ -171,7 +179,7 @@ export const rowText = (r: ShortcutRow): string => `${t(r.label)} ${keysText(r.k
 
 export function matchCommands(q: string): Command[] {
   if (!q.trim()) return []
-  return COMMANDS.filter((c) => includesText(`${t(c.label)} ${c.keys.map(keyName).join(' ')}`, q.trim()))
+  return COMMANDS.filter((c) => (c.when?.() ?? true) && includesText(`${t(c.label)} ${c.keys.map(keyName).join(' ')}`, q.trim()))
 }
 
 // Quem executa as ações é o `main.ts` (as mesmas funções das teclas, com os mesmos toasts).

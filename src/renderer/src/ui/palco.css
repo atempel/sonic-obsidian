@@ -138,3 +138,34 @@ body.clean .credit { transition-duration: 400ms; }
 }
 /* Respiro (Shift+Enter): o visual sem o áudio. */
 .breath-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 11px; color: var(--violet); }
+
+/* ── Atualização automática (spec 029; design 1794603894-598c, v3-modelo-de-navegacao.md):
+   plaquinha acima da faixa, à esquerda. Entra como um quarto bloco do M01 (40 ms depois da cauda)
+   e sai com a faixa em 150 ms. Some no ocioso, no Modo limpo, com painel/menu aberto e, abaixo de
+   900 px, enquanto o aviso de preset pesado estiver na tela (ele tem a vez). ── */
+.strip-wrap > .upd { position: absolute; left: max(16px, calc((100% - 1120px) / 2)); bottom: calc(16px + var(--strip-h) + 8px);
+  max-width: min(1120px, calc(100% - 32px)); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; min-height: 40px; padding: 4px 4px 4px 10px;
+  background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); font-size: 13px; color: var(--text-1); pointer-events: auto;
+  transition: opacity var(--t-med) var(--ease-out) 80ms, transform var(--t-med) var(--ease-out) 80ms, visibility 0s linear 0s; }
+.strip-wrap:has(> .chip) > .upd { max-width: calc(min(1120px, 100% - 32px) - 301px); }
+body:has(.float.notice) .strip-wrap > .upd { bottom: calc(var(--float-bottom) + 92px); }
+.strip-wrap > .upd.off, body.idle .strip-wrap > .upd:not(:has(.spin-ico)), body.clean .strip-wrap > .upd,
+body.lib-open .strip-wrap > .upd, body.palette-open .strip-wrap > .upd, body.sheet-open .strip-wrap > .upd, body.kbd-open .strip-wrap > .upd,
+body.settings-open .strip-wrap > .upd, body.studio-open .strip-wrap > .upd, body:has(.menu.collect) .strip-wrap > .upd {
+  opacity: 0; transform: translateY(6px); visibility: hidden; pointer-events: none;
+  transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out), visibility 0s linear 150ms; }
+@media (max-width: 899.98px) { .strip-wrap:has(> .chip) > .upd { opacity: 0; visibility: hidden; pointer-events: none; transition: none; } }
+.upd .upd-in { display: contents; }
+.upd > .upd-in > .ico { width: 16px; height: 16px; color: var(--text-2); }
+.upd .upd-tx { color: var(--text-1); animation: upd-swap 120ms var(--ease-out); }
+.upd .btn { height: 28px; padding: 0 8px; font-size: 13px; gap: 6px; }
+.upd .btn .ico { width: 12px; height: 12px; }
+.upd .btn-ghost { color: var(--text-2); }
+.upd .btn-ghost:hover { color: var(--text-1); }
+.upd .spin-ico { display: inline-grid; place-items: center; color: var(--text-2); }
+.upd .spin-ico .ico { width: 16px; height: 16px; animation: so-spin 1s linear infinite; }
+@keyframes upd-swap { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .strip-wrap > .upd { transform: none !important; }
+  .upd .spin-ico .ico { animation: none; }
+}

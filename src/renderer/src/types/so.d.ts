@@ -17,6 +17,17 @@ interface SoMineEntry {
   preset: Record<string, unknown>
 }
 
+/** Atualização automática (spec 029); espelha `UpdateState` de src/main/updater.ts. */
+type SoUpdatePhase = 'idle' | 'checking' | 'latest' | 'downloading' | 'ready' | 'available' | 'installing' | 'error'
+interface SoUpdateState {
+  phase: SoUpdatePhase
+  version: string | null
+  percent: number
+  lastCheckAt: number | null
+  portable: boolean
+  supported: boolean
+}
+
 interface Window {
   so: {
     settings: SoStore
@@ -40,6 +51,15 @@ interface Window {
       listMine(): Promise<SoMineEntry[]>
       saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: SoMineMeta }>
       removeMine(id: string): Promise<void>
+    }
+    /** Opcional: os testes headless e o modo dev sem preload novo não têm. */
+    update?: {
+      state(): Promise<SoUpdateState>
+      configure(auto: boolean): void
+      check(): Promise<SoUpdatePhase>
+      install(): Promise<boolean>
+      openRelease(): Promise<void>
+      onState(fn: (s: SoUpdateState) => void): () => void
     }
     collections: {
       export(text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>

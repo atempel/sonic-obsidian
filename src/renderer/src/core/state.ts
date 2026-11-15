@@ -140,6 +140,8 @@ export interface Settings {
   perf: { skipSlow: boolean; minFps: number }
   /** Idioma (spec 030): `auto` segue o Windows (`pt-*` → pt-BR; o resto → en). */
   language: LanguagePref
+  /** Buscar atualizações automaticamente (spec 029): uma checagem por dia no GitHub. */
+  updatesAuto: boolean
 }
 
 export interface Collection {
@@ -185,7 +187,8 @@ export function defaultSettings(): Settings {
     welcomeSeen: false,
     authorName: null,
     perf: { skipSlow: true, minFps: 30 },
-    language: 'auto'
+    language: 'auto',
+    updatesAuto: true
   }
 }
 
@@ -309,7 +312,8 @@ export function sanitizeSettings(raw: unknown): Settings {
       skipSlow: bool(isObj(raw.perf) ? raw.perf.skipSlow : undefined, d.perf.skipSlow),
       minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5
     },
-    language: oneOf(raw.language, LANGUAGE_PREFS, d.language)
+    language: oneOf(raw.language, LANGUAGE_PREFS, d.language),
+    updatesAuto: bool(raw.updatesAuto, d.updatesAuto)
   }
 }
 
