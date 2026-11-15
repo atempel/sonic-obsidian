@@ -17,7 +17,7 @@ const ok = R.ok
     await H.mockAudio(page)
     await page.goto('http://localhost:5229/')
     await page.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
-    ok('log da abertura diz "normalizar áudio desligado"', (await page.evaluate(() => window.__logs)).some((l) => /normalizar áudio desligado/.test(l)))
+    ok('log da abertura diz "normalize audio off"', (await page.evaluate(() => window.__logs)).some((l) => /normalize audio off/.test(l)))
 
     await page.keyboard.press(',')
     await page.waitForSelector('#autoGain', { state: 'attached', timeout: 5000 })
@@ -40,11 +40,11 @@ const ok = R.ok
     await page.waitForTimeout(200)
     ok('ajuste fino aceita −6', (await page.evaluate(() => window.__saves.at(-1).gainDb)) === -6)
 
-    // O AGC mede o bumbo e mexe: HUD com manual + auto e o nível medido.
+    // O AGC mede o bumbo e mexe: HUD com manual + auto e o measured level.
     await page.keyboard.press('Escape')
     await page.keyboard.press('Control+Shift+D')
-    const hudOk = await H.poll(page, () => /ganho em vigor [+−\-]?[\d.]+ dB \(manual -6\.0 \+ auto [+−\-]?[\d.]+, nível medido -[\d.]+ dBFS\)/.test(document.querySelector('#hud').textContent), { timeout: 10000 })
-    const hud = await page.$eval('#hud', (e) => (e.textContent.match(/ganho em vigor[^\n]*/) || [''])[0])
+    const hudOk = await H.poll(page, () => /gain in effect [+−\-]?[\d.]+ dB \(manual -6\.0 \+ auto [+−\-]?[\d.]+, measured level -[\d.]+ dBFS\)/.test(document.querySelector('#hud').textContent), { timeout: 10000 })
+    const hud = await page.$eval('#hud', (e) => (e.textContent.match(/gain in effect[^\n]*/) || [''])[0])
     ok('HUD: ganho em vigor = manual + auto, com o nível medido', hudOk, hud)
     const auto = Number((hud.match(/auto ([+\-]?[\d.]+)/) || [])[1])
     ok('o bumbo simulado move o ganho automático (≠ 0)', Number.isFinite(auto) && Math.abs(auto) >= 0.1, String(auto))
@@ -65,8 +65,8 @@ const ok = R.ok
     await page.waitForTimeout(300)
     ok('desligar pelas Configurações salva autoGain false', (await page.evaluate(() => window.__saves.at(-1).autoGain)) === false)
     await page.keyboard.press('Escape'); await page.waitForTimeout(300)
-    const off = await H.poll(page, () => /ganho em vigor -6\.0 dB \(manual\)/.test(document.querySelector('#hud').textContent), { timeout: 4000 })
-    ok('desligado: HUD volta ao ganho manual puro', off, await page.$eval('#hud', (e) => (e.textContent.match(/ganho em vigor[^\n]*/) || [''])[0]))
+    const off = await H.poll(page, () => /gain in effect -6\.0 dB \(manual\)/.test(document.querySelector('#hud').textContent), { timeout: 4000 })
+    ok('desligado: HUD volta ao ganho manual puro', off, await page.$eval('#hud', (e) => (e.textContent.match(/gain in effect[^\n]*/) || [''])[0]))
 
     // Shift+X chega à Memória Viva (4ª opção).
     for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+X')

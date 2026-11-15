@@ -192,8 +192,8 @@ function mainChecks() {
   ok('R remover apaga o meu preset', (await page.evaluate(() => window.__mine.length)) === 0 && (await text()).includes('Nenhum preset seu ainda'))
 
   // 9 (parte headless). log só com eventos, nunca por tecla
-  const logs = (await page.evaluate(() => window.__logs)).filter(l => l.startsWith('estúdio'))
-  ok('9a log com abrir/fechar/erros, sem linha por tecla', logs.some(l => l.startsWith('estúdio: aberto')) && logs.some(l => l.startsWith('estúdio: fechado')) && logs.length <= 12, JSON.stringify(logs))
+  const logs = (await page.evaluate(() => window.__logs)).filter(l => l.startsWith('studio'))
+  ok('9a log com abrir/fechar/erros, sem linha por tecla', logs.some(l => l.startsWith('studio: opened')) && logs.some(l => l.startsWith('studio: closed')) && logs.length <= 12, JSON.stringify(logs))
   ok('9b sem erros na página', errs.length === 0, errs.slice(0, 3).join(' | '))
 
   await b.close(); srv.close()

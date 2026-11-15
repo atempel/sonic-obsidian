@@ -38,7 +38,7 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement
 setupWindowChrome()
 const hudEl = document.getElementById('hud') as HTMLElement
 const hud = new Hud(hudEl)
-const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', fpsMode: 'monitor', gainDb: 0, audio: 'aguardando', level: 0 }
+const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', fpsMode: 'monitor', gainDb: 0, audio: 'waiting', level: 0 }
 
 /** Quanto esperar pelos pacotes extras quando o último preset está neles (critério < 3 s). */
 const STARTUP_EXTRAS_WAIT_MS = 1000
@@ -52,7 +52,7 @@ async function start(): Promise<void> {
     window.so.settings.load().catch(() => null),
     window.so.library.load().catch(() => null)
   ])
-  window.so.mark('ajustes lidos')
+  window.so.mark('settings read')
   const initialSettings = sanitizeSettings(rawSettings)
   // Idioma (spec 030): o main diz o do Windows; sem ele (testes), vale o do navegador.
   const systemLang = await (window.so.app.systemLanguage?.() ?? Promise.resolve(null)).catch(() => null)
@@ -62,7 +62,7 @@ async function start(): Promise<void> {
   const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
   // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
   if (testFlags.noWebgl2 || !document.createElement('canvas').getContext('webgl2')) {
-    window.so.log(`WebGL 2 indisponível${testFlags.noWebgl2 ? ' (simulado por test-flags.json)' : ''}`)
+    window.so.log(`WebGL 2 unavailable${testFlags.noWebgl2 ? ' (simulated by test-flags.json)' : ''}`)
     mountWebglError(document.getElementById('ui') as HTMLElement)
     return
   }
@@ -94,13 +94,13 @@ async function start(): Promise<void> {
   const viz = new PresetVisualizer(ctx, canvas, initialSettings.render)
   viz.visualizer.connectAudio(gain)
   hookShaderCleanup(viz.visualizer)
-  window.so.mark('motor')
+  window.so.mark('engine')
 
   // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
   // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
   canvas.addEventListener('webglcontextlost', (e) => {
     e.preventDefault()
-    window.so.log('contexto WebGL perdido; recarregando em 1,5 s')
+    window.so.log('WebGL context lost; reloading in 1.5 s')
     setTimeout(() => location.reload())
   })
 
@@ -128,19 +128,19 @@ async function start(): Promise<void> {
   )
   {
     const ex = settings.expression
-    window.so.log(`expressividade carregada: nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${exprProbe ? '' : ' (indisponível no motor)'} · normalizar áudio ${settings.autoGain ? 'ligado' : 'desligado'}`)
+    window.so.log(`expressiveness loaded: level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation}${exprProbe ? '' : ' (unavailable in the engine)'} · normalize audio ${settings.autoGain ? 'on' : 'off'}`)
   }
   // A cada 5 min (como a memória no main): bass médio e desvio com som, para "reagindo pouco" virar número.
   if (exprProbe)
     window.setInterval(() => {
       const p = exprProbe
       const ex = settings.expression
-      if (p.n < 30) window.so.log(`reação: sem som nos últimos 5 min (memória ${ex.adaptation})`)
+      if (p.n < 30) window.so.log(`reaction: no sound in the last 5 min (memory ${ex.adaptation})`)
       else {
         const mean = p.sum / p.n
         const sd = Math.sqrt(Math.max(0, p.sumSq / p.n - mean * mean))
-        const auto = settings.autoGain ? ` · normalizar ${agc.gainDb >= 0 ? '+' : ''}${agc.gainDb.toFixed(1)} dB (nível medido ${agc.levelDb.toFixed(1)} dBFS)` : ''
-        window.so.log(`reação: bass médio ${mean.toFixed(2)} · desvio ${sd.toFixed(2)} (${p.n} quadros com som; nível ${ex.level} · caráter ${ex.curve} · memória ${ex.adaptation}${auto})`)
+        const auto = settings.autoGain ? ` · normalize ${agc.gainDb >= 0 ? '+' : ''}${agc.gainDb.toFixed(1)} dB (measured level ${agc.levelDb.toFixed(1)} dBFS)` : ''
+        window.so.log(`reaction: mean bass ${mean.toFixed(2)} · sd ${sd.toFixed(2)} (${p.n} frames with sound; level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation}${auto})`)
       }
       p.n = 0
       p.sum = 0
@@ -150,7 +150,7 @@ async function start(): Promise<void> {
   setToastPolicy(() => settings.overlayText)
   // ── Batida (spec 024): só mudanças de estado vão para o log, nunca cada batida ──
   const beat = new BeatTracker(beatTap, ctx, (locked, bpm) => {
-    window.so.log(locked ? `beat: estável a ${bpm.toFixed(0)} BPM` : 'beat: perdido, voltando a segundos')
+    window.so.log(locked ? `beat: locked at ${bpm.toFixed(0)} BPM` : 'beat: lost, back to seconds')
     if (!locked) {
       rotation.beatLost()
       flushPending()
@@ -243,18 +243,18 @@ async function start(): Promise<void> {
       try {
         if (simulateFail) {
           simulateFail = false
-          throw new DOMException('simulada por test-flags.json', 'NotAllowedError')
+          throw new DOMException('simulated by test-flags.json', 'NotAllowedError')
         }
         cap = await captureSystemAudio()
-        window.so.mark('captura') // só a primeira vez conta (o main ignora repetidas)
+        window.so.mark('capture') // só a primeira vez conta (o main ignora repetidas)
       } catch (err) {
-        window.so.mark('captura')
-        console.error('[capture] captura recusada ou indisponível', err)
-        window.so.log(`captura recusada: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+        window.so.mark('capture')
+        console.error('[capture] capture refused or unavailable', err)
+        window.so.log(`capture refused: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
         setCheck(1, { state: 'fail', detail: 'setup.check.denied', help: PERMISSION_HELP })
         setCheck(2, { state: 'pending', detail: 'setup.check.waiting' })
         setCheck(3, { state: 'pending', detail: 'setup.check.waiting' })
-        state.audio = 'recusada'
+        state.audio = 'refused'
         core.setCapture('denied')
         return false
       }
@@ -276,8 +276,8 @@ async function start(): Promise<void> {
       audioTrack.addEventListener('unmute', updateTrack)
       audioTrack.addEventListener('ended', () => {
         updateTrack()
-        console.error('[capture] a track de áudio terminou')
-        window.so.log('captura: a track de áudio terminou')
+        console.error('[capture] audio track ended')
+        window.so.log('capture: audio track ended')
         source?.disconnect()
         source = null
         setCheck(1, { state: 'fail', detail: 'setup.check.stopped', help: PERMISSION_HELP })
@@ -335,13 +335,13 @@ async function start(): Promise<void> {
     }
     if (!r.onBeat) flushPending()
     state.gainDb = settings.gainDb
-    state.audio = state.audio.replace(/ · respiro$/, '') + (core.state.breath ? ' · respiro' : '')
+    state.audio = state.audio.replace(/ · rest$/, '') + (core.state.breath ? ' · rest' : '')
     state.rotation = core.state.held
-      ? 'segurada'
+      ? 'held'
       : r.enabled
-        ? `${core.rotationIntervalSeconds} s${r.onBeat ? ` ou ${r.bars} compassos` : ''}`
-        : 'pausada'
-    state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `limite ${settings.fpsLimit}`
+        ? `${core.rotationIntervalSeconds} s${r.onBeat ? ` or ${r.bars} bars` : ''}`
+        : 'paused'
+    state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `cap ${settings.fpsLimit}`
   }
   core.events.on('stateChanged', applyState)
   // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
@@ -371,7 +371,7 @@ async function start(): Promise<void> {
     core.run('library.setFps', { name, fps }, 'rotation')
     const cap = settings.fpsLimit === 'monitor' ? Infinity : settings.fpsLimit - 2
     if (settings.perf.skipSlow && fps < Math.min(settings.perf.minFps, cap) && name === core.state.current && !core.isHidden(name)) {
-      window.so.log(`preset pesado: ${name} a ${fps.toFixed(1)} fps`)
+      window.so.log(`heavy preset: ${name} at ${fps.toFixed(1)} fps`)
       core.events.emit('slowPreset', { name, fps })
     }
   }
@@ -393,7 +393,7 @@ async function start(): Promise<void> {
           blackCheck = { name, at: performance.now() + blendSeconds * 1000 + 2000, dark: 0 }
           return
         }
-        window.so.log(`preset com shader que não compila nesta GPU: ${name}: ${err}`)
+        window.so.log(`preset shader doesn't compile on this GPU: ${name}: ${err}`)
         if (badShader.has(name)) return
         badShader.add(name)
         showToast(t('toast.gpuSkipped'), { force: true })
@@ -401,7 +401,7 @@ async function start(): Promise<void> {
       })
       .catch((err: unknown) => {
         // Preset que não compila para WASM: registra; o anterior continua na tela.
-        window.so.log(`preset não carregou: ${name}: ${err instanceof Error ? err.message : String(err)}`)
+        window.so.log(`preset failed to load: ${name}: ${err instanceof Error ? err.message : String(err)}`)
       })
     rotation.restart(performance.now())
     state.preset = name
@@ -448,7 +448,7 @@ async function start(): Promise<void> {
       if (!info) return
       await window.so.presets.removeMine(info.id)
       library.removeMine(name)
-      window.so.log(`estúdio: removido ${name}`)
+      window.so.log(`studio: removed ${name}`)
       if (core.state.current === name) run('preset.next', { cut: false }, 'ui')
       state.presetCount = library.count
       core.events.emit('stateChanged', { origin: 'ui' })
@@ -470,8 +470,8 @@ async function start(): Promise<void> {
   }
   const first = last && library.has(last) && !core.isHidden(last) ? core.run('preset.play', { name: last }, 'startup') : null
   if (!first?.ok) core.run('preset.random', {}, 'startup')
-  window.so.mark('primeiro preset')
-  console.log(`[startup] primeiro preset em ${(performance.now() - t0).toFixed(0)} ms (${first?.ok ? 'último usado' : 'aleatório'})`)
+  window.so.mark('first preset')
+  console.log(`[startup] first preset in ${(performance.now() - t0).toFixed(0)} ms (${first?.ok ? 'last used' : 'random'})`)
   state.presetCount = library.count
   void connectCapture()
 
@@ -499,7 +499,7 @@ async function start(): Promise<void> {
     const srcMine = library.mineInfo(src)
     let mineRef: { name: string; id: string } | null = srcMine ? { name: src, id: srcMine.id } : null
     const basedOn = srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
-    window.so.log(`estúdio: aberto com ${src}`)
+    window.so.log(`studio: opened with ${src}`)
     openStudio({
       core,
       sourceName: src,
@@ -508,7 +508,7 @@ async function start(): Promise<void> {
       compile: (p) => compiler.compile(p),
       apply: (p) => {
         s.applied = true
-        viz.load(p, 'crossfade', 0.4).catch((err: unknown) => window.so.log(`estúdio: versão não carregou: ${err instanceof Error ? err.message : String(err)}`))
+        viz.load(p, 'crossfade', 0.4).catch((err: unknown) => window.so.log(`studio: version failed to load: ${err instanceof Error ? err.message : String(err)}`))
       },
       levels: () => {
         const v = audioVals()
@@ -536,7 +536,7 @@ async function start(): Promise<void> {
         studioBusy = false
         state.studio = undefined
         run('ui.close', {}, 'ui')
-        window.so.log(`estúdio: fechado${saved ? ` com ${saved}` : ''}`)
+        window.so.log(`studio: closed${saved ? ` with ${saved}` : ''}`)
         // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).
         if (saved) run('preset.play', { name: saved }, 'ui')
         else if (s.applied && library.has(src)) run('preset.play', { name: src }, 'ui')
@@ -572,7 +572,7 @@ async function start(): Promise<void> {
   window.addEventListener('resize', () => viz.resize())
   // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
   // O log mostra se isso acontece na máquina do usuário.
-  document.addEventListener('visibilitychange', () => window.so.log(`janela ${document.visibilityState === 'hidden' ? 'oculta: render pausado' : 'visível'}`))
+  document.addEventListener('visibilitychange', () => window.so.log(`window ${document.visibilityState === 'hidden' ? 'hidden: render paused' : 'visible'}`))
   // Ações com nome (spec 020): as mesmas das teclas, com os mesmos toasts; a busca rápida executa por aqui.
   const toggleClean = (): void => {
     run('overlayText.set', { clean: !settings.overlayText.clean })
@@ -799,7 +799,7 @@ async function start(): Promise<void> {
       renderErrors = []
       // No Estúdio, a versão em edição que trava no motor volta ao original, sem pular o preset.
       if (studio) {
-        window.so.log(`estúdio: a versão em edição travou no motor: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+        window.so.log(`studio: the edited version froze in the engine: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
         showToast(t('toast.studioFroze'), { force: true })
         if (library.has(studio.source)) void viz.load(library.get(studio.source), 'cut', 0)
         return
@@ -807,7 +807,7 @@ async function start(): Promise<void> {
       const name = core.state.current
       if (!name || broken.has(name)) return
       broken.add(name)
-      window.so.log(`preset travou e foi pulado: ${name}: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
+      window.so.log(`preset froze and was skipped: ${name}: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
       showToast(t('toast.presetFroze'), { force: true })
       run('preset.next', { cut: true }, 'rotation')
     }
@@ -900,13 +900,13 @@ async function start(): Promise<void> {
       else if (!isBlackFrame()) blackCheck = null
       else if (silence.resting) c.at = now + 1000 // sem som, preto pode ser o preset descansando
       else if (++c.dark >= 3) {
-        window.so.log(`preset preto: ${c.name} (os shaders compilaram; 3 s todo preto com som tocando)`)
+        window.so.log(`black preset: ${c.name} (shaders compiled; 3 s all black with sound playing)`)
         blackCheck = null
       } else c.at = now + 1000
     }
     if (!firstFrame) {
       firstFrame = true
-      window.so.mark('primeiro quadro')
+      window.so.mark('first frame')
     }
     probeFrame(now)
     frames++
@@ -920,14 +920,14 @@ async function start(): Promise<void> {
         const f = (v: number, d = 2): string => (Number.isFinite(v) ? v.toFixed(d) : '—')
         const db = (v: number): string => (Number.isFinite(v) ? `${v.toFixed(1)}` : '−∞')
         const dbSigned = (v: number): string => `${v > 0 ? '+' : ''}${v.toFixed(1)}`
-        const mem = ex.adaptation === 'normal' ? '' : p.seeding ? ' · memória: semeando' : ` · média memória ${f(p.memLongAvg)}`
-        const squelch = p.squelch < 1 ? ` · silêncio ${(p.squelch * 100).toFixed(0)} %` : ''
+        const mem = ex.adaptation === 'normal' ? '' : p.seeding ? ' · memory: seeding' : ` · memory avg ${f(p.memLongAvg)}`
+        const squelch = p.squelch < 1 ? ` · silence ${(p.squelch * 100).toFixed(0)} %` : ''
         state.expression =
-          `expressividade ${exprLevel()} · caráter ${ex.curve} · memória ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
-          `imm ${f(p.imm)} · média motor ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · pico ${db(prePeakDb)} dBFS (antes do ganho) · ganho em vigor ${dbSigned(gainInEffectDb())} dB (${settings.autoGain ? `manual ${dbSigned(manualDb(settings.gainDb, true))} + auto ${dbSigned(agc.gainDb)}, nível medido ${db(agc.levelDb)} dBFS` : 'manual'})`
+          `expressiveness ${exprLevel()} · character ${ex.curve} · memory ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
+          `imm ${f(p.imm)} · engine avg ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · peak ${db(prePeakDb)} dBFS (before gain) · gain in effect ${dbSigned(gainInEffectDb())} dB (${settings.autoGain ? `manual ${dbSigned(manualDb(settings.gainDb, true))} + auto ${dbSigned(agc.gainDb)}, measured level ${db(agc.levelDb)} dBFS` : 'manual'})`
       }
-      const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} batidas (${rotation.barsRemaining()} c restantes)` : ''
-      state.beat = `beat ${beat.locked ? 'estável' : 'procurando'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confiança ${beat.confidence.toFixed(2)}${bs} · detecção ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/quadro`
+      const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} beats (${rotation.barsRemaining()} bars left)` : ''
+      state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`
       beatCost = 0
       beatFrames = 0
       const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
@@ -941,20 +941,20 @@ async function start(): Promise<void> {
   extras
     .then((count) => {
       state.presetCount = count
-      window.so.mark('pacotes extras')
+      window.so.mark('extra packs')
       core.events.emit('stateChanged', { origin: 'startup' }) // Biblioteca e busca veem os presets novos
-      console.log(`[viz] ${count} presets após os pacotes extras (${(performance.now() - t0).toFixed(0)} ms)`)
+      console.log(`[viz] ${count} presets after the extra packs (${(performance.now() - t0).toFixed(0)} ms)`)
     })
-    .catch((err: unknown) => console.error('[viz] falha ao carregar pacotes extras', err))
+    .catch((err: unknown) => console.error('[viz] extra packs failed to load', err))
 }
 
-window.addEventListener('error', (e) => window.so.log(`erro: ${e.message} @ ${e.filename}:${e.lineno}`))
-window.addEventListener('unhandledrejection', (e) => window.so.log(`promessa rejeitada: ${String(e.reason)}`))
+window.addEventListener('error', (e) => window.so.log(`error: ${e.message} @ ${e.filename}:${e.lineno}`))
+window.addEventListener('unhandledrejection', (e) => window.so.log(`unhandled rejection: ${String(e.reason)}`))
 
 start().catch((err: unknown) => {
   const message = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
   console.error('[start]', err)
-  window.so.log(`falha na abertura: ${message}`)
+  window.so.log(`startup failed: ${message}`)
   hudEl.hidden = false
   hud.show({ ...state, error: message })
 })

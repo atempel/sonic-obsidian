@@ -28,7 +28,7 @@ import { LANG_NAME, getSystemLang, fmtNum, fmtSeconds, includesText, t, tn, type
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
-import { importSummary } from '../importer'
+import { failReason, importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
 
 /**
@@ -606,8 +606,8 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
     try {
       const r = await bridge.importMilk(picked.files, (done, total) => setMilk({ ok: true, text: t('settings.library.importing', { done, total }), fails: [] }))
       r.extra += picked.extra
-      for (const n of picked.tooBig) r.failed.push({ name: n.replace(/\.milk$/i, ''), reason: t('settings.library.tooBig') })
-      setMilk({ ok: r.failed.length === 0, text: importSummary(r), fails: r.failed.map((f) => `${f.name}: ${f.reason}`) })
+      for (const n of picked.tooBig) r.failed.push({ name: n.replace(/\.milk$/i, ''), reason: 'settings.library.tooBig' })
+      setMilk({ ok: r.failed.length === 0, text: importSummary(r), fails: r.failed.map((f) => `${f.name}: ${failReason(f)}`) })
     } finally {
       setMilkBusy(false)
     }

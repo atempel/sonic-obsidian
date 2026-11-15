@@ -138,7 +138,7 @@ export class PresetVisualizer {
       typeof bp.mesh_width !== 'number' ||
       typeof bp.mesh_height !== 'number'
     ) {
-      console.warn('[viz] blendPattern do Butterchurn não encontrado: tipos de transição indisponíveis (sorteio do motor)')
+      console.warn('[viz] Butterchurn blendPattern not found: transition types unavailable (engine picks)')
       return false
     }
     const pattern = bp as BlendPatternInternals

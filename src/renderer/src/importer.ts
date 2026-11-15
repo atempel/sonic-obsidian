@@ -1,6 +1,6 @@
 import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
 import type { PresetLibrary } from './presets'
-import { t, tn } from './i18n'
+import { msgText, t, tn, type Lang, type Msg } from './i18n'
 
 /**
  * Importar `.milk` (spec 022). A conversão é no main (texto → preset 3.x); aqui cada preset é
@@ -18,7 +18,8 @@ export interface ImportResult {
   added: string[]
   /** Já estava na biblioteca (nome igual: pular e avisar, decisão do usuário). */
   skipped: string[]
-  failed: { name: string; reason: string }[]
+  /** O motivo como dado: a interface mostra no idioma do app e o log em inglês (spec 030). */
+  failed: { name: string; reason: Msg }[]
   /** Arquivos além do limite de 200 por vez. */
   extra: number
 }
@@ -55,7 +56,7 @@ const glError = (gl: WebGL2RenderingContext, p: WebGLProgram): string => {
  */
 export function shaderError(viz: Visualizer): string | null {
   const f = shaderFailure(viz)
-  return f && `shader ${f.which} não compila: ${f.detail}`
+  return f && `shader ${f.which} doesn't compile: ${f.detail}`
 }
 
 /** O mesmo, como dado (o Estúdio monta a frase no idioma do app, spec 030). */
@@ -83,11 +84,11 @@ export class Validator {
     this.viz = butterchurn.createVisualizer(ctx, this.canvas, { width: 64, height: 64, onlyUseWASM: true })
   }
 
-  /** `null` = compila; senão, o motivo legível. */
-  async check(preset: Preset): Promise<string | null> {
+  /** `null` = compila; senão, o motivo (traduzido só ao mostrar). */
+  async check(preset: Preset): Promise<Msg | null> {
     const f = await this.inspect(preset)
     if (!f) return null
-    return f.kind === 'equations' ? `equações: ${f.detail}`.slice(0, 160) : `shader ${f.which} não compila: ${f.detail}`
+    return f.kind === 'equations' ? { key: 'studio.err.equations', params: { detail: f.detail } } : { key: 'studio.err.shader', params: { which: f.which, detail: f.detail } }
   }
 
   /** O mesmo, como dado (Estúdio, spec 030). */
@@ -128,7 +129,7 @@ export async function importMilks(
         continue
       }
       if (f.text.length > MAX_BYTES) {
-        result.failed.push({ name, reason: 'arquivo maior que 256 KB' })
+        result.failed.push({ name, reason: 'settings.library.tooBig' })
         continue
       }
       try {
@@ -145,17 +146,20 @@ export async function importMilks(
       } catch (err) {
         // Erro do main chega como "Error invoking remote method …: Error: <motivo>".
         const msg = err instanceof Error ? err.message.replace(/^.*Error: /, '') : String(err)
-        result.failed.push({ name, reason: msg.slice(0, 160) })
+        result.failed.push({ name, reason: { raw: msg.slice(0, 160) } })
       }
     }
   } finally {
     validator?.dispose()
     onProgress?.(batch.length, batch.length)
   }
-  for (const f of result.failed) window.so.log(`importar .milk: ${f.name}: ${f.reason}`)
-  if (result.added.length) window.so.log(`importar .milk: ${result.added.length} adicionados`)
+  for (const f of result.failed) window.so.log(`import .milk: ${f.name}: ${failReason(f, 'en')}`)
+  if (result.added.length) window.so.log(`import .milk: ${result.added.length} added`)
   return result
 }
+
+/** Motivo de uma falha no idioma do app, ou em `l` (o log usa `'en'`). */
+export const failReason = (f: { reason: Msg }, l?: Lang): string => msgText(f.reason, l)
 
 /** Resumo de uma linha para o toast e para a nota das Configurações. */
 export function importSummary(r: ImportResult): string {

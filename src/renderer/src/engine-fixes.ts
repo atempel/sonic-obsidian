@@ -32,7 +32,7 @@ export function hookShaderCleanup(visualizer: Visualizer): boolean {
   const gl = r?.gl
   const holders = [r?.warpShader, r?.prevWarpShader, r?.compShader, r?.prevCompShader]
   if (!gl || holders.some((h) => !h || typeof h.createShader !== 'function')) {
-    console.warn('[viz] shaders do Butterchurn não encontrados: limpeza de programas desligada')
+    console.warn('[viz] Butterchurn shaders not found: program cleanup off')
     return false
   }
   for (const holder of holders as ShaderHolder[]) {

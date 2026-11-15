@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico, Estúdio: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico, Estúdio, log e HUD: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -251,6 +251,9 @@ async function checkStudio(b, lang) {
   await H.mockSo(p, { systemLanguage: lang, settings: { welcomeSeen: true, rotation: { enabled: false, intervalSeconds: 30 }, startupPreset: 'last', lastPreset: 'Martin - liquid arrows' } }); await H.mockAudio(p)
   await p.goto('http://localhost:5230/')
   await p.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
+  // HUD de depuração ligado antes do Estúdio: o log e o HUD ficam em inglês nos dois idiomas.
+  await p.keyboard.press('Control+Shift+D'); await p.waitForTimeout(1300)
+  const hud = await p.$eval('#hud', e => e.hidden ? '' : e.textContent).catch(() => '')
   await p.mouse.move(640, 400); await p.keyboard.press('e')
   await p.waitForSelector('.studio', { timeout: 8000 })
   const status = () => p.$eval('.cstat', e => e.textContent.trim())
@@ -266,8 +269,9 @@ async function checkStudio(b, lang) {
   await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
   const texts = await p.evaluate(studioTexts)
   const cut = await p.evaluate(clippedStudio)
+  const logs = await p.evaluate(() => window.__logs)
   await p.close()
-  return { compiled, errored, err, foot, title, texts, cut }
+  return { compiled, errored, err, foot, title, texts, cut, hud, logs }
 }
 
 const srv = H.serve(5230)
@@ -474,6 +478,13 @@ const srv = H.serve(5230)
   ok('8g rodapé com hora em 24 h ("Com 1 erro desde hh:mm:ss")', /^Com 1 erro desde \d\d:\d\d:\d\d$/.test(stPt.foot), stPt.foot)
   ok('8h Estúdio sem texto em inglês', stPt.texts.every(s => !enStudio.some(p => hasWord(s, p))), stPt.texts.filter(s => enStudio.some(p => hasWord(s, p))).join(' | '))
   ok('6r nada cortado no Estúdio (pt-BR)', stPt.cut.length === 0, stPt.cut.join(' | '))
+
+  // Log e HUD sempre em inglês (critério 5), mesmo com o app em português.
+  const ptLog = ['estúdio', 'aberto', 'fechado', 'erro', 'linha', 'expressividade', 'caráter', 'memória', 'nível', 'normalizar', 'ligado', 'desligado', 'ganho', 'rotação', 'áudio', 'aguardando', 'segurada', 'pausada', 'compilação', 'quadro', 'batidas', 'confiança', 'detecção', 'procurando', 'estável', 'Erro de sintaxe', 'esperava']
+  const ptIn = (s) => ptLog.filter(w => hasWord(s.toLowerCase(), w.toLowerCase()))
+  ok('9a HUD em inglês com o app em português', /fps/.test(stPt.hud) && /expressiveness/.test(stPt.hud) && ptIn(stPt.hud).length === 0, `${ptIn(stPt.hud).join(', ')} · ${stPt.hud.split('\n').slice(0, 2).join(' | ')}`)
+  ok('9b log em inglês com o app em português (erro do Estúdio com bloco e linha)', stPt.logs.some(l => /^studio: error in per_frame, line 2: Syntax error/.test(l)) && stPt.logs.every(l => ptIn(l).length === 0), stPt.logs.filter(l => ptIn(l).length || /^studio: error/.test(l)).join(' | '))
+  ok('9c log igual nos dois idiomas (mesmas linhas do Estúdio)', JSON.stringify(stEn.logs.filter(l => l.startsWith('studio'))) === JSON.stringify(stPt.logs.filter(l => l.startsWith('studio'))), JSON.stringify(stEn.logs.filter(l => l.startsWith('studio'))))
 
   const code = await R.finish()
   await b.close(); srv.close(); process.exit(code)
