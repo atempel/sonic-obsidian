@@ -2,11 +2,11 @@ import { render } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Preset } from 'butterchurn'
 import type { Core } from '../core/commands'
-import { EQ_KEYS, type Block, type CompileResult, type StudioError } from '../studio/compile'
+import { EQ_KEYS, type Block, type CompileResult, type StudioError, type StudioIssue } from '../studio/compile'
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
-import { t } from '../i18n'
+import { getLang, onLanguage, t, tn, type MessageKey } from '../i18n'
 import './studio.css'
 
 /**
@@ -38,20 +38,49 @@ export interface StudioApi {
 
 const DEBOUNCE_MS = 400
 const ESC_WINDOW_MS = 3000
-const BLOCKS: { id: Block; title: string; legend: string; h: number }[] = [
-  { id: 'init', title: 'per_frame_init', legend: 'Executa uma vez ao carregar o preset', h: 120 },
-  { id: 'frame', title: 'per_frame', legend: 'Executa a cada quadro', h: 180 },
-  { id: 'pixel', title: 'per_pixel', legend: 'Executa em cada ponto da malha', h: 150 }
+const BLOCKS: { id: Block; title: string; legend: MessageKey; h: number }[] = [
+  { id: 'init', title: 'per_frame_init', legend: 'studio.block.init', h: 120 },
+  { id: 'frame', title: 'per_frame', legend: 'studio.block.frame', h: 180 },
+  { id: 'pixel', title: 'per_pixel', legend: 'studio.block.pixel', h: 150 }
 ]
 const BLOCK_TITLE: Record<Block, string> = { init: 'per_frame_init', frame: 'per_frame', pixel: 'per_pixel' }
 
 type Status = 'ok' | 'busy' | 'err'
 type Code = Record<Block, string>
 
-const pad = (n: number): string => String(n).padStart(2, '0')
-const clock = (d: Date): string => `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
-const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`
-const errKey = (e: StudioError): string => `${e.block}:${e.line ?? '-'}:${e.message}`
+/** Hora da última compilação no formato do idioma do app (`2:32:05 PM` / `14:32:05`). */
+const clock = (d: Date): string => new Intl.DateTimeFormat(getLang(), { hour: getLang() === 'en' ? 'numeric' : '2-digit', minute: '2-digit', second: '2-digit' }).format(d)
+const errKey = (e: StudioError): string => `${e.block}:${e.line ?? '-'}:${JSON.stringify(e.issue)}`
+/** Log e HUD ficam fora da tradução (passo próprio da spec 030): seguem como estavam. */
+const count = (n: number): string => `${n} ${n === 1 ? 'erro' : 'erros'}`
+
+/** A frase do problema no idioma do app. */
+function issueText(i: StudioIssue): string {
+  switch (i.kind) {
+    case 'syntax': {
+      const got = i.got ?? t('studio.err.end')
+      return i.want.length ? t('studio.err.expected', { want: new Intl.ListFormat(getLang(), { type: 'disjunction' }).format(i.want), got }) : t('studio.err.near', { got })
+    }
+    case 'undefined':
+      return t('studio.err.undefined', { fn: i.fn })
+    case 'args':
+      return tn('studio.err.args', i.expected, { fn: i.fn, got: i.got })
+    case 'invalid':
+      return t('studio.err.invalid', { name: i.name })
+    case 'slow':
+      return t('studio.err.slow', { ms: i.ms })
+    case 'timeout':
+      return t('studio.err.timeout')
+    case 'equations':
+      return t('studio.err.equations', { detail: i.detail })
+    case 'shader':
+      return t('studio.err.shader', { which: i.which, detail: i.detail })
+    case 'raw':
+      return i.text
+  }
+}
+/** Onde: `per_frame, linha 2` / `per_frame, line 2`, ou só o bloco. */
+const whereText = (e: StudioError): string => (e.line ? t('studio.atLine', { block: BLOCK_TITLE[e.block], line: String(e.line) }) : BLOCK_TITLE[e.block])
 
 /** Do texto do bloco (o motor guarda com `\n`; o editor também). */
 const codeOf = (p: Preset): Code => ({
@@ -83,7 +112,7 @@ function Studio({ api }: { api: StudioApi }) {
   const [hadValid, setHadValid] = useState(false)
   const [probsOpen, setProbsOpen] = useState(true)
   const [saved, setSaved] = useState<{ name: string; id: string; meta: SoMineMeta } | null>(api.mine ? { name: api.sourceName, ...api.mine } : null)
-  const [title, setTitle] = useState(() => (api.mine ? api.sourceName : `Remix de ${originalCredit(api.sourceName).name.split(' - ').slice(1).join(' - ') || api.sourceName}`))
+  const [title, setTitle] = useState(() => (api.mine ? api.sourceName : t('studio.remixOf', { name: originalCredit(api.sourceName).name.split(' - ').slice(1).join(' - ') || api.sourceName })))
   const [dirty, setDirty] = useState(false)
   const [askAuthor, setAskAuthor] = useState(false)
   const [authorDraft, setAuthorDraft] = useState('')
@@ -96,6 +125,9 @@ function Studio({ api }: { api: StudioApi }) {
   latest.current = code
   const editors = useRef<Partial<Record<Block, HTMLTextAreaElement | null>>>({})
   const root = useRef<HTMLDivElement>(null)
+  // A troca de idioma redesenha o Estúdio (ele tem a própria raiz, fora do Overlay).
+  const [, setLangTick] = useState(0)
+  useEffect(() => onLanguage(() => setLangTick((n) => n + 1)), [])
 
   const basedOn = api.mine ? api.mine.meta.basedOn : originalCredit(api.sourceName)
   const author = settings.authorName || t('credit.mine.defaultAuthor')
@@ -122,10 +154,10 @@ function Studio({ api }: { api: StudioApi }) {
     }
     setStatus('err')
     setErrors(r.errors)
-    api.reportCost(`estúdio: compilação ${r.ms.toFixed(0)} ms · ${plural(r.errors.length, 'erro', 'erros')}`)
+    api.reportCost(`estúdio: compilação ${r.ms.toFixed(0)} ms · ${count(r.errors.length)}`)
     // Log: só erros novos, nunca por tecla.
     const keys = new Set(r.errors.map(errKey))
-    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`estúdio: erro em ${BLOCK_TITLE[e.block]}${e.line ? `, linha ${e.line}` : ''}: ${e.message}`)
+    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`estúdio: erro em ${BLOCK_TITLE[e.block]}${e.line ? `, linha ${e.line}` : ''}: ${issueText(e.issue)}`)
     lastErrs.current = keys
     return false
   }
@@ -162,7 +194,7 @@ function Studio({ api }: { api: StudioApi }) {
       }
     }
     try {
-      const name = (saved?.name ?? title.trim()) || 'Meu preset'
+      const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
       const r = await api.save({ preset: withCode(api.source, c), title: name, author: authorName ?? author })
       setSaved(r)
       setTitle(r.name)
@@ -253,16 +285,16 @@ function Studio({ api }: { api: StudioApi }) {
   ].filter(([, v]) => v.trim())
 
   return (
-    <div class="studio" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Estúdio de presets">
+    <div class="studio" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('studio.dialog')}>
       <header class="st-top">
-        <button type="button" class="btn btn-ghost st-back" title="Voltar ao Palco (Esc)" onClick={exit}>
+        <button type="button" class="btn btn-ghost st-back" title={t('studio.backTitle')} onClick={exit}>
           <Icon name="arrow-left" />
-          <span class="lbl">Voltar ao Palco</span>
+          <span class="lbl">{t('studio.back')}</span>
           <kbd class="lbl">Esc</kbd>
         </button>
         <div class="st-ident">
           <label class="sr-only" for="studio-name">
-            Nome do preset
+            {t('studio.nameLabel')}
           </label>
           <input
             id="studio-name"
@@ -273,7 +305,7 @@ function Studio({ api }: { api: StudioApi }) {
             spellcheck={false}
             autocomplete="off"
             readOnly={!!saved}
-            title={saved ? 'Renomear chega na próxima versão do Estúdio.' : undefined}
+            title={saved ? t('studio.renameSoon') : undefined}
             onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
           />
           <div class="st-credit">{credit}</div>
@@ -283,31 +315,31 @@ function Studio({ api }: { api: StudioApi }) {
             {status === 'ok' ? (
               <>
                 <Icon name="check" small />
-                Compilado
+                {t('studio.status.ok')}
               </>
             ) : status === 'err' ? (
               <>
                 <Icon name="triangle-alert" small />
-                {plural(errors.length, 'erro', 'erros')}
+                {tn('studio.errors', errors.length)}
               </>
             ) : (
               <>
                 <Icon name="clock" small />
-                Compilando…
+                {t('studio.status.busy')}
               </>
             )}
           </div>
-          <button type="button" class="btn btn-primary st-save" title="Salvar na biblioteca (Ctrl+S)" onClick={() => void save()}>
-            Salvar na biblioteca <span class="save-k">Ctrl+S</span>
+          <button type="button" class="btn btn-primary st-save" title={t('studio.saveTitle')} onClick={() => void save()}>
+            {t('studio.save')} <span class="save-k">Ctrl+S</span>
           </button>
           {askAuthor && (
-            <div class="st-ask" role="dialog" aria-label="Seu nome nos presets">
-              <label for="studio-ask-in">Seu nome nos presets</label>
+            <div class="st-ask" role="dialog" aria-label={t('studio.ask.title')}>
+              <label for="studio-ask-in">{t('studio.ask.title')}</label>
               <input
                 id="studio-ask-in"
                 type="text"
                 maxLength={60}
-                placeholder="Eu"
+                placeholder={t('credit.mine.defaultAuthor')}
                 autoFocus
                 value={authorDraft}
                 onInput={(e) => setAuthorDraft((e.target as HTMLInputElement).value)}
@@ -318,13 +350,13 @@ function Studio({ api }: { api: StudioApi }) {
                   }
                 }}
               />
-              <p>Aparece no crédito: “por {authorDraft.trim() || 'Eu'} · baseado em …”. Muda em Configurações › Geral.</p>
+              <p>{t('studio.ask.help', { name: authorDraft.trim() || t('credit.mine.defaultAuthor') })}</p>
               <div class="st-ask-a">
                 <button type="button" class="btn btn-ghost" onClick={() => setAskAuthor(false)}>
-                  Cancelar
+                  {t('studio.ask.cancel')}
                 </button>
                 <button type="button" class="btn btn-primary" onClick={confirmAuthor}>
-                  Salvar
+                  {t('studio.ask.save')}
                 </button>
               </div>
             </div>
@@ -333,23 +365,23 @@ function Studio({ api }: { api: StudioApi }) {
       </header>
 
       <div class="st-main">
-        <section class="st-prev" aria-label="Prévia">
+        <section class="st-prev" aria-label={t('studio.preview')}>
           <div class="st-stage">
-            <span class="chip tl">{dirty || !saved ? 'Seu remix' : 'Salvo'}</span>
+            <span class="chip tl">{dirty || !saved ? t('studio.chip.remix') : t('studio.chip.saved')}</span>
             {stale && (
               <span class="chip tr warn">
                 <Icon name="triangle-alert" small />
-                Mostrando a última versão válida
+                {t('studio.stale')}
               </span>
             )}
           </div>
           <Levels api={api} />
         </section>
 
-        <section class="st-ed" aria-label="Editor">
-          <div class="st-tabs" role="tablist" aria-label="Seções do preset">
+        <section class="st-ed" aria-label={t('studio.editor')}>
+          <div class="st-tabs" role="tablist" aria-label={t('studio.sections')}>
             <button type="button" role="tab" class="tab" aria-selected="true">
-              Código
+              {t('studio.tab.code')}
             </button>
           </div>
           <div class="st-blocks">
@@ -366,11 +398,11 @@ function Studio({ api }: { api: StudioApi }) {
               />
             ))}
             <p class="note">
-              Variáveis disponíveis: <span class="num">bass mid treb bass_att mid_att treb_att time frame fps</span>
+              {t('studio.vars')} <span class="num">bass mid treb bass_att mid_att treb_att time frame fps</span>
             </p>
             {shaders.length > 0 && (
               <details class="st-shaders">
-                <summary>Shaders (somente leitura; edição na próxima versão do Estúdio)</summary>
+                <summary>{t('studio.shaders')}</summary>
                 {shaders.map(([k, v]) => (
                   <div key={k}>
                     <h3 class="num">{k}</h3>
@@ -385,23 +417,22 @@ function Studio({ api }: { api: StudioApi }) {
               <span class="chev">
                 <Icon name="chevron-right" small />
               </span>
-              Problemas <span class={errors.length ? 'cnt bad' : 'cnt'}>{errors.length}</span>
+              {t('studio.problems')} <span class={errors.length ? 'cnt bad' : 'cnt'}>{errors.length}</span>
             </button>
             {probsOpen && (
               <div class="probs-b">
                 {errors.length === 0 ? (
-                  <p class="pempty">Nenhum problema.</p>
+                  <p class="pempty">{t('studio.noProblems')}</p>
                 ) : (
                   <ul>
                     {errors.map((e) => (
                       <li class="perr" key={errKey(e)}>
                         <Icon name="triangle-alert" small />
                         <p class="selectable">
-                          <code>{BLOCK_TITLE[e.block]}</code>
-                          {e.line ? `, linha ${e.line}` : ''}: {e.message}
+                          <code>{whereText(e)}</code>: {issueText(e.issue)}
                         </p>
                         <button type="button" class="btn" onClick={() => goTo(e.block, e.line)}>
-                          {e.line ? 'Ir para a linha' : 'Ir para o bloco'}
+                          {e.line ? t('studio.goLine') : t('studio.goBlock')}
                         </button>
                       </li>
                     ))}
@@ -415,9 +446,13 @@ function Studio({ api }: { api: StudioApi }) {
 
       <footer class="st-foot">
         <span>
-          {compiledAt ? (errors.length ? `Com ${plural(errors.length, 'erro', 'erros')} desde ${clock(compiledAt)}` : `Compilado às ${clock(compiledAt)}`) : 'Compilado às --:--:--'}
+          {compiledAt
+            ? errors.length
+              ? tn('studio.foot.errorsSince', errors.length, { time: clock(compiledAt) })
+              : t('studio.foot.compiledAt', { time: clock(compiledAt) })
+            : t('studio.foot.compiledAt', { time: '--:--:--' })}
         </span>
-        <span>Tab insere 2 espaços · Esc sai do campo · Ctrl+Enter compila agora</span>
+        <span>{t('studio.foot.keys')}</span>
       </footer>
     </div>
   )
@@ -432,7 +467,7 @@ function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines
     <div class="ed-block">
       <div class="ed-label">
         <h3 class="num">{block.title}</h3>
-        <span>{block.legend}</span>
+        <span>{t(block.legend)}</span>
       </div>
       <div class="ed" style={{ '--h': `${block.h}px` }}>
         <div class="ed-gut" ref={gut} aria-hidden="true">
@@ -445,7 +480,7 @@ function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines
         <textarea
           class="ed-ta"
           ref={props.bind}
-          aria-label={`${block.title}: ${block.legend}`}
+          aria-label={`${block.title}: ${t(block.legend)}`}
           spellcheck={false}
           autocomplete="off"
           wrap="off"
@@ -496,13 +531,13 @@ function Levels({ api }: { api: StudioApi }) {
   return (
     <section class="panel st-audio" aria-labelledby="studio-aud-h">
       <div class="panel-h">
-        <h2 id="studio-aud-h">Áudio agora</h2>
-        <p class="note">Use estas variáveis nas equações</p>
+        <h2 id="studio-aud-h">{t('studio.audio.title')}</h2>
+        <p class="note">{t('studio.audio.note')}</p>
       </div>
       {['bass', 'mid', 'treb'].map((n, i) => (
         <div class="mrow" key={n}>
           <span class="num nm">{n}</span>
-          <div class="lvl" role="img" aria-label={`Nível de ${n}`}>
+          <div class="lvl" role="img" aria-label={t('studio.audio.level', { name: n })}>
             <i
               ref={(el) => {
                 bars.current[i] = el
