@@ -1,6 +1,6 @@
 # 029 — Atualização automática pelo GitHub Releases
 
-**Fase:** Abertura · **Status:** A fazer · **Issue:** [#69](https://github.com/atempel/sonic-obsidian/issues/69) · **Origem:** P1 da [016](016-releases-abertura.md) · **Relacionada:** [017 — Landing](017-landing-github-pages.md)
+**Fase:** Abertura · **Status:** Em revisão (PR da rodada 2026-11-15; testar no bloco v0.7.0) · **Issue:** [#69](https://github.com/atempel/sonic-obsidian/issues/69) · **Origem:** P1 da [016](016-releases-abertura.md) · **Relacionada:** [017 — Landing](017-landing-github-pages.md)
 
 ## Problema
 Hoje, para ter uma versão nova, a pessoa precisa saber que ela saiu, voltar à landing, baixar e reinstalar. Quem instalou a v0.5.0 fica parado nela. Com releases saindo com frequência, o app precisa se atualizar sozinho, e a pessoa só deve precisar confirmar.

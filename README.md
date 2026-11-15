@@ -128,7 +128,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 
 ## Privacy
 
-- **Audio is analyzed in memory and never saved or uploaded.** The app has no account, no telemetry and no network calls of its own.
+- **Audio is analyzed in memory and never saved or uploaded.** The app has no account and no telemetry. The only network call it makes on its own is a daily check on GitHub for new versions (from 0.7.0); you can turn it off in Settings › About › Updates.
 - It visualizes what your system is playing. Content protected by DRM is out of scope, and the app does not try to work around it.
 - Integration with AI tools will be opt-in, local only (`127.0.0.1`), off by default, with a token and scoped permissions.
 

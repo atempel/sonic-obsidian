@@ -1,3 +1,7 @@
+<!-- Ao fechar o bloco v0.7.0 (spec 029, atualização automática): dizer aqui que quem está na 0.6.0 ou anterior instala
+     esta versão à mão uma única vez (instalar por cima mantém as configurações) e que, daí em diante, o app se atualiza
+     sozinho (dá para desligar em Configurações › Sobre › Atualizações). E voltar o "atualizações automáticas" ao cartão
+     do instalador na landing (site/index.html e site/pt/index.html; DECISIONS 2026-11-08). -->
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
 ## What's new in 0.6.0

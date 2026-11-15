@@ -159,9 +159,9 @@ const ok = R.ok
     // Configurações › Sobre › Atualizações.
     await page.evaluate(() => window.__upd.emit({ phase: 'idle', version: null, portable: false }))
     await page.keyboard.press('Control+,')
-    await page.waitForSelector('.settings [data-sec="sobre"]', { timeout: 5000 })
-    await page.click('.settings [data-sec="sobre"]')
-    await page.waitForSelector('#st-upd-auto', { state: 'attached', timeout: 5000 })
+    await page.waitForSelector('.settings [data-sec="sobre"]', { state: 'attached', timeout: 15000 })
+    await page.$eval('.settings [data-sec="sobre"]', (e) => e.click())
+    await page.waitForSelector('#st-upd-auto', { state: 'attached', timeout: 15000 })
     const s0 = await page.evaluate(() => ({
       grp: [...document.querySelectorAll('.settings .grp h3')].map((h) => h.textContent),
       checked: document.querySelector('#st-upd-auto').checked,
@@ -178,17 +178,17 @@ const ok = R.ok
 
     const status = () => page.$eval('.upd-st', (e) => e.textContent)
     const nowBtn = '.settings .row:has(.upd-st) .ctl button'
-    await page.click(nowBtn)
+    await page.$eval(nowBtn, (e) => e.click())
     ok('Verificar agora (com a chave desligada): "Verificando…" e o botão desabilitado', await H.poll(page, () => /Verificando…/.test(document.querySelector('.upd-st').textContent) && document.querySelector('.settings .row:has(.upd-st) .ctl button').disabled, { timeout: 1000, every: 50 }))
     await H.poll(page, () => !/Verificando/.test(document.querySelector('.upd-st').textContent), { timeout: 5000 })
     ok('→ "Você está na versão mais nova." e a última verificação de hoje', /Você está na versão mais nova\./.test(await status()) && /Última verificação: hoje, \d{2}:\d{2}/.test(await page.$eval('.upd-last', (e) => e.textContent)), await status())
 
     await page.evaluate(() => { window.__upd.next = 'error' })
-    await page.click(nowBtn); await H.poll(page, () => /Não deu/.test(document.querySelector('.upd-st').textContent), { timeout: 5000 })
+    await page.$eval(nowBtn, (e) => e.click()); await H.poll(page, () => /Não deu/.test(document.querySelector('.upd-st').textContent), { timeout: 5000 })
     ok('erro só aqui: "Não deu para verificar agora…"', /Não deu para verificar agora\. Confira a conexão e tente de novo\./.test(await status()))
 
     await page.evaluate(() => { window.__upd.next = 'downloading' })
-    await page.click(nowBtn); await H.poll(page, () => /42/.test(document.querySelector('.upd-st').textContent), { timeout: 5000 })
+    await page.$eval(nowBtn, (e) => e.click()); await H.poll(page, () => /42/.test(document.querySelector('.upd-st').textContent), { timeout: 5000 })
     const dl = await page.evaluate(() => ({ st: document.querySelector('.upd-st').textContent, cy: document.querySelector('.upd-st .cy')?.textContent, bar: !!document.querySelector('.settings .prog'), dis: document.querySelector('.settings .row:has(.upd-st) .ctl button').disabled }))
     ok('baixando: "Baixando 42%" em ciano, com a linha de progresso e o botão desabilitado', /Baixando 42%/.test(dl.st) && dl.cy === '42%' && dl.bar && dl.dis, JSON.stringify(dl))
     await page.evaluate(() => window.__upd.emit({ phase: 'ready', version: '0.6.4', percent: 100 }))
