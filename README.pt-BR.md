@@ -128,7 +128,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 
 ## Privacidade
 
-- **O áudio é analisado em memória e nunca é salvo nem enviado.** O app não tem conta, não tem telemetria e não faz chamadas de rede próprias.
+- **O áudio é analisado em memória e nunca é salvo nem enviado.** O app não tem conta nem telemetria. A única chamada de rede que ele faz por conta própria é uma checagem diária no GitHub por versões novas (a partir da 0.7.0); dá para desligar em Configurações › Sobre › Atualizações.
 - Ele visualiza o áudio que você escolhe tocar. Conteúdo protegido por DRM está fora do escopo, e o app não tenta contornar a proteção.
 - A integração com ferramentas de IA será opcional, apenas local (`127.0.0.1`), desligada por padrão, com token e permissões restritas.
 

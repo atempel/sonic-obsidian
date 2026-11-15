@@ -314,13 +314,13 @@ export class Core {
         if (typeof a.authorName !== 'string') fail('authorName: texto')
         s.authorName = cleanAuthor(a.authorName as string)
       }
-      for (const key of ['pinControls', 'startFullscreen', 'showFps', 'welcomeSeen'] as const) {
+      for (const key of ['pinControls', 'startFullscreen', 'showFps', 'welcomeSeen', 'updatesAuto'] as const) {
         const v = optBool(a[key], key)
         if (v !== undefined) s[key] = v
       }
       this.changedSettings(origin)
-      const { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps } = s
-      return { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps }
+      const { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps, updatesAuto } = s
+      return { fpsLimit, startupPreset, startupFavorite, gainDefaultDb, pinControls, startFullscreen, showFps, updatesAuto }
     },
     /** Idioma (spec 030): `{ language: 'auto' | 'en' | 'pt-BR' }`. Vale na hora, sem reiniciar; devolve o idioma em uso. */
     'app.setLanguage': (a, origin) => {

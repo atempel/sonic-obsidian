@@ -139,3 +139,18 @@ body.settings-open .settings .win { opacity: 1; transform: translate(-50%, -50%)
 }
 .settings .note .fails { margin: 6px 0 0; padding-left: 18px; color: var(--text-2); font-size: 12px; overflow-wrap: anywhere; }
 .settings .ctl .autodb { font-size: 12px; color: var(--text-2); margin-right: 8px; white-space: nowrap; }
+
+/* Sobre › Atualizações (spec 029; design 1794603894-598c, página Configurações) */
+.settings .upd-ver { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.settings .upd-st { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.settings .upd-st:empty { display: none; }
+.settings .upd-st .ico { width: 15px; height: 15px; color: var(--text-2); flex: none; }
+.settings .upd-st .warn-ico { display: inline-grid; color: var(--warn); }
+.settings .upd-st .warn-ico .ico { color: var(--warn); }
+.settings .upd-st .cy { color: var(--cyan); }
+.settings .spin-ico { display: inline-grid; place-items: center; }
+.settings .spin-ico .ico { animation: so-spin 1s linear infinite; }
+.settings .prog { display: block; height: 2px; margin-top: 10px; border-radius: 2px; background: var(--line-2); overflow: hidden; }
+.settings .prog i { display: block; height: 100%; width: 0; background: var(--violet); }
+.settings .upd-last { margin: 12px 0 0; font-size: 13px; color: var(--text-3); }
+@media (prefers-reduced-motion: reduce) { .settings .spin-ico .ico { animation: none; } }

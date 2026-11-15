@@ -33,6 +33,7 @@ import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
+import { checkUpdates, configureUpdates, installUpdate, startUpdates, updateState } from './update'
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement
 setupWindowChrome()
@@ -344,6 +345,14 @@ async function start(): Promise<void> {
     state.fpsMode = settings.fpsLimit === 'monitor' ? 'monitor' : `cap ${settings.fpsLimit}`
   }
   core.events.on('stateChanged', applyState)
+  // Atualização automática (spec 029): o main só checa sozinho com a chave ligada.
+  startUpdates(settings.updatesAuto)
+  let updatesAuto = settings.updatesAuto
+  core.events.on('stateChanged', () => {
+    if (settings.updatesAuto === updatesAuto) return
+    updatesAuto = settings.updatesAuto
+    configureUpdates(updatesAuto)
+  })
   // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
   // Só mede com a janela visível; o limite de fps vira teto do mínimo.
   let probe: { name: string; from: number; start: number; frames: number; last: number } | null = null
@@ -608,6 +617,22 @@ async function start(): Promise<void> {
     favorite: () => {
       const r = core.run<boolean>('library.favorite', {}, 'ui')
       if (r.ok) showToast(t(r.value ? 'toast.favAdded' : 'toast.favRemoved'))
+    },
+    // Busca rápida › "Verificar atualizações" (spec 029): responde por toast; a plaquinha aparece quando ficar pronta.
+    updateCheck: () => {
+      void checkUpdates().then((phase) => {
+        const v = updateState().version ?? ''
+        if (phase === 'latest') showToast(t('update.latest'), { force: true })
+        else if (phase === 'downloading' || phase === 'checking') showToast(t('update.toastDownloading', { version: v }), { force: true })
+        else if (phase === 'ready') showToast(t('update.readyShort', { version: v }), { force: true })
+        else if (phase === 'available') showToast(t('update.availableShort', { version: v }), { force: true })
+        else showToast(t('update.toastError'), { force: true })
+        idle.wake()
+      })
+    },
+    updateInstall: () => {
+      idle.wake()
+      installUpdate()
     }
   }
   setActionRunner((id) => actions[id]())

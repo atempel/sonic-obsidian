@@ -4,6 +4,7 @@ name: release
 # O usuário testa e publica à mão (Publish) no GitHub.
 # Disparo manual com `version` (ex.: 0.5.0) faz o mesmo sem push de tag: o rascunho aponta para o
 # commit disparado e o GitHub cria a tag vX.Y.Z quando o usuário publica.
+# Junto vão o latest.yml e o .blockmap do atualizador (spec 029).
 # Em PR que mexe no empacotamento, ou disparo sem `version`, só builda e sobe os arquivos como artifact (ensaio).
 on:
   push:
@@ -53,6 +54,25 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run dist:release
+      # Atualização automática (spec 029): o app instalado lê o latest.yml da release publicada.
+      - name: latest.yml do atualizador
+        shell: bash
+        working-directory: release
+        run: |
+          test -f latest.yml || { echo "::error::latest.yml não foi gerado (falta o bloco publish no electron-builder.yml?)"; exit 1; }
+          test -f SonicObsidian-Setup.exe.blockmap || { echo "::error::SonicObsidian-Setup.exe.blockmap não foi gerado"; exit 1; }
+          cat latest.yml
+          yml="$(sed -n 's/^version: *//p' latest.yml | tr -d "'\" ")"
+          version="$(node -p "require('../package.json').version")"
+          if [ "$yml" != "$version" ]; then
+            echo "::error::latest.yml diz $yml, mas o package.json diz $version."
+            exit 1
+          fi
+          if [ -n "$TAG" ] && [ "${TAG#v}" != "$yml" ]; then
+            echo "::error::latest.yml diz $yml, mas a tag é $TAG."
+            exit 1
+          fi
+          grep -q 'SonicObsidian-Setup.exe' latest.yml || { echo "::error::latest.yml não aponta para SonicObsidian-Setup.exe"; exit 1; }
       - name: Checksums
         shell: bash
         working-directory: release
@@ -73,7 +93,8 @@ jobs:
           gh release create "$TAG" $draft $pre --target "$GITHUB_SHA" \
             --title "Sonic Obsidian $TAG" \
             --notes-file .github/release-notes.md \
-            release/SonicObsidian-Setup.exe release/SonicObsidian-win-x64.zip release/SHA256SUMS.txt
+            release/SonicObsidian-Setup.exe release/SonicObsidian-win-x64.zip release/SHA256SUMS.txt \
+            release/latest.yml release/SonicObsidian-Setup.exe.blockmap
       - name: Artifact do ensaio
         if: env.TAG == ''
         uses: actions/upload-artifact@v4
@@ -83,5 +104,7 @@ jobs:
             release/SonicObsidian-Setup.exe
             release/SonicObsidian-win-x64.zip
             release/SHA256SUMS.txt
+            release/latest.yml
+            release/SonicObsidian-Setup.exe.blockmap
           retention-days: 7
           if-no-files-found: error

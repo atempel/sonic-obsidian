@@ -21,6 +21,8 @@ import { QuickSettings } from './QuickSettings'
 import { Settings } from './Settings'
 import { ShortcutsPanel, isShortcutsOpen, toggleShortcuts } from './ShortcutsPanel'
 import { CaptureDiag, SilenceNotice, SlowChip, WelcomeCard } from './Diagnostics'
+import { UpdateNotice } from './UpdateNotice'
+import { updateState } from '../update'
 import { setupIdle, type Idle } from './idle'
 import { splitPresetName } from './preset-name'
 import { TextStack, coreRise, drainLine, nudgeIcon, shuffleIcon } from './motion'
@@ -296,6 +298,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   return (
     <div class="strip-wrap">
       <SlowChip core={core} />
+      <UpdateNotice />
       <div class="strip" role="toolbar" aria-label={t('strip.toolbar')}>
         <i class="rot-line" ref={line} />
         <div class="now">
@@ -636,6 +639,7 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   setupPress()
   const { state } = bridge.core
   return setupIdle(
-    () => state.settings.pinControls || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
+    // "Atualizando…" (spec 029): a faixa fica presa visível até a janela fechar.
+    () => state.settings.pinControls || updateState().phase === 'installing' || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
   )
 }
