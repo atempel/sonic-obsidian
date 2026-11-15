@@ -179,6 +179,8 @@ async function ui() {
     const v = await page.evaluate(() => [document.querySelector('#exprCurve [aria-checked="true"]').dataset.v, document.querySelector('#exprMemory [aria-checked="true"]').dataset.v, document.querySelector('#exprReset').disabled, document.activeElement && document.activeElement.id])
     ok('4b "Restaurar padrão" volta Nível, Caráter e Memória; foco vai ao Nível', v[0] === 'b' && v[1] === 'normal' && v[2] === true && v[3] === 'expr', JSON.stringify(v))
     await page.keyboard.press('Escape')
+    // O Restaurar leva o foco ao Nível; o Esc o devolve ao visual — esperar, senão a tecla cai no slider.
+    await page.waitForFunction(() => !document.activeElement || !document.activeElement.closest('.sheet'), null, { timeout: 3000 })
     await page.keyboard.press('Control+Shift+D')
     await page.waitForTimeout(1500)
     const hud = await page.$eval('#hud', (e) => e.textContent)
