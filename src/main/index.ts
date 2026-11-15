@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
 import { mark } from './startup'
+import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
 import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
 import { listMine, removeMine, saveMine } from './mine'
@@ -17,7 +18,7 @@ function registerStores(): void {
   for (const name of ['settings', 'library']) stores.set(name, new JsonStore(name))
   const get = (name: unknown): JsonStore => {
     const store = typeof name === 'string' ? stores.get(name) : undefined
-    if (!store) throw new Error(`store desconhecido: ${String(name)}`)
+    if (!store) throw new Error(`unknown store: ${String(name)}`)
     return store
   }
   ipcMain.handle('store:load', (_e, name: unknown) => get(name).load())
@@ -43,7 +44,9 @@ function registerStores(): void {
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
   ipcMain.handle('app:version', () => app.getVersion())
   // Idioma do Windows (spec 030): o primeiro preferido; `pt-*` vira pt-BR, o resto en (o renderer só recebe os dois).
-  ipcMain.handle('app:systemLanguage', () => (/^pt(-|_|$)/i.test(app.getPreferredSystemLanguages()[0] ?? app.getLocale()) ? 'pt-BR' : 'en'))
+  ipcMain.handle('app:systemLanguage', () => systemLang())
+  // Idioma ativo do app (resolvido no renderer): os diálogos nativos seguem ele (spec 030, P1).
+  ipcMain.on('app:setLanguage', (_e, l: unknown) => setMainLanguage(l))
   // Créditos de terceiros: o arquivo vai ao lado do .exe (extraFiles); em dev, na raiz do projeto.
   ipcMain.handle('system:openNotices', () =>
     shell.openPath(join(app.isPackaged ? dirname(process.execPath) : app.getAppPath(), 'THIRD_PARTY_NOTICES.md'))
@@ -72,8 +75,8 @@ function registerStores(): void {
   // renderer proíbe. Entra texto, sai preset 3.x (EEL + GLSL); nada é executado.
   const milkFile = (v: unknown): MilkFile => {
     const f = v as Partial<MilkFile> | null
-    if (!f || typeof f.name !== 'string' || typeof f.text !== 'string') throw new Error('arquivo inválido')
-    if (f.text.length > MAX_BYTES) throw new Error('arquivo maior que 256 KB')
+    if (!f || typeof f.name !== 'string' || typeof f.text !== 'string') throw new Error('[invalid] bad file')
+    if (f.text.length > MAX_BYTES) throw new Error('[too-big] file larger than 256 KB')
     return { name: f.name.slice(0, 260), text: f.text }
   }
   ipcMain.handle('presets:convertMilk', async (_e, text: unknown) => {
@@ -121,7 +124,7 @@ function registerCollectionFiles(): void {
   ipcMain.handle('collections:export', async (e, text: unknown) => {
     if (typeof text !== 'string' || text.length > 2_000_000) return { ok: false }
     const win = BrowserWindow.fromWebContents(e.sender)
-    const opts = { defaultPath: 'sonic-obsidian-colecoes.json', filters }
+    const opts = { title: mt('collections.exportTitle'), defaultPath: mt('collections.defaultFile'), filters }
     const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
     if (res.canceled || !res.filePath) return { ok: false, canceled: true }
     await writeFile(res.filePath, text, 'utf8')
@@ -129,7 +132,7 @@ function registerCollectionFiles(): void {
   })
   ipcMain.handle('collections:import', async (e) => {
     const win = BrowserWindow.fromWebContents(e.sender)
-    const opts = { properties: ['openFile' as const], filters }
+    const opts = { title: mt('collections.importTitle'), properties: ['openFile' as const], filters }
     const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
     const path = res.filePaths[0]
     if (res.canceled || !path) return { ok: false, canceled: true }
@@ -157,14 +160,14 @@ function registerLoopbackCapture(): void {
         .then((sources) => {
           const screen = sources[0]
           if (!screen) {
-            console.error('[capture] nenhuma tela encontrada pelo desktopCapturer')
+            console.error('[capture] desktopCapturer found no screen')
             callback({})
             return
           }
           callback({ video: screen, audio: 'loopback' })
         })
         .catch((err: unknown) => {
-          console.error('[capture] desktopCapturer falhou', err)
+          console.error('[capture] desktopCapturer failed', err)
           callback({})
         })
     },

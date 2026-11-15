@@ -22,6 +22,7 @@ import {
 } from '../core/state'
 import { Icon } from './icons'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
+import { Kbd } from './Kbd'
 
 /**
  * Ajustes rápidos (spec 011, PR 1): painel à direita com o que se mexe com a
@@ -324,7 +325,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
               <Icon name="settings" />
               {t('quick.allSettings')}
             </span>
-            <kbd>Ctrl+,</kbd>
+            <Kbd k="Ctrl+," />
           </button>
         </section>
       </div>

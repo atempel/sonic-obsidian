@@ -30,6 +30,7 @@ import { splitPresetName } from './preset-name'
 import { AutoGainReadout, dbText, secondsText } from './QuickSettings'
 import { failReason, importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
+import { Kbd } from './Kbd'
 
 /**
  * Configurações (spec 011, PR 2): tela por cima do Palco, com o visual a 25% atrás.
@@ -172,7 +173,7 @@ function withKey(text: string, key: string): ComponentChildren {
   return (
     <>
       {before}
-      <kbd>{key}</kbd>
+      <Kbd k={key} />
       {after}
     </>
   )

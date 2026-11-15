@@ -53,7 +53,9 @@ contextBridge.exposeInMainWorld('so', {
   app: {
     version: (): Promise<string> => ipcRenderer.invoke('app:version'),
     /** Idioma do Windows já reduzido a 'en' ou 'pt-BR' (spec 030). */
-    systemLanguage: (): Promise<'en' | 'pt-BR'> => ipcRenderer.invoke('app:systemLanguage')
+    systemLanguage: (): Promise<'en' | 'pt-BR'> => ipcRenderer.invoke('app:systemLanguage'),
+    /** Idioma ativo do app: os diálogos nativos do main seguem ele (spec 030, P1). */
+    setLanguage: (lang: 'en' | 'pt-BR'): void => ipcRenderer.send('app:setLanguage', lang === 'pt-BR' ? 'pt-BR' : 'en')
   },
   /** .milk (texto) → preset do Butterchurn 3, convertido no main (spec 022). */
   presets: {

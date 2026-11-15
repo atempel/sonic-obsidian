@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { basename, join } from 'node:path'
 import { log } from './log'
+import { mt } from './i18n'
 import { milkToPreset3 } from './milk'
 
 /**
@@ -71,7 +72,7 @@ export async function listImported(): Promise<CacheFile[]> {
 /** Converte e grava (fonte + cache). O renderer só chama isto depois de validar o preset. */
 export async function saveImported(file: MilkFile): Promise<void> {
   const name = presetNameFromFile(file.name)
-  if (!name) throw new Error('nome de arquivo vazio')
+  if (!name) throw new Error('[invalid] empty file name')
   const preset = await milkToPreset3(file.text)
   await mkdir(dir(), { recursive: true })
   const id = idOf(name)
@@ -88,7 +89,7 @@ export async function removeImported(name: unknown): Promise<void> {
 
 /** Diálogo nativo para escolher `.milk` (até MAX_BATCH; arquivos grandes demais ficam de fora). */
 export async function pickMilkFiles(win: BrowserWindow | null): Promise<{ files: MilkFile[]; tooBig: string[]; extra: number }> {
-  const opts = { title: 'Importar presets .milk', filters: [{ name: 'Presets MilkDrop', extensions: ['milk'] }], properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'> }
+  const opts = { title: mt('milk.pickTitle'), filters: [{ name: mt('milk.filter'), extensions: ['milk'] }], properties: ['openFile', 'multiSelections'] as Array<'openFile' | 'multiSelections'> }
   const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
   if (res.canceled) return { files: [], tooBig: [], extra: 0 }
   const paths = res.filePaths.filter((p) => /\.milk$/i.test(p))

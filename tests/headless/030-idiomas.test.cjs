@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico, Estúdio, log e HUD: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico, Estúdio, log e HUD, P1 (main e teclas faladas): Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -22,6 +22,23 @@ const unused = Object.keys(en).filter(k => {
 ok('0a catálogos lidos (en e pt-BR com as mesmas chaves)', Object.keys(en).length > 50 && Object.keys(en).join() === Object.keys(pt).join(), `${Object.keys(en).length} chaves`)
 ok('0b nenhuma chave sem uso', unused.length === 0, unused.join(', '))
 
+// P1: erros do main chegam em inglês com código e a interface traduz pelo código (main-error.ts).
+{
+  const ts = require('typescript'), Module = require('module')
+  const js = ts.transpileModule(fs.readFileSync(path.join(src, 'main-error.ts'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
+  const m = new Module('main-error.js'); m._compile(js, 'main-error.js')
+  const { mainError, mainErrorText } = m.exports
+  const ipc = (msg) => new Error(`Error invoking remote method 'presets:saveMine': Error: ${msg}`)
+  const shader = mainError(ipc("[shader:warp] shader warp: the HLSL converter couldn't read the shader"))
+  ok('0c erro do main com código vira chave traduzível', mainError(ipc('[js] preset with JavaScript (*_str/useJS) refused')) === 'mainErr.js' && mainError(ipc('[too-big] preset larger than 256 KB')) === 'mainErr.tooBig' && shader.key === 'mainErr.shader' && shader.params.which === 'warp' && mainError(ipc('[invalid] bad id')).params.detail === 'bad id', JSON.stringify(shader))
+  ok('0d sem código: o texto como veio; o log recebe o inglês sem o código', mainError(ipc('boom')).raw === 'boom' && mainErrorText(ipc('[empty-title] empty title')) === 'empty title')
+  // Todo texto lançado pelo main é inglês e com código (exceto erro interno de programação).
+  const mainSrc = ['index.ts', 'mine.ts', 'milk.ts', 'imported.ts'].map(f => fs.readFileSync(path.join(src, '..', '..', 'main', f), 'utf8')).join('\n')
+  const thrown = [...mainSrc.matchAll(/throw new Error\((['"`])(.*?)\1/g)].map(x => x[2])
+  const bad = thrown.filter(x => !/^\[[\w-]+(:[^\]]*)?\] /.test(x) && !/^(unknown store|the HLSL converter)/.test(x) || /[À-ú]/.test(x))
+  ok('0e erros lançados pelo main: inglês e com código', thrown.length >= 15 && bad.length === 0, `${thrown.length} · ${bad.join(' | ')}`)
+}
+
 // Textos da faixa (rótulos, dicas e texto visível), sem o nome do preset (créditos não se traduzem).
 const stripTexts = () => {
   const out = []
@@ -36,7 +53,7 @@ const stripTexts = () => {
 const clipped = () => {
   const sel = '.strip button, .strip .rot span, .breath-tag, .chip, .gtoast span, .settings .lbl, .settings .help, .settings button, .sheet h2, .sheet h3, .sheet label, .sheet .line > span, .sheet button, .sheet .val, .sheet select'
   return [...document.querySelectorAll(sel)]
-    .filter(e => e.offsetParent && !e.closest('.now-title, .now-author') && e.scrollWidth > e.clientWidth + 1)
+    .filter(e => e.offsetParent && !e.classList.contains('vh') && !e.closest('.now-title, .now-author') && e.scrollWidth > e.clientWidth + 1)
     .map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 }
 // Textos dos Ajustes rápidos (rótulos, dicas, opções e texto visível).
@@ -80,7 +97,7 @@ const libTexts = () => {
   return out
 }
 const clippedLib = () => [...document.querySelectorAll('.lib .brand, .lib .ltabs button, .lib .chips button, .lib .hiddenbar span, .lib .hiddenbar button, .lib .empty .h, .lib .newcoll, .palette .p-tabs button, .palette .p-foot span, .palette .r-hint')]
-  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+  .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 const libOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(library|palette)\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 // Abre a Biblioteca (Todos e Coleções) e a busca rápida com "flêxi" (sem acento no nome: a busca ignora acentos).
 async function checkLib(page) {
@@ -116,7 +133,7 @@ const settingsTexts = () => {
   return out
 }
 const clippedSettings = () => [...document.querySelectorAll('.settings .lbl, .settings .help, .settings button, .settings h2, .settings h3, .settings .seg span, .settings .phase, .settings .count, .settings .testres')]
-  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+  .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 const settingsOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^(settings|quick|credit|shortcuts)\./.test(k) && !/^shortcuts\.(group|cmd|key|or$|title$|filter$|close|empty$|customize$|lib)/.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 // Percorre as seções pelo menu (com a lista de ocultos aberta e o teste de captura rodado) e devolve textos, cortados e nomes do menu.
 async function checkSettings(page) {
@@ -155,7 +172,7 @@ const panelTexts = () => {
   return out
 }
 const clippedPanel = () => [...document.querySelectorAll('.kpanel h2, .kpanel h3, .kpanel .k-row > span:first-child, .kpanel kbd, .kpanel .k-foot a, .kpanel input')]
-  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+  .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 const panelOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^shortcuts\./.test(k) && !/^shortcuts\.cmd\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 async function checkPanel(page, filter) {
   // Na máquina lenta do CI a busca pode ainda estar fechando: tenta de novo até o painel abrir.
@@ -168,6 +185,7 @@ async function checkPanel(page, filter) {
   const groups = await page.$$eval('.kpanel h3', (h) => h.map((e) => e.textContent))
   const texts = await page.evaluate(panelTexts)
   const cut = await page.evaluate(clippedPanel)
+  const spoken = await page.$$eval('.kpanel kbd', (k) => k.filter(e => e.querySelector('[aria-hidden="true"]')).map(e => `${e.querySelector('[aria-hidden]').textContent}=${e.querySelector('.vh').textContent}`))
   await page.fill('.kpanel input', filter); await page.waitForTimeout(200)
   const rows = await page.$$eval('.kpanel .k-row', (r) => r.map((e) => e.innerText.replace(/\s+/g, ' ')))
   await page.fill('.kpanel input', 'zzzz'); await page.waitForTimeout(150)
@@ -178,7 +196,7 @@ async function checkPanel(page, filter) {
   await page.keyboard.type(filter); await page.waitForTimeout(250)
   const cmds = await page.$$eval('.palette .prow.cmd', (r) => r.map((e) => e.innerText.replace(/\s+/g, ' ')))
   await page.keyboard.press('Escape'); await page.waitForTimeout(400)
-  return { title, groups, texts, cut, rows, empty, cmds }
+  return { title, groups, texts, cut, rows, empty, cmds, spoken }
 }
 
 
@@ -193,7 +211,7 @@ const floatTexts = () => {
   return out
 }
 const clippedFloat = () => [...document.querySelectorAll('.float h2, .float .t, .float .lbl, .float .det, .float .help, .float button, .float kbd, .float summary, .float .okline')]
-  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+  .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 const setupOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^setup\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
 // Abre o app com a captura recusada (test-flags) e a primeira abertura: boas-vindas + diagnóstico de captura.
 async function checkSetup(b, lang) {
@@ -245,7 +263,7 @@ const studioTexts = () => {
   return out
 }
 const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h')]
-  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+  .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 async function checkStudio(b, lang) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
   await H.mockSo(p, { systemLanguage: lang, settings: { welcomeSeen: true, rotation: { enabled: false, intervalSeconds: 30 }, startupPreset: 'last', lastPreset: 'Martin - liquid arrows' } }); await H.mockAudio(p)
@@ -333,6 +351,8 @@ const srv = H.serve(5230)
   ok('3t estado vazio do painel em English', kEn.empty === 'No shortcuts for “zzzz”.', kEn.empty)
   ok('3u comandos da busca em English', kEn.cmds.some(c => c.includes('Random preset') && c.includes('Space')), kEn.cmds.join(' | '))
   ok('6k nada cortado no painel ? (en)', kEn.cut.length === 0, kEn.cut.join(' | '))
+  ok('10a teclas de símbolo com nome falado em English (← = Left arrow)', kEn.spoken.includes('←=Left arrow') && kEn.spoken.includes('?=Question mark'), kEn.spoken.join(' | '))
+  ok('10b diálogos nativos do main seguem o idioma do app (en)', await page.evaluate(() => window.__mainLang.at(-1)) === 'en', JSON.stringify(await page.evaluate(() => window.__mainLang)))
   await page.mouse.move(600, 380); await page.mouse.move(640, 400)
 
   // 2. Configurações › Geral › Idioma: no topo, ajuda do Automático, troca na hora.
@@ -414,6 +434,8 @@ const srv = H.serve(5230)
   ok('3y estado vazio do painel em português', kPt.empty === 'Nenhum atalho para “zzzz”.', kPt.empty)
   ok('3z comandos da busca em português', kPt.cmds.some(c => c.includes('Preset aleatório') && c.includes('Espaço')), kPt.cmds.join(' | '))
   ok('6l nada cortado no painel ? (pt-BR)', kPt.cut.length === 0, kPt.cut.join(' | '))
+  ok('10c teclas de símbolo com nome falado em português (← = Seta para a esquerda)', kPt.spoken.includes('←=Seta para a esquerda') && kPt.spoken.includes('?=Ponto de interrogação'), kPt.spoken.join(' | '))
+  ok('10d diálogos nativos do main seguem o idioma do app (pt-BR, na hora)', await page.evaluate(() => window.__mainLang.at(-1)) === 'pt-BR', JSON.stringify(await page.evaluate(() => window.__mainLang)))
   ok('sem erros na página', errs.length === 0, JSON.stringify(errs.slice(0, 5)))
 
   // 1. Windows em português (outra página) → pt-BR; idioma salvo em English vence o Windows.

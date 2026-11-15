@@ -35,3 +35,7 @@ nsis:
   # Desinstalar mantém settings.json, library.json e o log no userData.
   deleteAppDataOnUninstall: false
   artifactName: SonicObsidian-Setup.${ext}
+  # Idiomas do instalador (spec 030, P1): segue o idioma do Windows (pt-* → pt_BR, o resto → en_US),
+  # sem seletor. Só os dois idiomas do app (o padrão do electron-builder embutia todos).
+  installerLanguages: [en_US, pt_BR]
+  displayLanguageSelector: false

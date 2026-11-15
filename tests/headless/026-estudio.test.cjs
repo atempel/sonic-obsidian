@@ -28,6 +28,8 @@ function mainChecks() {
   ok('8d *_str numa forma é recusado', throws({ ...good, shapes: [{ ...good.shapes[0], frame_eqs_str: 'x' }] }))
   ok('8e campo desconhecido é recusado', throws({ ...good, evil: 'x' }))
   ok('8f maior que 256 KB é recusado', throws({ ...good, comp: 'x'.repeat(260 * 1024) }))
+  const msg = (p) => { try { sanitizePreset(p); return '' } catch (e) { return e.message } }
+  ok('8g erro do main em inglês com código (spec 030, P1)', /^\[js\] /.test(msg({ ...good, useJS: true })) && /^\[too-big\] /.test(msg({ ...good, comp: 'x'.repeat(260 * 1024) })) && /^\[invalid\] /.test(msg({ ...good, evil: 'x' })), msg({ ...good, evil: 'x' }))
 }
 
 ;(async () => {
@@ -45,7 +47,7 @@ function mainChecks() {
       listMine: async () => [],
       saveMine: async (d) => {
         window.__mineCalls.push(JSON.parse(JSON.stringify(d)))
-        if (JSON.stringify(d.preset).includes('_str"')) throw new Error("Error invoking remote method 'presets:saveMine': Error: preset com JavaScript (*_str/useJS) recusado")
+        if (JSON.stringify(d.preset).includes('_str"')) throw new Error("Error invoking remote method 'presets:saveMine': Error: [js] preset with JavaScript (*_str/useJS) refused")
         if (d.id) { const e = window.__mine.find(x => x.id === d.id); e.preset = d.preset; return { id: e.id, meta: e.meta } }
         const id = String(++n).padStart(24, '0'); const meta = { ...d.meta, createdAt: new Date().toISOString() }
         window.__mine.push({ id, meta, preset: d.preset }); return { id, meta }

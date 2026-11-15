@@ -1,6 +1,6 @@
 # 030 — Idiomas: inglês e português (Brasil)
 
-**Fase:** Abertura · **Status:** Em andamento (base + migração 1 no 1º PR; migração 2, Ajustes rápidos, no 2º; migração 3, Biblioteca e busca, no 3º; migração 4, Configurações, no 4º; migração 5, painel `?` e comandos da busca, no 5º; migração 6, Setup e diagnóstico, no 6º; migração 7, Estúdio, no 7º; log e HUD em inglês no 8º; falta o P1) · **Issue:** [#101](https://github.com/atempel/sonic-obsidian/issues/101) · **Personas:** todas (o app público precisa falar inglês); Nostálgico do Winamp e Anfitrião de Ambiente no Brasil (pt-BR)
+**Fase:** Abertura · **Status:** Implementada, aguardando o teste no bloco v0.7.0 (base + migração 1 no 1º PR; migração 2, Ajustes rápidos, no 2º; migração 3, Biblioteca e busca, no 3º; migração 4, Configurações, no 4º; migração 5, painel `?` e comandos da busca, no 5º; migração 6, Setup e diagnóstico, no 6º; migração 7, Estúdio, no 7º; log e HUD em inglês no 8º; P1 no 9º) · **Issue:** [#101](https://github.com/atempel/sonic-obsidian/issues/101) · **Personas:** todas (o app público precisa falar inglês); Nostálgico do Winamp e Anfitrião de Ambiente no Brasil (pt-BR)
 
 ## Problema
 Todos os textos do app estão em pt-BR, escritos direto nos componentes, sem nenhuma estrutura de tradução. O repositório e a landing já são bilíngues, e o design system manda escrever o texto primeiro em inglês ("English first, pt-BR as a full translation"). Quem baixa o app fora do Brasil hoje recebe tudo em português.
@@ -44,6 +44,7 @@ Todos os textos do app estão em pt-BR, escritos direto nos componentes, sem nen
 **P1**
 - Processo main: menus, diálogos nativos e o instalador NSIS em pt-BR.
 - Nomes de tecla para leitor de tela ("Space" / "Espaço").
+- Feito (9º PR, DECISIONS 2026-11-15): diálogos nativos no idioma do app (`app:setLanguage` → `src/main/i18n.ts`); erros do main em inglês com código, traduzidos no renderer (`main-error.ts`); NSIS só com `en_US` e `pt_BR`, pelo idioma do Windows; teclas de símbolo com nome falado (`Kbd`). O app não tem menu visível.
 
 ## Glossário (fonte: design system › Microcopy, mais os termos novos)
 Stage/Palco · Control strip/Faixa de controle · Library/Biblioteca · Quick search/Busca rápida · Quick settings/Ajustes rápidos · Settings/Configurações · Clean mode/Modo limpo · **Notifications/Avisos** (decisão do usuário, 2026-11-13: não "Notices") · Profile/Perfil · Built-in/Do app · Default · Calm · Party · Study presets/Padrão · Calmo · Festa · Estudar presets · Expressiveness/Expressividade · Character: Contrast · Energy · Snap/Caráter: Contraste · Energia · Nervo · Memory: Short · Long · Fixed · Live/Memória: Curta · Longa · Fixa · Viva · Frequency curve: Flat · Lows · Mids · Highs · Smile · Custom/Curva por frequência: Plana · Graves · Médios · Agudos · Sorriso · Personalizada · Normalize audio · Fine adjust/Normalizar áudio · Ajuste fino · Transitions · Hard cut · Duration/Transições · Corte seco · Tempo · Restart and update · Later · What's new/Reiniciar e atualizar · Depois · O que mudou · Report a problem · Suggest an idea · Ask a question/Relatar um problema · Sugerir uma ideia · Fazer uma pergunta.

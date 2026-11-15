@@ -4,9 +4,10 @@ import { Highlight } from './Highlight'
 import { Icon } from './icons'
 import { TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
-import { keyName, matchCommands, runAction, type Command } from './shortcuts'
+import { matchCommands, runAction, type Command } from './shortcuts'
 import { showToast } from './toast'
 import { fmtSeconds, t } from '../i18n'
+import { Kbd } from './Kbd'
 
 const MAX_RESULTS = 50
 
@@ -201,7 +202,7 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
                 <span class="r-hint">{t('palette.hintRun')}</span>
                 <span class="k-keys">
                   {c.keys.map((k) => (
-                    <kbd key={k}>{keyName(k)}</kbd>
+                    <Kbd key={k} k={k} />
                   ))}
                 </span>
               </div>
@@ -211,8 +212,8 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
         </div>
         <div class="p-foot">
           <span>
-            <kbd>↑</kbd>
-            <kbd>↓</kbd> {t('palette.footNavigate')}
+            <Kbd k="↑" />
+            <Kbd k="↓" /> {t('palette.footNavigate')}
           </span>
           <span>
             <kbd>Enter</kbd> {t('palette.footPlay')}

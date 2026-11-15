@@ -8,6 +8,7 @@ import { COLLECTION_INTERVALS, TABS, listFor, matches, presetsWord, thumbStyle, 
 import { splitPresetName } from './preset-name'
 import { showToast } from './toast'
 import { fmtSeconds, t, tn } from '../i18n'
+import { Kbd } from './Kbd'
 
 /**
  * Biblioteca em gaveta (spec 010) — protótipo "Palco integrado" (`#lib`), versão 1794165177-f126.
@@ -219,7 +220,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
               <Icon name="x" small />
             </button>
           ) : (
-            <kbd>/</kbd>
+            <Kbd k="/" />
           )}
         </div>
         <div class="ltabs" ref={tabsRef} role="tablist" aria-label={t('library.sections')} onKeyDown={onTabKey}>

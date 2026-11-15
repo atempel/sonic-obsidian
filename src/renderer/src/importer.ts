@@ -1,6 +1,7 @@
 import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
 import type { PresetLibrary } from './presets'
 import { msgText, t, tn, type Lang, type Msg } from './i18n'
+import { mainError, mainErrorText } from './main-error'
 
 /**
  * Importar `.milk` (spec 022). A conversão é no main (texto → preset 3.x); aqui cada preset é
@@ -19,7 +20,8 @@ export interface ImportResult {
   /** Já estava na biblioteca (nome igual: pular e avisar, decisão do usuário). */
   skipped: string[]
   /** O motivo como dado: a interface mostra no idioma do app e o log em inglês (spec 030). */
-  failed: { name: string; reason: Msg }[]
+  /** `log`: o texto inglês completo do main, quando houver (o log não perde o detalhe). */
+  failed: { name: string; reason: Msg; log?: string }[]
   /** Arquivos além do limite de 200 por vez. */
   extra: number
 }
@@ -144,16 +146,15 @@ export async function importMilks(
         library.addImported(name, preset as Preset)
         result.added.push(name)
       } catch (err) {
-        // Erro do main chega como "Error invoking remote method …: Error: <motivo>".
-        const msg = err instanceof Error ? err.message.replace(/^.*Error: /, '') : String(err)
-        result.failed.push({ name, reason: { raw: msg.slice(0, 160) } })
+        // Erro do main: em inglês com código; a interface traduz pelo código (main-error.ts).
+        result.failed.push({ name, reason: mainError(err), log: mainErrorText(err).slice(0, 300) })
       }
     }
   } finally {
     validator?.dispose()
     onProgress?.(batch.length, batch.length)
   }
-  for (const f of result.failed) window.so.log(`import .milk: ${f.name}: ${failReason(f, 'en')}`)
+  for (const f of result.failed) window.so.log(`import .milk: ${f.name}: ${f.log ?? failReason(f, 'en')}`)
   if (result.added.length) window.so.log(`import .milk: ${result.added.length} added`)
   return result
 }

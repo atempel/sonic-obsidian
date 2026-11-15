@@ -48,6 +48,8 @@ export function applyLanguage(pref: LanguagePref): Lang {
     for (const fn of listeners) fn(lang)
   }
   if (typeof document !== 'undefined') document.documentElement.lang = lang
+  // Os diálogos nativos (main) seguem o idioma do app; opcional porque os testes trocam o `window.so`.
+  if (typeof window !== 'undefined') window.so?.app?.setLanguage?.(lang)
   return lang
 }
 

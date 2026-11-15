@@ -441,6 +441,14 @@ export const en = {
   'shortcuts.customize': 'Customize in Settings › Shortcuts',
   'shortcuts.or': 'or',
   'shortcuts.key.space': 'Space',
+  'shortcuts.spoken.left': 'Left arrow',
+  'shortcuts.spoken.right': 'Right arrow',
+  'shortcuts.spoken.up': 'Up arrow',
+  'shortcuts.spoken.down': 'Down arrow',
+  'shortcuts.spoken.comma': 'Comma',
+  'shortcuts.spoken.slash': 'Slash',
+  'shortcuts.spoken.question': 'Question mark',
+  'shortcuts.spoken.plus': 'Plus',
   'shortcuts.group.playback': 'Playback',
   'shortcuts.group.expression': 'Expressiveness',
   'shortcuts.group.navigation': 'Navigation',
@@ -581,7 +589,12 @@ export const en = {
   'studio.err.slow': 'Too slow: {ms} ms per frame (long loop?).',
   'studio.err.timeout': "Endless or too long loop: over 1 s in one frame. This version wasn't loaded.",
   'studio.err.equations': 'equations: {detail}',
-  'studio.err.shader': "shader {which} doesn't compile: {detail}"
+  'studio.err.shader': "shader {which} doesn't compile: {detail}",
+  'mainErr.tooBig': 'larger than 256 KB',
+  'mainErr.js': 'preset with JavaScript (*_str/useJS) refused',
+  'mainErr.invalid': 'invalid file ({detail})',
+  'mainErr.emptyTitle': 'empty title',
+  'mainErr.shader': "the {which} shader couldn't be converted"
 } as const
 
 export type MessageKey = keyof typeof en

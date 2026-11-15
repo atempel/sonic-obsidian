@@ -38,55 +38,55 @@ const clean = (v: unknown, max: number): string => (typeof v === 'string' ? v.re
 
 /** Só números em baseVals. */
 function vals(v: unknown): Record<string, number> {
-  if (!isObj(v)) throw new Error('baseVals inválido')
+  if (!isObj(v)) throw new Error('[invalid] bad baseVals')
   const out: Record<string, number> = {}
   for (const [k, x] of Object.entries(v)) {
-    if (!/^[a-z_][a-z0-9_]{0,40}$/i.test(k)) throw new Error(`baseVals: campo inválido ${k}`)
-    if (typeof x !== 'number' || !Number.isFinite(x)) throw new Error(`baseVals.${k} não é número`)
+    if (!/^[a-z_][a-z0-9_]{0,40}$/i.test(k)) throw new Error(`[invalid] baseVals: bad field ${k}`)
+    if (typeof x !== 'number' || !Number.isFinite(x)) throw new Error(`[invalid] baseVals.${k} is not a number`)
     out[k] = x
   }
   return out
 }
 
 function part(v: unknown, keys: Set<string>, label: string): Record<string, unknown> {
-  if (!isObj(v)) throw new Error(`${label} inválido`)
+  if (!isObj(v)) throw new Error(`[invalid] bad ${label}`)
   const out: Record<string, unknown> = {}
   for (const [k, x] of Object.entries(v)) {
-    if (/_str$/.test(k) || k === 'useJS') throw new Error('preset com JavaScript (*_str/useJS) recusado')
-    if (!keys.has(k)) throw new Error(`${label}: campo desconhecido ${k}`)
+    if (/_str$/.test(k) || k === 'useJS') throw new Error('[js] preset with JavaScript (*_str/useJS) refused')
+    if (!keys.has(k)) throw new Error(`[invalid] ${label}: unknown field ${k}`)
     if (k === 'baseVals') out[k] = vals(x)
     else if (typeof x === 'string') out[k] = x
-    else throw new Error(`${label}.${k} não é texto`)
+    else throw new Error(`[invalid] ${label}.${k} is not text`)
   }
   return out
 }
 
 /** Recusa o que não for um preset Butterchurn 3 só com EEL e GLSL. */
 export function sanitizePreset(raw: unknown): Record<string, unknown> {
-  if (!isObj(raw)) throw new Error('preset inválido')
-  if (JSON.stringify(raw).length > MAX_BYTES) throw new Error('preset maior que 256 KB')
+  if (!isObj(raw)) throw new Error('[invalid] bad preset')
+  if (JSON.stringify(raw).length > MAX_BYTES) throw new Error('[too-big] preset larger than 256 KB')
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(raw)) {
-    if (/_str$/.test(k) || k === 'useJS') throw new Error('preset com JavaScript (*_str/useJS) recusado')
-    if (!TOP.has(k)) throw new Error(`campo desconhecido: ${k}`)
+    if (/_str$/.test(k) || k === 'useJS') throw new Error('[js] preset with JavaScript (*_str/useJS) refused')
+    if (!TOP.has(k)) throw new Error(`[invalid] unknown field: ${k}`)
     if (k === 'version') {
-      if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error('version inválido')
+      if (typeof v !== 'number' || !Number.isFinite(v)) throw new Error('[invalid] bad version')
       out[k] = v
     } else if (k === 'baseVals') out[k] = vals(v)
     else if (k === 'shapes' || k === 'waves') {
-      if (!Array.isArray(v) || v.length > 4) throw new Error(`${k} inválido`)
+      if (!Array.isArray(v) || v.length > 4) throw new Error(`[invalid] bad ${k}`)
       out[k] = v.map((x, i) => part(x, k === 'shapes' ? SHAPE : WAVE, `${k}[${i}]`))
     } else if (typeof v === 'string') out[k] = v
-    else throw new Error(`${k} não é texto`)
+    else throw new Error(`[invalid] ${k} is not text`)
   }
-  for (const k of ['init_eqs_eel', 'frame_eqs_eel', 'pixel_eqs_eel']) if (typeof out[k] !== 'string') throw new Error(`falta ${k}`)
+  for (const k of ['init_eqs_eel', 'frame_eqs_eel', 'pixel_eqs_eel']) if (typeof out[k] !== 'string') throw new Error(`[invalid] missing ${k}`)
   return out
 }
 
 function sanitizeMeta(raw: unknown, createdAt: string): MineMeta {
   const m = isObj(raw) ? raw : {}
   const title = clean(m.title, 200)
-  if (!title) throw new Error('título vazio')
+  if (!title) throw new Error('[empty-title] empty title')
   const b = isObj(m.basedOn) ? m.basedOn : null
   const basedOn = b && clean(b.name, 300) ? { name: clean(b.name, 300), author: clean(b.author, 120) } : null
   return { title, author: clean(m.author, 60) || 'Eu', basedOn, createdAt }
@@ -120,7 +120,7 @@ export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMe
   const r = isObj(raw) ? raw : {}
   const preset = sanitizePreset(r.preset)
   if (r.id !== undefined && r.id !== null) {
-    if (typeof r.id !== 'string' || !ID.test(r.id)) throw new Error('id inválido')
+    if (typeof r.id !== 'string' || !ID.test(r.id)) throw new Error('[invalid] bad id')
     const folder = join(dir(), r.id)
     const meta = JSON.parse(await readFile(join(folder, 'meta.json'), 'utf8')) as MineMeta
     await rename(join(folder, 'preset.json'), join(folder, 'preset.prev.json')).catch(() => {})

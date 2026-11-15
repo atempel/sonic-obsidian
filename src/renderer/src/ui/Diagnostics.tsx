@@ -8,6 +8,7 @@ import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
 import { keyName } from './shortcuts'
 import { msgText, t, type MessageKey } from '../i18n'
+import { Kbd } from './Kbd'
 
 /**
  * Setup e diagnóstico (spec 012; protótipo "Setup" e "Palco integrado", design 1794178325-0fd0).
@@ -103,7 +104,7 @@ export function WelcomeCard({ core }: { core: Core }) {
           <span>{t('shortcuts.random')}</span>
         </li>
         <li>
-          <kbd>/</kbd>
+          <Kbd k="/" />
           <span>{t('shortcuts.search')}</span>
         </li>
         <li>
@@ -113,7 +114,7 @@ export function WelcomeCard({ core }: { core: Core }) {
       </ul>
       <button type="button" class="k-hint" onClick={() => openShortcuts(core)}>
         {hintBefore}
-        <kbd>?</kbd>
+        <Kbd k="?" />
         {hintAfter}
       </button>
       <div class="actions">
