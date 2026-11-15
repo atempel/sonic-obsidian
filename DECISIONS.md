@@ -565,3 +565,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Execução anterior = artifact `perf-*` mais novo de outra execução** (`gh api …/actions/artifacts` + `gh run download`, com o `GITHUB_TOKEN` e `actions: read` no job). Inclui disparos do mesmo commit (critério 5: "num segundo disparo").
 - **O passo roda depois do upload do app:** se o desempenho quebrar, o artifact do build já subiu e o bloco continua testável.
 - **Descartado:** medir por `app.getGPUInfo`/tracing (pesado e diferente no runner); falhar por número (spec: depois de ~10 execuções).
+
+## 2026-11-15 — Bloco v0.7.0 fecha com 4 issues; landing só na publicação (rodada, `agent-decided`)
+- **Decisão:** o v0.7.0 fecha com as 4 issues que tem (#69 atualização automática, #101 idiomas, #73 desempenho no CI, #94 ajustes do design 598c), sem esperar a 5ª: não há issue `ready` e o bloco já é grande (030 inteira em 9 PRs + atualizador). O passo 3 da `rodada` só exige o milestone sem issues abertas.
+- **Landing:** o "atualizações automáticas" volta ao cartão do instalador **quando a 0.7.0 for publicada**, não no fechamento do bloco (o lembrete da 029 dizia "ao fechar o bloco"). **Por quê:** o Pages publica a cada merge no `main` e a landing baixa a release publicada, que até o ok do usuário é a 0.6.0, sem atualizador.
+- **Descartado:** planejar uma issue do `backlog` só para completar 5 neste bloco.
+
