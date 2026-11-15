@@ -252,8 +252,10 @@ async function checkStudio(b, lang) {
   await p.goto('http://localhost:5230/')
   await p.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
   // HUD de depuração ligado antes do Estúdio: o log e o HUD ficam em inglês nos dois idiomas.
-  await p.keyboard.press('Control+Shift+D'); await p.waitForTimeout(1300)
-  const hud = await p.$eval('#hud', e => e.hidden ? '' : e.textContent).catch(() => '')
+  // O HUD redesenha a cada segundo de quadros: no CI lento, espera até 10 s pela linha do fps.
+  await p.keyboard.press('Control+Shift+D')
+  let hud = ''
+  for (const t0 = Date.now(); Date.now() - t0 < 10000 && !/expressiveness|expressividade/.test(hud); await p.waitForTimeout(250)) hud = await p.$eval('#hud', e => e.hidden ? '' : e.textContent).catch(() => '')
   await p.mouse.move(640, 400); await p.keyboard.press('e')
   await p.waitForSelector('.studio', { timeout: 8000 })
   const status = () => p.$eval('.cstat', e => e.textContent.trim())
