@@ -1,6 +1,6 @@
 # 025 — Suíte de testes no CI (interface, estados e regressão de desempenho)
 
-**Fase:** Manutenção · **Status:** P0 implementada (#76); P1 pronta para implementar (planejada na rodada de 2026-11-13) · **Issue:** [#73](https://github.com/atempel/sonic-obsidian/issues/73) · **Personas:** todas, indiretamente (menos regressões chegando ao Windows) · **Depende de:** testes headless de 023 e 024 (`tests/headless/`)
+**Fase:** Manutenção · **Status:** P0 implementada (#76); P1 implementada (rodada de 2026-11-15; números reais só no primeiro build Windows) · **Issue:** [#73](https://github.com/atempel/sonic-obsidian/issues/73) · **Personas:** todas, indiretamente (menos regressões chegando ao Windows) · **Depende de:** testes headless de 023 e 024 (`tests/headless/`)
 
 ## Problema
 Hoje, quase tudo é verificado à mão no Windows do usuário: cada PR exige baixar o artifact e repetir roteiros. Bugs de interface que um teste automático pegaria (Configurações deslocadas no #56, painel de coleções cortado na 023) só aparecem no teste manual. O usuário pediu: "não quero testar apenas no meu computador" ([queue](../../queue/2026-11-09-suite-testes-performance.md)).
