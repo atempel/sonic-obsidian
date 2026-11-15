@@ -150,6 +150,20 @@ export const COMMANDS: Command[] = [
 const KEY_NAMES: Record<string, MessageKey> = { Space: 'shortcuts.key.space' }
 export const keyName = (k: string): string => (KEY_NAMES[k] ? t(KEY_NAMES[k]) : k)
 
+/** Teclas de símbolo: o nome falado para leitor de tela, no idioma do app (spec 030, P1). */
+const SPOKEN: Record<string, MessageKey> = {
+  '←': 'shortcuts.spoken.left',
+  '→': 'shortcuts.spoken.right',
+  '↑': 'shortcuts.spoken.up',
+  '↓': 'shortcuts.spoken.down',
+  ',': 'shortcuts.spoken.comma',
+  '/': 'shortcuts.spoken.slash',
+  '?': 'shortcuts.spoken.question',
+  '+': 'shortcuts.spoken.plus'
+}
+/** `null` quando o nome visível já serve para ler em voz alta. */
+export const keySpoken = (k: string): string | null => (SPOKEN[k] ? t(SPOKEN[k]) : null)
+
 export const keysText = (keys: Keys): string => keys.map((a) => a.map(keyName).join(' ')).join(' ')
 
 /** Texto de uma linha para o filtro (rótulo e teclas, no idioma do app). */

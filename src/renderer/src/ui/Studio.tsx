@@ -7,6 +7,7 @@ import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
 import { getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey } from '../i18n'
+import { mainError, mainErrorText } from '../main-error'
 import './studio.css'
 
 /**
@@ -204,9 +205,9 @@ function Studio({ api }: { api: StudioApi }) {
       setEscWarn(false)
       showToast(saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }), { force: true })
     } catch (err) {
-      const msg = err instanceof Error ? err.message.replace(/^.*Error: /, '') : String(err)
-      api.log(`studio: save failed: ${msg}`)
-      showToast(t('toast.studio.notSaved', { error: msg }), { force: true })
+      // O main lança em inglês com código: a tela traduz, o log fica em inglês (spec 030, P1).
+      api.log(`studio: save failed: ${mainErrorText(err)}`)
+      showToast(t('toast.studio.notSaved', { error: msgText(mainError(err)) }), { force: true })
     }
   }
 

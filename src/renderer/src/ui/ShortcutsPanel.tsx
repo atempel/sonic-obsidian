@@ -2,7 +2,8 @@ import { useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import { Icon } from './icons'
 import { includesText, t } from '../i18n'
-import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, keyName, rowText, type Keys } from './shortcuts'
+import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, rowText, type Keys } from './shortcuts'
+import { Kbd } from './Kbd'
 
 /**
  * Painel de atalhos `?` (spec 020) — protótipo "Palco integrado" (`#kPanel`), versão 1794178325-0fd0.
@@ -63,7 +64,7 @@ export function KeyCaps({ keys }: { keys: Keys }) {
         <>
           {i > 0 && <span class="k-or">{t('shortcuts.or')}</span>}
           {alt.map((k) => (
-            <kbd key={k}>{keyName(k)}</kbd>
+            <Kbd key={k} k={k} />
           ))}
         </>
       ))}

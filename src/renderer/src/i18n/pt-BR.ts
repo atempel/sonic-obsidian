@@ -441,6 +441,14 @@ export const ptBR: Messages = {
   'shortcuts.customize': 'Personalizar em Configurações › Atalhos',
   'shortcuts.or': 'ou',
   'shortcuts.key.space': 'Espaço',
+  'shortcuts.spoken.left': 'Seta para a esquerda',
+  'shortcuts.spoken.right': 'Seta para a direita',
+  'shortcuts.spoken.up': 'Seta para cima',
+  'shortcuts.spoken.down': 'Seta para baixo',
+  'shortcuts.spoken.comma': 'Vírgula',
+  'shortcuts.spoken.slash': 'Barra',
+  'shortcuts.spoken.question': 'Ponto de interrogação',
+  'shortcuts.spoken.plus': 'Mais',
   'shortcuts.group.playback': 'Reprodução',
   'shortcuts.group.expression': 'Expressividade',
   'shortcuts.group.navigation': 'Navegação',
@@ -581,5 +589,10 @@ export const ptBR: Messages = {
   'studio.err.slow': 'Lento demais: {ms} ms por quadro (laço longo?).',
   'studio.err.timeout': 'Laço sem fim ou longo demais: passou de 1 s num quadro. A versão não foi carregada.',
   'studio.err.equations': 'equações: {detail}',
-  'studio.err.shader': 'shader {which} não compila: {detail}'
+  'studio.err.shader': 'shader {which} não compila: {detail}',
+  'mainErr.tooBig': 'maior que 256 KB',
+  'mainErr.js': 'preset com JavaScript (*_str/useJS) recusado',
+  'mainErr.invalid': 'arquivo inválido ({detail})',
+  'mainErr.emptyTitle': 'título vazio',
+  'mainErr.shader': 'o shader {which} não pôde ser convertido'
 }
