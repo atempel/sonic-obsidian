@@ -50,6 +50,10 @@ jobs:
       (github.event.action == 'labeled' && github.event.label.name == 'build-windows') ||
       (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'build-windows'))
     runs-on: windows-latest
+    permissions:
+      contents: read
+      # Desempenho (spec 025): baixar o perf.json da execução anterior.
+      actions: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,3 +73,34 @@ jobs:
           # Build de bloco de teste (disparo manual) fica 30 dias; o de PR, 7.
           retention-days: ${{ github.event_name == 'workflow_dispatch' && 30 || 7 }}
           if-no-files-found: error
+      # Desempenho no app empacotado (spec 025, P1): abertura, ms por quadro e memória, ao lado da
+      # execução anterior. Só falha se o script quebrar (o app não abre, um preset não desenha); número pior, não.
+      - name: Desempenho (spec 025)
+        timeout-minutes: 20
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.63.0
+          # A execução anterior com perf.json (artifact mais novo de outra execução), para o resumo lado a lado.
+          read -r prev_run prev_name < <(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" \
+            --jq "[.artifacts[] | select((.name | startswith(\"perf-\")) and (.expired | not) and (.workflow_run.id != $GITHUB_RUN_ID))][0] | select(.) | \"\(.workflow_run.id) \(.name)\"") || true
+          if [ -n "${prev_run:-}" ] && gh run download "$prev_run" -R "$GITHUB_REPOSITORY" -n "$prev_name" -D perf-prev; then
+            export PERF_PREV=perf-prev/perf.json
+          else
+            echo "Sem execução anterior com perf.json."
+          fi
+          npm run perf:win
+      - name: Nome do artifact de desempenho
+        if: always()
+        id: perfmeta
+        shell: bash
+        run: echo "name=perf-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.perfmeta.outputs.name }}
+          path: perf.json
+          retention-days: 90
+          if-no-files-found: ignore

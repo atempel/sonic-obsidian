@@ -41,3 +41,4 @@ site/assets/audio/
 
 # Testes headless (spec 025)
 test-results/
+perf.json

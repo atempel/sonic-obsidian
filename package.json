@@ -11,6 +11,7 @@
     "build": "electron-vite build",
     "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
     "test:ui": "node tests/headless/run.cjs",
+    "perf:win": "node tests/perf/windows.cjs",
     "sim:beat": "node tests/sim/beat-sim.cjs",
     "sim:agc": "node tests/sim/agc-sim.cjs",
     "dist:win": "electron-vite build && electron-builder --win --dir --publish never",

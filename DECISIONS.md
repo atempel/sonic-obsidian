@@ -556,3 +556,12 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Landing e notas da release ficam para o fechamento do bloco v0.7.0** (lembrete em comentário no `.github/release-notes.md`): a landing baixa a release publicada, que ainda é a 0.6.0, sem atualizador. O README muda já (descreve o código do `main`).
 - **Descartado:** `autoInstallOnAppQuit` (instalaria sem o clique); mostrar "Verificando…"/erro das checagens automáticas (só as pedidas pela pessoa).
 
+
+## 2026-11-15 — Spec 025 P1: desempenho no Windows implementado (rodada, `agent-decided`)
+- **"ms por quadro" = intervalo entre `requestAnimationFrame`** medido na página (mediana e p95 por preset), não o tempo de GPU. **Por quê:** no desenho por software do runner o quadro é limitado pelo render, então o intervalo acompanha o custo; não pede mudança no app. Serve para comparar builds, não como fps.
+- **Heap JS medido depois de um GC forçado** (CDP `HeapProfiler.collectGarbage` + `Runtime.getHeapUsage`; sem CDP, `performance.memory`). **Por quê:** sem o GC, o número oscila com o lixo do momento e esconde o crescimento que importa.
+- **Troca de preset pela busca (`Ctrl+K`)**, clicando na linha com o nome exato e conferindo o `.now-title`; a memória usa `→` a cada 2 s. **Por quê:** é o caminho de quem usa o app e não precisa de gancho de teste no renderer.
+- **`--enable-unsafe-swiftshader --ignore-gpu-blocklist`** passados ao `.exe` no CI: o runner não tem GPU e o Chromium poderia recusar o WebGL 2. Só no teste; o app do usuário não muda.
+- **Execução anterior = artifact `perf-*` mais novo de outra execução** (`gh api …/actions/artifacts` + `gh run download`, com o `GITHUB_TOKEN` e `actions: read` no job). Inclui disparos do mesmo commit (critério 5: "num segundo disparo").
+- **O passo roda depois do upload do app:** se o desempenho quebrar, o artifact do build já subiu e o bloco continua testável.
+- **Descartado:** medir por `app.getGPUInfo`/tracing (pesado e diferente no runner); falhar por número (spec: depois de ~10 execuções).
