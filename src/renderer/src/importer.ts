@@ -54,15 +54,21 @@ const glError = (gl: WebGL2RenderingContext, p: WebGLProgram): string => {
  * Usado no visualizador de teste (022) e no principal (tela preta sem aviso, 2026-11-10).
  */
 export function shaderError(viz: Visualizer): string | null {
+  const f = shaderFailure(viz)
+  return f && `shader ${f.which} não compila: ${f.detail}`
+}
+
+/** O mesmo, como dado (o Estúdio monta a frase no idioma do app, spec 030). */
+export function shaderFailure(viz: Visualizer): { which: 'warp' | 'comp'; detail: string } | null {
   const r = (viz as unknown as { renderer?: RendererInternals }).renderer
   const gl = r?.gl
   if (!gl) return null
-  for (const [label, h] of [
+  for (const [which, h] of [
     ['warp', r?.warpShader],
     ['comp', r?.compShader]
   ] as const) {
     const p = h?.shaderProgram
-    if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return `shader ${label} não compila: ${glError(gl, p)}`
+    if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return { which, detail: glError(gl, p) }
   }
   return null
 }
@@ -79,13 +85,21 @@ export class Validator {
 
   /** `null` = compila; senão, o motivo legível. */
   async check(preset: Preset): Promise<string | null> {
+    const f = await this.inspect(preset)
+    if (!f) return null
+    return f.kind === 'equations' ? `equações: ${f.detail}`.slice(0, 160) : `shader ${f.which} não compila: ${f.detail}`
+  }
+
+  /** O mesmo, como dado (Estúdio, spec 030). */
+  async inspect(preset: Preset): Promise<{ kind: 'equations'; detail: string } | { kind: 'shader'; which: string; detail: string } | null> {
     try {
       await this.viz.loadPreset(structuredClone(preset), 0)
       this.viz.render()
     } catch (err) {
-      return `equações: ${err instanceof Error ? err.message : String(err)}`.slice(0, 160)
+      return { kind: 'equations', detail: (err instanceof Error ? err.message : String(err)).slice(0, 150) }
     }
-    return shaderError(this.viz)
+    const s = shaderFailure(this.viz)
+    return s && { kind: 'shader', ...s }
   }
 
   dispose(): void {

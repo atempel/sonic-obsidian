@@ -10,6 +10,29 @@
 import { loadModule } from 'eel-wasm'
 
 export type Block = 'init' | 'frame' | 'pixel'
+/**
+ * Problema das equações como dado, não como texto: a interface monta a frase no idioma do app
+ * (spec 030), e a troca de idioma vale também para os erros já na tela.
+ */
+export type StudioIssue =
+  /** Sintaxe: o que o compilador esperava (`want`) e o que veio (`got`; `null` = o fim do bloco). */
+  | { kind: 'syntax'; want: string[]; got: string | null }
+  | { kind: 'undefined'; fn: string }
+  | { kind: 'args'; fn: string; expected: number; got: number }
+  /** Saída que ficou NaN ou infinita. */
+  | { kind: 'invalid'; name: string }
+  | { kind: 'slow'; ms: number }
+  | { kind: 'timeout' }
+  /** O motor recusou as equações (mensagem do Butterchurn, em inglês). */
+  | { kind: 'equations'; detail: string }
+  | { kind: 'shader'; which: string; detail: string }
+  /** Mensagem do compilador que não reconhecemos (em inglês, como veio). */
+  | { kind: 'raw'; text: string }
+export interface WorkerError {
+  block: Block
+  line: number | null
+  issue: StudioIssue
+}
 export interface CheckRequest {
   seq: number
   code: Record<Block, string>
@@ -20,31 +43,27 @@ export interface CheckRequest {
 }
 export type CheckReply =
   | { seq: number; kind: 'running'; block: Block }
-  | { seq: number; kind: 'done'; errors: { block: Block; line: number | null; message: string }[]; ms: number }
+  | { seq: number; kind: 'done'; errors: WorkerError[]; ms: number }
 
 const POOL: Record<Block, string> = { init: 'perFrame', frame: 'perFrame', pixel: 'perVertex' }
 
-const tok = (t: string): string => (t === 'EOF' ? 'o fim do bloco' : t.replace(/_TOKEN$/, '').toLowerCase().replace(/^'|'$/g, '"'))
+const tok = (t: string): string | null => (t === 'EOF' ? null : t.replace(/_TOKEN$/, '').toLowerCase().replace(/^'|'$/g, '"'))
 
-/** Mensagem do compilador em português curto; a linha vem de `loc` (eel-wasm 0.0.16). */
-export function readError(err: unknown): { line: number | null; message: string } {
+/** Mensagem do compilador como dado (a frase sai no idioma do app); a linha vem de `loc` (eel-wasm 0.0.16). */
+export function readError(err: unknown): { line: number | null; issue: StudioIssue } {
   const raw = (err instanceof Error ? err.message : String(err)).replace(/\s+/g, ' ').trim()
   const loc = (err as { loc?: { first_line?: unknown } } | null)?.loc
   const line = typeof loc?.first_line === 'number' ? loc.first_line : null
-  let message = raw
   const parse = /^Parse Error: Expecting (.*), got '(.*)'$/.exec(raw)
   const undef = /^"(.+)" is not defined\.?$/.exec(raw)
   const args = /^Too (many|few) arguments passed to `(.+?)`\. Expected (\d+) but got (\d+)\.?$/.exec(raw)
   if (parse) {
-    const want = parse[1]!.split(', ').map((x) => x.replace(/^'|'$/g, ''))
-    const got = tok(parse[2]!)
-    message = want.length <= 3 ? `Erro de sintaxe: esperava ${want.map((w) => `"${w}"`).join(' ou ')}, veio ${got}.` : `Erro de sintaxe perto de ${got}.`
-  } else if (undef) {
-    message = `A função ${undef[1]}() não existe.`
-  } else if (args) {
-    message = `${args[2]} recebe ${args[3]} argumento${args[3] === '1' ? '' : 's'}, recebeu ${args[4]}.`
+    const want = parse[1]!.split(', ').map((x) => `"${x.replace(/^'|'$/g, '')}"`)
+    return { line, issue: { kind: 'syntax', want: want.length <= 3 ? want : [], got: tok(parse[2]!) } }
   }
-  return { line, message: message.slice(0, 200) }
+  if (undef) return { line, issue: { kind: 'undefined', fn: undef[1]!.slice(0, 80) } }
+  if (args) return { line, issue: { kind: 'args', fn: args[2]!.slice(0, 80), expected: Number(args[3]), got: Number(args[4]) } }
+  return { line, issue: { kind: 'raw', text: raw.slice(0, 200) } }
 }
 
 /** Saídas que o motor usa para desenhar: precisam continuar finitas. */
@@ -82,7 +101,7 @@ const bad = (pool: Pool, keys: string[]): string | null => keys.find((k) => pool
 
 self.onmessage = async (e: MessageEvent<CheckRequest>) => {
   const { seq, code, mesh, baseVals } = e.data
-  const errors: { block: Block; line: number | null; message: string }[] = []
+  const errors: WorkerError[] = []
   const fns: Partial<Record<Block, () => number>> = {}
   const pools = makePools(baseVals, mesh)
   for (const block of ['init', 'frame', 'pixel'] as Block[]) {
@@ -99,7 +118,7 @@ self.onmessage = async (e: MessageEvent<CheckRequest>) => {
     return
   }
   const invalid = (block: Block, v: string): void =>
-    void errors.push({ block, line: null, message: `A equação deixa ${v} inválido (NaN ou infinito): a imagem apagaria e não voltaria.` })
+    void errors.push({ block, line: null, issue: { kind: 'invalid', name: v } })
   const { perFrame: pf, perVertex: pv } = pools
   resetBase(pf, baseVals, Object.keys(baseVals))
   postMessage({ seq, kind: 'running', block: 'init' } satisfies CheckReply)

@@ -1,6 +1,6 @@
 import type { Preset } from 'butterchurn'
 import { Validator } from '../importer'
-import type { Block, CheckReply, CheckRequest } from './eel-worker'
+import type { Block, CheckReply, CheckRequest, StudioIssue, WorkerError } from './eel-worker'
 
 /**
  * Compilação ao vivo do Estúdio (spec 026). Cada versão passa por duas barreiras antes de
@@ -10,12 +10,8 @@ import type { Block, CheckReply, CheckRequest } from './eel-worker'
  * 2. visualizador de teste de 64×64 (o da 022): equações no motor + shaders.
  * Pedidos em fila: vale o último.
  */
-export type { Block }
-export interface StudioError {
-  block: Block
-  line: number | null
-  message: string
-}
+export type { Block, StudioIssue }
+export type StudioError = WorkerError
 export type CompileResult =
   | { ok: true; ms: number; frameMs: number }
   | { ok: false; errors: StudioError[]; ms: number }
@@ -62,14 +58,14 @@ export class StudioCompiler {
     if (check.frameMs > SLOW_FRAME_MS) {
       return {
         ok: false,
-        errors: [{ block: check.slowBlock ?? 'pixel', line: null, message: `Lento demais: ${Math.round(check.frameMs)} ms por quadro (laço longo?).` }],
+        errors: [{ block: check.slowBlock ?? 'pixel', line: null, issue: { kind: 'slow', ms: Math.round(check.frameMs) } }],
         ms: performance.now() - t0
       }
     }
     this.validator ??= new Validator(this.ctx)
-    const err = await this.validator.check(preset)
+    const err = await this.validator.inspect(preset)
     if (seq !== this.seq || this.disposed) return { ok: false, superseded: true }
-    if (err) return { ok: false, errors: [{ block: 'frame', line: null, message: err }], ms: performance.now() - t0 }
+    if (err) return { ok: false, errors: [{ block: 'frame', line: null, issue: err }], ms: performance.now() - t0 }
     return { ok: true, ms: performance.now() - t0, frameMs: check.frameMs }
   }
 
@@ -87,7 +83,7 @@ export class StudioCompiler {
         w.terminate()
         if (this.worker === w) this.worker = null
         done({
-          errors: [{ block: running ?? 'frame', line: null, message: 'Laço sem fim ou longo demais: passou de 1 s num quadro. A versão não foi carregada.' }],
+          errors: [{ block: running ?? 'frame', line: null, issue: { kind: 'timeout' } }],
           frameMs: TIMEOUT_MS
         })
       }, TIMEOUT_MS)

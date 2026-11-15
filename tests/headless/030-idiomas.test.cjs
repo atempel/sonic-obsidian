@@ -1,4 +1,4 @@
-// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico: Windows em inglês abre em English, a troca em
+// Spec 030 (idiomas), base + faixa, toasts, estados, Ajustes rápidos, Biblioteca e busca, Configurações, painel `?`, Setup e diagnóstico, Estúdio: Windows em inglês abre em English, a troca em
 // Configurações › Geral vale na hora e fica salva, números pelo idioma, nada cortado nos dois idiomas,
 // e nenhuma chave do catálogo sem uso. A chave faltando no pt-BR é pega pelo typecheck, não aqui.
 const H = require('./harness.cjs')
@@ -233,6 +233,43 @@ async function checkWebgl(b, lang) {
   return { title, texts, cut, bad, copied }
 }
 
+// Estúdio (passo 7 da migração): abre com E, compila, erro de sintaxe na linha 2, pergunta do nome; nos dois idiomas.
+const studioOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^studio\./.test(k) && v !== to[k]).map(([, v]) => v.replace(/\{\w+\}/g, '').replace(/[“”]/g, '').trim()).filter(v => v.length > 3)
+const studioTexts = () => {
+  const out = []
+  for (const el of document.querySelectorAll('.studio, .studio *')) {
+    if (el.closest('.ed-ta, .st-shaders pre, .st-credit, .num')) continue
+    for (const a of ['aria-label', 'title', 'placeholder']) if (el.getAttribute(a)) out.push(el.getAttribute(a))
+    for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
+  }
+  return out
+}
+const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h')]
+  .filter(e => e.offsetParent && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
+async function checkStudio(b, lang) {
+  const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
+  await H.mockSo(p, { systemLanguage: lang, settings: { welcomeSeen: true, rotation: { enabled: false, intervalSeconds: 30 }, startupPreset: 'last', lastPreset: 'Martin - liquid arrows' } }); await H.mockAudio(p)
+  await p.goto('http://localhost:5230/')
+  await p.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
+  await p.mouse.move(640, 400); await p.keyboard.press('e')
+  await p.waitForSelector('.studio', { timeout: 8000 })
+  const status = () => p.$eval('.cstat', e => e.textContent.trim())
+  const waitStatus = async (re, ms = 6000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(await status())) return true; await p.waitForTimeout(50) } return false }
+  const okRe = lang === 'en' ? /^Compiled$/ : /^Compilado$/
+  const compiled = await waitStatus(okRe)
+  await p.fill('.studio .ed-ta >> nth=1', 'zoom = 1.01;\nrot = sin(time;')
+  const errRe = lang === 'en' ? /^1 error$/ : /^1 erro$/
+  const errored = await waitStatus(errRe)
+  const err = await p.$eval('.perr p', e => e.textContent).catch(() => '')
+  const foot = await p.textContent('.st-foot span')
+  const title = await p.inputValue('#studio-name')
+  await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
+  const texts = await p.evaluate(studioTexts)
+  const cut = await p.evaluate(clippedStudio)
+  await p.close()
+  return { compiled, errored, err, foot, title, texts, cut }
+}
+
 const srv = H.serve(5230)
 ;(async () => {
   const b = await H.launch()
@@ -422,6 +459,21 @@ const srv = H.serve(5230)
   ok('7l WebGL 2 em português', glPt.title === 'Este computador não suporta WebGL 2' && glPt.bad === 'indisponível' && glPt.texts.every(s => !enSetup.some(p => hasWord(s, p))), `${glPt.title} · ${glPt.bad}`)
   ok('7m diagnóstico de vídeo copiado em inglês', /video diagnostics/.test(glPt.copied) && /WebGL 2: unavailable/.test(glPt.copied), glPt.copied)
   ok('6p nada cortado no aviso de WebGL 2 (en e pt-BR)', glEn.cut.length === 0 && glPt.cut.length === 0, glEn.cut.concat(glPt.cut).join(' | '))
+
+  // Estúdio (passo 7): textos, erro com bloco e linha, hora no formato do idioma, nada cortado.
+  const ptStudio = studioOnly(pt, en), enStudio = studioOnly(en, pt)
+  const stEn = await checkStudio(b, 'en')
+  ok('8a Estúdio em English ("Compiled", "1 error", "Remix of …")', stEn.compiled && stEn.errored && /^Remix of /.test(stEn.title), `${stEn.compiled} · ${stEn.errored} · ${stEn.title}`)
+  ok('8b erro de sintaxe em English com bloco e linha', /^per_frame, line 2: Syntax error/.test(stEn.err), stEn.err)
+  ok('8c rodapé com hora em 12 h ("1 error since h:mm:ss AM/PM")', /^1 error since \d{1,2}:\d\d:\d\d\s?[AP]M$/.test(stEn.foot), stEn.foot)
+  ok('8d Estúdio sem texto em português', stEn.texts.every(s => !ptStudio.some(p => hasWord(s, p))), stEn.texts.filter(s => ptStudio.some(p => hasWord(s, p))).join(' | '))
+  ok('6q nada cortado no Estúdio (en)', stEn.cut.length === 0, stEn.cut.join(' | '))
+  const stPt = await checkStudio(b, 'pt-BR')
+  ok('8e Estúdio em português ("Compilado", "1 erro", "Remix de …")', stPt.compiled && stPt.errored && /^Remix de /.test(stPt.title), `${stPt.compiled} · ${stPt.errored} · ${stPt.title}`)
+  ok('8f erro de sintaxe em português com bloco e linha', /^per_frame, linha 2: Erro de sintaxe/.test(stPt.err), stPt.err)
+  ok('8g rodapé com hora em 24 h ("Com 1 erro desde hh:mm:ss")', /^Com 1 erro desde \d\d:\d\d:\d\d$/.test(stPt.foot), stPt.foot)
+  ok('8h Estúdio sem texto em inglês', stPt.texts.every(s => !enStudio.some(p => hasWord(s, p))), stPt.texts.filter(s => enStudio.some(p => hasWord(s, p))).join(' | '))
+  ok('6r nada cortado no Estúdio (pt-BR)', stPt.cut.length === 0, stPt.cut.join(' | '))
 
   const code = await R.finish()
   await b.close(); srv.close(); process.exit(code)
