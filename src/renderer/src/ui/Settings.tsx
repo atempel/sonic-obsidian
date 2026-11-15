@@ -70,15 +70,28 @@ interface RowProps {
   kw?: string
   phase?: string
   stack?: boolean
+  /** Ao lado do nome (ex.: "auto +5 dB" do Normalizar áudio, design 598c). */
+  aside?: ComponentChildren
   children?: ComponentChildren
 }
 
-function Row({ id, label, help, kw = '', phase, stack, children }: RowProps) {
+function Row({ id, label, help, kw = '', phase, stack, aside, children }: RowProps) {
   const helpText = typeof help === 'string' ? help : ''
   return (
     <div class={stack ? 'row stack' : 'row'} data-search={`${label} ${helpText} ${kw}`}>
       <div class="txt">
-        {id ? (
+        {aside ? (
+          <span class="lbl-line">
+            {id ? (
+              <label class="lbl" for={id}>
+                {label}
+              </label>
+            ) : (
+              <span class="lbl">{label}</span>
+            )}
+            {aside}
+          </span>
+        ) : id ? (
           <label class="lbl" for={id}>
             {label}
           </label>
@@ -359,8 +372,8 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
           label={t('quick.normalize')}
           help={s.autoGain ? t('settings.capture.normalizeHelpOn') : t('settings.capture.normalizeHelpOff')}
           kw="ganho automático agc volume nível normalizar auto gain level normalize"
+          aside={s.autoGain && <AutoGainReadout core={core} />}
         >
-          {s.autoGain && <AutoGainReadout core={core} />}
           <Sw id="st-autogain" checked={s.autoGain} label={t('quick.normalize')} onChange={(value) => run('audio.autoGain', { value })} />
         </Row>
         <Row id="st-gain" label={t('settings.capture.gain')} help={t('settings.capture.gainHelp')} kw="volume db ganho gain">

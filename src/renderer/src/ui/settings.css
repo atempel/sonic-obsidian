@@ -138,7 +138,8 @@ body.settings-open .settings .win { opacity: 1; transform: translate(-50%, -50%)
   .settings .win { transition: opacity 120ms linear; }
 }
 .settings .note .fails { margin: 6px 0 0; padding-left: 18px; color: var(--text-2); font-size: 12px; overflow-wrap: anywhere; }
-.settings .ctl .autodb { font-size: 12px; color: var(--text-2); margin-right: 8px; white-space: nowrap; }
+.settings .lbl-line { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
+.settings .lbl-line .autodb { font-size: 12px; color: var(--cyan); white-space: nowrap; }
 
 /* Sobre › Atualizações (spec 029; design 1794603894-598c, página Configurações) */
 .settings .upd-ver { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }

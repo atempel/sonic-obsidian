@@ -32,6 +32,7 @@ const ok = R.ok
     })
     ok('ligado: o Ganho vira "Ajuste fino" de −6 a +6, e o +10 cai para +6', g1.checked && g1.min === '-6' && g1.max === '6' && g1.value === '6' && /Ajuste fino/.test(g1.label), JSON.stringify(g1))
     ok('ligado: mostra o ganho aplicado em mono ("auto … dB")', /^auto [+−]?\d+ dB$/.test(g1.readout), g1.readout)
+    ok('"auto" em ciano (valor ao vivo), 12 px', (await page.$eval('#autoGainLbl .autodb', (e) => { const c = getComputedStyle(e); return c.color + ' ' + c.fontSize })) === 'rgb(0, 229, 255) 12px')
     const saved = await page.evaluate(() => window.__saves.at(-1))
     ok('salva autoGain e o ganho limitado', saved && saved.autoGain === true && saved.gainDb === 6, saved && JSON.stringify({ autoGain: saved.autoGain, gainDb: saved.gainDb }))
 
@@ -60,7 +61,8 @@ const ok = R.ok
     // Configurações › Captura: a mesma chave, ligada; desligar volta ao ganho manual puro.
     await page.keyboard.press('Control+Comma'); await page.waitForTimeout(500)
     await page.click('[data-sec="captura"]'); await page.waitForTimeout(300)
-    ok('Configurações › Captura tem "Normalizar áudio" ligado, com o valor auto', await page.$eval('#st-autogain', (e) => e.checked) && /auto/.test(await page.$eval('.settings .ctl .autodb', (e) => e.textContent)))
+    ok('Configurações › Captura tem "Normalizar áudio" ligado, com o valor auto', await page.$eval('#st-autogain', (e) => e.checked) && /auto/.test(await page.$eval('.settings .lbl-line .autodb', (e) => e.textContent)))
+    ok('Configurações: "auto" ao lado do nome, em ciano, não junto do switch', await page.$eval('#st-autogain', (e) => { const row = e.closest('.row'); const a = row.querySelector('.autodb'); return !!a && !a.closest('.ctl') && a.previousElementSibling?.textContent === 'Normalizar áudio' && getComputedStyle(a).color === 'rgb(0, 229, 255)' }))
     await page.$eval('#st-autogain', (e) => e.click())
     await page.waitForTimeout(300)
     ok('desligar pelas Configurações salva autoGain false', (await page.evaluate(() => window.__saves.at(-1).autoGain)) === false)
