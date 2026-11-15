@@ -14,6 +14,8 @@ import {
   BEAT_BARS,
   type BeatBars,
   type BlendType,
+  type ExpressionAdaptation,
+  type ExpressionCurve,
   type PresetNameMode,
   type ToastMode,
   blendTypeLabel,
@@ -23,6 +25,7 @@ import {
 import { Icon } from './icons'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
 import { Kbd } from './Kbd'
+import { showToast } from './toast'
 
 /**
  * Ajustes rápidos (spec 011, PR 1): painel à direita com o que se mexe com a
@@ -37,9 +40,13 @@ const QUICK_BLEND_MAX_S = 5
 const sign = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0')
 export const dbText = (db: number): string => `${sign(db)} dB`
 export const secondsText = (s: number): string => `${fmtFixed(s, 1)} s`
-export const exprLevelText = (l: number): string => (l === 0 ? t('quick.levelNeutral') : sign(l)) + (l === EXPRESSION_DEFAULT.level ? t('quick.default') : '')
-/** Spec 028: a opção padrão leva "· padrão" no nome. */
-const withDefault = (name: string, isDefault: boolean): string => (isDefault ? `${name}${t('quick.default')}` : name)
+export const exprLevelText = (l: number): string => (l === 0 ? t('quick.levelNeutral') : sign(l))
+/** Design 598c: o padrão sai do rótulo e vira "Padrão." no fim da descrição (e um ponto de 4 px sob a opção). */
+const withDefaultDesc = (desc: string, isDefault: boolean): string => {
+  if (!isDefault) return desc
+  const base = /[.!?…]$/.test(desc) ? desc : `${desc}.`
+  return `${base} ${t('quick.defaultDesc')}`
+}
 /** "Contraste — picos…" → ["Contraste", "picos…"]. */
 const splitLabel = (label: string): [string, string] => {
   const [head, ...rest] = label.split(' — ')
@@ -56,10 +63,12 @@ export interface SliderProps {
   max: number
   step: number
   text: string
+  /** Traço no valor padrão do meio do slider (Nível da Expressividade, design 598c). */
+  zeroMark?: boolean
   onInput: (v: number) => void
 }
 
-export function Slider({ id, label, value, min, max, step, text, onInput }: SliderProps) {
+export function Slider({ id, label, value, min, max, step, text, zeroMark, onInput }: SliderProps) {
   const [bubble, setBubble] = useState(false)
   const drag = useRef(false)
   const keyTimer = useRef<number | undefined>(undefined)
@@ -88,7 +97,7 @@ export function Slider({ id, label, value, min, max, step, text, onInput }: Slid
         <label for={id}>{label}</label>
         <span class="val num">{text}</span>
       </div>
-      <div class="range">
+      <div class={zeroMark ? 'range sl0' : 'range'}>
         <input
           type="range"
           id={id}
@@ -159,6 +168,43 @@ export function Select<T extends string | number>({ id, label, value, options, o
   )
 }
 
+/**
+ * Segmentado (design 598c, Ajustes rápidos › Expressividade): radiogroup com foco
+ * itinerante; setas/Home/End escolhem. A opção padrão leva um ponto de 4 px embaixo
+ * e "(padrão)" só para o leitor de tela. `dim` = texto em `text-3`, ainda clicável.
+ */
+export function Segmented<T extends string>({ id, label, value, options, def, dim, onChange }: { id: string; label: string; value: T; options: [T, string][]; def?: T; dim?: boolean; onChange: (v: T) => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const onKeyDown = (e: KeyboardEvent): void => {
+    const n = options.length
+    const step = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[e.key]
+    let i = options.findIndex(([v]) => v === value)
+    if (step) i = (i + step + n) % n
+    else if (e.key === 'Home') i = 0
+    else if (e.key === 'End') i = n - 1
+    else return
+    e.preventDefault()
+    e.stopPropagation()
+    onChange(options[i]![0])
+    ref.current?.querySelectorAll<HTMLButtonElement>('button')[i]?.focus()
+  }
+  return (
+    <div class="field">
+      <div class="field-top">
+        <span id={`${id}Lbl`}>{label}</span>
+      </div>
+      <div class={dim ? 'seg dim' : 'seg'} id={id} ref={ref} role="radiogroup" aria-labelledby={`${id}Lbl`} onKeyDown={onKeyDown}>
+        {options.map(([v, text]) => (
+          <button type="button" role="radio" key={v} data-v={v} class={v === def ? 'def' : undefined} aria-checked={v === value} tabIndex={v === value ? 0 : -1} onClick={() => onChange(v)}>
+            {text}
+            {v === def && <span class="vh">{t('quick.defaultSr')}</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function BlendControl({ core, target, label, available, max = QUICK_BLEND_MAX_S }: { core: Core; target: 'manual' | 'auto'; label: string; available: boolean; max?: number }) {
   const rule = core.state.settings.blend[target]
   const set = (args: Record<string, unknown>): void => void core.run('blend.set', { target, ...args }, 'ui')
@@ -206,6 +252,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
   const text = settings.overlayText
   const [, curveHint] = splitLabel(expressionCurveLabel(expr.curve))
   const [, memoryHint] = splitLabel(expressionAdaptationLabel(expr.adaptation))
+  const exprIsDefault = expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation
 
   return (
     <aside class="sheet" ref={ref} tabIndex={-1} aria-label={t('quick.title')} aria-hidden={!open} inert={!open}>
@@ -230,7 +277,25 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
         </section>
 
         <section>
-          <h3>{t('quick.expression')}</h3>
+          <div class="sec-head">
+            <h3>{t('quick.expression')}</h3>
+            <button
+              type="button"
+              class="btn btn-ghost"
+              id="exprReset"
+              title={t('quick.restoreDefault')}
+              disabled={exprIsDefault}
+              onClick={() => {
+                run('expression.set', { ...EXPRESSION_DEFAULT })
+                showToast(t('toast.exprDefault'))
+                // O botão desabilita: o foco vai para o Nível em vez de se perder.
+                document.getElementById('expr')?.focus()
+              }}
+            >
+              <Icon name="rotate-ccw" />
+              {t('quick.restoreDefault')}
+            </button>
+          </div>
           <Slider
             id="expr"
             label={t('quick.level')}
@@ -239,33 +304,32 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             max={EXPRESSION_MAX}
             step={1}
             text={exprLevelText(expr.level)}
+            zeroMark
             onInput={(level) => run('expression.set', { level })}
           />
-          <Select
+          <Segmented<ExpressionCurve>
             id="exprCurve"
             label={t('quick.character')}
             value={expr.curve}
-            options={EXPRESSION_CURVES.map((c) => [c, withDefault(splitLabel(expressionCurveLabel(c))[0], c === EXPRESSION_DEFAULT.curve)])}
+            def={EXPRESSION_DEFAULT.curve}
+            dim={expr.level === 0}
+            options={EXPRESSION_CURVES.map((c) => [c, splitLabel(expressionCurveLabel(c))[0]])}
             onChange={(curve) => run('expression.set', { curve })}
           />
-          <p class="note hint">{expr.level === 0 ? t('quick.noEffect') : curveHint}</p>
-          <Select
+          <p class="note seg-desc" id="exprCurveDesc" aria-live="polite">
+            {expr.level === 0 ? t('quick.noEffect') : withDefaultDesc(curveHint, expr.curve === EXPRESSION_DEFAULT.curve)}
+          </p>
+          <Segmented<ExpressionAdaptation>
             id="exprMemory"
             label={t('quick.memory')}
             value={expr.adaptation}
-            options={EXPRESSION_ADAPTATIONS.map((a) => [a, withDefault(splitLabel(expressionAdaptationLabel(a))[0], a === EXPRESSION_DEFAULT.adaptation)])}
+            def={EXPRESSION_DEFAULT.adaptation}
+            options={EXPRESSION_ADAPTATIONS.map((a) => [a, splitLabel(expressionAdaptationLabel(a))[0]])}
             onChange={(adaptation) => run('expression.set', { adaptation })}
           />
-          <p class="note hint">{memoryHint}</p>
-          <button
-            class="btn sheet-link"
-            id="exprReset"
-            disabled={expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation}
-            onClick={() => run('expression.set', { ...EXPRESSION_DEFAULT })}
-          >
-            <span>{t('quick.restoreDefault')}</span>
-            <span class="soon">{t('quick.restoreDefaultValues')}</span>
-          </button>
+          <p class="note seg-desc" id="exprMemoryDesc" aria-live="polite">
+            {withDefaultDesc(expr.adaptation === 'live' ? t('quick.memoryLiveDesc') : memoryHint, expr.adaptation === EXPRESSION_DEFAULT.adaptation)}
+          </p>
           {!expressionAvailable && <p class="note">{t('quick.unavailable')}</p>}
         </section>
 
