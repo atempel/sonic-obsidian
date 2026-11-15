@@ -227,7 +227,11 @@ async function checkSetup(b, lang) {
   const kbd = await p.$eval('.float.card .shortcuts kbd', (e) => e.textContent)
   const texts = await p.evaluate(floatTexts)
   const cut = await p.evaluate(clippedFloat)
-  await p.click('.float.panel .actions .btn:nth-child(2)'); await p.waitForTimeout(150)
+  // O rótulo só troca depois da cópia (assíncrona: monta o texto e chama o main); num runner lento passa de 150 ms.
+  const sel = '.float.panel .actions .btn:nth-child(2) span'
+  const before = await p.textContent(sel)
+  await p.click('.float.panel .actions .btn:nth-child(2)')
+  await p.waitForFunction(([s, b]) => document.querySelector(s)?.textContent !== b, [sel, before], { timeout: 5000 }).catch(() => {})
   const copiedLabel = await p.textContent('.float.panel .actions .btn:nth-child(2) span')
   const copied = await p.evaluate(() => window.__copied.at(-1) || '')
   await p.click('.float.panel .btn-primary'); await p.waitForTimeout(400)
