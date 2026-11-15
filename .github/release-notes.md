@@ -1,23 +1,21 @@
-<!-- Ao fechar o bloco v0.7.0 (spec 029, atualização automática): dizer aqui que quem está na 0.6.0 ou anterior instala
-     esta versão à mão uma única vez (instalar por cima mantém as configurações) e que, daí em diante, o app se atualiza
-     sozinho (dá para desligar em Configurações › Sobre › Atualizações). E voltar o "atualizações automáticas" ao cartão
-     do instalador na landing (site/index.html e site/pt/index.html; DECISIONS 2026-11-08). -->
+<!-- Ao publicar a 0.7.0 (depois do ok no bloco): voltar o "atualizações automáticas" ao cartão do instalador na landing
+     (site/index.html e site/pt/index.html; DECISIONS 2026-11-08 e 2026-11-15). Não antes: a landing baixa a release
+     publicada, que até lá é a 0.6.0, sem atualizador. -->
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
-## What's new in 0.6.0
+## What's new in 0.7.0
 
-- **Reacts better to the music:** the visual memory now learns from sound only (no more stuck or maxed-out reaction after opening in silence), and real silence means no pulsing — presets keep drifting, slow and dim, and the reaction comes back smoothly when the music returns. Defaults are marked in Quick settings (`,`), with a **Restaurar padrão** (restore defaults) button.
-- **Normalize audio** (*Normalizar áudio*): optional automatic gain (Quick settings › *Sinal*, or Settings › *Captura*) so quiet and loud tracks move the visuals alike. With it on, the manual gain becomes a ±6 dB fine adjustment. It never changes what you hear.
-- **Live memory:** a fourth memory mode (`Shift+X`) for more contrast on steady tracks.
-- **New engine (Butterchurn 3, WebAssembly):** runs more presets safely.
-- **Import your own `.milk` presets** and organize **collections** right from the Stage.
-- **Switch on the beat:** change presets every N bars, and hold the current visual when you like it.
-- **Preset Studio:** edit a preset's equations with a live preview.
-- Fixes: two presets that rendered black, and dot waves that were invisible on Windows. The debug HUD (`Ctrl+Shift+D`) and the log now show audio levels and reaction.
+- **Automatic updates:** the installed app checks GitHub Releases once a day, downloads new versions in the background and shows a small note when one is ready — **Restart and update** installs it silently and reopens where you left off. Turn it off, or check by hand, in Settings › About › Updates. The portable zip only tells you a new version exists and opens its page.
+- **English and Portuguese (Brazil):** the whole app is translated. On first launch it follows the Windows language; switch any time in Settings › General › Language, with no restart. The installer, file dialogs and screen-reader key names follow too. The log, the debug HUD and copied diagnostics stay in English so they can be pasted into issues.
+- **Clearer Quick settings:** Normalize audio shows its live gain (`auto +N dB`) next to its name; Character and Memory are side-by-side buttons; defaults are marked with a dot; **Restore default** sits next to the Expressiveness title.
+
+### Updating from 0.6.0 or earlier
+
+Install this version by hand **once** (run `SonicObsidian-Setup.exe` over the old one — your presets, favorites, collections and settings are kept). From then on the app updates itself.
 
 ## Download
 
-- **Installer:** `SonicObsidian-Setup.exe` (per user, no admin rights).
+- **Installer:** `SonicObsidian-Setup.exe` (per user, no admin rights; updates itself).
 - **Portable:** `SonicObsidian-win-x64.zip` — unzip anywhere and run `Sonic Obsidian.exe`.
 - **Checksums:** `SHA256SUMS.txt`.
 
