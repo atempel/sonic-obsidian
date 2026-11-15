@@ -22,6 +22,15 @@ interface MineEntry {
   preset: Record<string, unknown>
 }
 
+interface UpdateState {
+  phase: 'idle' | 'checking' | 'latest' | 'downloading' | 'ready' | 'available' | 'installing' | 'error'
+  version: string | null
+  percent: number
+  lastCheckAt: number | null
+  portable: boolean
+  supported: boolean
+}
+
 contextBridge.exposeInMainWorld('so', {
   settings: store('settings'),
   library: store('library'),
@@ -72,6 +81,22 @@ contextBridge.exposeInMainWorld('so', {
     saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: MineMeta }> =>
       ipcRenderer.invoke('presets:saveMine', data),
     removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id))
+  },
+  /** Atualização automática (spec 029): o main decide o que checar, baixar e abrir. */
+  update: {
+    state: (): Promise<UpdateState> => ipcRenderer.invoke('update:state'),
+    /** Chave "Buscar atualizações automaticamente". */
+    configure: (auto: boolean): void => ipcRenderer.send('update:configure', auto === true),
+    /** "Verificar agora": devolve a fase em que ficou. */
+    check: (): Promise<UpdateState['phase']> => ipcRenderer.invoke('update:check'),
+    install: (): Promise<boolean> => ipcRenderer.invoke('update:install'),
+    /** Abre a página da versão encontrada (ou da instalada) no navegador. */
+    openRelease: (): Promise<void> => ipcRenderer.invoke('update:openRelease'),
+    onState: (fn: (s: UpdateState) => void): (() => void) => {
+      const listener = (_e: unknown, s: UpdateState): void => fn(s)
+      ipcRenderer.on('update:state', listener)
+      return () => ipcRenderer.removeListener('update:state', listener)
+    }
   },
   /** Coleções em arquivo: o diálogo é nativo (main); aqui só passa texto. */
   collections: {

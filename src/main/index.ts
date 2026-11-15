@@ -7,11 +7,13 @@ import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
 import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
 import { listMine, removeMine, saveMine } from './mine'
+import { flushUpdater, registerUpdater, updaterFirstFrame } from './updater'
 
 mark('main.js')
 import { JsonStore } from './store'
 
 const stores = new Map<string, JsonStore>()
+const flushStores = (): Promise<void> => Promise.all([...stores.values()].map((s) => s.flush())).then(() => undefined)
 
 /** settings.json e library.json (architecture §7): só o main toca o disco. */
 function registerStores(): void {
@@ -36,7 +38,10 @@ function registerStores(): void {
   })
   // Etapas da abertura vindas do renderer (só nomes conhecidos; ver startup.ts).
   ipcMain.on('startup:mark', (_e, name: unknown) => {
-    if (typeof name === 'string') mark(name)
+    if (typeof name !== 'string') return
+    mark(name)
+    // Atualização automática (spec 029): a agenda só começa depois do primeiro quadro.
+    if (name === 'first frame') updaterFirstFrame()
   })
   // Mostra o arquivo de log no Explorer (caminho fixo, definido aqui).
   ipcMain.handle('log:show', () => shell.showItemInFolder(logPath()))
@@ -57,6 +62,7 @@ function registerStores(): void {
     return undefined
   })
   registerCollectionFiles()
+  registerUpdater({ flush: flushStores })
   // Diagnóstico (spec 012): texto curto para a área de transferência, GPU e flags de teste.
   ipcMain.handle('system:copyText', (_e, text: unknown) => {
     if (typeof text === 'string' && text.length <= 20_000) clipboard.writeText(text)
@@ -263,7 +269,7 @@ let flushed = false
 app.on('before-quit', (event) => {
   if (flushed) return
   event.preventDefault()
-  Promise.all([...stores.values()].map((s) => s.flush())).finally(() => {
+  Promise.all([flushStores(), flushUpdater()]).finally(() => {
     flushed = true
     app.quit()
   })

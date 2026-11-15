@@ -50,6 +50,11 @@ SOFTWARE.
 
 As licenças MIT acima têm o mesmo texto reproduzido no início deste arquivo, com o respectivo aviso de copyright.
 
+## Atualização automática (spec 029)
+- electron-updater 6.8.11 — MIT, Copyright (c) 2015 Loopline Systems; electron-builder contributors
+- builder-util-runtime 9.7.0 — MIT, Copyright (c) Vladimir Krivosheev (electron-builder)
+- Dependências deles: semver 7.7.4 (ISC), js-yaml 4.x (MIT) com argparse 2.0.1 (Python-2.0, permissiva), fs-extra 10.1.0 (MIT) com graceful-fs (ISC), jsonfile (MIT) e universalify (MIT), lazy-val 1.0.5 (MIT), lodash.isequal 4.5.0 e lodash.escaperegexp 4.1.2 (MIT), tiny-typed-emitter 2.1.0 (MIT), debug 4.x e ms 2.x (MIT), sax 1.x (BlueOak-1.0.0, permissiva). Os textos estão nos próprios pacotes, dentro do app (`resources/app.asar/node_modules`).
+
 ## Preact
 [Preact](https://preactjs.com/) 11 (MIT) — Copyright (c) 2015-present Jason Miller. Licença MIT, mesmo texto reproduzido acima.
 
