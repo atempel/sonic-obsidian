@@ -17,6 +17,8 @@ export interface HudState {
   studio?: string
   /** Spec 027: ondas e formas ligadas no motor (lido de volta dele). */
   studioSlots?: string
+  /** Spec 027, fatia 4: "Comparar com o original" ligado e o mínimo de fps. */
+  studioCompare?: string
   error?: string
 }
 
@@ -38,6 +40,7 @@ export class Hud {
       `${s.beat ?? 'beat: waiting'}\n` +
       (s.studio ? `${s.studio}\n` : '') +
       (s.studioSlots ? `${s.studioSlots}\n` : '') +
+      (s.studioCompare ? `${s.studioCompare}\n` : '') +
       `→ ← presets · + − 0 expressiveness · X character · Shift+X memory · B ↑↓ transition · T clean mode · Space random · Enter hold`
   }
 }

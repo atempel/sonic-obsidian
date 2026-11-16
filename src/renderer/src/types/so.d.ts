@@ -45,7 +45,7 @@ interface Window {
       openLink(url: string): Promise<void>
       copyText(text: string): Promise<void>
       gpuInfo(): Promise<{ driver: string; ids: string }>
-      testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean }>
+      testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean; compareMinFps?: number }>
     }
     app: { version(): Promise<string>; systemLanguage?(): Promise<'en' | 'pt-BR'>; setLanguage?(lang: 'en' | 'pt-BR'): void }
     presets: {

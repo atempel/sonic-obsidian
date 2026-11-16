@@ -110,14 +110,17 @@ function registerStores(): void {
 /**
  * Flags de teste (spec 012): `test-flags.json` na pasta de dados (Ctrl+Shift+L abre a pasta
  * do log, ao lado). Simula a captura recusada e a falta de WebGL 2 sem linha de comando.
- * Só estas chaves, só booleanos; arquivo ausente ou inválido = nenhuma flag.
+ * Só estas chaves (booleanos, e o número `compareMinFps`); arquivo ausente ou inválido = nenhuma flag.
  */
-type TestFlags = { captureFail: boolean; noWebgl2: boolean }
+type TestFlags = { captureFail: boolean; noWebgl2: boolean; compareMinFps?: number }
 async function readTestFlags(): Promise<TestFlags> {
   try {
     const raw = JSON.parse(await readFile(join(app.getPath('userData'), 'test-flags.json'), 'utf8')) as Record<string, unknown>
-    const flags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }
-    if (flags.captureFail || flags.noWebgl2) log('main', `test flags: ${JSON.stringify(flags)}`)
+    const flags: TestFlags = { captureFail: raw.captureFail === true, noWebgl2: raw.noWebgl2 === true }
+    // Estúdio (spec 027, critério 4): muda o limite de fps de "Comparar com o original" (0–1000; 0 = sem limite).
+    const m = raw.compareMinFps
+    if (typeof m === 'number' && Number.isFinite(m) && m >= 0 && m <= 1000) flags.compareMinFps = m
+    if (flags.captureFail || flags.noWebgl2 || flags.compareMinFps !== undefined) log('main', `test flags: ${JSON.stringify(flags)}`)
     return flags
   } catch {
     return { captureFail: false, noWebgl2: false }

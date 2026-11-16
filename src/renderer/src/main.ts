@@ -45,6 +45,8 @@ const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s
 const STARTUP_EXTRAS_WAIT_MS = 1000
 /** Cadência do medidor de nível da faixa (~30×/s). */
 const LEVEL_TICK_MS = 33
+/** Estúdio, "Comparar com o original" (spec 027): abaixo disto, o segundo visual desliga. */
+const COMPARE_MIN_FPS = 50
 
 async function start(): Promise<void> {
   // Tempos da abertura no log (passagem de performance): ver src/main/startup.ts.
@@ -60,7 +62,9 @@ async function start(): Promise<void> {
   setSystemLang(systemLang ?? langFromTag(navigator.language))
   applyLanguage(initialSettings.language)
 
-  const testFlags = await window.so.system.testFlags().catch(() => ({ captureFail: false, noWebgl2: false }))
+  const testFlags: { captureFail: boolean; noWebgl2: boolean; compareMinFps?: number } = await window.so.system
+    .testFlags()
+    .catch(() => ({ captureFail: false, noWebgl2: false }))
   // WebGL 2 (spec 012): sem ele o Butterchurn não desenha; mostra o diagnóstico em vez de tela preta.
   if (testFlags.noWebgl2 || !document.createElement('canvas').getContext('webgl2')) {
     window.so.log(`WebGL 2 unavailable${testFlags.noWebgl2 ? ' (simulated by test-flags.json)' : ''}`)
@@ -317,6 +321,7 @@ async function start(): Promise<void> {
     if (rk !== renderKey) {
       renderKey = rk
       viz.applyRender(settings.render)
+      compare?.viz.applyRender(settings.render)
     }
     // Desligar o Normalizar volta ao ganho manual puro; ligar de novo mede do zero.
     if (!settings.autoGain && agc.gainDb !== 0) {
@@ -493,6 +498,63 @@ async function start(): Promise<void> {
     const v = (viz.visualizer as unknown as { renderer?: { audioLevels?: { val?: unknown } } }).renderer?.audioLevels?.val
     return v instanceof Float32Array ? v : null
   }
+  // ── Comparar com o original (spec 027, fatia 4) ───────────
+  // Um segundo motor, só enquanto o switch está ligado, desenhado logo depois do principal e com
+  // os mesmos níveis de áudio. Só liga com folga de GPU e desliga sozinho se o fps cair.
+  let compare: { viz: PresetVisualizer; since: number; low: number; min: number; onDrop: (fps: number) => void } | null = null
+  /** 50 fps, ou 90 % do limite de fps quando ele é menor (30 fps → 27); `compareMinFps` no test-flags.json muda. */
+  const compareMin = (): number =>
+    testFlags.compareMinFps ?? Math.min(COMPARE_MIN_FPS, settings.fpsLimit === 'monitor' ? COMPARE_MIN_FPS : Math.floor(settings.fpsLimit * 0.9))
+  const stopCompare = (): void => {
+    if (!compare) return
+    compare.viz.dispose()
+    compare = null
+    state.studioCompare = undefined
+  }
+  const dropCompare = (fps: number, why: string): void => {
+    const c = compare
+    if (!c) return
+    stopCompare()
+    window.so.log(`studio: compare turned off: ${why}`)
+    c.onDrop(fps)
+  }
+  const startCompare = (host: HTMLElement, preset: Preset, onDrop: (fps: number) => void): { ok: true } | { ok: false; fps: number } => {
+    const min = compareMin()
+    if (compare) {
+      void compare.viz.load(preset, 'cut', 0)
+      compare.onDrop = onDrop
+      return { ok: true }
+    }
+    // Sem folga: o principal sozinho já está abaixo do limite (a medida é do último segundo).
+    if (state.fps < min) {
+      window.so.log(`studio: compare refused at ${state.fps.toFixed(0)} fps (minimum ${min})`)
+      return { ok: false, fps: state.fps }
+    }
+    const cv = document.createElement('canvas')
+    cv.className = 'st-cmp-canvas'
+    cv.setAttribute('aria-hidden', 'true')
+    host.appendChild(cv)
+    try {
+      const v = new PresetVisualizer(ctx, cv, settings.render)
+      v.visualizer.connectAudio(gain)
+      hookShaderCleanup(v.visualizer)
+      const mirrored = v.mirrorAudioFrom(viz)
+      compare = { viz: v, since: performance.now(), low: 0, min, onDrop }
+      v.gl?.canvas.addEventListener('webglcontextlost', (e) => {
+        e.preventDefault()
+        if (compare?.viz === v) dropCompare(0, 'WebGL context lost')
+      })
+      void v.load(preset, 'cut', 0)
+      state.studioCompare = `studio: compare on · minimum ${min} fps${mirrored ? '' : ' · own audio levels'}`
+      window.so.log(`studio: compare on (minimum ${min} fps${mirrored ? '' : ', own audio levels'})`)
+      return { ok: true }
+    } catch (err) {
+      cv.remove()
+      window.so.log(`studio: compare failed to start: ${err instanceof Error ? err.message : String(err)}`)
+      return { ok: false, fps: state.fps }
+    }
+  }
+
   const openStudioFor = async (name?: string): Promise<void> => {
     if (studio || studioBusy) return
     const src = name ?? core.state.current
@@ -553,6 +615,7 @@ async function start(): Promise<void> {
         return { name: finalName, id: r.id, meta: r.meta }
       },
       close: (saved) => {
+        stopCompare()
         closeStudio()
         compiler.dispose()
         studio = null
@@ -575,7 +638,11 @@ async function start(): Promise<void> {
       version: async (n) => {
         if (!mineRef) throw new Error('[invalid] no saved preset')
         return (await window.so.presets.mineVersion(mineRef.id, n)) as Preset
-      }
+      },
+      // Comparar (fatia 4): o "original" de um meu preset é aquele em que ele se baseou, se ainda existe.
+      original: structuredClone(srcMine?.meta.basedOn && library.has(srcMine.meta.basedOn.name) ? library.get(srcMine.meta.basedOn.name) : library.get(src)),
+      compareStart: startCompare,
+      compareStop: stopCompare
     })
   }
 
@@ -599,7 +666,10 @@ async function start(): Promise<void> {
     return type === 'cut' ? t('toast.blend', { label }) : `${t('toast.blendTimed', { label, s: fmtSeconds(seconds) })}${unavailable}`
   }
 
-  window.addEventListener('resize', () => viz.resize())
+  window.addEventListener('resize', () => {
+    viz.resize()
+    compare?.viz.resize()
+  })
   // Minimizada ou coberta, o Chromium para o requestAnimationFrame (e o render junto).
   // O log mostra se isso acontece na máquina do usuário.
   document.addEventListener('visibilitychange', () => window.so.log(`window ${document.visibilityState === 'hidden' ? 'hidden: render paused' : 'visible'}`))
@@ -940,6 +1010,13 @@ async function start(): Promise<void> {
     // No modo beat, a troca sai na batida e mistura no máximo 1 batida, para cair no tempo.
     if (!studioBusy && rotation.due(now)) run('rotation.advance', rotation.barsMode ? { maxBlendSeconds: beat.periodMs / 1000 } : {}, 'rotation')
     renderSafe(dt * speed)
+    if (compare) {
+      try {
+        compare.viz.render(dt * speed)
+      } catch (err) {
+        dropCompare(0, `render error: ${err instanceof Error ? err.message : String(err)}`)
+      }
+    }
     if (blackCheck && now >= blackCheck.at) {
       const c = blackCheck
       if (c.name !== core.state.current || document.hidden) blackCheck = null
@@ -958,6 +1035,11 @@ async function start(): Promise<void> {
     frames++
     if (now - windowStart >= 1000) {
       state.fps = (frames * 1000) / (now - windowStart)
+      // Comparar: 2 s seguidos abaixo do mínimo (depois de 3 s para os shaders compilarem) desliga.
+      if (compare && now - compare.since > 3000) {
+        compare.low = state.fps < compare.min ? compare.low + 1 : 0
+        if (compare.low >= 2) dropCompare(state.fps, `${state.fps.toFixed(0)} fps, below ${compare.min}`)
+      }
       frames = 0
       windowStart = now
       if (exprProbe) {
