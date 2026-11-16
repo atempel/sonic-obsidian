@@ -1,6 +1,6 @@
 # Arquitetura v3 — Sonic Obsidian
 
-> Estado: **planejamento** (8/nov/2026). Hoje o código é o spike da Fase 0 (`src/main/index.ts`, `src/renderer/src/*`). Este documento descreve para onde ele cresce para suportar a interface v3, as fontes de áudio, presets do usuário e o MCP. Decisões em [DECISIONS.md](../DECISIONS.md) (2026-11-08); interface em [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md).
+> Estado: **planejamento** (8/nov/2026), implementado aos poucos — na v0.7.0 (16/nov) o núcleo de comandos, a interface v3, o Butterchurn 3, o pipeline `.milk`, o Estúdio P0, a atualização automática e os idiomas já estão no código; MCP e fontes extras ainda não. Este documento descreve para onde ele cresce para suportar a interface v3, as fontes de áudio, presets do usuário e o MCP. Decisões em [DECISIONS.md](../DECISIONS.md) (2026-11-08); interface em [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md).
 
 ## 1. Princípio: um único núcleo de comandos
 
@@ -143,3 +143,7 @@ O app não embute IA. Ele expõe um servidor **MCP** para a ferramenta de IA que
 3. **Fase 3 — Fontes e presets**: arquivo e microfone; spikes 006 e 007; importar `.milk`; Estúdio; SoundCloud se o 007 aprovar.
 4. **Fase 4 — MCP**: servidor, transportes, escopos, ferramentas de controle; criação de presets se o 006 aprovar.
 5. **Fase 5 — Extras**: Rack/multi-monitor, beat/BPM, "iniciar com o Windows", instalador.
+
+## 9. Atualização automática e idiomas (v0.7.0)
+- **Atualização** ([spec 029](specs/029-atualizacao-automatica.md)): `src/main/updater.ts` com `electron-updater` (provedor GitHub), carregado por `import()` dinâmico na primeira checagem. Só no app instalado: checagem diária (desligável em Configurações › Sobre › Atualizações), download em segundo plano, e a instalação só com o clique em "Reiniciar e atualizar" (sem `autoInstallOnAppQuit`). O zip portátil só avisa e abre a página da release. A release precisa de `latest.yml` e `SonicObsidian-Setup.exe.blockmap` (o `release.yml` falha sem eles). O renderer vê o estado por `window.so.update`; linhas `[update]` no log.
+- **Idiomas** ([spec 030](specs/030-idiomas.md)): `settings.language` = `'auto' | 'en' | 'pt-BR'`; o main resolve `'auto'` pelo idioma do Windows. Texto de interface em `src/renderer/src/i18n/en.ts` (fonte) e `pt-BR.ts`, lido com `t()`/`tn()`; diálogos do main por `mt()` (`src/main/i18n.ts`); erros do main em inglês com código, traduzidos no renderer (`main-error.ts`). Log, HUD e diagnóstico copiado ficam em inglês.

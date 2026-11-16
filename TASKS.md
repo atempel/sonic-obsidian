@@ -23,7 +23,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] Refazer a checagem de `electron@45.2.3` e `vite@8.3.6` depois de 19/11 (14 dias) — [docs/dependencias.md](docs/dependencias.md)
 - [x] Decidir sobre `electron@45.2.3` e `vite@8.3.6`: mantidos; refazer a checagem depois de 19/11 — [docs/dependencias.md](docs/dependencias.md)
 - [x] Avaliar as 6 vulnerabilidades *moderate* de `minimatch` via `electron-builder`: aceitas (só empacotamento); rever quando o electron-builder atualizar
-- [ ] **Suíte de testes no CI** (pedido do usuário: não depender só da máquina dele) — [spec 025](docs/specs/025-suite-testes-ci.md) · issue [#73](https://github.com/atempel/sonic-obsidian/issues/73) · P0 aguarda o ok para o Playwright no CI
+- [x] **Suíte de testes no CI** (pedido do usuário: não depender só da máquina dele; P1 de desempenho no Windows na v0.7.0) — [spec 025](docs/specs/025-suite-testes-ci.md) · issue [#73](https://github.com/atempel/sonic-obsidian/issues/73)
 - [x] Memória da GPU estável numa sessão longa: ~40 min visível, GPU entre 158 e 200 MB, sem tendência de alta (DECISIONS 2026-11-09)
 - [x] CI roda duas vezes em branch com PR aberto (`push` + `pull_request`), dobrando os minutos do runner Windows — restringir o gatilho em `.github/workflows/build-windows.yml`.
 
@@ -45,18 +45,18 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [x] **Releases no GitHub** (v0.5.0 publicada em 2026-11-09; PRs #58/#59; P1 = atualização automática e winget) — tag → rascunho de release com instalador, zip e checksums; nomes sem versão (licença e arquivos de comunidade já feitos no #43) — [spec 016](docs/specs/016-releases-abertura.md) · issue [#40](https://github.com/atempel/sonic-obsidian/issues/40)
 - [x] **Landing page no GitHub Pages** (P0 no ar em atempel.github.io/sonic-obsidian, PR #48; P1 = 404 e notas da versão) — [spec 017](docs/specs/017-landing-github-pages.md) · issue [#41](https://github.com/atempel/sonic-obsidian/issues/41)
 - [x] **Landing: refino de movimento e microinterações** (sistema de movimento da v3 no `site/` + músicas do Uppbeat criptografadas na demo) — [spec 019](docs/specs/019-landing-refino-movimento.md) · issue [#52](https://github.com/atempel/sonic-obsidian/issues/52)
-- [ ] **Atualização automática pelo GitHub Releases** (`electron-updater`; checagem diária, download em segundo plano, um clique reinicia e atualiza; portátil só avisa) — [spec 029](docs/specs/029-atualizacao-automatica.md) · issue [#69](https://github.com/atempel/sonic-obsidian/issues/69)
+- [x] **Atualização automática pelo GitHub Releases** (v0.7.0, publicada em 2026-11-16; `electron-updater`; checagem diária, download em segundo plano, um clique reinicia e atualiza; portátil só avisa) — [spec 029](docs/specs/029-atualizacao-automatica.md) · issue [#69](https://github.com/atempel/sonic-obsidian/issues/69)
 
 ## Agora — Fase 3 (Fontes e presets)
-- [ ] **Idiomas: inglês (fonte) e português (Brasil)** (próxima da fila, pedido do usuário) — [spec 030](docs/specs/030-idiomas.md) · issue [#101](https://github.com/atempel/sonic-obsidian/issues/101)
+- [x] **Idiomas: inglês (fonte) e português (Brasil)** (v0.7.0, publicada em 2026-11-16; 9 PRs) — [spec 030](docs/specs/030-idiomas.md) · issue [#101](https://github.com/atempel/sonic-obsidian/issues/101)
 - [x] **Migração para o Butterchurn 3** — #62, validada no Windows em 2026-11-10
 - [x] **Importar presets `.milk`** — [spec 022](docs/specs/022-importar-milk.md) · issue [#64](https://github.com/atempel/sonic-obsidian/issues/64) · PR #65, validada no Windows
 - [x] **Troca no beat a cada N compassos + segurar visual + Respiro** (PRs #71 e #77, validada no Windows em 2026-11-10) — [spec 024](docs/specs/024-troca-no-beat-segurar.md) · issue [#67](https://github.com/atempel/sonic-obsidian/issues/67)
 - [x] **Estúdio de presets (P0): editar equações com prévia ao vivo, validar, salvar como "Meu preset" com crédito** (PR #79, validada no Windows em 2026-11-10) — [spec 026](docs/specs/026-estudio-presets-p0.md) · issue [#74](https://github.com/atempel/sonic-obsidian/issues/74) · 
-- [ ] **Estúdio de presets (P1): parâmetros, ondas/formas, shaders, versões, exportar `.milk`, novo preset** (depois da 028) — [spec 027](docs/specs/027-estudio-presets-p1.md) · issue [#75](https://github.com/atempel/sonic-obsidian/issues/75)
+- [ ] **Estúdio de presets (P1): parâmetros, ondas/formas, shaders, versões, exportar `.milk`, novo preset** (bloco v0.8.0, em fatias; Básico e Ondas/Formas feitos) — [spec 027](docs/specs/027-estudio-presets-p1.md) · issue [#75](https://github.com/atempel/sonic-obsidian/issues/75)
 - [ ] Fonte microfone (P1, depois do Estúdio)
 - [ ] **Controle de velocidade do visual** (`time`; pedido do usuário) — [queue](queue/2026-11-11-controle-velocidade.md), planejar
-- [ ] **Reação ao áudio: corrigir a Memória, medir no HUD e ganho automático** (próximo; relatos do usuário + pesquisa de reatividade) — [spec 028](docs/specs/028-reatividade-ganho-automatico.md) · issue [#81](https://github.com/atempel/sonic-obsidian/issues/81) · spec fechada (PR #82), implementar o P0
+- [x] **Reação ao áudio: corrigir a Memória, medir no HUD e ganho automático** (v0.6.0; ajustes de interface do design 598c na v0.7.0, issue #94) — [spec 028](docs/specs/028-reatividade-ganho-automatico.md) · issue [#81](https://github.com/atempel/sonic-obsidian/issues/81)
 - [ ] **Beat na batida principal** (bumbo/caixa, não outros instrumentos; relato do usuário) — [queue](queue/2026-11-10-beat-batida-principal.md), planejar
 - ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)
 - [x] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, validada no Windows
