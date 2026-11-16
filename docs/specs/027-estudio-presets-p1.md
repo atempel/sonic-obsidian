@@ -1,6 +1,6 @@
 # 027 — Estúdio de presets (P1): parâmetros, shaders, versões e exportar
 
-**Fase:** 3 · **Status:** Planejada · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
+**Fase:** 3 · **Status:** Pronta (perguntas fechadas pela rodada 2026-11-16, `agent-decided`; uma fatia por PR) · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
 
 ## Problema
 Com a 026, o usuário edita as equações e salva. Falta o resto do que o desenho do Estúdio promete: mexer nos parâmetros sem escrever código, editar ondas, formas e shaders, voltar a uma versão anterior e levar o preset para fora do app.
@@ -46,10 +46,11 @@ Conversão GLSL → HLSL. Botão de IA dentro do Estúdio (a IA é a do usuário
 9. "Capturar quadro" salva um PNG do quadro atual. "Testar troca" mostra a assinatura de nome e crédito.
 
 ## Perguntas em aberto
-- Cópia de preset do pacote não tem `.milk`: exportar sem shaders é aceitável, ou o botão fica só para presets com fonte `.milk`? Sugestão: aceitável, com aviso.
-- Versões: guardar um arquivo por versão (simples, até 50 × 256 KB) ou só o delta? Sugestão: arquivo inteiro.
-- O histórico entra no `library.json` ou só em arquivos da pasta do preset? Sugestão: só na pasta (o `library.json` não cresce).
-- A ordem das fatias acima serve? Se o usuário quiser exportar antes de editar shaders, a 7 sobe.
+Decididas pela rodada em 2026-11-16 (`agent-decided`, revisar no teste do bloco; DECISIONS 2026-11-16):
+- ~~Cópia de preset do pacote sem `.milk`: exportar sem shaders?~~ **Sim**, com aviso antes de salvar ("Os shaders não vão no `.milk`: este preset veio do pacote, que só tem a versão convertida"). A alternativa "Exportar JSON do Butterchurn" fica no mesmo menu.
+- ~~Versões: arquivo inteiro ou delta?~~ **Arquivo inteiro** por versão (`v0001.json`…), limite de **50** por preset (as mais antigas saem). No pior caso, 50 × 256 KB ≈ 12,5 MB por preset.
+- ~~Histórico no `library.json` ou na pasta do preset?~~ **Só na pasta** (`userData/presets/mine/<id>/`, ao lado de `meta.json`/`preset.json`); o `library.json` não cresce. O `preset.prev.json` da 026 vira a primeira versão na migração.
+- ~~Ordem das fatias~~ **Mantida** (1 → 11). Cada fatia é um PR que não fecha a issue, como na 030; o último fecha.
 
 ## Referências
 - Protótipo `1794281099-42d3` (`docs/design/v3/SYNC.md`), página `Sonic Obsidian Estúdio.html`: abas, Básico, slots de Ondas e Formas, gaveta de Versões, "Comparar com o original", "Testar troca", "Capturar quadro", "Exportar .milk", estados **Normal**, **Com erro** (avisos) e **Editado por IA** (Fase 4).

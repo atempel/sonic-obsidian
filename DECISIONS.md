@@ -571,3 +571,11 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Landing:** o "atualizações automáticas" volta ao cartão do instalador **quando a 0.7.0 for publicada**, não no fechamento do bloco (o lembrete da 029 dizia "ao fechar o bloco"). **Por quê:** o Pages publica a cada merge no `main` e a landing baixa a release publicada, que até o ok do usuário é a 0.6.0, sem atualizador.
 - **Descartado:** planejar uma issue do `backlog` só para completar 5 neste bloco.
 
+
+## 2026-11-16 — Spec 027 pronta: perguntas fechadas (rodada, `agent-decided`)
+- **Exportar `.milk` de cópia do pacote:** permitido **sem os shaders**, com aviso antes de salvar; "Exportar JSON do Butterchurn" no mesmo menu. **Por quê:** o pacote só tem o GLSL convertido e não há conversão de volta para HLSL; bloquear o botão tiraria a exportação justamente dos presets mais editados.
+- **Versões = arquivo inteiro** (`v0001.json`…), **até 50 por preset**. **Por quê:** restaurar e comparar ficam triviais e o pior caso (~12,5 MB por preset) é aceitável; delta só complicaria a restauração.
+- **Histórico só na pasta do preset** (`userData/presets/mine/<id>/`), não no `library.json`. **Por quê:** o `library.json` é lido inteiro na abertura; a pasta por preset já existe desde a 026. O `preset.prev.json` da 026 vira a primeira versão.
+- **Ordem das fatias mantida** (Básico → Ondas/Formas → Versões → Comparar → Shaders → Código → Exportar → Novo → Renomear → Verificador → Extras), **um PR por fatia** sem fechar a issue, como na 030.
+- **Milestone v0.8.0** criado (o v0.7.0 já está congelado na `rc/v0.7.0`).
+- **Descartado:** guardar só deltas; esconder "Exportar .milk" para cópias do pacote.
