@@ -60,7 +60,8 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   // 4. Slider: valor na hora, no motor, sem recompilar; erro impossível
   await page.keyboard.press('Control+Shift+d')
   await page.$eval('#studio-p-zoom', (e) => { e.value = '1.05'; e.dispatchEvent(new Event('input', { bubbles: true })) })
-  await page.waitForTimeout(150)
+  // O HUD redesenha a cada segundo de quadros: no CI lento, espera até 5 s.
+  await H.poll(page, () => /studio: live zoom/.test(document.getElementById('hud').textContent), { timeout: 5000 })
   ok('4a valor mostrado em ciano atualiza', (await page.$eval('#studio-p-zoom', e => e.closest('.ctl').querySelector('output').textContent)) === '1.050')
   ok('4b o motor recebe o valor (HUD lê do runner)', /studio: live zoom = 1\.050/.test(await hud()), (await hud()).split('\n').find(l => l.startsWith('studio')))
   await page.$eval('#studio-p-warp', (e) => { e.value = '99'; e.dispatchEvent(new Event('input', { bubbles: true })) })
@@ -68,10 +69,10 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   const warp = await page.$eval('#studio-p-warp', e => e.closest('.ctl').querySelector('output').textContent)
   ok('4c fora da faixa fica preso a ela', Number(warp) <= 5 && Number(warp) >= 0, warp)
   await page.check('#studio-p-invert', { force: true })
-  await H.poll(page, () => /studio: live invert/.test(document.getElementById('hud').textContent), { timeout: 2000 })
+  await H.poll(page, () => /studio: live invert/.test(document.getElementById('hud').textContent), { timeout: 5000 })
   ok('4d switch vira 1 no motor', /studio: live invert = 1\.000/.test(await hud()), (await hud()).split('\n').find(l => l.startsWith('studio')))
   await page.selectOption('#studio-p-wave_mode', '6')
-  await H.poll(page, () => /studio: live wave_mode/.test(document.getElementById('hud').textContent), { timeout: 2000 })
+  await H.poll(page, () => /studio: live wave_mode/.test(document.getElementById('hud').textContent), { timeout: 5000 })
   ok('4e forma da onda vai para o motor', /studio: live wave_mode = 6\.000/.test(await hud()))
   ok('4f selo "Seu remix" com mudança', await page.isVisible('.chip.tl:has-text("Seu remix")'))
   await page.keyboard.press('Control+Shift+d')
@@ -86,11 +87,11 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   // 6. Ir para a linha troca de aba
   await page.keyboard.press('Control+2')
   await page.fill('.studio .ed-ta >> nth=1', 'rot = sin(time;')
-  await H.poll(page, () => !!document.querySelector('.perr .btn'), { timeout: 4000 })
+  const gotErr = await H.poll(page, () => !!document.querySelector('.perr .btn'), { timeout: 10000 })
   await page.keyboard.press('Control+1')
-  await page.click('.perr .btn')
-  await page.waitForTimeout(200)
-  ok('6a "Ir para a linha" abre Equações e foca o bloco', (await selected()).join() === 'Equações' && (await page.evaluate(() => document.activeElement === document.querySelectorAll('.studio .ed-ta')[1])))
+  if (gotErr) await page.click('.perr .btn')
+  const focused = await H.poll(page, () => document.activeElement === document.querySelectorAll('.studio .ed-ta')[1], { timeout: 3000, every: 100 })
+  ok('6a "Ir para a linha" abre Equações e foca o bloco', gotErr && focused && (await selected()).join() === 'Equações', `erro=${gotErr} foco=${focused} aba=${await selected()}`)
 
   // 7. Fim
   await page.evaluate(() => document.activeElement?.blur())
