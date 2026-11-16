@@ -6,7 +6,7 @@ import { mark } from './startup'
 import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
 import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
-import { listMine, removeMine, saveMine } from './mine'
+import { listMine, listVersions, readVersion, removeMine, saveMine } from './mine'
 import { flushUpdater, registerUpdater, updaterFirstFrame } from './updater'
 
 mark('main.js')
@@ -102,6 +102,9 @@ function registerStores(): void {
     return r
   })
   ipcMain.handle('presets:removeMine', (_e, id: unknown) => removeMine(id))
+  // Versões (spec 027, fatia 3): o id e o número são conferidos no main; o caminho nunca vem do renderer.
+  ipcMain.handle('presets:mineVersions', (_e, id: unknown) => listVersions(id))
+  ipcMain.handle('presets:mineVersion', (_e, id: unknown, n: unknown) => readVersion(id, n))
 }
 
 /**

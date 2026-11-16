@@ -73,7 +73,7 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
     imported/<id>.milk            # importados (arquivo/arrastar)
     imported/<id>.json            # convertido (cache) + nome
     mine/<id>/preset.json         # meu preset (Estúdio): o preset Butterchurn 3
-    mine/<id>/preset.prev.json    # a versão anterior (P0); histórico completo na 027
+    mine/<id>/v0001.json…         # versões (027): {savedAt, summary, preset}, até 50; preset.prev.json da 026 migra para cá
     mine/<id>/meta.json           # título, autor, basedOn (crédito original), createdAt
   library.json                    # favoritos, ocultos, recentes, coleções, fps medido
   settings.json

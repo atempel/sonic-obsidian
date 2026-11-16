@@ -1,13 +1,14 @@
 import { app } from 'electron'
 import { randomBytes } from 'node:crypto'
-import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { log } from './log'
 
 /**
  * "Meus presets" do Estúdio (spec 026), em `userData/presets/mine/<id>/`:
- * `preset.json` (preset Butterchurn 3), `meta.json` (título, autor, `basedOn`, `createdAt`) e,
- * depois do segundo salvamento, `preset.prev.json` (a versão anterior).
+ * `preset.json` (preset Butterchurn 3), `meta.json` (título, autor, `basedOn`, `createdAt`) e o
+ * histórico (spec 027, fatia 3): cada salvamento vira `v0001.json`, `v0002.json`… (até 50; as mais
+ * antigas saem). O `preset.prev.json` da 026 vira a primeira versão na migração.
  * O `<id>` é gerado aqui; nenhum caminho vem do renderer. A mesma barreira da 022:
  * só campos conhecidos, só `*_eel` (nenhum `*_str` nem `useJS`), até 256 KB.
  */
@@ -112,9 +113,156 @@ export async function listMine(): Promise<MineEntry[]> {
   return out
 }
 
+// ── Versões (spec 027, fatia 3) ────────────────────────────
+export const MAX_VERSIONS = 50
+const VER = /^v(\d{4,})\.json$/
+const verFile = (n: number): string => `v${String(n).padStart(4, '0')}.json`
+
 /**
- * Salva. Sem `id`: cria uma pasta nova (id gerado aqui). Com `id`: sobrescreve só aquele
- * "meu" preset, guardando o anterior em `preset.prev.json`; o título não muda (renomear na 027).
+ * Resumo de uma versão, sem texto: o renderer escreve na língua do app.
+ * `created` = primeira versão do preset; `earlier` = o `preset.prev.json` da 026 (sem como saber o que mudou);
+ * `edit` = até 3 parâmetros base mudados (`vals`, `more` = quantos além deles) e os blocos editados.
+ */
+export interface VersionSummary {
+  kind: 'created' | 'earlier' | 'edit'
+  vals: { key: string; from: number; to: number }[]
+  more: number
+  blocks: string[]
+}
+export interface VersionInfo {
+  n: number
+  savedAt: string
+  summary: VersionSummary
+}
+
+const EQ_BLOCKS: [string, string][] = [
+  ['init_eqs_eel', 'per_frame_init'],
+  ['frame_eqs_eel', 'per_frame'],
+  ['pixel_eqs_eel', 'per_pixel'],
+  ['warp', 'warp'],
+  ['comp', 'comp']
+]
+
+/** O que mudou de `a` para `b` (os dois já sanitizados). */
+export function diffPresets(a: Record<string, unknown>, b: Record<string, unknown>): VersionSummary {
+  const va = (isObj(a.baseVals) ? a.baseVals : {}) as Record<string, number>
+  const vb = (isObj(b.baseVals) ? b.baseVals : {}) as Record<string, number>
+  const changed: { key: string; from: number; to: number }[] = []
+  for (const key of Object.keys(vb)) {
+    const from = va[key]
+    if (from === undefined || Math.abs(from - vb[key]!) > 1e-9) changed.push({ key, from: from ?? 0, to: vb[key]! })
+  }
+  const blocks: string[] = []
+  for (const [k, name] of EQ_BLOCKS) if (String(a[k] ?? '') !== String(b[k] ?? '')) blocks.push(name)
+  // Onda ou forma: qualquer mudança no slot conta como o slot (`wave_1`, `shape_0`), como no `.milk`.
+  for (const kind of ['waves', 'shapes'] as const) {
+    const la = Array.isArray(a[kind]) ? (a[kind] as unknown[]) : []
+    const lb = Array.isArray(b[kind]) ? (b[kind] as unknown[]) : []
+    for (let i = 0; i < Math.max(la.length, lb.length); i++) {
+      if (JSON.stringify(la[i] ?? null) !== JSON.stringify(lb[i] ?? null)) blocks.push(`${kind === 'waves' ? 'wave' : 'shape'}_${i}`)
+    }
+  }
+  return { kind: 'edit', vals: changed.slice(0, 3), more: Math.max(0, changed.length - 3), blocks }
+}
+
+async function versionNumbers(folder: string): Promise<number[]> {
+  const names = await readdir(folder).catch(() => [] as string[])
+  return names
+    .map((x) => VER.exec(x))
+    .filter((m): m is RegExpExecArray => !!m)
+    .map((m) => Number(m[1]))
+    .sort((x, y) => x - y)
+}
+
+async function writeVersion(folder: string, n: number, preset: Record<string, unknown>, summary: VersionSummary, savedAt: string): Promise<void> {
+  await writeFile(join(folder, verFile(n)), JSON.stringify({ savedAt, summary, preset }))
+}
+
+const mtime = async (f: string): Promise<string> => (await stat(f).catch(() => null))?.mtime.toISOString() ?? new Date().toISOString()
+const NONE: VersionSummary = { kind: 'created', vals: [], more: 0, blocks: [] }
+
+/**
+ * Preset salvo antes do histórico: o `preset.prev.json` (se houver) vira a v0001 e o
+ * `preset.json` atual, a seguinte. Sem nada a migrar, não faz nada.
+ */
+async function migrate(folder: string): Promise<void> {
+  if ((await versionNumbers(folder)).length) return
+  let cur: Record<string, unknown>
+  try {
+    cur = sanitizePreset(JSON.parse(await readFile(join(folder, 'preset.json'), 'utf8')))
+  } catch {
+    return
+  }
+  const prevPath = join(folder, 'preset.prev.json')
+  let prev: Record<string, unknown> | null = null
+  try {
+    prev = sanitizePreset(JSON.parse(await readFile(prevPath, 'utf8')))
+  } catch {
+    prev = null
+  }
+  if (prev) {
+    await writeVersion(folder, 1, prev, { ...NONE, kind: 'earlier' }, await mtime(prevPath))
+    await writeVersion(folder, 2, cur, diffPresets(prev, cur), await mtime(join(folder, 'preset.json')))
+    await rm(prevPath, { force: true })
+  } else {
+    await writeVersion(folder, 1, cur, NONE, await mtime(join(folder, 'preset.json')))
+  }
+  log('main', `studio: migrated history of ${folder.slice(-24)} (${prev ? 2 : 1} versions)`)
+}
+
+/** Grava a próxima versão e tira as mais antigas além de 50. */
+async function addVersion(folder: string, preset: Record<string, unknown>, summary: VersionSummary): Promise<void> {
+  const ns = await versionNumbers(folder)
+  const n = (ns[ns.length - 1] ?? 0) + 1
+  await writeVersion(folder, n, preset, summary, new Date().toISOString())
+  const all = [...ns, n]
+  for (const old of all.slice(0, Math.max(0, all.length - MAX_VERSIONS))) await rm(join(folder, verFile(old)), { force: true })
+}
+
+const folderOf = (id: unknown): string => {
+  if (typeof id !== 'string' || !ID.test(id)) throw new Error('[invalid] bad id')
+  return join(dir(), id)
+}
+
+function sanitizeSummary(raw: unknown): VersionSummary {
+  const s = isObj(raw) ? raw : {}
+  const kind = s.kind === 'earlier' || s.kind === 'edit' ? s.kind : 'created'
+  const vals = (Array.isArray(s.vals) ? s.vals : [])
+    .filter((v): v is Record<string, unknown> => isObj(v) && typeof v.key === 'string' && typeof v.from === 'number' && typeof v.to === 'number')
+    .slice(0, 3)
+    .map((v) => ({ key: clean(v.key, 40), from: v.from as number, to: v.to as number }))
+  const blocks = (Array.isArray(s.blocks) ? s.blocks : []).filter((b): b is string => typeof b === 'string').map((b) => clean(b, 40)).slice(0, 20)
+  return { kind, vals, more: typeof s.more === 'number' && s.more > 0 ? Math.floor(s.more) : 0, blocks }
+}
+
+/** Versões de um "meu" preset, da mais nova para a mais antiga (sem os presets). */
+export async function listVersions(id: unknown): Promise<VersionInfo[]> {
+  const folder = folderOf(id)
+  await migrate(folder)
+  const out: VersionInfo[] = []
+  for (const n of (await versionNumbers(folder)).reverse()) {
+    try {
+      const v = JSON.parse(await readFile(join(folder, verFile(n)), 'utf8')) as Record<string, unknown>
+      out.push({ n, savedAt: typeof v.savedAt === 'string' ? v.savedAt : '', summary: sanitizeSummary(v.summary) })
+    } catch (err) {
+      log('main', `studio: unreadable version ${n} of ${String(id)}: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+  return out
+}
+
+/** O preset de uma versão, pela mesma barreira de sempre. */
+export async function readVersion(id: unknown, n: unknown): Promise<Record<string, unknown>> {
+  const folder = folderOf(id)
+  if (typeof n !== 'number' || !Number.isInteger(n) || n < 1) throw new Error('[invalid] bad version')
+  const v = JSON.parse(await readFile(join(folder, verFile(n)), 'utf8')) as Record<string, unknown>
+  return sanitizePreset(v.preset)
+}
+
+/**
+ * Salva. Sem `id`: cria uma pasta nova (id gerado aqui) e a primeira versão. Com `id`: sobrescreve
+ * só aquele "meu" preset e grava uma versão nova com o resumo do que mudou; o título não muda
+ * (renomear é outra fatia da 027).
  */
 export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMeta }> {
   const r = isObj(raw) ? raw : {}
@@ -123,8 +271,15 @@ export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMe
     if (typeof r.id !== 'string' || !ID.test(r.id)) throw new Error('[invalid] bad id')
     const folder = join(dir(), r.id)
     const meta = JSON.parse(await readFile(join(folder, 'meta.json'), 'utf8')) as MineMeta
-    await rename(join(folder, 'preset.json'), join(folder, 'preset.prev.json')).catch(() => {})
+    await migrate(folder)
+    let before: Record<string, unknown> | null = null
+    try {
+      before = sanitizePreset(JSON.parse(await readFile(join(folder, 'preset.json'), 'utf8')))
+    } catch {
+      before = null
+    }
     await writeFile(join(folder, 'preset.json'), JSON.stringify(preset))
+    await addVersion(folder, preset, before ? diffPresets(before, preset) : NONE)
     return { id: r.id, meta }
   }
   const meta = sanitizeMeta(r.meta, new Date().toISOString())
@@ -133,6 +288,7 @@ export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMe
   await mkdir(folder, { recursive: true })
   await writeFile(join(folder, 'preset.json'), JSON.stringify(preset))
   await writeFile(join(folder, 'meta.json'), JSON.stringify(meta))
+  await addVersion(folder, preset, NONE)
   return { id, meta }
 }
 
