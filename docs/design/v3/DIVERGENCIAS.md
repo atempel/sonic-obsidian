@@ -182,5 +182,6 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Nota no fim do Básico:** "São os valores de partida. Uma equação em Equações que atribui o mesmo nome (zoom = …) passa por cima do controle a cada quadro." (o protótipo não explica por que um slider às vezes não muda nada).
 - O painel **Problemas** continua embaixo da coluna do editor, também no Básico.
 - *Fatia 2 (Ondas e Formas), mesma versão:* abas Ondas e Formas como no protótipo (`Ctrl+3`/`Ctrl+4`), sem divergência de desenho. O `per_frame_init` de cada slot não aparece (como no protótipo) e segue como veio do preset.
+- *Fatia 3 (Histórico e desfazer), mesma versão:* botão "Versões" e gaveta de 320 px como no protótipo, por enquanto **sem "Comparar"** em cada versão (entra com a prévia dividida da fatia 4). A hora leva o dia quando a versão não é de hoje. Sem salvar, a gaveta diz "Salve na biblioteca para começar o histórico…" (o protótipo não tem esse estado). No pé da gaveta, a nota "Ctrl+Z desfaz e Ctrl+Shift+Z refaz a última mudança no editor."
 **Status:** Aberta (aguarda a sessão de design).
 

@@ -11,6 +11,12 @@ interface SoMineMeta {
   basedOn: { name: string; author: string } | null
   createdAt: string
 }
+/** Versão de um "meu" preset (spec 027, fatia 3): resumo sem texto, escrito pelo renderer. */
+interface SoMineVersion {
+  n: number
+  savedAt: string
+  summary: { kind: 'created' | 'earlier' | 'edit'; vals: { key: string; from: number; to: number }[]; more: number; blocks: string[] }
+}
 interface SoMineEntry {
   id: string
   meta: SoMineMeta
@@ -51,6 +57,8 @@ interface Window {
       listMine(): Promise<SoMineEntry[]>
       saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: SoMineMeta }>
       removeMine(id: string): Promise<void>
+      mineVersions(id: string): Promise<SoMineVersion[]>
+      mineVersion(id: string, n: number): Promise<Record<string, unknown>>
     }
     /** Opcional: os testes headless e o modo dev sem preload novo não têm. */
     update?: {

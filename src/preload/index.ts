@@ -22,6 +22,13 @@ interface MineEntry {
   preset: Record<string, unknown>
 }
 
+/** Versão de um "meu" preset (spec 027, fatia 3); espelha `VersionInfo` de src/main/mine.ts. */
+interface MineVersion {
+  n: number
+  savedAt: string
+  summary: { kind: 'created' | 'earlier' | 'edit'; vals: { key: string; from: number; to: number }[]; more: number; blocks: string[] }
+}
+
 interface UpdateState {
   phase: 'idle' | 'checking' | 'latest' | 'downloading' | 'ready' | 'available' | 'installing' | 'error'
   version: string | null
@@ -80,7 +87,10 @@ contextBridge.exposeInMainWorld('so', {
     listMine: (): Promise<MineEntry[]> => ipcRenderer.invoke('presets:listMine'),
     saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: MineMeta }> =>
       ipcRenderer.invoke('presets:saveMine', data),
-    removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id))
+    removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id)),
+    /** Histórico de um "meu" preset (spec 027, fatia 3), do mais novo para o mais antigo. */
+    mineVersions: (id: string): Promise<MineVersion[]> => ipcRenderer.invoke('presets:mineVersions', String(id)),
+    mineVersion: (id: string, n: number): Promise<Record<string, unknown>> => ipcRenderer.invoke('presets:mineVersion', String(id), Number(n))
   },
   /** Atualização automática (spec 029): o main decide o que checar, baixar e abrir. */
   update: {

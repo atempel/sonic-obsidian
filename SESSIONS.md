@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-16 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/027-versoes`
+**Fez:** Passo 4 da `rodada` (nenhum PR aberto, nenhum bloco esperando teste, #75 `ready` no v0.8.0): #75 reivindicada, **fatia 3 da 027** (Histórico e desfazer). Design checado: artefato ainda em `1794680346-fb12`. No main (`mine.ts`): cada salvamento grava `v0001.json`… na pasta do preset (até 50, as mais antigas saem), com resumo em dados (parâmetros e blocos mudados); `preset.prev.json` da 026 migra para v0001; IPC `presets:mineVersions`/`presets:mineVersion` com id e número conferidos. No Estúdio: botão "Versões" e gaveta do protótipo com hora, "Você", resumo no idioma do app e "Restaurar"; `Ctrl+Z`/`Ctrl+Shift+Z` fora de campo de texto desfazem o editor inteiro (um passo por arrasto), dentro do campo vale o nativo. "Comparar" da gaveta fica para a fatia 4 (prévia dividida). Teste novo `027-estudio-versoes` (39 checagens, com o `mine.ts` de verdade numa pasta temporária por trás do `window.so`); `026-estudio`, `027-estudio-basico`, `027-estudio-ondas`, `030-idiomas` e `020-atalhos` passam. DECISIONS e DIVERGENCIAS 2026-11-16.
+**Deixou em:** PR desta branch, sem `Closes` (a #75 fecha na última fatia); #75 volta a `ready` para a fatia 4 (Comparar com o original, com o "Comparar" das versões). Não verificado: o visual voltando ao restaurar, no Windows (vai para o bloco v0.8.0).
+
 ### 2026-11-16 — Claude (chat, projeto Audio Visualizer) — branch `site/demo-troca-musica`
 **Fez:** Landing: botão para trocar a música da demo (próxima música do Uppbeat, `1 / 2`) e Tocar demo esperando a checagem dos arquivos para sempre começar pelo Uppbeat. Spec 019 e DECISIONS atualizados. Conferido no Chromium headless com `site:vendor` e áudios de teste no lugar das músicas (EN e PT): crédito, rótulo e contagem trocam a cada clique.
 **Deixou em:** PR desta branch. Não verificado com as músicas reais (só no site publicado, com a `SITE_AUDIO_KEY`). Botão também no canvas da landing (versão `1794848714-486d`, som sintetizado como substituto) e espelho `docs/design/landing/` sincronizado.
@@ -11,6 +15,7 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 ### 2026-11-16 — Claude (chat, projeto Audio Visualizer) — branch `docs/release-0.7.0`
 **Fez:** Docs atualizadas para a v0.7.0 publicada: README e README.pt-BR (status v0.7.0, recursos da 0.6/0.7, atalhos `Enter`/`Shift+Enter`/`E`/`F11`/`Ctrl+W`, CI por label, `test:ui`, i18n, layout do repo, roadmap, assinatura "Brazil"/"Brasil" a pedido do usuário); PROJECT.md (estado atual), TASKS.md (029, 030, 025 e 028 marcadas), PRD (fases e Fase 5), docs/README.md (specs 016–030), architecture.md (§9 atualização e idiomas), CONTRIBUTING.md (CI e regra de textos traduzidos).
 **Deixou em:** PR desta branch (só docs). Rodapé da landing (`site/` EN e PT) também trocado para "Brazil"/"Brasil"; canvas do Claude Design trocado também (versão `1794846713-386e`) e espelho `docs/design/landing/` sincronizado.
+
 
 ### 2026-11-16 — Claude Code (nuvem, continuação da rodada) — branch `site/atualizacoes-0.7.0`
 **Fez:** O usuário aprovou o bloco v0.7.0 na conversa ("tudo rodou bem", "pode publicar"). Disparou o workflow `release` na `rc/v0.7.0` com `version=0.7.0` e `publicar=true` (a `rc/v0.7.0` já está no `main`, sem PR de volta). Com a release publicada: landing com "atualizações automáticas" no cartão do instalador (en e pt; "abrir com o Windows" do canvas continua fora, não existe no app) e o lembrete tirado de `.github/release-notes.md`; #121 e milestone v0.7.0 fechados.

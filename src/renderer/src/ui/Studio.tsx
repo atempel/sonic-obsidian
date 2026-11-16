@@ -39,10 +39,17 @@ export interface StudioApi {
   log(message: string): void
   /** Custo da última compilação, para o HUD. */
   reportCost(text: string): void
+  /** Versões do "meu" preset em edição, da mais nova para a mais antiga (vazio antes do primeiro salvamento). */
+  versions(): Promise<SoMineVersion[]>
+  /** O preset de uma versão (já pela barreira do main). */
+  version(n: number): Promise<Preset>
 }
 
 const DEBOUNCE_MS = 400
 const ESC_WINDOW_MS = 3000
+/** Desfazer: mudanças no mesmo campo com menos de 1 s entre elas viram um passo só. */
+const UNDO_GROUP_MS = 1000
+const MAX_UNDO = 200
 const BLOCKS: { id: MainBlock; title: string; legend: MessageKey; h: number }[] = [
   { id: 'init', title: 'per_frame_init', legend: 'studio.block.init', h: 120 },
   { id: 'frame', title: 'per_frame', legend: 'studio.block.frame', h: 180 },
@@ -57,6 +64,12 @@ type Status = 'ok' | 'busy' | 'err'
 type Code = Record<MainBlock, string>
 /** Parâmetros base mudados no Básico (só as chaves mexidas). */
 type Base = Record<string, number>
+/** Um passo do desfazer: tudo o que o editor muda (spec 027, fatia 3). */
+interface Snap {
+  code: Code
+  base: Base
+  slots: Slots
+}
 
 /** Abas na ordem do protótipo; Shaders e Código .milk chegam nas próximas fatias da 027. */
 const TABS = [
@@ -120,6 +133,34 @@ function withCode(source: Preset, code: Code, base: Base = {}, slots?: Slots): P
   return p
 }
 
+/** O editor inteiro a partir de um preset (restaurar uma versão): o `baseVals` todo entra como mexido. */
+function snapOf(p: Preset): Snap {
+  const bv = p.baseVals && typeof p.baseVals === 'object' ? (p.baseVals as Record<string, unknown>) : {}
+  const base: Base = {}
+  for (const [k, v] of Object.entries(bv)) if (typeof v === 'number' && Number.isFinite(v)) base[k] = v
+  return { code: codeOf(p), base, slots: slotsOf(p) }
+}
+
+/** Hora da versão: só `14:32` se for de hoje; senão com o dia (`12 de nov., 14:32`). */
+function verTime(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '--:--'
+  const today = new Date().toDateString() === d.toDateString()
+  const time: Intl.DateTimeFormatOptions = { hour: getLang() === 'en' ? 'numeric' : '2-digit', minute: '2-digit' }
+  return new Intl.DateTimeFormat(getLang(), today ? time : { ...time, day: 'numeric', month: 'short' }).format(d)
+}
+
+/** "decay 0.960 → 0.975; per_frame editada", no idioma do app (o main guarda só os dados). */
+function verSummary(v: SoMineVersion, basedOn: { name: string } | null): string {
+  const s = v.summary
+  if (s.kind === 'created') return basedOn ? t('studio.ver.createdFrom', { name: basedOn.name }) : t('studio.ver.created')
+  if (s.kind === 'earlier') return t('studio.ver.earlier')
+  const parts = s.vals.map((x) => `${x.key} ${x.from.toFixed(3)} → ${x.to.toFixed(3)}`)
+  if (s.more) parts.push(tn('studio.ver.moreVals', s.more))
+  if (s.blocks.length) parts.push(tn('studio.ver.edited', s.blocks.length, { blocks: new Intl.ListFormat(getLang(), { type: 'conjunction' }).format(s.blocks) }))
+  return parts.length ? parts.join('; ') : t('studio.ver.noChanges')
+}
+
 function originalCredit(name: string): { name: string; author: string } {
   const i = name.indexOf(' - ')
   return { name, author: i > 0 ? name.slice(0, i).trim() : '' }
@@ -169,6 +210,14 @@ function Studio({ api }: { api: StudioApi }) {
   const latest = useRef(code)
   latest.current = code
   const editors = useRef<Partial<Record<Block, HTMLTextAreaElement | null>>>({})
+  // ── Desfazer / refazer (Ctrl+Z, Ctrl+Shift+Z) e Versões ─
+  const undoStack = useRef<Snap[]>([])
+  const redoStack = useRef<Snap[]>([])
+  const lastGroup = useRef({ key: '', at: 0 })
+  const [drawer, setDrawer] = useState(false)
+  const [versions, setVersions] = useState<SoMineVersion[] | 'loading' | 'error'>('loading')
+  const verBtn = useRef<HTMLButtonElement>(null)
+  const drClose = useRef<HTMLButtonElement>(null)
   const root = useRef<HTMLDivElement>(null)
   // A troca de idioma redesenha o Estúdio (ele tem a própria raiz, fora do Overlay).
   const [, setLangTick] = useState(0)
@@ -207,12 +256,84 @@ function Studio({ api }: { api: StudioApi }) {
     return false
   }
 
+  const snapNow = (): Snap => ({ code: latest.current, base: latestBase.current, slots: latestSlots.current })
+  /** Guarda o estado de antes de uma mudança. `group` igual em menos de 1 s = o mesmo passo; `null` = sempre um passo. */
+  const remember = (group: string | null): void => {
+    const now = performance.now()
+    if (group !== null && group === lastGroup.current.key && now - lastGroup.current.at < UNDO_GROUP_MS) {
+      lastGroup.current.at = now
+      return
+    }
+    lastGroup.current = { key: group ?? '', at: group === null ? 0 : now }
+    undoStack.current.push(snapNow())
+    if (undoStack.current.length > MAX_UNDO) undoStack.current.shift()
+    redoStack.current = []
+  }
+  const applySnap = (x: Snap): void => {
+    latest.current = x.code
+    latestBase.current = x.base
+    latestSlots.current = x.slots
+    setCode(x.code)
+    setBase(x.base)
+    setSlots(x.slots)
+    setDirty(true)
+    setEscWarn(false)
+    void compile(x.code)
+  }
+  const step = (from: { current: Snap[] }, to: { current: Snap[] }, empty: MessageKey, what: string): void => {
+    const x = from.current.pop()
+    if (!x) {
+      showToast(t(empty), { force: true })
+      return
+    }
+    to.current.push(snapNow())
+    lastGroup.current = { key: '', at: 0 }
+    applySnap(x)
+    api.log(`studio: ${what}`)
+  }
+  const undo = (): void => step(undoStack, redoStack, 'toast.studio.nothingToUndo', 'undo')
+  const redo = (): void => step(redoStack, undoStack, 'toast.studio.nothingToRedo', 'redo')
+
+  const loadVersions = (): void => {
+    if (!saved) {
+      setVersions([])
+      return
+    }
+    setVersions('loading')
+    api.versions().then(setVersions, (err: unknown) => {
+      api.log(`studio: versions failed to load: ${mainErrorText(err)}`)
+      setVersions('error')
+    })
+  }
+  const openDrawer = (open: boolean): void => {
+    setDrawer(open)
+    if (open) loadVersions()
+    else if (root.current?.querySelector('.st-drawer')?.contains(document.activeElement)) verBtn.current?.focus()
+  }
+  useEffect(() => {
+    if (drawer) window.setTimeout(() => drClose.current?.focus(), 30)
+  }, [drawer])
+  const restore = async (v: SoMineVersion): Promise<void> => {
+    try {
+      const p = await api.version(v.n)
+      remember(null)
+      lastGroup.current = { key: '', at: 0 }
+      applySnap(snapOf(p))
+      api.log(`studio: restored version ${v.n}`)
+      showToast(t('toast.studio.restored', { time: verTime(v.savedAt) }), { force: true })
+    } catch (err) {
+      api.log(`studio: restore failed: ${mainErrorText(err)}`)
+      showToast(t('toast.studio.notRestored', { error: msgText(mainError(err)) }), { force: true })
+    }
+  }
+
   // A cópia aberta já está no visual; a primeira compilação só confere e mostra o status.
   useEffect(() => {
     void compile(initial, false)
   }, [])
 
   const edit = (b: Block, v: string): void => {
+    remember(`code:${b}`)
     const next = { ...latest.current, [b]: v }
     setCode(next)
     setDirty(true)
@@ -233,7 +354,8 @@ function Studio({ api }: { api: StudioApi }) {
     timer.current = window.setTimeout(() => void compile(latest.current), DEBOUNCE_MS)
   }
   const listOf = (s: Slots, kind: SlotKind): Slots['waves'] | Slots['shapes'] => (kind === 'wave' ? s.waves : s.shapes)
-  const updateSlot = (kind: SlotKind, i: number, f: (x: Slots['waves'][number] & Slots['shapes'][number]) => void): void => {
+  const updateSlot = (kind: SlotKind, i: number, f: (x: Slots['waves'][number] & Slots['shapes'][number]) => void, group: string): void => {
+    remember(`slot:${kind}${i}:${group}`)
     const next = structuredClone(latestSlots.current)
     f(listOf(next, kind)[i] as Slots['waves'][number] & Slots['shapes'][number])
     changeSlots(next)
@@ -241,16 +363,26 @@ function Studio({ api }: { api: StudioApi }) {
   const setSlotParam = (kind: SlotKind, i: number, p: BasicParam, raw: number): void => {
     const orig = slotValue(kind, listOf(origSlots, kind)[i]!.baseVals, p.key)
     const v = clampParam(p, raw, rangeFor(p, orig))
-    updateSlot(kind, i, (x) => {
-      x.baseVals[p.key] = v
-    })
+    updateSlot(
+      kind,
+      i,
+      (x) => {
+        x.baseVals[p.key] = v
+      },
+      p.key
+    )
   }
   const setSlotCode = (b: SlotBlock, v: string): void => {
     const { kind, idx, field } = slotOfBlock(b)
-    updateSlot(kind, idx, (x) => {
-      if (field === 'point') x.point_eqs_eel = v
-      else x.frame_eqs_eel = v
-    })
+    updateSlot(
+      kind,
+      idx,
+      (x) => {
+        if (field === 'point') x.point_eqs_eel = v
+        else x.frame_eqs_eel = v
+      },
+      field
+    )
   }
 
   const valueOf = (p: BasicParam): number => (p.key in base ? base[p.key]! : baseValue(api.source.baseVals, p))
@@ -258,6 +390,7 @@ function Studio({ api }: { api: StudioApi }) {
   const tweak = (p: BasicParam, raw: number): void => {
     const range = rangeFor(p, baseValue(api.source.baseVals, p))
     const v = clampParam(p, raw, range)
+    remember(`base:${p.key}`)
     const next = { ...latestBase.current, [p.key]: v }
     latestBase.current = next
     setBase(next)
@@ -290,6 +423,7 @@ function Studio({ api }: { api: StudioApi }) {
       const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author })
       setSaved(r)
       setTitle(r.name)
+      if (drawer) api.versions().then(setVersions, () => setVersions('error'))
       setDirty(false)
       setEscWarn(false)
       showToast(saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }), { force: true })
@@ -328,6 +462,16 @@ function Studio({ api }: { api: StudioApi }) {
       void save()
       return
     }
+    // Ctrl+Z / Ctrl+Shift+Z (e Ctrl+Y): desfazer do editor. Num campo de texto vale o desfazer nativo dele.
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.code === 'KeyZ' || e.code === 'KeyY')) {
+      const textField = !!tgt && (tgt.tagName === 'TEXTAREA' || (tgt.tagName === 'INPUT' && (tgt as HTMLInputElement).type === 'text'))
+      if (textField) return
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (e.code === 'KeyY' || e.shiftKey) redo()
+      else undo()
+      return
+    }
     // Ctrl+1…: abas (com e.code, para valer em qualquer layout de teclado).
     const digit = /^Digit([1-9])$/.exec(e.code)
     if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && digit) {
@@ -350,8 +494,9 @@ function Studio({ api }: { api: StudioApi }) {
       setAskAuthor(false)
       return
     }
-    // Esc num campo só sai do campo; fora dele, volta ao Palco.
+    // Esc num campo só sai do campo; com a gaveta aberta, fecha a gaveta; senão, volta ao Palco.
     if (inField) tgt!.blur()
+    else if (drawer) openDrawer(false)
     else exit()
   }
   useLayoutEffect(() => {
@@ -441,6 +586,19 @@ function Studio({ api }: { api: StudioApi }) {
               </>
             )}
           </div>
+          <button
+            type="button"
+            class="btn btn-ghost st-ver"
+            ref={verBtn}
+            title={t('studio.ver.title')}
+            aria-label={t('studio.ver.title')}
+            aria-expanded={drawer}
+            aria-controls="studio-versions"
+            onClick={() => openDrawer(!drawer)}
+          >
+            <Icon name="history" />
+            <span class="lbl">{t('studio.ver.title')}</span>
+          </button>
           <button type="button" class="btn btn-primary st-save" title={t('studio.saveTitle')} onClick={() => void save()}>
             {t('studio.save')} <span class="save-k">Ctrl+S</span>
           </button>
@@ -575,9 +733,14 @@ function Studio({ api }: { api: StudioApi }) {
                   errors={errors}
                   onOpen={(i) => setOpenSlot((o) => ({ ...o, [kind]: o[kind] === i ? -1 : i }))}
                   onToggle={(i, on) =>
-                    updateSlot(kind, i, (x) => {
-                      x.baseVals.enabled = on ? 1 : 0
-                    })
+                    updateSlot(
+                      kind,
+                      i,
+                      (x) => {
+                        x.baseVals.enabled = on ? 1 : 0
+                      },
+                      `enabled:${performance.now()}`
+                    )
                   }
                   onParam={(i, p, v) => setSlotParam(kind, i, p, v)}
                   onCode={setSlotCode}
@@ -623,6 +786,40 @@ function Studio({ api }: { api: StudioApi }) {
           </div>
         </section>
       </div>
+
+      <aside class={drawer ? 'st-drawer open' : 'st-drawer'} id="studio-versions" aria-label={t('studio.ver.drawer')}>
+        <div class="st-drawer-h">
+          <h2>{t('studio.ver.title')}</h2>
+          <button type="button" class="ibtn" ref={drClose} aria-label={t('studio.ver.close')} title={t('studio.ver.close')} onClick={() => openDrawer(false)}>
+            <Icon name="x" />
+          </button>
+        </div>
+        {drawer &&
+          (versions === 'loading' ? null : versions === 'error' ? (
+            <p class="st-ver-empty">{t('studio.ver.loadFailed')}</p>
+          ) : versions.length === 0 ? (
+            <p class="st-ver-empty">{t('studio.ver.unsaved')}</p>
+          ) : (
+            <ol class="st-vlist">
+              {versions.map((v, i) => (
+                <li class={i === 0 ? 'ver cur' : 'ver'} key={v.n}>
+                  <div class="ver-h">
+                    <span class="num">{verTime(v.savedAt)}</span>
+                    <Icon name="user" small />
+                    {t('studio.ver.you')}
+                  </div>
+                  <p>{verSummary(v, basedOn)}</p>
+                  <div class="ver-a">
+                    <button type="button" class="btn" onClick={() => void restore(v)}>
+                      {t('studio.ver.restore')}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ))}
+        <p class="note st-ver-keys">{t('studio.ver.keys')}</p>
+      </aside>
 
       <footer class="st-foot">
         <span>

@@ -569,6 +569,12 @@ async function start(): Promise<void> {
       log: (m) => window.so.log(m),
       reportCost: (t) => {
         state.studio = t
+      },
+      // Versões (spec 027, fatia 3): só de um "meu" preset já salvo.
+      versions: async () => (mineRef ? window.so.presets.mineVersions(mineRef.id) : []),
+      version: async (n) => {
+        if (!mineRef) throw new Error('[invalid] no saved preset')
+        return (await window.so.presets.mineVersion(mineRef.id, n)) as Preset
       }
     })
   }
