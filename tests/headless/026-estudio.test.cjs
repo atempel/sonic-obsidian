@@ -72,6 +72,8 @@ function mainChecks() {
   // Lido depois de abrir: a rotação (5 s) pode trocar o preset antes do E.
   const c0 = await cur()
   ok('1a E abre o Estúdio', await page.isVisible('.studio'))
+  // Desde a 027 o Estúdio abre no Básico; as equações ficam na aba Equações (Ctrl+2).
+  await page.keyboard.press('Control+2')
   const title0 = await page.inputValue('#studio-name')
   ok('1b título começa como "Remix de …"', title0.startsWith('Remix de '), title0)
   ok('1c três blocos com a legenda do protótipo', (await page.$$('.studio .ed-ta')).length === 3 && (await text()).includes('Executa uma vez ao carregar o preset') && (await text()).includes('Executa em cada ponto da malha'))

@@ -1,8 +1,9 @@
-import { render } from 'preact'
+import { Fragment, render } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Preset } from 'butterchurn'
 import type { Core } from '../core/commands'
 import { EQ_KEYS, type Block, type CompileResult, type StudioError, type StudioIssue } from '../studio/compile'
+import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor, type BasicParam } from '../studio/basic'
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
@@ -26,6 +27,8 @@ export interface StudioApi {
   compile(p: Preset): Promise<CompileResult>
   /** Carrega no visualizador principal (blend curto). */
   apply(p: Preset): void
+  /** Muda um parâmetro base no preset que está tocando, sem recarregar. `false` = não deu (recarregar). */
+  tweak(key: string, value: number): boolean
   /** bass, mid, treb como as equações veem (depois da expressividade). */
   levels(): [number, number, number] | null
   /** Grava e põe na biblioteca. Devolve o nome final (com "(2)" se já existia). */
@@ -48,6 +51,17 @@ const BLOCK_TITLE: Record<Block, string> = { init: 'per_frame_init', frame: 'per
 
 type Status = 'ok' | 'busy' | 'err'
 type Code = Record<Block, string>
+/** Parâmetros base mudados no Básico (só as chaves mexidas). */
+type Base = Record<string, number>
+
+/** Abas na ordem do protótipo; as demais (Ondas, Formas, Shaders, Código .milk) chegam nas próximas fatias da 027. */
+const TABS = [
+  { id: 'basic', label: 'studio.tab.basic' },
+  { id: 'eq', label: 'studio.tab.eq' }
+] as const satisfies readonly { id: string; label: MessageKey }[]
+type TabId = (typeof TABS)[number]['id']
+/** Última aba usada nesta abertura do app (reabrir o Estúdio volta nela). */
+let lastTab: TabId = 'basic'
 
 /** Hora da última compilação no formato do idioma do app (`2:32:05 PM` / `14:32:05`). */
 const clock = (d: Date): string => new Intl.DateTimeFormat(getLang(), { hour: getLang() === 'en' ? 'numeric' : '2-digit', minute: '2-digit', second: '2-digit' }).format(d)
@@ -92,9 +106,10 @@ const codeOf = (p: Preset): Code => ({
   pixel: String(p[EQ_KEYS.pixel] ?? '')
 })
 
-function withCode(base: Preset, code: Code): Preset {
-  const p = structuredClone(base)
+function withCode(source: Preset, code: Code, base: Base = {}): Preset {
+  const p = structuredClone(source)
   for (const b of ['init', 'frame', 'pixel'] as Block[]) p[EQ_KEYS[b]] = code[b]
+  if (Object.keys(base).length) p.baseVals = { ...(p.baseVals && typeof p.baseVals === 'object' ? (p.baseVals as Record<string, number>) : {}), ...base }
   return p
 }
 
@@ -108,6 +123,17 @@ function Studio({ api }: { api: StudioApi }) {
   const settings = core.state.settings
   const initial = useMemo(() => codeOf(api.source), [api])
   const [code, setCode] = useState<Code>(initial)
+  const [base, setBase] = useState<Base>({})
+  const latestBase = useRef(base)
+  latestBase.current = base
+  const [tab, setTabState] = useState<TabId>(lastTab)
+  const tabRef = useRef(tab)
+  const setTab = (id: TabId, focus = false): void => {
+    lastTab = id
+    tabRef.current = id
+    setTabState(id)
+    if (focus) root.current?.querySelector<HTMLElement>(`#studio-tab-${id}`)?.focus()
+  }
   const [status, setStatus] = useState<Status>('busy')
   const [errors, setErrors] = useState<StudioError[]>([])
   const [compiledAt, setCompiledAt] = useState<Date | null>(null)
@@ -141,13 +167,13 @@ function Studio({ api }: { api: StudioApi }) {
     window.clearTimeout(timer.current)
     const key = JSON.stringify(c)
     setStatus('busy')
-    const preset = withCode(api.source, c)
-    const r = await api.compile(preset)
+    const r = await api.compile(withCode(api.source, c, latestBase.current))
     if ('superseded' in r) return false
     lastCompiled.current = key
     setCompiledAt(new Date())
     if (r.ok) {
-      if (load) api.apply(preset)
+      // Parâmetros base mexidos durante a compilação também vão (são sempre válidos).
+      if (load) api.apply(withCode(api.source, c, latestBase.current))
       setStatus('ok')
       setErrors([])
       setHadValid(true)
@@ -180,6 +206,22 @@ function Studio({ api }: { api: StudioApi }) {
     timer.current = window.setTimeout(() => void compile(next), DEBOUNCE_MS)
   }
 
+  const valueOf = (p: BasicParam): number => (p.key in base ? base[p.key]! : baseValue(api.source.baseVals, p))
+  /** Básico: vale na hora (no motor) e entra no próximo salvamento. Valor sempre válido. */
+  const tweak = (p: BasicParam, raw: number): void => {
+    const range = rangeFor(p, baseValue(api.source.baseVals, p))
+    const v = clampParam(p, raw, range)
+    const next = { ...latestBase.current, [p.key]: v }
+    latestBase.current = next
+    setBase(next)
+    setDirty(true)
+    setEscWarn(false)
+    if (api.tweak(p.key, v)) return
+    // Sem acesso ao runner (ou carga em andamento): recarrega pelo caminho normal.
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => void compile(latest.current), DEBOUNCE_MS)
+  }
+
   // ── Salvar ──────────────────────────────────────────────
   const save = async (authorName?: string): Promise<void> => {
     if (settings.authorName === null && authorName === undefined && !saved) {
@@ -198,7 +240,7 @@ function Studio({ api }: { api: StudioApi }) {
     }
     try {
       const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
-      const r = await api.save({ preset: withCode(api.source, c), title: name, author: authorName ?? author })
+      const r = await api.save({ preset: withCode(api.source, c, latestBase.current), title: name, author: authorName ?? author })
       setSaved(r)
       setTitle(r.name)
       setDirty(false)
@@ -239,6 +281,15 @@ function Studio({ api }: { api: StudioApi }) {
       void save()
       return
     }
+    // Ctrl+1…: abas (com e.code, para valer em qualquer layout de teclado).
+    const digit = /^Digit([1-9])$/.exec(e.code)
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && digit) {
+      const target = TABS[Number(digit[1]) - 1]
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (target) setTab(target.id)
+      return
+    }
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
       e.preventDefault()
       e.stopImmediatePropagation()
@@ -271,6 +322,12 @@ function Studio({ api }: { api: StudioApi }) {
   const goTo = (b: Block, line: number | null): void => {
     const ta = editors.current[b]
     if (!ta) return
+    if (tabRef.current !== 'eq') {
+      setTab('eq')
+      // O painel aparece no próximo quadro.
+      requestAnimationFrame(() => goTo(b, line))
+      return
+    }
     ta.focus()
     if (line) {
       const lines = ta.value.split('\n')
@@ -383,11 +440,48 @@ function Studio({ api }: { api: StudioApi }) {
 
         <section class="st-ed" aria-label={t('studio.editor')}>
           <div class="st-tabs" role="tablist" aria-label={t('studio.sections')}>
-            <button type="button" role="tab" class="tab" aria-selected="true">
-              {t('studio.tab.code')}
-            </button>
+            {TABS.map((x, i) => (
+              <button
+                key={x.id}
+                type="button"
+                role="tab"
+                class="tab"
+                id={`studio-tab-${x.id}`}
+                aria-controls={`studio-tp-${x.id}`}
+                aria-selected={tab === x.id}
+                tabIndex={tab === x.id ? 0 : -1}
+                title={`${t(x.label)} (Ctrl+${i + 1})`}
+                onClick={() => setTab(x.id)}
+                onKeyDown={(e) => {
+                  const n = TABS.length
+                  const j = e.key === 'ArrowRight' ? (i + 1) % n : e.key === 'ArrowLeft' ? (i + n - 1) % n : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1
+                  if (j < 0) return
+                  e.preventDefault()
+                  setTab(TABS[j]!.id, true)
+                }}
+              >
+                {t(x.label)}
+              </button>
+            ))}
           </div>
-          <div class="st-blocks">
+          <div class="st-blocks st-basic" role="tabpanel" id="studio-tp-basic" aria-labelledby="studio-tab-basic" hidden={tab !== 'basic'}>
+            {BASIC_GROUPS.map((g) => (
+              <section class="grp" key={g.title}>
+                <h3>{t(g.title)}</h3>
+                <div class="grp-b">
+                  {g.params.map((p) => (
+                    <Fragment key={p.key}>
+                      <BasicControl p={p} original={baseValue(api.source.baseVals, p)} value={valueOf(p)} onChange={(v) => tweak(p, v)} />
+                      {/* A amostra da cor fica entre a opacidade e os canais, como no protótipo. */}
+                      {p.key === 'wave_a' && <WaveSwatch rgb={['wave_r', 'wave_g', 'wave_b'].map((k) => valueOf(BASIC_PARAMS.find((x) => x.key === k)!))} />}
+                    </Fragment>
+                  ))}
+                </div>
+              </section>
+            ))}
+            <p class="note">{t('studio.basic.note')}</p>
+          </div>
+          <div class="st-blocks" role="tabpanel" id="studio-tp-eq" aria-labelledby="studio-tab-eq" hidden={tab !== 'eq'}>
             {BLOCKS.map((b) => (
               <Editor
                 key={b.id}
@@ -457,6 +551,71 @@ function Studio({ api }: { api: StudioApi }) {
         </span>
         <span>{t('studio.foot.keys')}</span>
       </footer>
+    </div>
+  )
+}
+
+/** Uma linha do Básico: slider, switch ou a lista de formas da onda; o nome do parâmetro em `.num`. */
+function BasicControl({ p, original, value, onChange }: { p: BasicParam; original: number; value: number; onChange(v: number): void }) {
+  const id = `studio-p-${p.key}`
+  if (p.kind === 'switch') {
+    return (
+      <div class="ctl sw">
+        <label class="switch" for={id}>
+          <input type="checkbox" id={id} checked={value >= 0.5} onChange={(e) => onChange((e.target as HTMLInputElement).checked ? 1 : 0)} />
+          <span class="track" />
+          <span>{t(p.label)}</span>
+        </label>
+        <span class="num pn">{p.key}</span>
+      </div>
+    )
+  }
+  if (p.kind === 'select') {
+    const cur = Math.round(value)
+    return (
+      <div class="ctl">
+        <div class="ctl-h">
+          <label for={id}>{t(p.label)}</label>
+          <span class="num pn">{p.key}</span>
+          <output class="num val" for={id}>
+            {cur}
+          </output>
+        </div>
+        <select class="sel" id={id} value={String(cur)} onChange={(e) => onChange(Number((e.target as HTMLSelectElement).value))}>
+          {WAVE_MODES.map((k, i) => (
+            <option key={k} value={String(i)}>
+              {`${i} · ${t(k)}`}
+            </option>
+          ))}
+        </select>
+      </div>
+    )
+  }
+  const r = rangeFor(p, original)
+  const fill = ((Math.min(r.max, Math.max(r.min, value)) - r.min) / (r.max - r.min)) * 100
+  return (
+    <div class="ctl">
+      <div class="ctl-h">
+        <label for={id}>{t(p.label)}</label>
+        <span class="num pn">{p.key}</span>
+        <output class="num val" for={id}>
+          {value.toFixed(p.dec)}
+        </output>
+      </div>
+      <input id={id} type="range" min={r.min} max={r.max} step={p.step} value={value} style={{ '--fill': `${fill}%` }} onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))} />
+    </div>
+  )
+}
+
+/** Amostra da cor da onda principal (wave_r/g/b). */
+function WaveSwatch({ rgb }: { rgb: number[] }) {
+  const c = rgb.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255)).join(',')
+  return (
+    <div class="ctl">
+      <div class="ctl-h">
+        <span>{t('studio.basic.waveColor')}</span>
+      </div>
+      <div class="swatch" style={{ background: `rgb(${c})` }} aria-hidden="true" />
     </div>
   )
 }

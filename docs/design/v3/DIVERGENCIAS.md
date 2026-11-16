@@ -172,3 +172,14 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Pedido à sessão de design:** desenhar as duas coisas na página Palco integrado › Ajustes rápidos, conferindo antes a versão `1794352628-1d72`, que o espelho ainda não tem.
 - **Como ficou no código (028 P1, 2026-11-13):** Ajustes rápidos › Sinal: chave "Normalizar áudio" acima do ganho, com "auto +N dB" em mono (`text-3`, 12 px) ao lado do nome; ligada, o slider vira "Ajuste fino" (−6 a +6) e aparece a nota "Iguala o volume entre faixas em alguns segundos. O som das caixas não muda." Configurações › **Captura** › Nível (não há seção "Áudio"): a mesma chave acima do Ganho padrão, com o "auto" à esquerda do switch. A Memória ganhou a 4ª opção "Viva" (em teste) no mesmo select.
 **Status:** Aceita com correções (design atualizado na versão 1794603894-598c, `v3-modelo-de-navegacao.md` › Sinal e Expressividade). Ação no repo: (1) "auto +N dB" em ciano, mono 12 px, ao lado do nome também nas Configurações; (2) "· padrão" sai dos rótulos: ponto de 4 px sob a opção padrão, "Padrão." na descrição, traço no 0 do Nível; (3) Memória em segmentado de 4 (Curta · Longa · Fixa · Viva), "(em teste)" na descrição; (4) com Nível 0, "Sem efeito no nível 0" substitui a descrição do Caráter e o segmentado fica em `text-3`, clicável; (5) "Restaurar padrão" vira botão fantasma pequeno (`rotate-ccw`) à direita do título da seção, toast "Expressividade no padrão.". Issue própria. **Feito no repo:** issue #94 (2026-11-15).
+
+### 2026-11-16 — Estúdio 027, fatia 1 (abas e Básico), página `Sonic Obsidian Estúdio completo (027).html` (versão `1794680346-fb12`)
+**No app:**
+- **Camada sobre o Palco** do P0 (nota da própria página 027 na versão `fb12`), com as abas e o Básico do protótipo dentro da coluna do editor.
+- **Só as abas que já funcionam:** Básico e Equações nesta fatia; Ondas, Formas, Shaders e Código .milk aparecem com as fatias deles. `Ctrl+N` vai para a N-ésima aba visível (no protótipo, `Ctrl+5` = Shaders).
+- **Shaders** continuam no bloco recolhível só de leitura dentro de Equações até a fatia 5.
+- **Faixa do slider** alargada quando o valor do preset está fora da faixa do protótipo (ex.: `zoom` 1,335 com faixa 0,9–1,1).
+- **Nota no fim do Básico:** "São os valores de partida. Uma equação em Equações que atribui o mesmo nome (zoom = …) passa por cima do controle a cada quadro." (o protótipo não explica por que um slider às vezes não muda nada).
+- O painel **Problemas** continua embaixo da coluna do editor, também no Básico.
+**Status:** Aberta (aguarda a sessão de design).
+

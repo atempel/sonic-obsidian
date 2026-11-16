@@ -1,6 +1,6 @@
 # 027 — Estúdio de presets (P1): parâmetros, shaders, versões e exportar
 
-**Fase:** 3 · **Status:** Pronta (perguntas fechadas pela rodada 2026-11-16, `agent-decided`; uma fatia por PR) · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
+**Fase:** 3 · **Status:** Em andamento — fatia 1 (abas e Básico) feita em 2026-11-16; próxima: fatia 2 (Ondas e Formas). Perguntas fechadas pela rodada 2026-11-16 (`agent-decided`); uma fatia por PR · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
 
 ## Problema
 Com a 026, o usuário edita as equações e salva. Falta o resto do que o desenho do Estúdio promete: mexer nos parâmetros sem escrever código, editar ondas, formas e shaders, voltar a uma versão anterior e levar o preset para fora do app.

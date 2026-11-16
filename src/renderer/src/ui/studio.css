@@ -59,6 +59,24 @@ body.studio-open .winctl { display: none !important; }
 .st-tabs .tab { height: 42px; padding: 0 12px; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--text-2); font-family: inherit; font-size: 13px; font-weight: 500; }
 .st-tabs .tab[aria-selected="true"] { color: var(--text-1); border-bottom-color: var(--violet); }
 .st-blocks { flex: 1; min-height: 0; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.st-blocks[hidden] { display: none; }
+.st-tabs .tab { cursor: pointer; border-radius: var(--r-2) var(--r-2) 0 0; transition: color var(--t-fast), background var(--t-fast); }
+.st-tabs .tab:hover { color: var(--text-1); background: var(--bg-02); }
+
+/* Básico (spec 027, fatia 1) — protótipo "Estúdio completo (027)" */
+.st-basic { gap: 20px; }
+.grp h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--line-1); }
+.grp-b { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 24px; }
+.ctl { min-width: 0; }
+.ctl-h { display: flex; align-items: baseline; gap: 8px; }
+.ctl-h label, .ctl-h > span:first-child { font-size: 14px; color: var(--text-1); }
+.ctl .pn { font-size: 12px; color: var(--text-3); }
+.ctl .val { margin-left: auto; font-size: 13px; color: var(--cyan); }
+.ctl.sw { display: flex; align-items: center; gap: 8px; height: 32px; }
+.ctl.sw .pn { margin-left: auto; }
+.ctl select.sel { width: 100%; height: 34px; margin-top: 4px; padding: 0 8px; background: var(--bg-02); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font: inherit; }
+.ctl select.sel:hover { border-color: #4A4A64; }
+.ctl .swatch { height: 14px; margin-top: 6px; border-radius: var(--r-1); border: 1px solid var(--line-3); }
 .ed-label { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
 .ed-label h3 { margin: 0; font-size: 14px; font-weight: 600; }
 .ed-label span { font-size: 12px; color: var(--text-3); }

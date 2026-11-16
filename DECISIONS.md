@@ -579,3 +579,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Ordem das fatias mantida** (Básico → Ondas/Formas → Versões → Comparar → Shaders → Código → Exportar → Novo → Renomear → Verificador → Extras), **um PR por fatia** sem fechar a issue, como na 030.
 - **Milestone v0.8.0** criado (o v0.7.0 já está congelado na `rc/v0.7.0`).
 - **Descartado:** guardar só deltas; esconder "Exportar .milk" para cópias do pacote.
+
+## 2026-11-16 — Estúdio 027, fatia 1: Básico ao vivo sem recarregar (rodada, `agent-decided`)
+- **Decisão:** mexer num controle do Básico grava o valor direto no runner WASM do Butterchurn (`renderer.presetEquationRunner.mdVS`, copiado para as equações no começo de cada quadro), sem `loadPreset`. Com uma carga em andamento, o valor espera o runner novo; sem acesso a essa parte interna, o Estúdio cai no caminho normal (compila e carrega, 400 ms depois). O valor entra no `baseVals` do preset salvo; só as chaves mexidas.
+- **Por quê:** o critério 1 pede o visual mudando *enquanto* arrasta; recarregar o preset a cada passo do slider reinicia `per_frame_init` e refaz o blend (o visual "pisca" e perde o estado).
+- **Descartado:** `loadPreset` com blend 0 a cada evento (pesado, reinicia o preset); patch no pacote (a regra é não ter fork).
+- **Também:** a barra mostra só as abas que já funcionam (Básico e Equações nesta fatia; Ondas, Formas, Shaders e Código .milk entram com as fatias deles), e `Ctrl+N` vai para a N-ésima aba visível. O Estúdio abre no Básico, como no protótipo, e lembra a última aba enquanto o app está aberto. A faixa de cada slider é a do protótipo, alargada para caber o valor do preset quando ele está fora dela (ex.: `zoom` 1,335).

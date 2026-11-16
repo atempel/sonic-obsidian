@@ -32,6 +32,10 @@ export class PresetVisualizer {
   /** Pedido de preset mais recente: em trocas rápidas, vale o último (loadPreset é assíncrono). */
   private loadSeq = 0
   private loadChain: Promise<boolean> = Promise.resolve(true)
+  /** Cargas em andamento (`loadPreset` é assíncrono): o runner ainda vai ser trocado. */
+  private loading = 0
+  /** Parâmetros base mudados durante uma carga: valem no runner novo, assim que ela termina. */
+  private pendingTweaks = new Map<string, number>()
 
   constructor(ctx: AudioContext, private readonly canvas: HTMLCanvasElement, render: RenderSettings) {
     this.render_ = { ...render }
@@ -99,13 +103,46 @@ export class PresetVisualizer {
     const run = async (): Promise<boolean> => {
       if (seq !== this.loadSeq) return false
       this.pendingType = type
-      // Cópia: o motor altera o objeto do preset (baseVals); a biblioteca guarda o original.
-      await this.visualizer.loadPreset(structuredClone(preset), type === 'cut' ? 0 : blendSeconds)
+      this.loading++
+      try {
+        // Cópia: o motor altera o objeto do preset (baseVals); a biblioteca guarda o original.
+        await this.visualizer.loadPreset(structuredClone(preset), type === 'cut' ? 0 : blendSeconds)
+      } finally {
+        this.loading--
+        if (this.loading === 0 && this.pendingTweaks.size) {
+          const pending = [...this.pendingTweaks]
+          this.pendingTweaks.clear()
+          for (const [k, v] of pending) this.tweakBase(k, v)
+        }
+      }
       return true
     }
     const p = this.loadChain.then(run, run)
     this.loadChain = p.catch(() => false)
     return p
+  }
+
+  /**
+   * Muda um parâmetro base (`baseVals`) do preset que está tocando, sem recarregar (Estúdio,
+   * spec 027, Básico). O runner WASM do Butterchurn 3 copia `mdVS` para o pool das equações
+   * no começo de cada quadro (`runFrameEquations`), então o valor vale já no próximo quadro;
+   * as equações `per_frame` ainda podem sobrescrevê-lo, como no MilkDrop. Com uma carga em
+   * andamento, o valor espera o runner novo. Partes internas, fora da API pública: sem elas
+   * devolve `null` e o Estúdio recarrega o preset. Devolve o valor lido de volta do motor.
+   */
+  tweakBase(key: string, value: number): number | null {
+    const r = (this.visualizer as unknown as { renderer?: { presetEquationRunner?: { mdVS?: Record<string, unknown>; preset?: { baseVals?: Record<string, unknown> } } } }).renderer
+    const runner = r?.presetEquationRunner
+    const mdVS = runner?.mdVS
+    if (!mdVS || typeof mdVS[key] !== 'number') return null
+    if (this.loading > 0) {
+      this.pendingTweaks.set(key, value)
+      return value
+    }
+    mdVS[key] = value
+    const bv = runner.preset?.baseVals
+    if (bv && typeof bv[key] === 'number') bv[key] = value
+    return mdVS[key] as number
   }
 
   resize(): void {
