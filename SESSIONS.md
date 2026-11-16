@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-16 — Claude (chat, projeto Audio Visualizer) — branch `site/demo-troca-musica`
+**Fez:** Landing: botão para trocar a música da demo (próxima música do Uppbeat, `1 / 2`) e Tocar demo esperando a checagem dos arquivos para sempre começar pelo Uppbeat. Spec 019 e DECISIONS atualizados. Conferido no Chromium headless com `site:vendor` e áudios de teste no lugar das músicas (EN e PT): crédito, rótulo e contagem trocam a cada clique.
+**Deixou em:** PR desta branch. Não verificado com as músicas reais (só no site publicado, com a `SITE_AUDIO_KEY`). Botão ainda fora do canvas da landing.
+
 ### 2026-11-16 — Claude Code (nuvem, continuação da rodada) — branch `site/atualizacoes-0.7.0`
 **Fez:** O usuário aprovou o bloco v0.7.0 na conversa ("tudo rodou bem", "pode publicar"). Disparou o workflow `release` na `rc/v0.7.0` com `version=0.7.0` e `publicar=true` (a `rc/v0.7.0` já está no `main`, sem PR de volta). Com a release publicada: landing com "atualizações automáticas" no cartão do instalador (en e pt; "abrir com o Windows" do canvas continua fora, não existe no app) e o lembrete tirado de `.github/release-notes.md`; #121 e milestone v0.7.0 fechados.
 **Deixou em:** PR desta branch (só `site/` e `.github/`). Quem está na 0.6.0 instala a 0.7.0 à mão uma vez; dali em diante o atualizador entrega as próximas. Próxima rodada: fatia 3 da 027 (#75).

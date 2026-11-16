@@ -113,7 +113,7 @@ Download for Windows
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8080A0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></svg>
 <canvas data-ref="meter" width="320" height="14" aria-hidden="true" style="flex: 1 1 auto; min-width: 0; height: 10px; display: block"></canvas>
 </div>
-<p class="so-credit" data-if="hasTrack" hidden style="margin: 0">Music: <a data-ref="trackLink" href="https://uppbeat.io/" rel="noopener"><span data-text="trackCredit"></span></a></p>
+<div data-if="hasTrack" hidden style="display:contents"><div style="display: flex; align-items: center; gap: 8px; min-width: 0"><p class="so-credit" style="margin: 0; flex: 1 1 auto; min-width: 0">Music: <a data-ref="trackLink" href="https://uppbeat.io/" rel="noopener"><span data-text="trackCredit"></span></a></p><button class="so-btn" type="button" data-act="track" aria-label="Next track" title="Next track" style="padding: 0 12px; flex: 0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg><span class="so-mono" style="font-size: 12px"><span data-text="trackPos"></span></span></button></div></div>
 <div data-if="engineFailed" hidden style="display:contents">
 <p style="margin: 0; font-size: 13px; color: #FF8FB0">This browser could not start WebGL 2, so the stage stays dark here. The desktop app does not depend on your browser.</p>
 </div>
