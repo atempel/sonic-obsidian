@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-16 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/027-perguntas`
+**Fez:** Passo 5 da `rodada` (bloco v0.7.0 esperando o teste do usuário em #121, sem comentário dele; nenhum PR aberto; nada `ready`): planejou a `backlog` mais antiga, #75 (spec 027, Estúdio P1). Fechou as 4 perguntas da spec como `agent-decided` (exportar sem shaders com aviso; versões em arquivo inteiro, até 50; histórico só na pasta do preset; ordem das fatias mantida, um PR por fatia) e registrou em DECISIONS. Criou o milestone v0.8.0.
+**Deixou em:** PR desta branch (só docs). #75 em `ready` + `agent-decided`, milestone v0.8.0. Próxima rodada: mergear este PR e começar a fatia 1 da 027 (abas e Básico; checar o design `42d3` antes). Nada verificado no Windows (não houve código).
+
 ### 2026-11-15 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.7.0`
 **Fez:** Passo 3 da `rodada` (nada do usuário a responder, nenhum PR aberto, v0.7.0 sem issues abertas e nenhum bloco esperando teste): fecha o bloco v0.7.0. Versão 0.7.0 no `package.json`/`package-lock.json`, notas em `.github/release-notes.md` (atualizador, idiomas, ajustes do 598c, instalar à mão uma vez quem vem da 0.6.0). DECISIONS: bloco fecha com 4 issues; a landing ganha "atualizações automáticas" só na publicação.
 **Deixou em:** PR desta branch; depois do merge, branch `rc/v0.7.0`, `build-windows` disparado nela e issue "Testar bloco v0.7.0" (`test-block`, atribuída ao atempel). Próxima rodada: responder ao bloco (ok → release + landing; problema → bugs na `rc/v0.7.0`); sem resposta, planejar o `backlog` mais antigo para o v0.8.0.
