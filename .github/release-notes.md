@@ -1,6 +1,3 @@
-<!-- Ao publicar a 0.7.0 (depois do ok no bloco): voltar o "atualizações automáticas" ao cartão do instalador na landing
-     (site/index.html e site/pt/index.html; DECISIONS 2026-11-08 e 2026-11-15). Não antes: a landing baixa a release
-     publicada, que até lá é a 0.6.0, sem atualizador. -->
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
 ## What's new in 0.7.0
