@@ -15,6 +15,8 @@ export interface HudState {
   beat?: string
   /** Spec 026: custo da última compilação do Estúdio. */
   studio?: string
+  /** Spec 027: ondas e formas ligadas no motor (lido de volta dele). */
+  studioSlots?: string
   error?: string
 }
 
@@ -35,6 +37,7 @@ export class Hud {
       `${s.expression ?? 'expressiveness unavailable'}\n` +
       `${s.beat ?? 'beat: waiting'}\n` +
       (s.studio ? `${s.studio}\n` : '') +
+      (s.studioSlots ? `${s.studioSlots}\n` : '') +
       `→ ← presets · + − 0 expressiveness · X character · Shift+X memory · B ↑↓ transition · T clean mode · Space random · Enter hold`
   }
 }

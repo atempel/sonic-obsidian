@@ -2,7 +2,8 @@ import { Fragment, render } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Preset } from 'butterchurn'
 import type { Core } from '../core/commands'
-import { EQ_KEYS, type Block, type CompileResult, type StudioError, type StudioIssue } from '../studio/compile'
+import { EQ_KEYS, type Block, type CompileResult, type MainBlock, type SlotBlock, type StudioError, type StudioIssue } from '../studio/compile'
+import { SHAPE_PARAMS, SLOT_INDEXES, WAVE_PARAMS, slotBlockTitle, slotOfBlock, slotOn, slotValue, slotsOf, writeSlots, type SlotKind, type Slots } from '../studio/slots'
 import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor, type BasicParam } from '../studio/basic'
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
@@ -42,22 +43,27 @@ export interface StudioApi {
 
 const DEBOUNCE_MS = 400
 const ESC_WINDOW_MS = 3000
-const BLOCKS: { id: Block; title: string; legend: MessageKey; h: number }[] = [
+const BLOCKS: { id: MainBlock; title: string; legend: MessageKey; h: number }[] = [
   { id: 'init', title: 'per_frame_init', legend: 'studio.block.init', h: 120 },
   { id: 'frame', title: 'per_frame', legend: 'studio.block.frame', h: 180 },
   { id: 'pixel', title: 'per_pixel', legend: 'studio.block.pixel', h: 150 }
 ]
-const BLOCK_TITLE: Record<Block, string> = { init: 'per_frame_init', frame: 'per_frame', pixel: 'per_pixel' }
+const MAIN_TITLE: Record<MainBlock, string> = { init: 'per_frame_init', frame: 'per_frame', pixel: 'per_pixel' }
+const isMain = (b: Block): b is MainBlock => b in MAIN_TITLE
+/** Nome do bloco como no `.milk`: `per_frame`, `wave_1_per_point`… (técnico, igual nos dois idiomas). */
+const blockTitle = (b: Block): string => (isMain(b) ? MAIN_TITLE[b] : slotBlockTitle(b))
 
 type Status = 'ok' | 'busy' | 'err'
-type Code = Record<Block, string>
+type Code = Record<MainBlock, string>
 /** Parâmetros base mudados no Básico (só as chaves mexidas). */
 type Base = Record<string, number>
 
-/** Abas na ordem do protótipo; as demais (Ondas, Formas, Shaders, Código .milk) chegam nas próximas fatias da 027. */
+/** Abas na ordem do protótipo; Shaders e Código .milk chegam nas próximas fatias da 027. */
 const TABS = [
   { id: 'basic', label: 'studio.tab.basic' },
-  { id: 'eq', label: 'studio.tab.eq' }
+  { id: 'eq', label: 'studio.tab.eq' },
+  { id: 'waves', label: 'studio.tab.waves' },
+  { id: 'shapes', label: 'studio.tab.shapes' }
 ] as const satisfies readonly { id: string; label: MessageKey }[]
 type TabId = (typeof TABS)[number]['id']
 /** Última aba usada nesta abertura do app (reabrir o Estúdio volta nela). */
@@ -97,7 +103,7 @@ function issueText(i: StudioIssue, l: Lang = getLang()): string {
   }
 }
 /** Onde: `per_frame, linha 2` / `per_frame, line 2`, ou só o bloco. */
-const whereText = (e: StudioError): string => (e.line ? t('studio.atLine', { block: BLOCK_TITLE[e.block], line: String(e.line) }) : BLOCK_TITLE[e.block])
+const whereText = (e: StudioError): string => (e.line ? t('studio.atLine', { block: blockTitle(e.block), line: String(e.line) }) : blockTitle(e.block))
 
 /** Do texto do bloco (o motor guarda com `\n`; o editor também). */
 const codeOf = (p: Preset): Code => ({
@@ -106,9 +112,10 @@ const codeOf = (p: Preset): Code => ({
   pixel: String(p[EQ_KEYS.pixel] ?? '')
 })
 
-function withCode(source: Preset, code: Code, base: Base = {}): Preset {
+function withCode(source: Preset, code: Code, base: Base = {}, slots?: Slots): Preset {
   const p = structuredClone(source)
-  for (const b of ['init', 'frame', 'pixel'] as Block[]) p[EQ_KEYS[b]] = code[b]
+  for (const b of ['init', 'frame', 'pixel'] as MainBlock[]) p[EQ_KEYS[b]] = code[b]
+  if (slots) writeSlots(p, slots)
   if (Object.keys(base).length) p.baseVals = { ...(p.baseVals && typeof p.baseVals === 'object' ? (p.baseVals as Record<string, number>) : {}), ...base }
   return p
 }
@@ -126,6 +133,15 @@ function Studio({ api }: { api: StudioApi }) {
   const [base, setBase] = useState<Base>({})
   const latestBase = useRef(base)
   latestBase.current = base
+  /** Ondas e formas (4 + 4), editadas como um todo e compiladas com as equações. */
+  const origSlots = useMemo(() => slotsOf(api.source), [api])
+  const [slots, setSlots] = useState<Slots>(() => slotsOf(api.source))
+  const latestSlots = useRef(slots)
+  latestSlots.current = slots
+  /** Slot aberto em cada aba (um por vez, como no protótipo; -1 = todos fechados). */
+  const [openSlot, setOpenSlot] = useState<Record<SlotKind, number>>({ wave: 0, shape: 0 })
+  /** O que foi compilado por último: equações + slots (o Básico é sempre válido e fica de fora). */
+  const keyOf = (c: Code): string => JSON.stringify([c, latestSlots.current])
   const [tab, setTabState] = useState<TabId>(lastTab)
   const tabRef = useRef(tab)
   const setTab = (id: TabId, focus = false): void => {
@@ -165,15 +181,15 @@ function Studio({ api }: { api: StudioApi }) {
   // ── Compilar ────────────────────────────────────────────
   const compile = async (c: Code, load = true): Promise<boolean> => {
     window.clearTimeout(timer.current)
-    const key = JSON.stringify(c)
+    const key = keyOf(c)
     setStatus('busy')
-    const r = await api.compile(withCode(api.source, c, latestBase.current))
+    const r = await api.compile(withCode(api.source, c, latestBase.current, latestSlots.current))
     if ('superseded' in r) return false
     lastCompiled.current = key
     setCompiledAt(new Date())
     if (r.ok) {
       // Parâmetros base mexidos durante a compilação também vão (são sempre válidos).
-      if (load) api.apply(withCode(api.source, c, latestBase.current))
+      if (load) api.apply(withCode(api.source, c, latestBase.current, latestSlots.current))
       setStatus('ok')
       setErrors([])
       setHadValid(true)
@@ -186,7 +202,7 @@ function Studio({ api }: { api: StudioApi }) {
     api.reportCost(`studio: compile ${r.ms.toFixed(0)} ms · ${count(r.errors.length)}`)
     // Log: só erros novos, nunca por tecla.
     const keys = new Set(r.errors.map(errKey))
-    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`studio: error in ${BLOCK_TITLE[e.block]}${e.line ? `, line ${e.line}` : ''}: ${issueText(e.issue, 'en')}`)
+    for (const e of r.errors) if (!lastErrs.current.has(errKey(e))) api.log(`studio: error in ${blockTitle(e.block)}${e.line ? `, line ${e.line}` : ''}: ${issueText(e.issue, 'en')}`)
     lastErrs.current = keys
     return false
   }
@@ -204,6 +220,37 @@ function Studio({ api }: { api: StudioApi }) {
     setStatus('busy')
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => void compile(next), DEBOUNCE_MS)
+  }
+
+  /** Ondas e Formas: tudo passa pela compilação (com pausa de 400 ms), como as equações. */
+  const changeSlots = (next: Slots): void => {
+    latestSlots.current = next
+    setSlots(next)
+    setDirty(true)
+    setEscWarn(false)
+    setStatus('busy')
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => void compile(latest.current), DEBOUNCE_MS)
+  }
+  const listOf = (s: Slots, kind: SlotKind): Slots['waves'] | Slots['shapes'] => (kind === 'wave' ? s.waves : s.shapes)
+  const updateSlot = (kind: SlotKind, i: number, f: (x: Slots['waves'][number] & Slots['shapes'][number]) => void): void => {
+    const next = structuredClone(latestSlots.current)
+    f(listOf(next, kind)[i] as Slots['waves'][number] & Slots['shapes'][number])
+    changeSlots(next)
+  }
+  const setSlotParam = (kind: SlotKind, i: number, p: BasicParam, raw: number): void => {
+    const orig = slotValue(kind, listOf(origSlots, kind)[i]!.baseVals, p.key)
+    const v = clampParam(p, raw, rangeFor(p, orig))
+    updateSlot(kind, i, (x) => {
+      x.baseVals[p.key] = v
+    })
+  }
+  const setSlotCode = (b: SlotBlock, v: string): void => {
+    const { kind, idx, field } = slotOfBlock(b)
+    updateSlot(kind, idx, (x) => {
+      if (field === 'point') x.point_eqs_eel = v
+      else x.frame_eqs_eel = v
+    })
   }
 
   const valueOf = (p: BasicParam): number => (p.key in base ? base[p.key]! : baseValue(api.source.baseVals, p))
@@ -231,7 +278,7 @@ function Studio({ api }: { api: StudioApi }) {
     }
     // Garante que o que vai para o disco é exatamente o que compilou.
     const c = latest.current
-    if (status !== 'ok' || lastCompiled.current !== JSON.stringify(c)) {
+    if (status !== 'ok' || lastCompiled.current !== keyOf(c)) {
       const ok = await compile(c)
       if (!ok) {
         showToast(t('toast.studio.fixErrors'), { force: true })
@@ -240,7 +287,7 @@ function Studio({ api }: { api: StudioApi }) {
     }
     try {
       const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
-      const r = await api.save({ preset: withCode(api.source, c, latestBase.current), title: name, author: authorName ?? author })
+      const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author })
       setSaved(r)
       setTitle(r.name)
       setDirty(false)
@@ -319,15 +366,20 @@ function Studio({ api }: { api: StudioApi }) {
     }
   }, [])
 
-  const goTo = (b: Block, line: number | null): void => {
+  const goTo = (b: Block, line: number | null, retry = true): void => {
+    const want: TabId = isMain(b) ? 'eq' : slotOfBlock(b).kind === 'wave' ? 'waves' : 'shapes'
+    if (!isMain(b)) {
+      const { kind, idx } = slotOfBlock(b)
+      setOpenSlot((o) => (o[kind] === idx ? o : { ...o, [kind]: idx }))
+    }
+    if (tabRef.current !== want) setTab(want)
     const ta = editors.current[b]
-    if (!ta) return
-    if (tabRef.current !== 'eq') {
-      setTab('eq')
-      // O painel aparece no próximo quadro.
-      requestAnimationFrame(() => goTo(b, line))
+    // Aba ou slot escondido: o painel aparece no próximo quadro.
+    if ((!ta || !ta.offsetParent) && retry) {
+      requestAnimationFrame(() => goTo(b, line, false))
       return
     }
+    if (!ta) return
     ta.focus()
     if (line) {
       const lines = ta.value.split('\n')
@@ -485,7 +537,9 @@ function Studio({ api }: { api: StudioApi }) {
             {BLOCKS.map((b) => (
               <Editor
                 key={b.id}
-                block={b}
+                title={b.title}
+                legend={t(b.legend)}
+                h={b.h}
                 value={code[b.id]}
                 errLines={errors.filter((e) => e.block === b.id && e.line).map((e) => e.line!)}
                 bind={(el) => {
@@ -509,6 +563,35 @@ function Studio({ api }: { api: StudioApi }) {
               </details>
             )}
           </div>
+          {(['wave', 'shape'] as SlotKind[]).map((kind) => {
+            const id = kind === 'wave' ? 'waves' : 'shapes'
+            return (
+              <div class="st-blocks st-slots" role="tabpanel" id={`studio-tp-${id}`} aria-labelledby={`studio-tab-${id}`} hidden={tab !== id} key={kind}>
+                <SlotList
+                  kind={kind}
+                  slots={kind === 'wave' ? slots.waves : slots.shapes}
+                  original={kind === 'wave' ? origSlots.waves : origSlots.shapes}
+                  open={openSlot[kind]}
+                  errors={errors}
+                  onOpen={(i) => setOpenSlot((o) => ({ ...o, [kind]: o[kind] === i ? -1 : i }))}
+                  onToggle={(i, on) =>
+                    updateSlot(kind, i, (x) => {
+                      x.baseVals.enabled = on ? 1 : 0
+                    })
+                  }
+                  onParam={(i, p, v) => setSlotParam(kind, i, p, v)}
+                  onCode={setSlotCode}
+                  bind={(b, el) => {
+                    editors.current[b] = el
+                  }}
+                />
+                <p class="note">
+                  {t(kind === 'wave' ? 'studio.waves.vars' : 'studio.shapes.vars')}{' '}
+                  <span class="num">{kind === 'wave' ? 'sample value1 value2 x y r g b a' : 'x y rad ang sides r g b a bass mid treb'}</span>
+                </p>
+              </div>
+            )
+          })}
           <div class="probs">
             <button type="button" class="probs-h" aria-expanded={probsOpen} onClick={() => setProbsOpen(!probsOpen)}>
               <span class="chev">
@@ -556,13 +639,12 @@ function Studio({ api }: { api: StudioApi }) {
 }
 
 /** Uma linha do Básico: slider, switch ou a lista de formas da onda; o nome do parâmetro em `.num`. */
-function BasicControl({ p, original, value, onChange }: { p: BasicParam; original: number; value: number; onChange(v: number): void }) {
-  const id = `studio-p-${p.key}`
+function BasicControl({ p, original, value, onChange, id = `studio-p-${p.key}`, disabled = false }: { p: BasicParam; original: number; value: number; onChange(v: number): void; id?: string; disabled?: boolean }) {
   if (p.kind === 'switch') {
     return (
       <div class="ctl sw">
         <label class="switch" for={id}>
-          <input type="checkbox" id={id} checked={value >= 0.5} onChange={(e) => onChange((e.target as HTMLInputElement).checked ? 1 : 0)} />
+          <input type="checkbox" id={id} checked={value >= 0.5} disabled={disabled} onChange={(e) => onChange((e.target as HTMLInputElement).checked ? 1 : 0)} />
           <span class="track" />
           <span>{t(p.label)}</span>
         </label>
@@ -581,7 +663,7 @@ function BasicControl({ p, original, value, onChange }: { p: BasicParam; origina
             {cur}
           </output>
         </div>
-        <select class="sel" id={id} value={String(cur)} onChange={(e) => onChange(Number((e.target as HTMLSelectElement).value))}>
+        <select class="sel" id={id} value={String(cur)} disabled={disabled} onChange={(e) => onChange(Number((e.target as HTMLSelectElement).value))}>
           {WAVE_MODES.map((k, i) => (
             <option key={k} value={String(i)}>
               {`${i} · ${t(k)}`}
@@ -602,7 +684,7 @@ function BasicControl({ p, original, value, onChange }: { p: BasicParam; origina
           {value.toFixed(p.dec)}
         </output>
       </div>
-      <input id={id} type="range" min={r.min} max={r.max} step={p.step} value={value} style={{ '--fill': `${fill}%` }} onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))} />
+      <input id={id} type="range" min={r.min} max={r.max} step={p.step} value={value} disabled={disabled} style={{ '--fill': `${fill}%` }} onInput={(e) => onChange(Number((e.target as HTMLInputElement).value))} />
     </div>
   )
 }
@@ -620,18 +702,18 @@ function WaveSwatch({ rgb }: { rgb: number[] }) {
   )
 }
 
-function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines: number[]; bind(el: HTMLTextAreaElement | null): void; onInput(v: string): void }) {
-  const { block, value, errLines } = props
+function Editor(props: { title: string; legend: string; legendNum?: boolean; h: number; value: string; errLines: number[]; label?: string; readOnly?: boolean; bind(el: HTMLTextAreaElement | null): void; onInput(v: string): void }) {
+  const { value, errLines } = props
   const gut = useRef<HTMLDivElement>(null)
   const lines = Math.max(1, value.split('\n').length)
   const errs = new Set(errLines)
   return (
     <div class="ed-block">
       <div class="ed-label">
-        <h3 class="num">{block.title}</h3>
-        <span>{t(block.legend)}</span>
+        <h3 class="num">{props.title}</h3>
+        <span class={props.legendNum ? 'num' : undefined}>{props.legend}</span>
       </div>
-      <div class="ed" style={{ '--h': `${block.h}px` }}>
+      <div class={props.readOnly ? 'ed ro' : 'ed'} style={{ '--h': `${props.h}px` }}>
         <div class="ed-gut" ref={gut} aria-hidden="true">
           {Array.from({ length: lines }, (_, i) => (
             <div key={i} class={errs.has(i + 1) ? 'err' : undefined}>
@@ -642,10 +724,11 @@ function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines
         <textarea
           class="ed-ta"
           ref={props.bind}
-          aria-label={`${block.title}: ${t(block.legend)}`}
+          aria-label={props.label ?? `${props.title}: ${props.legend}`}
           spellcheck={false}
           autocomplete="off"
           wrap="off"
+          readOnly={props.readOnly}
           value={value}
           onInput={(e) => props.onInput((e.target as HTMLTextAreaElement).value)}
           onScroll={(e) => {
@@ -653,7 +736,7 @@ function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines
           }}
           onKeyDown={(e) => {
             // Tab = 2 espaços (Shift+Tab continua saindo do campo).
-            if (e.key !== 'Tab' || e.shiftKey || e.ctrlKey || e.altKey) return
+            if (e.key !== 'Tab' || e.shiftKey || e.ctrlKey || e.altKey || props.readOnly) return
             e.preventDefault()
             const ta = e.target as HTMLTextAreaElement
             const { selectionStart: a, selectionEnd: b } = ta
@@ -662,6 +745,88 @@ function Editor(props: { block: (typeof BLOCKS)[number]; value: string; errLines
           }}
         />
       </div>
+    </div>
+  )
+}
+
+type AnySlot = Slots['waves'][number] | Slots['shapes'][number]
+
+/**
+ * Ondas ou Formas (spec 027, fatia 2): 4 slots em sanfona (um aberto por vez), cada um com
+ * "Ativa", os parâmetros do protótipo e os blocos `per_frame` (e `per_point`, nas ondas).
+ * Slot desligado fica só leitura: controles desabilitados e editores sem edição.
+ */
+function SlotList(props: {
+  kind: SlotKind
+  slots: AnySlot[]
+  original: AnySlot[]
+  open: number
+  errors: StudioError[]
+  onOpen(i: number): void
+  onToggle(i: number, on: boolean): void
+  onParam(i: number, p: BasicParam, v: number): void
+  onCode(b: SlotBlock, v: string): void
+  bind(b: SlotBlock, el: HTMLTextAreaElement | null): void
+}) {
+  const { kind } = props
+  const params = kind === 'wave' ? WAVE_PARAMS : SHAPE_PARAMS
+  return (
+    <div class="slots">
+      {SLOT_INDEXES.map((i) => {
+        const s = props.slots[i]!
+        const on = slotOn(kind, s.baseVals)
+        const name = t(kind === 'wave' ? 'studio.slot.wave' : 'studio.slot.shape', { n: String(i + 1) })
+        const open = props.open === i
+        const bid = `studio-slot-${kind}${i}`
+        // Como no protótipo: o bloco e, ao lado, o nome dele no `.milk` (wave_0_per_frame).
+        const blocks: { b: SlotBlock; title: string; value: string }[] = [{ b: `${kind}${i}_frame` as SlotBlock, title: 'per_frame', value: s.frame_eqs_eel }]
+        if (kind === 'wave') blocks.push({ b: `wave${i}_point`, title: 'per_point', value: (s as Slots['waves'][number]).point_eqs_eel })
+        return (
+          <div class={on ? 'slot' : 'slot off'} key={i}>
+            <div class="slot-h">
+              <button type="button" class="slot-t" aria-expanded={open} aria-controls={bid} onClick={() => props.onOpen(i)}>
+                <Icon name="chevron-right" small />
+                {name}
+              </button>
+              <label class="switch">
+                <input type="checkbox" checked={on} aria-label={t('studio.slot.activeOf', { slot: name })} onChange={(e) => props.onToggle(i, (e.target as HTMLInputElement).checked)} />
+                <span class="track" />
+                <span aria-hidden="true">{t('studio.slot.active')}</span>
+              </label>
+            </div>
+            <div class="slot-b" id={bid} hidden={!open}>
+              <div class="grp-b">
+                {params.map((p) => (
+                  <BasicControl
+                    key={p.key}
+                    p={p}
+                    id={`studio-s-${kind}${i}-${p.key}`}
+                    original={slotValue(kind, props.original[i]!.baseVals, p.key)}
+                    value={slotValue(kind, s.baseVals, p.key)}
+                    disabled={!on}
+                    onChange={(v) => props.onParam(i, p, v)}
+                  />
+                ))}
+              </div>
+              {blocks.map((x) => (
+                <Editor
+                  key={x.b}
+                  title={x.title}
+                  legend={blockTitle(x.b)}
+                  legendNum
+                  h={120}
+                  label={`${x.title}, ${name}`}
+                  readOnly={!on}
+                  value={x.value}
+                  errLines={props.errors.filter((e) => e.block === x.b && e.line).map((e) => e.line!)}
+                  bind={(el) => props.bind(x.b, el)}
+                  onInput={(v) => props.onCode(x.b, v)}
+                />
+              ))}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

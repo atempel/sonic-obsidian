@@ -181,5 +181,6 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Faixa do slider** alargada quando o valor do preset está fora da faixa do protótipo (ex.: `zoom` 1,335 com faixa 0,9–1,1).
 - **Nota no fim do Básico:** "São os valores de partida. Uma equação em Equações que atribui o mesmo nome (zoom = …) passa por cima do controle a cada quadro." (o protótipo não explica por que um slider às vezes não muda nada).
 - O painel **Problemas** continua embaixo da coluna do editor, também no Básico.
+- *Fatia 2 (Ondas e Formas), mesma versão:* abas Ondas e Formas como no protótipo (`Ctrl+3`/`Ctrl+4`), sem divergência de desenho. O `per_frame_init` de cada slot não aparece (como no protótipo) e segue como veio do preset.
 **Status:** Aberta (aguarda a sessão de design).
 

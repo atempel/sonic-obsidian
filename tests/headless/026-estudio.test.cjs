@@ -76,7 +76,7 @@ function mainChecks() {
   await page.keyboard.press('Control+2')
   const title0 = await page.inputValue('#studio-name')
   ok('1b título começa como "Remix de …"', title0.startsWith('Remix de '), title0)
-  ok('1c três blocos com a legenda do protótipo', (await page.$$('.studio .ed-ta')).length === 3 && (await text()).includes('Executa uma vez ao carregar o preset') && (await text()).includes('Executa em cada ponto da malha'))
+  ok('1c três blocos com a legenda do protótipo', (await page.$$('#studio-tp-eq .ed-ta')).length === 3 && (await text()).includes('Executa uma vez ao carregar o preset') && (await text()).includes('Executa em cada ponto da malha'))
   ok('1d nota de variáveis', (await text()).includes('bass mid treb bass_att mid_att treb_att time frame fps'))
   ok('1e status termina em "Compilado"', await waitStatus(/^Compilado$/), await status())
   ok('1f controles do Palco escondidos', !(await page.isVisible('.strip-wrap')))
