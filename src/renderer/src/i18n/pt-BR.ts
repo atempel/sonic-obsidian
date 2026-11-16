@@ -184,6 +184,10 @@ export const ptBR: Messages = {
   'toast.studio.nothingToUndo': 'Nada para desfazer.',
   'toast.studio.nothingToRedo': 'Nada para refazer.',
   'toast.studio.restored': 'Versão de {time} restaurada. Salve para ficar com ela.',
+  'toast.studio.cmpVersion': 'Comparando com a versão de {time}',
+  'toast.studio.cmpLowFps': 'Sem folga de GPU para comparar: o visual está a {fps} fps.',
+  'toast.studio.cmpDropped': 'Comparação desligada: o visual caiu para {fps} fps.',
+  'toast.studio.cmpFailed': 'Não deu para mostrar a comparação.',
   'toast.studio.notRestored': 'Não restaurada: {error}',
 
   // ── Configurações ───────────────────────────────────────
@@ -608,6 +612,10 @@ export const ptBR: Messages = {
   'studio.ver.edited.one': '{blocks} editado',
   'studio.ver.edited.other': '{blocks} editados',
   'studio.ver.noChanges': 'Sem mudanças',
+  'studio.cmp.switch': 'Comparar com o original',
+  'studio.cmp.original': 'Original',
+  'studio.cmp.version': 'Versão de {time}',
+  'studio.ver.compare': 'Comparar',
   'studio.editor': 'Editor',
   'studio.sections': 'Seções do preset',
   'studio.tab.basic': 'Básico',

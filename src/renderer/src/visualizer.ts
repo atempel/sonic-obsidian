@@ -161,6 +161,42 @@ export class PresetVisualizer {
     return { waves: on(p.waves), shapes: on(p.shapes) }
   }
 
+  /**
+   * Segundo visual do Estúdio ("Comparar com o original", spec 027, fatia 4): os níveis de áudio
+   * deste motor passam a ser cópia dos de `from` a cada quadro (depois da expressividade e do
+   * silêncio), para os dois lados reagirem igual. `from` precisa desenhar antes, no mesmo quadro.
+   * Partes internas (`renderer.audioLevels`); sem elas devolve `false` e cada um mede o seu.
+   */
+  mirrorAudioFrom(from: PresetVisualizer): boolean {
+    type Levels = { updateAudioLevels?: (fps: number, frame: number) => void; val?: unknown; att?: unknown; imm?: unknown; avg?: unknown }
+    const levelsOf = (v: Visualizer): Levels | undefined => (v as unknown as { renderer?: { audioLevels?: Levels } }).renderer?.audioLevels
+    const src = levelsOf(from.visualizer)
+    const dst = levelsOf(this.visualizer)
+    const keys = ['val', 'att', 'imm', 'avg'] as const
+    if (!src || !dst || typeof dst.updateAudioLevels !== 'function' || !keys.every((k) => src[k] instanceof Float32Array && dst[k] instanceof Float32Array)) return false
+    const original = dst.updateAudioLevels.bind(dst)
+    dst.updateAudioLevels = (fps: number, frame: number) => {
+      original(fps, frame)
+      for (const k of keys) (dst[k] as Float32Array).set(src[k] as Float32Array)
+    }
+    return true
+  }
+
+  /**
+   * Contexto WebGL do motor. O Butterchurn 3 desenha num canvas interno (OffscreenCanvas) e copia
+   * para o nosso por 2D: o `webglcontextlost` sai do canvas de `gl.canvas`, não do da página.
+   */
+  get gl(): WebGL2RenderingContext | null {
+    const v = this.visualizer as unknown as { gl?: WebGL2RenderingContext; renderer?: { gl?: WebGL2RenderingContext } }
+    return v.gl ?? v.renderer?.gl ?? null
+  }
+
+  /** Solta o contexto WebGL deste visual (o segundo do Estúdio); o canvas sai junto. */
+  dispose(): void {
+    this.gl?.getExtension('WEBGL_lose_context')?.loseContext()
+    this.canvas.remove()
+  }
+
   resize(): void {
     const { width, height } = this.size()
     this.canvas.width = width

@@ -184,6 +184,10 @@ export const en = {
   'toast.studio.nothingToUndo': 'Nothing to undo.',
   'toast.studio.nothingToRedo': 'Nothing to redo.',
   'toast.studio.restored': 'Version from {time} restored. Save to keep it.',
+  'toast.studio.cmpVersion': 'Comparing with the version from {time}',
+  'toast.studio.cmpLowFps': 'Not enough GPU headroom to compare: the visual is at {fps} fps.',
+  'toast.studio.cmpDropped': 'Comparison turned off: the visual dropped to {fps} fps.',
+  'toast.studio.cmpFailed': 'Could not show the comparison.',
   'toast.studio.notRestored': 'Not restored: {error}',
 
   // ── Settings ────────────────────────────────────────────
@@ -608,6 +612,10 @@ export const en = {
   'studio.ver.edited.one': '{blocks} edited',
   'studio.ver.edited.other': '{blocks} edited',
   'studio.ver.noChanges': 'No changes',
+  'studio.cmp.switch': 'Compare with the original',
+  'studio.cmp.original': 'Original',
+  'studio.cmp.version': 'Version from {time}',
+  'studio.ver.compare': 'Compare',
   'studio.editor': 'Editor',
   'studio.sections': 'Preset sections',
   'studio.tab.basic': 'Basic',

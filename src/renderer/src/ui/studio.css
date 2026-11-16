@@ -148,3 +148,18 @@ body.studio-open .winctl { display: none !important; }
 .st-ver-keys { margin: 0; padding: 10px 16px 14px; border-top: 1px solid var(--line-2); font-size: 12px; color: var(--text-3); }
 @media (max-width: 1260px) { .st-ver { width: 36px; padding: 0; justify-content: center; } }
 @media (prefers-reduced-motion: reduce) { .st-drawer, .st-drawer.open { transition: none; } }
+
+/* Comparar com o original (spec 027, fatia 4) — protótipo, página Estúdio completo (027): prévia em duas, 1 px entre elas (a da direita fica transparente).
+   À direita, o visual principal visto pela camada; à esquerda, o segundo visual (canvas do tamanho da janela, deslocado
+   para mostrar a mesma região do quadro). */
+.st-stage { display: grid; grid-template-columns: 1fr; overflow: hidden; }
+.st-stage.cmp { grid-template-columns: 1fr 1fr; }
+.st-pane { position: relative; min-width: 0; overflow: hidden; }
+.st-pane.orig { display: none; background: var(--bg-00); }
+.st-stage.cmp .st-pane.orig { display: block; }
+.st-stage.cmp .st-pane.rmx { border-left: 1px solid var(--line-2); }
+.st-cmp-canvas { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; }
+.st-pane .chip { z-index: 1; }
+.st-pbar { display: flex; align-items: center; gap: 8px; flex: none; min-height: 32px; }
+/* A coluna da prévia é transparente (o visual aparece atrás): o switch ganha fundo para ser lido. */
+.st-pbar .switch { padding: 4px 12px 4px 6px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }

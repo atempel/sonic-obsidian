@@ -8,7 +8,7 @@ import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
-import { getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey } from '../i18n'
+import { fmtNum, getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey } from '../i18n'
 import { mainError, mainErrorText } from '../main-error'
 import './studio.css'
 
@@ -43,6 +43,14 @@ export interface StudioApi {
   versions(): Promise<SoMineVersion[]>
   /** O preset de uma versão (já pela barreira do main). */
   version(n: number): Promise<Preset>
+  /** "Comparar com o original" (027, fatia 4): o preset do lado esquerdo. */
+  original: Preset
+  /**
+   * Liga o segundo visual dentro de `host` (ou troca o preset dele, se já ligado). Recusa sem folga
+   * de GPU (`fps` medido); `onDrop` é chamado se ele desligar sozinho (fps baixo, erro).
+   */
+  compareStart(host: HTMLElement, preset: Preset, onDrop: (fps: number) => void): { ok: true } | { ok: false; fps: number }
+  compareStop(): void
 }
 
 const DEBOUNCE_MS = 400
@@ -216,6 +224,11 @@ function Studio({ api }: { api: StudioApi }) {
   const lastGroup = useRef({ key: '', at: 0 })
   const [drawer, setDrawer] = useState(false)
   const [versions, setVersions] = useState<SoMineVersion[] | 'loading' | 'error'>('loading')
+  // ── Comparar (spec 027, fatia 4) ────────────────────────
+  /** Ligado: o que está à esquerda (o original ou uma versão, com a hora). */
+  const [cmp, setCmp] = useState<{ version: SoMineVersion | null } | null>(null)
+  const origPane = useRef<HTMLDivElement>(null)
+  const rmxPane = useRef<HTMLDivElement>(null)
   const verBtn = useRef<HTMLButtonElement>(null)
   const drClose = useRef<HTMLButtonElement>(null)
   const root = useRef<HTMLDivElement>(null)
@@ -326,6 +339,68 @@ function Studio({ api }: { api: StudioApi }) {
       showToast(t('toast.studio.notRestored', { error: msgText(mainError(err)) }), { force: true })
     }
   }
+
+  const onCompareDrop = (fps: number): void => {
+    setCmp(null)
+    showToast(fps > 0 ? t('toast.studio.cmpDropped', { fps: fmtNum(Math.round(fps)) }) : t('toast.studio.cmpFailed'), { force: true })
+  }
+  /** Liga a comparação com `version` (ou o original). Devolve se ligou. */
+  const startCompare = (version: SoMineVersion | null, preset: Preset): boolean => {
+    const host = origPane.current
+    if (!host) return false
+    const r = api.compareStart(host, preset, onCompareDrop)
+    if (!r.ok) {
+      showToast(r.fps > 0 ? t('toast.studio.cmpLowFps', { fps: fmtNum(Math.round(r.fps)) }) : t('toast.studio.cmpFailed'), { force: true })
+      return false
+    }
+    setCmp({ version })
+    return true
+  }
+  const toggleCompare = (input: HTMLInputElement): void => {
+    if (!input.checked) {
+      api.compareStop()
+      setCmp(null)
+      api.log('studio: compare off')
+      return
+    }
+    // Recusado: o switch volta (o estado não mudou, então o Preact não o redesenharia).
+    if (!startCompare(null, api.original)) input.checked = false
+  }
+  const compareVersion = async (v: SoMineVersion): Promise<void> => {
+    try {
+      const p = await api.version(v.n)
+      if (startCompare(v, p)) {
+        api.log(`studio: comparing with version ${v.n}`)
+        showToast(t('toast.studio.cmpVersion', { time: verTime(v.savedAt) }), { force: true })
+      }
+    } catch (err) {
+      api.log(`studio: compare failed: ${mainErrorText(err)}`)
+      showToast(t('toast.studio.notRestored', { error: msgText(mainError(err)) }), { force: true })
+    }
+  }
+  useEffect(() => () => api.compareStop(), [])
+  // O segundo canvas tem o tamanho da janela e mostra, à esquerda, o mesmo pedaço do quadro que
+  // o visual principal mostra à direita (a mesma região dos dois presets, lado a lado).
+  useLayoutEffect(() => {
+    if (!cmp) return
+    const place = (): void => {
+      const o = origPane.current?.getBoundingClientRect()
+      const r = rmxPane.current?.getBoundingClientRect()
+      const cv = origPane.current?.querySelector<HTMLCanvasElement>('.st-cmp-canvas')
+      if (!o || !r || !cv) return
+      // Canvas na tela em x = −(r.left − o.left), y = 0 (o principal está em 0, 0); relativo ao painel:
+      cv.style.left = `${-r.left}px`
+      cv.style.top = `${-o.top}px`
+    }
+    place()
+    window.addEventListener('resize', place)
+    const ro = new ResizeObserver(place)
+    if (origPane.current) ro.observe(origPane.current)
+    return () => {
+      window.removeEventListener('resize', place)
+      ro.disconnect()
+    }
+  }, [cmp])
 
   // A cópia aberta já está no visual; a primeira compilação só confere e mostra o status.
   useEffect(() => {
@@ -636,14 +711,26 @@ function Studio({ api }: { api: StudioApi }) {
 
       <div class="st-main">
         <section class="st-prev" aria-label={t('studio.preview')}>
-          <div class="st-stage">
-            <span class="chip tl">{dirty || !saved ? t('studio.chip.remix') : t('studio.chip.saved')}</span>
+          <div class={cmp ? 'st-stage cmp' : 'st-stage'}>
+            <div class="st-pane orig" ref={origPane}>
+              {cmp && <span class="chip tl">{cmp.version ? t('studio.cmp.version', { time: verTime(cmp.version.savedAt) }) : t('studio.cmp.original')}</span>}
+            </div>
+            <div class="st-pane rmx" ref={rmxPane}>
+              <span class="chip tl">{dirty || !saved ? t('studio.chip.remix') : t('studio.chip.saved')}</span>
+            </div>
             {stale && (
               <span class="chip tr warn">
                 <Icon name="triangle-alert" small />
                 {t('studio.stale')}
               </span>
             )}
+          </div>
+          <div class="st-pbar">
+            <label class="switch" for="studio-cmp">
+              <input type="checkbox" id="studio-cmp" checked={!!cmp} onChange={(e) => toggleCompare(e.target as HTMLInputElement)} />
+              <span class="track" />
+              <span>{t('studio.cmp.switch')}</span>
+            </label>
           </div>
           <Levels api={api} />
         </section>
@@ -812,6 +899,9 @@ function Studio({ api }: { api: StudioApi }) {
                   <div class="ver-a">
                     <button type="button" class="btn" onClick={() => void restore(v)}>
                       {t('studio.ver.restore')}
+                    </button>
+                    <button type="button" class="btn btn-ghost" onClick={() => void compareVersion(v)}>
+                      {t('studio.ver.compare')}
                     </button>
                   </div>
                 </li>

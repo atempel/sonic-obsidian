@@ -64,7 +64,7 @@ contextBridge.exposeInMainWorld('so', {
     /** Driver e ids da GPU (diagnóstico de WebGL 2). */
     gpuInfo: (): Promise<{ driver: string; ids: string }> => ipcRenderer.invoke('system:gpuInfo'),
     /** Flags de teste lidas de test-flags.json (spec 012). */
-    testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean }> => ipcRenderer.invoke('system:testFlags')
+    testFlags: (): Promise<{ captureFail: boolean; noWebgl2: boolean; compareMinFps?: number }> => ipcRenderer.invoke('system:testFlags')
   },
   app: {
     version: (): Promise<string> => ipcRenderer.invoke('app:version'),
