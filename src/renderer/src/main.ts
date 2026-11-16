@@ -517,7 +517,14 @@ async function start(): Promise<void> {
       compile: (p) => compiler.compile(p),
       apply: (p) => {
         s.applied = true
-        viz.load(p, 'crossfade', 0.4).catch((err: unknown) => window.so.log(`studio: version failed to load: ${err instanceof Error ? err.message : String(err)}`))
+        viz
+          .load(p, 'crossfade', 0.4)
+          .then(() => {
+            // HUD: o que o motor ligou de ondas e formas (027, fatia 2), lido de volta dele.
+            const on = viz.liveSlots()
+            if (on && studio === s) state.studioSlots = `studio: live waves ${on.waves} · shapes ${on.shapes}`
+          })
+          .catch((err: unknown) => window.so.log(`studio: version failed to load: ${err instanceof Error ? err.message : String(err)}`))
       },
       tweak: (key, value) => {
         const got = viz.tweakBase(key, value)
@@ -551,6 +558,7 @@ async function start(): Promise<void> {
         studio = null
         studioBusy = false
         state.studio = undefined
+        state.studioSlots = undefined
         run('ui.close', {}, 'ui')
         window.so.log(`studio: closed${saved ? ` with ${saved}` : ''}`)
         // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).

@@ -145,6 +145,22 @@ export class PresetVisualizer {
     return mdVS[key] as number
   }
 
+  /**
+   * Ondas e formas ligadas no preset que está tocando, lidas do motor (Estúdio, 027 fatia 2;
+   * para o HUD). Ex.: `{ waves: '2', shapes: '3,4' }` (contando de 1). Sem acesso: `null`.
+   */
+  liveSlots(): { waves: string; shapes: string } | null {
+    const r = (this.visualizer as unknown as { renderer?: { preset?: { waves?: { baseVals?: { enabled?: number } }[]; shapes?: { baseVals?: { enabled?: number } }[] } } }).renderer
+    const p = r?.preset
+    if (!p || !Array.isArray(p.waves) || !Array.isArray(p.shapes)) return null
+    const on = (xs: { baseVals?: { enabled?: number } }[]): string =>
+      xs
+        .map((x, i) => (x?.baseVals?.enabled ? String(i + 1) : ''))
+        .filter(Boolean)
+        .join(',') || '-'
+    return { waves: on(p.waves), shapes: on(p.shapes) }
+  }
+
   resize(): void {
     const { width, height } = this.size()
     this.canvas.width = width

@@ -266,7 +266,7 @@ const studioTexts = () => {
   }
   return out
 }
-const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h, .studio .grp h3, .studio .ctl-h label, .studio .ctl .switch span, .studio .ctl select')]
+const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h, .studio .grp h3, .studio .ctl-h label, .studio .ctl .switch span, .studio .ctl select, .studio .slot-h .switch span')]
   .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 async function checkStudio(b, lang) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
@@ -286,6 +286,9 @@ async function checkStudio(b, lang) {
   const compiled = await waitStatus(okRe)
   // Abre no Básico (027): o que corta ali é medido antes de ir às Equações (Ctrl+2).
   const cutBasic = await p.evaluate(clippedStudio)
+  // Ondas e Formas (027, fatia 2): com a Onda 1 e a Forma 1 abertas.
+  await p.keyboard.press('Control+3'); const cutWaves = await p.evaluate(clippedStudio)
+  await p.keyboard.press('Control+4'); const cutShapes = await p.evaluate(clippedStudio)
   await p.keyboard.press('Control+2')
   await p.fill('.studio .ed-ta >> nth=1', 'zoom = 1.01;\nrot = sin(time;')
   const errRe = lang === 'en' ? /^1 error$/ : /^1 erro$/
@@ -295,7 +298,7 @@ async function checkStudio(b, lang) {
   const title = await p.inputValue('#studio-name')
   await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
   const texts = await p.evaluate(studioTexts)
-  const cut = cutBasic.concat(await p.evaluate(clippedStudio))
+  const cut = cutBasic.concat(cutWaves, cutShapes, await p.evaluate(clippedStudio))
   const logs = await p.evaluate(() => window.__logs)
   await p.close()
   return { compiled, errored, err, foot, title, texts, cut, hud, logs }
