@@ -74,7 +74,7 @@
   var comp = null, out = null, dly = null, noise = null, timer = null, nextTime = 0, stepN = 0;
   var micStream = null, micSrc = null;
   // Músicas da demo (Uppbeat). Só existem no site publicado (decifradas no deploy, spec 019);
-  // sem elas, a demo usa a faixa sintetizada. Tocam em sequência.
+  // sem elas, a demo usa a faixa sintetizada. Tocam em sequência; o botão de música passa para a próxima.
   var TRACKS = [
     { file: 'demo-1.m4a', title: '24 Hrs In Tokyo', artist: 'Yawnathan', url: 'https://uppbeat.io/c/yawnathan' },
     { file: 'demo-2.m4a', title: 'Space Dancers', artist: '2050', url: 'https://uppbeat.io/c/2050-music' }
@@ -106,6 +106,7 @@
         soundLabel: st.muted ? T.muted : T.sound,
         sourceLabel: isDemo ? (usingTrack ? 'DEMO · ' + TRACKS[trackIdx].title.toUpperCase() : T.srcDemo) : (isMic ? T.srcMic : T.srcIdle),
         trackCredit: '‘' + TRACKS[trackIdx].title + '’' + T.creditBy + TRACKS[trackIdx].artist + T.creditOn,
+        trackPos: (trackIdx + 1) + ' / ' + TRACKS.length,
         curAuthor: p.author, curTitle: p.title,
         curPos: pad2((idx < 0 ? 0 : idx) + 1) + ' / ' + total,
         presetCount: String(total),
@@ -229,6 +230,7 @@
       set({ auto: on });
     },
     mute: toggleMute,
+    track: function () { nudge('track', 2); nextTrack(); },
     more: function () { set({ page: st.page + 1 }); }
   };
   // M04: o ícone dá um passo de 2 px na direção
@@ -454,16 +456,25 @@
     try { ctx.resume(); } catch (e) {}
     stopMic();
     lastSwitch = performance.now();
-    if (hasTrack) {
-      playTrack().then(function () {
-        usingTrack = true;
-        set({ source: 'demo', msg: '' });
-      }, function () {
-        hasTrack = false; startSynth();
-      });
-      return;
-    }
-    startSynth();
+    // Espera a checagem das músicas: sem isso, um clique logo na abertura caía na faixa sintetizada.
+    probeTrack().then(function () {
+      if (hasTrack) playDemoTrack(); else startSynth();
+    });
+  }
+  function playDemoTrack() {
+    playTrack().then(function () {
+      usingTrack = true;
+      set({ source: 'demo', msg: '' });
+    }, function () {
+      hasTrack = false; startSynth();
+    });
+  }
+  // Troca para a próxima música (só com as músicas do Uppbeat tocando).
+  function nextTrack() {
+    if (!track || !usingTrack) return;
+    loadTrack((trackIdx + 1) % TRACKS.length);
+    track.play().catch(function () {});
+    render();
   }
   function startSynth() {
     usingTrack = false;
@@ -506,11 +517,14 @@
   }
 
   // As músicas só existem no site publicado; aqui só se confere se a primeira está lá.
+  var probing = null;
   function probeTrack() {
-    if (!window.fetch) return;
-    fetch(BASE + 'assets/audio/' + TRACKS[0].file, { method: 'HEAD' })
+    if (probing) return probing;
+    if (!window.fetch) return (probing = Promise.resolve());
+    probing = fetch(BASE + 'assets/audio/' + TRACKS[0].file, { method: 'HEAD' })
       .then(function (r) { hasTrack = r.ok; })
       .catch(function () { hasTrack = false; });
+    return probing;
   }
 
   function startMic() {

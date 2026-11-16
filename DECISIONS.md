@@ -592,3 +592,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Sempre 4 + 4 slots:** preset com menos é completado com slots desligados (o motor desenha 4 de cada). O resto do slot (cor, espessura, `usedots`…) fica como veio.
 - **HUD:** linha `studio: live waves 2 · shapes 3`, lida do motor depois de cada carga, para o teste headless conferir o que ligou.
 - **Descartado:** escrever `baseVals` dos slots direto no runner (como o Básico); checar NaN nas saídas das ondas/formas (não realimentam a imagem como `zoom`/`rot`).
+
+## 2026-11-16 — Landing: trocar a música da demo (spec 019, pedido do usuário)
+- **Decisão:** botão de nota musical no console, ao lado do crédito, que passa para a próxima música do Uppbeat (mostra `1 / 2`); só aparece com as músicas tocando. O Tocar demo espera a checagem dos arquivos (`probeTrack` virou promessa reaproveitada), para a primeira música ser sempre a do Uppbeat ('24 Hrs In Tokyo') e não a sintetizada quando o clique vem logo na abertura.
+- **Descartado:** um menu com as faixas (mais peso no console para duas músicas); pôr a faixa sintetizada na rotação (ela é só reserva sem a chave).
+- **Canvas:** o botão também entrou no canvas da landing (`1794848714-486d`), com o crédito da música; lá o som continua a faixa sintetizada, porque as músicas não podem ser redistribuídas.

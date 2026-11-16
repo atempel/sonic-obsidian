@@ -36,6 +36,7 @@ Levar para `site/` a **linguagem de movimento da v3**, com os mesmos tokens e re
 - Tocar demo usa duas faixas do Uppbeat, em sequência: '24 Hrs In Tokyo' (Yawnathan) e 'Space Dancers' (2050). O crédito da faixa atual aparece no console, com link, e o crédito completo (com o código de licença) fica em "Built in the open"; o rótulo de fonte mostra o nome da faixa.
 - **Licença:** o Uppbeat permite conteúdo de site, mas proíbe oferecer o arquivo como download avulso. Por isso o repo guarda só a versão criptografada (`site-media/*.enc`, AAC 128k, openssl aes-256-cbc/pbkdf2), e o deploy do Pages decifra com o segredo `SITE_AUDIO_KEY`. O artifact de teste dos PRs não leva as músicas, e sem a chave a demo cai na faixa sintetizada.
 - A batida da música (graves acima da média recente) acende a marca, o coração e o ponto do console, como o kick da faixa sintetizada.
+- **Trocar a música (16/nov, pedido do usuário):** com as músicas do Uppbeat tocando, um botão de nota musical ao lado do crédito (`1 / 2`) passa para a próxima; ao fim de cada uma, segue a sequência. A demo sempre começa por uma música do Uppbeat: o Tocar demo espera a checagem dos arquivos, em vez de cair na faixa sintetizada quando o clique vem antes dela. A faixa sintetizada fica só como reserva (artifact de PR ou sem a chave).
 
 **P1**
 - **Teclado no palco:** com o foco no console, `←`/`→` trocam de preset, `R` alterna AUTO e `M` muta (como os atalhos do app). Sem atalho global na página.

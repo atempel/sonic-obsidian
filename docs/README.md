@@ -27,8 +27,23 @@
 | 013 | [Transições](specs/013-transicoes.md) | 2 |
 | 014 | [Texto sobre o visual e janela](specs/014-texto-sobre-visual-janela.md) | 2 |
 | 015 | [Expressividade](specs/015-expressividade.md) | 2 |
+| 016 | [Releases no GitHub e abertura do repositório](specs/016-releases-abertura.md) | abertura |
+| 017 | [Landing page no GitHub Pages](specs/017-landing-github-pages.md) | abertura |
+| 018 | [Microinterações da faixa e da gaveta](specs/018-microinteracoes-faixa.md) | 2 |
+| 019 | [Landing: refino de movimento e microinterações](specs/019-landing-refino-movimento.md) | abertura |
+| 020 | [Painel de atalhos (`?`) e busca com comandos](specs/020-painel-atalhos-comandos.md) | 2 |
+| 021 | [Migração para o Butterchurn 3 (WASM)](specs/021-migracao-butterchurn3.md) | 3 |
+| 022 | [Importar presets `.milk`](specs/022-importar-milk.md) | 3 |
+| 023 | [Coleções pelo Palco](specs/023-colecoes-no-palco.md) | 3 |
+| 024 | [Troca no beat e segurar visual](specs/024-troca-no-beat-segurar.md) | 3 |
+| 025 | [Suíte de testes no CI](specs/025-suite-testes-ci.md) | manutenção |
+| 026 | [Estúdio de presets (P0)](specs/026-estudio-presets-p0.md) | 3 |
+| 027 | [Estúdio de presets (P1)](specs/027-estudio-presets-p1.md) | 3 |
+| 028 | [Reação ao áudio e Normalizar áudio](specs/028-reatividade-ganho-automatico.md) | 3 |
+| 029 | [Atualização automática pelo GitHub Releases](specs/029-atualizacao-automatica.md) | 5 |
+| 030 | [Idiomas: inglês e português (Brasil)](specs/030-idiomas.md) | 3 |
 
-Estado de cada uma: [TASKS.md](../TASKS.md).
+Estado de cada uma: issues e milestones do GitHub ([TASKS.md](../TASKS.md) fica como índice histórico).
 
 ## Design
 | Onde | O que tem |
@@ -58,7 +73,7 @@ Estado de cada uma: [TASKS.md](../TASKS.md).
 |---|---|
 | [README.md](../README.md) · [README.pt-BR.md](../README.pt-BR.md) | Apresentação pública (inglês e português). |
 | [PROJECT.md](../PROJECT.md) | Visão geral e onde está cada coisa. |
-| [TASKS.md](../TASKS.md) | O que está sendo feito agora. |
+| [TASKS.md](../TASKS.md) | Índice histórico das tarefas (o estado vive nas issues do GitHub desde 13/nov). |
 | [DECISIONS.md](../DECISIONS.md) | Por que as coisas são como são, e o que foi descartado. |
 | [SESSIONS.md](../SESSIONS.md) | Diário das sessões de trabalho. |
 | [CONTEXT.md](../CONTEXT.md) | Convenções, restrições e vocabulário. |

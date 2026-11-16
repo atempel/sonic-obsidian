@@ -35,8 +35,8 @@ Um app desktop para Windows que:
 |---|---|---|
 | **0 — Spike** ✅ | Provar que loopback + Butterchurn funcionam no Electron | [spec 001](specs/001-spike-electron-butterchurn.md) |
 | **1 — Núcleo** ✅ | App usável sem UI elaborada, já sobre o núcleo de comandos | Presets por teclado, rotação, janela, ganho (specs 002–005) |
-| **2 — Interface v3** | O Sonic Obsidian de verdade | Palco, Biblioteca, busca, ajustes rápidos, Configurações, setup, persistência |
-| **3 — Fontes e presets** | Ouvir outras coisas e criar visuais próprios | Microfone, SoundCloud (se viável), importar `.milk`, Estúdio (arquivo de áudio adiado) |
+| **2 — Interface v3** ✅ | O Sonic Obsidian de verdade (v0.5.0) | Palco, Biblioteca, busca, ajustes rápidos, Configurações, setup, persistência |
+| **3 — Fontes e presets** 🔄 | Ouvir outras coisas e criar visuais próprios (v0.6.0 e v0.7.0 publicadas; v0.8.0 = Estúdio P1) | Microfone, SoundCloud (se viável), importar `.milk`, Estúdio (arquivo de áudio adiado) |
 | **4 — MCP** | Controle e criação pela IA do usuário | Servidor local, stdio + HTTP, escopos, ferramentas, registro de atividade |
 | **5 — Extras** | O que sobra para "terminar" | Rack/multi-monitor, beat/BPM, instalador, iniciar com o Windows |
 
@@ -84,7 +84,9 @@ Referência: [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md
 |---|---|
 | Modo Rack + multi-monitor | P1 |
 | Detecção de beat/BPM própria; trocar no beat | P1 |
-| Iniciar com o Windows, instalador, ícone | P2 |
+| Iniciar com o Windows, instalador, ícone | P2 (instalador e ícone na v0.5.0, spec 016) |
+| Atualização automática pelo GitHub Releases | ✅ v0.7.0 ([spec 029](specs/029-atualizacao-automatica.md)) |
+| Idiomas: inglês (fonte) e português (Brasil) | ✅ v0.7.0 ([spec 030](specs/030-idiomas.md)) |
 | Camadas próprias sobre o Butterchurn (barras/osciloscópio do Python) | P2 |
 | Seleção de dispositivo de saída (investigar) | P2 |
 
