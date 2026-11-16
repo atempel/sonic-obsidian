@@ -266,7 +266,7 @@ const studioTexts = () => {
   }
   return out
 }
-const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h')]
+const clippedStudio = () => [...document.querySelectorAll('.studio button, .studio .cstat, .studio .chip, .studio .ed-label span, .studio .panel-h h2, .studio .panel-h .note, .studio .st-foot span, .studio .st-ask label, .studio .st-ask p, .studio .probs-h, .studio .grp h3, .studio .ctl-h label, .studio .ctl .switch span, .studio .ctl select')]
   .filter(e => e.offsetParent && !e.classList.contains('vh') && e.scrollWidth > e.clientWidth + 1).map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
 async function checkStudio(b, lang) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
@@ -284,6 +284,9 @@ async function checkStudio(b, lang) {
   const waitStatus = async (re, ms = 6000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(await status())) return true; await p.waitForTimeout(50) } return false }
   const okRe = lang === 'en' ? /^Compiled$/ : /^Compilado$/
   const compiled = await waitStatus(okRe)
+  // Abre no Básico (027): o que corta ali é medido antes de ir às Equações (Ctrl+2).
+  const cutBasic = await p.evaluate(clippedStudio)
+  await p.keyboard.press('Control+2')
   await p.fill('.studio .ed-ta >> nth=1', 'zoom = 1.01;\nrot = sin(time;')
   const errRe = lang === 'en' ? /^1 error$/ : /^1 erro$/
   const errored = await waitStatus(errRe)
@@ -292,7 +295,7 @@ async function checkStudio(b, lang) {
   const title = await p.inputValue('#studio-name')
   await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
   const texts = await p.evaluate(studioTexts)
-  const cut = await p.evaluate(clippedStudio)
+  const cut = cutBasic.concat(await p.evaluate(clippedStudio))
   const logs = await p.evaluate(() => window.__logs)
   await p.close()
   return { compiled, errored, err, foot, title, texts, cut, hud, logs }

@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-16 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/027-abas-basico`
+**Fez:** Passo 4 da `rodada` (bloco v0.7.0 em #121 sem comentário do usuário; nenhum PR aberto; v0.8.0 com a #75 `ready`): #75 reivindicada, **fatia 1 da 027** (abas e Básico). Design checado: o artefato está em `1794680346-fb12` (espelho em `598c`); a página nova `Estúdio completo (027).html` é igual à `Estúdio.html` do espelho, com uma nota dizendo que o layout virou a camada sobre o Palco (como o P0 já faz). Abas Básico/Equações com ARIA, `Ctrl+1/2`, setas, `Home`/`End`; Básico com os 18 parâmetros do protótipo (sliders, switches, forma da onda, amostra de cor), valor gravado direto no runner do Butterchurn sem recarregar (`PresetVisualizer.tweakBase`; sem ele, recompila), salvo no `baseVals`. Teste novo `027-estudio-basico` (21/21); `026-estudio` (52/52) e `030-idiomas` (97/97, agora mede corte no Básico) ajustados. DECISIONS e DIVERGENCIAS 2026-11-16.
+**Deixou em:** PR desta branch, sem `Closes` (a #75 só fecha na última fatia); #75 volta a `ready` para a fatia 2 (Ondas e Formas). Não verificado: o visual mudando enquanto arrasta, no Windows (vai para o bloco v0.8.0). O espelho do design segue em `598c` (issue `backlog` aberta para sincronizar com `fb12`).
+
 ### 2026-11-16 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/027-perguntas`
 **Fez:** Passo 5 da `rodada` (bloco v0.7.0 esperando o teste do usuário em #121, sem comentário dele; nenhum PR aberto; nada `ready`): planejou a `backlog` mais antiga, #75 (spec 027, Estúdio P1). Fechou as 4 perguntas da spec como `agent-decided` (exportar sem shaders com aviso; versões em arquivo inteiro, até 50; histórico só na pasta do preset; ordem das fatias mantida, um PR por fatia) e registrou em DECISIONS. Criou o milestone v0.8.0.
 **Deixou em:** PR desta branch (só docs). #75 em `ready` + `agent-decided`, milestone v0.8.0. Próxima rodada: mergear este PR e começar a fatia 1 da 027 (abas e Básico; checar o design `42d3` antes). Nada verificado no Windows (não houve código).

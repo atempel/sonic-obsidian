@@ -519,6 +519,13 @@ async function start(): Promise<void> {
         s.applied = true
         viz.load(p, 'crossfade', 0.4).catch((err: unknown) => window.so.log(`studio: version failed to load: ${err instanceof Error ? err.message : String(err)}`))
       },
+      tweak: (key, value) => {
+        const got = viz.tweakBase(key, value)
+        if (got === null) return false
+        s.applied = true
+        state.studio = `studio: live ${key} = ${got.toFixed(3)}`
+        return true
+      },
       levels: () => {
         const v = audioVals()
         return v ? [v[0]!, v[1]!, v[2]!] : null
