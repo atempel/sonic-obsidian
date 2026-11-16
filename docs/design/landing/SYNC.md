@@ -5,8 +5,8 @@ Espelho **somente leitura** do canvas do Claude Design. Não edite à mão: mude
 | Campo | Valor |
 |---|---|
 | Canvas | https://claude.ai/artifact/77UgsmUowPneiFTfduxF2L |
-| Versão sincronizada | `1794165992-cb8e` |
-| Sincronizado em | 2026-11-08 |
+| Versão sincronizada | `1794846713-386e` |
+| Sincronizado em | 2026-11-16 |
 | Por | Claude (chat, projeto "Audio Visualizer") |
 
 ## Mapa de arquivos (canvas → repo)
@@ -17,6 +17,6 @@ Espelho **somente leitura** do canvas do Claude Design. Não edite à mão: mude
 | Arquivo | sha256 |
 |---|---|
 | `prototype/canvas.json` | `da9e4cb73164` |
-| `prototype/Main.dc.html` | `77d1ae29510c` |
-| `prototype/MainPT.dc.html` | `8c80d8d93932` |
+| `prototype/Main.dc.html` | `1d93f29417ee` |
+| `prototype/MainPT.dc.html` | `3a42f60ada7c` |
 | `prototype/SocialCard.dc.html` | `1d7ea1fd48af` |
