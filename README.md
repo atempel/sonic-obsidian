@@ -42,7 +42,7 @@ Sonic Obsidian is a desktop app that turns the audio you choose to play — Spot
 Under the hood it runs [Butterchurn](https://github.com/jberg/butterchurn), a WebGL 2 implementation of MilkDrop 2, with its library of community presets. On top of that sits the Sonic Obsidian interface: a quiet, exact shell around something alive.
 
 > [!NOTE]
-> **Status:** in active development. Phase 2 (the full interface) is done; the current version is **v0.6.0**. The code is MIT-licensed.
+> **Status:** in active development. Phase 2 (the full interface) is done and Phase 3 (sources and presets) is under way; the current version is **v0.7.0**, and the installed app now updates itself. The code is MIT-licensed.
 >
 > **Download (Windows 10/11, x64):** [installer](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (per user, no admin rights) · [portable zip](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [all releases](https://github.com/atempel/sonic-obsidian/releases). The app is not code-signed: if SmartScreen warns, click **More info → Run anyway**.
 
@@ -95,12 +95,17 @@ Every preset is someone's work. The preset name carries its authors, and the app
 - **Quick search and Library.** `/` or `Ctrl+K` finds any preset by name or author. The Library drawer (`L`) has tabs, favorites and recents.
 - **Transitions you choose.** Pick the transition type and duration, for manual changes and for auto-rotation separately. `Shift` on any change makes a hard cut.
 - **Auto-rotation** with an adjustable interval.
-- **Expressiveness.** `+` / `−` set how strongly the visual reacts; `X` cycles its character and `Shift+X` its memory. Input gain adapts on its own.
+- **Switch on the beat.** Change presets every N bars of the music; `Enter` holds the visual you like and `Shift+Enter` lets it rest without reacting.
+- **Expressiveness.** `+` / `−` set how strongly the visual reacts; `X` cycles its character and `Shift+X` its memory (four modes, including Live for steady tracks). The visual memory learns from sound only, and real silence means no pulsing.
+- **Normalize audio.** Optional automatic gain so quiet and loud tracks move the visuals alike, with the live gain shown in Quick settings. It never changes what you hear.
+- **Your own presets.** Import `.milk` files and organize collections right from the Stage. The Preset Studio (`E`) edits a preset's equations with a live preview and saves it as yours, keeping the original credit.
+- **English and Portuguese (Brazil).** The app follows the Windows language on first launch; switch any time in Settings › General › Language, with no restart.
+- **Automatic updates.** The installed app checks GitHub Releases once a day, downloads in the background and asks before restarting to update. Turn it off in Settings › About › Updates. The portable zip only tells you a new version exists.
 - **Silence state.** When nothing is playing, the app says so instead of showing a frozen frame.
-- **Persistence.** Settings and library survive restarts.
-- **Diagnostics.** `Ctrl+Shift+D` shows a debug HUD (fps, memory, audio); a log file records crashes and GPU events.
+- **Persistence.** Settings and library survive restarts and updates.
+- **Diagnostics.** `Ctrl+Shift+D` shows a debug HUD (fps, memory, audio levels, reaction); a log file records crashes and GPU events.
 
-**Coming next** — first-run setup and diagnostics, performance per preset, audio files and microphone as sources, importing and creating `.milk` presets in a Studio, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
+**Coming next** — the full Preset Studio (parameters, waves and shapes, shaders, version history, `.milk` export, new presets from scratch), the microphone as a source, a speed control for the visual, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
 
 ## Keyboard
 
@@ -112,16 +117,19 @@ Every preset is someone's work. The preset name carries its authors, and the app
 | `B` / `Shift+B` | Cycle the transition type |
 | `↑` / `↓` | Transition duration (0.25 s to 8 s) |
 | `R` | Auto-rotation on/off |
+| `Enter` / `Shift+Enter` | Hold the visual / rest (visual without audio) |
 | `Ctrl+,` | Settings |
 | `,` | Quick settings (gain, rotation, transitions, expressiveness, text over the visual) |
 | `+` / `−` / `0` | Expressiveness up / down / reset |
 | `X` / `Shift+X` | Character / memory of the reaction |
 | `/` or `Ctrl+K` | Quick search |
 | `L` | Library |
-| `F` | Fullscreen |
+| `E` | Preset Studio |
+| `F` or `F11` | Fullscreen |
 | `T` | Clean mode (no text over the visual) |
 | `H` | Hide the interface now |
 | `Esc` | Close what is open, or leave fullscreen |
+| `Ctrl+W` | Close the app |
 | `?` | All shortcuts (searchable) |
 | `Ctrl+Shift+D` | Debug HUD |
 | `Ctrl+Shift+L` | Open the log folder |
@@ -146,18 +154,21 @@ The app is built with Electron, electron-vite and TypeScript. The interface over
 npm ci            # install dependencies
 npm run typecheck # type-check main and renderer
 npm run build     # compile to out/
+npm run test:ui   # headless interface and state tests (after npm run build)
 npm run dist:win  # build + portable Windows folder in release/win-unpacked/
 npm run dev       # run with hot reload (needs a desktop session)
 ```
 
-System audio capture uses Chromium's loopback, which only exists on Windows, so the app has to run on Windows to be tested for real. Every push runs [`build-windows.yml`](.github/workflows/build-windows.yml), which type-checks on Ubuntu and builds a portable app on `windows-latest`, published as the `sonic-obsidian-win-<sha>` artifact.
+System audio capture uses Chromium's loopback, which only exists on Windows, so the app has to run on Windows to be tested for real. Every pull request that touches the app runs [`build-windows.yml`](.github/workflows/build-windows.yml): type-check and headless tests on Ubuntu. The Windows build (the `sonic-obsidian-win-<sha>` artifact, plus a performance pass on 20 fixed presets) runs only with the `build-windows` label or by hand. Releases are built by [`release.yml`](.github/workflows/release.yml), which attaches the installer, the portable zip, checksums and the files the updater needs.
+
+Interface text never goes straight into a component: every string is a key in `src/renderer/src/i18n/en.ts` (English, the source) with its translation in `pt-BR.ts`; a missing key fails the type-check.
 
 ### How it works
 
 ```mermaid
 flowchart LR
   A[System playback] -->|Windows loopback| B[Main process<br/>display-media handler]
-  B --> C[AudioContext<br/>gain · expressiveness]
+  B --> C[AudioContext<br/>gain · normalize · expressiveness]
   C --> D[Butterchurn<br/>WebGL 2]
   D --> E[Canvas]
   F[Keyboard · UI] --> G[Command core]
@@ -172,13 +183,15 @@ Keyboard, interface and, later, MCP are all clients of one **command core** (`pr
 
 ```
 src/
-  main/        Electron main process: window, loopback handler, storage, log
+  main/        Electron main process: window, loopback handler, storage, .milk converter, updater, log
   preload/     narrow API exposed to the page as window.so
-  renderer/    Butterchurn, audio graph, command core and the Preact overlay
+  renderer/    Butterchurn, audio graph, command core, Preact overlay and i18n (en, pt-BR)
+tests/         headless interface tests and the Windows performance pass
+site/          landing page (GitHub Pages)
 docs/
   PRD.md       product and roadmap (anchor document)
   architecture.md
-  specs/       one spec per feature (001–015 so far)
+  specs/       one spec per feature (001–030 so far)
   design/      interface: v3 prototype mirror, explorations, moodboard
   brand/       logo files
   research/    technical research (MilkDrop, FFT, effects)
@@ -189,7 +202,7 @@ The documentation index is in [docs/README.md](docs/README.md) (in Portuguese).
 
 ### How the project is built
 
-Each feature starts as a spec in [`docs/specs/`](docs/specs/), becomes an entry in [TASKS.md](TASKS.md) and a GitHub issue, and lands through a pull request. Decisions and what was discarded live in [DECISIONS.md](DECISIONS.md); a log of every working session in [SESSIONS.md](SESSIONS.md). Code is written with [Claude Code](https://claude.com/claude-code), and the interface is designed in Claude Design and mirrored in [`docs/design/v3/`](docs/design/v3/README.md). The structure follows [workspace//kit](https://github.com/atempel/workspace-kit).
+Each feature starts as a spec in [`docs/specs/`](docs/specs/), becomes a GitHub issue and lands through a pull request. Work is tracked in [issues and milestones](https://github.com/atempel/sonic-obsidian/milestones) (one milestone per release); a scheduled cycle moves it forward, and a release only ships after the maintainer tests the whole block on Windows. Decisions and what was discarded live in [DECISIONS.md](DECISIONS.md); a log of every working session in [SESSIONS.md](SESSIONS.md). Code is written with [Claude Code](https://claude.com/claude-code), and the interface is designed in Claude Design and mirrored in [`docs/design/v3/`](docs/design/v3/README.md). The structure follows [workspace//kit](https://github.com/atempel/workspace-kit).
 
 ## Roadmap
 
@@ -198,11 +211,11 @@ Each feature starts as a spec in [`docs/specs/`](docs/specs/), becomes an entry 
 | 0 — Spike | Prove loopback + Butterchurn in Electron | Done |
 | 1 — Core | Presets by keyboard, rotation, window, input signal | Done |
 | 2 — Interface v3 | Stage, Library, search, transitions, settings, setup, shortcuts | Done (v0.5.0) |
-| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | In progress (v0.6.0: `.milk` import, Studio P0, beat switching, audio reaction) |
+| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | In progress (v0.6.0: `.milk` import, Studio P0, beat switching, audio reaction · v0.7.0: English/Portuguese, automatic updates · next, v0.8.0: full Studio) |
 | 4 — MCP | Live control and preset authoring from your AI tool | Planned |
-| 5 — Extras | Multi-monitor rack, beat/BPM, installer, start with Windows | Planned |
+| 5 — Extras | Multi-monitor rack, beat/BPM, installer, start with Windows | Planned (installer shipped in v0.5.0, automatic updates in v0.7.0) |
 
-Details in [docs/PRD.md](docs/PRD.md); current work in [TASKS.md](TASKS.md).
+Details in [docs/PRD.md](docs/PRD.md); current work in the [milestones](https://github.com/atempel/sonic-obsidian/milestones).
 
 ## Credits
 
@@ -222,5 +235,5 @@ Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md). Found a security issue? S
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
-  <sub>Made with ♥ in São Paulo by <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
+  <sub>Made with ♥ in Brazil by <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
 </p>

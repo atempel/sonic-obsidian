@@ -42,7 +42,7 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está pronta; a versão atual é a **v0.5.0**. O código está sob a licença MIT.
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está pronta e a fase 3 (fontes e presets) está em andamento; a versão atual é a **v0.7.0**, e o app instalado agora se atualiza sozinho. O código está sob a licença MIT.
 >
 > **Download (Windows 10/11, x64):** [instalador](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (por usuário, sem pedir admin) · [zip portátil](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [todas as versões](https://github.com/atempel/sonic-obsidian/releases). O app não tem assinatura de código: se o SmartScreen avisar, clique em **Mais informações → Executar assim mesmo**.
 
@@ -95,12 +95,17 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 - **Busca rápida e Biblioteca.** `/` ou `Ctrl+K` encontra qualquer preset por nome ou autor. A gaveta da Biblioteca (`L`) tem abas, favoritos e recentes.
 - **Transições à sua escolha.** Escolha o tipo e a duração da transição, separadamente para trocas manuais e para a rotação automática. `Shift` em qualquer troca faz um corte seco.
 - **Rotação automática** com intervalo ajustável.
-- **Expressividade.** `+` / `−` definem a intensidade da reação do visual; `X` alterna o Caráter e `Shift+X` a Memória. O ganho de entrada se adapta sozinho.
+- **Troca no beat.** Muda de preset a cada N compassos da música; `Enter` segura o visual de que você gostou e `Shift+Enter` o deixa em Respiro, sem reagir.
+- **Expressividade.** `+` / `−` definem a intensidade da reação do visual; `X` alterna o Caráter e `Shift+X` a Memória (quatro modos, incluindo o Ao vivo para faixas constantes). A Memória aprende só com o som, e silêncio de verdade não pulsa.
+- **Normalizar áudio.** Ganho automático opcional para que faixas baixas e altas movam o visual por igual, com o ganho ao vivo nos Ajustes rápidos. Nunca muda o que você ouve.
+- **Seus próprios presets.** Importe arquivos `.milk` e organize coleções direto do Palco. O Estúdio de presets (`E`) edita as equações de um preset com prévia ao vivo e salva como seu, mantendo o crédito original.
+- **Inglês e português (Brasil).** No primeiro uso o app segue o idioma do Windows; troque quando quiser em Configurações › Geral › Idioma, sem reiniciar.
+- **Atualização automática.** O app instalado consulta o GitHub Releases uma vez por dia, baixa em segundo plano e pergunta antes de reiniciar para atualizar. Dá para desligar em Configurações › Sobre › Atualizações. O zip portátil só avisa que há versão nova.
 - **Estado de silêncio.** Quando nada está tocando, o app avisa em vez de mostrar um quadro congelado.
-- **Persistência.** Configurações e biblioteca sobrevivem ao reinício.
-- **Diagnóstico.** `Ctrl+Shift+D` mostra um HUD de depuração (fps, memória, áudio); um arquivo de log registra travamentos e eventos da GPU.
+- **Persistência.** Configurações e biblioteca sobrevivem ao reinício e às atualizações.
+- **Diagnóstico.** `Ctrl+Shift+D` mostra um HUD de depuração (fps, memória, níveis de áudio, reação); um arquivo de log registra travamentos e eventos da GPU.
 
-**Próximos passos** — configuração do primeiro uso e diagnóstico, desempenho por preset, arquivos de áudio e microfone como fontes, importação e criação de presets `.milk` em um Estúdio, e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
+**Próximos passos** — o Estúdio completo (parâmetros, ondas e formas, shaders, histórico de versões, exportar `.milk`, preset novo do zero), o microfone como fonte, um controle de velocidade do visual e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
 
 ## Teclado
 
@@ -112,16 +117,19 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 | `B` / `Shift+B` | Alterna o tipo de transição |
 | `↑` / `↓` | Duração da transição (0,25 s a 8 s) |
 | `R` | Liga/desliga a rotação automática |
+| `Enter` / `Shift+Enter` | Segura o visual / Respiro (visual sem áudio) |
 | `Ctrl+,` | Configurações |
 | `,` | Ajustes rápidos (ganho, rotação, transições, Expressividade, texto sobre o visual) |
 | `+` / `−` / `0` | Aumenta / diminui / restaura a Expressividade |
 | `X` / `Shift+X` | Caráter / Memória da reação |
 | `/` ou `Ctrl+K` | Busca rápida |
 | `L` | Biblioteca |
-| `F` | Tela cheia |
+| `E` | Estúdio de presets |
+| `F` ou `F11` | Tela cheia |
 | `T` | Modo limpo (sem texto sobre o visual) |
 | `H` | Esconde a interface agora |
 | `Esc` | Fecha o que estiver aberto, ou sai da tela cheia |
+| `Ctrl+W` | Fecha o app |
 | `?` | Todos os atalhos (com filtro) |
 | `Ctrl+Shift+D` | HUD de depuração |
 | `Ctrl+Shift+L` | Abre a pasta de logs |
@@ -146,18 +154,21 @@ O app é feito com Electron, electron-vite e TypeScript. A camada de interface u
 npm ci            # instala as dependências
 npm run typecheck # checa os tipos de main e renderer
 npm run build     # compila para out/
+npm run test:ui   # testes headless de interface e estados (depois do npm run build)
 npm run dist:win  # build + pasta portátil do Windows em release/win-unpacked/
 npm run dev       # roda com hot reload (precisa de uma sessão de desktop)
 ```
 
-A captura de áudio do sistema usa o loopback do Chromium, que só existe no Windows. Por isso o app precisa rodar no Windows para ser testado de verdade. Cada push executa o [`build-windows.yml`](.github/workflows/build-windows.yml), que checa os tipos no Ubuntu e gera um app portátil no `windows-latest`, publicado como o artifact `sonic-obsidian-win-<sha>`.
+A captura de áudio do sistema usa o loopback do Chromium, que só existe no Windows. Por isso o app precisa rodar no Windows para ser testado de verdade. Todo pull request que mexe no app executa o [`build-windows.yml`](.github/workflows/build-windows.yml): checagem de tipos e testes headless no Ubuntu. O build do Windows (o artifact `sonic-obsidian-win-<sha>`, mais uma passagem de desempenho em 20 presets fixos) só roda com a label `build-windows` ou por disparo manual. As releases saem do [`release.yml`](.github/workflows/release.yml), que anexa o instalador, o zip portátil, os checksums e os arquivos de que o atualizador precisa.
+
+Texto de interface nunca vai direto no componente: cada texto é uma chave em `src/renderer/src/i18n/en.ts` (inglês, a fonte) com a tradução em `pt-BR.ts`; chave faltando quebra a checagem de tipos.
 
 ### Como funciona
 
 ```mermaid
 flowchart LR
   A[Reprodução do sistema] -->|loopback do Windows| B[Processo main<br/>handler de display-media]
-  B --> C[AudioContext<br/>ganho · expressividade]
+  B --> C[AudioContext<br/>ganho · normalizar · expressividade]
   C --> D[Butterchurn<br/>WebGL 2]
   D --> E[Canvas]
   F[Teclado · Interface] --> G[Núcleo de comandos]
@@ -172,13 +183,15 @@ Teclado, interface e, mais adiante, o MCP são todos clientes de um único **nú
 
 ```
 src/
-  main/        processo main do Electron: janela, handler de loopback, armazenamento, log
+  main/        processo main do Electron: janela, handler de loopback, armazenamento, conversor .milk, atualizador, log
   preload/     API estreita exposta à página como window.so
-  renderer/    Butterchurn, grafo de áudio, núcleo de comandos e o overlay em Preact
+  renderer/    Butterchurn, grafo de áudio, núcleo de comandos, overlay em Preact e idiomas (en, pt-BR)
+tests/         testes headless de interface e a passagem de desempenho no Windows
+site/          landing page (GitHub Pages)
 docs/
   PRD.md       produto e roadmap (documento âncora)
   architecture.md
-  specs/       uma spec por feature (001–015 até agora)
+  specs/       uma spec por feature (001–030 até agora)
   design/      interface: espelho do protótipo v3, explorações, moodboard
   brand/       arquivos do logo
   research/    pesquisa técnica (MilkDrop, FFT, efeitos)
@@ -189,7 +202,7 @@ O índice da documentação está em [docs/README.md](docs/README.md).
 
 ### Como o projeto é feito
 
-Cada feature começa como uma spec em [`docs/specs/`](docs/specs/), vira uma entrada no [TASKS.md](TASKS.md) e uma issue no GitHub, e chega por pull request. As decisões e o que foi descartado ficam no [DECISIONS.md](DECISIONS.md); o registro de cada sessão de trabalho fica no [SESSIONS.md](SESSIONS.md). O código é escrito com o [Claude Code](https://claude.com/claude-code), e a interface é desenhada no Claude Design e espelhada em [`docs/design/v3/`](docs/design/v3/README.md). A estrutura segue o [workspace//kit](https://github.com/atempel/workspace-kit).
+Cada feature começa como uma spec em [`docs/specs/`](docs/specs/), vira uma issue no GitHub e chega por pull request. O trabalho é acompanhado em [issues e milestones](https://github.com/atempel/sonic-obsidian/milestones) (um milestone por release); um ciclo agendado o faz andar, e uma release só sai depois que o mantenedor testa o bloco inteiro no Windows. As decisões e o que foi descartado ficam no [DECISIONS.md](DECISIONS.md); o registro de cada sessão de trabalho fica no [SESSIONS.md](SESSIONS.md). O código é escrito com o [Claude Code](https://claude.com/claude-code), e a interface é desenhada no Claude Design e espelhada em [`docs/design/v3/`](docs/design/v3/README.md). A estrutura segue o [workspace//kit](https://github.com/atempel/workspace-kit).
 
 ## Roadmap
 
@@ -198,11 +211,11 @@ Cada feature começa como uma spec em [`docs/specs/`](docs/specs/), vira uma ent
 | 0 — Spike | Provar loopback + Butterchurn no Electron | Concluída |
 | 1 — Núcleo | Presets pelo teclado, rotação, janela, sinal de entrada | Concluída |
 | 2 — Interface v3 | Palco, Biblioteca, busca, transições, configurações, setup, atalhos | Feita (v0.5.0) |
-| 3 — Fontes e presets | Microfone, arquivos de áudio, importação de `.milk`, Estúdio de presets | Planejada |
+| 3 — Fontes e presets | Microfone, arquivos de áudio, importação de `.milk`, Estúdio de presets | Em andamento (v0.6.0: importar `.milk`, Estúdio P0, troca no beat, reação ao áudio · v0.7.0: inglês/português, atualização automática · próxima, v0.8.0: Estúdio completo) |
 | 4 — MCP | Controle ao vivo e criação de presets pela sua ferramenta de IA | Planejada |
-| 5 — Extras | Rack multi-monitor, beat/BPM, instalador, iniciar com o Windows | Planejada |
+| 5 — Extras | Rack multi-monitor, beat/BPM, instalador, iniciar com o Windows | Planejada (instalador na v0.5.0, atualização automática na v0.7.0) |
 
-Detalhes no [docs/PRD.md](docs/PRD.md); o trabalho atual está no [TASKS.md](TASKS.md).
+Detalhes no [docs/PRD.md](docs/PRD.md); o trabalho atual está nos [milestones](https://github.com/atempel/sonic-obsidian/milestones).
 
 ## Créditos
 
@@ -222,5 +235,5 @@ Quer ajudar? Leia o [CONTRIBUTING.md](CONTRIBUTING.md) (em inglês). Achou um pr
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
-  <sub>Feito com ♥ em São Paulo por <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
+  <sub>Feito com ♥ no Brasil por <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
 </p>

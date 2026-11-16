@@ -596,4 +596,4 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 ## 2026-11-16 — Landing: trocar a música da demo (spec 019, pedido do usuário)
 - **Decisão:** botão de nota musical no console, ao lado do crédito, que passa para a próxima música do Uppbeat (mostra `1 / 2`); só aparece com as músicas tocando. O Tocar demo espera a checagem dos arquivos (`probeTrack` virou promessa reaproveitada), para a primeira música ser sempre a do Uppbeat ('24 Hrs In Tokyo') e não a sintetizada quando o clique vem logo na abertura.
 - **Descartado:** um menu com as faixas (mais peso no console para duas músicas); pôr a faixa sintetizada na rotação (ela é só reserva sem a chave).
-- **Desvio do canvas:** o botão ainda não existe no canvas da landing; fica registrado no PR (regra da 017).
+- **Canvas:** o botão também entrou no canvas da landing (`1794848714-486d`), com o crédito da música; lá o som continua a faixa sintetizada, porque as músicas não podem ser redistribuídas.

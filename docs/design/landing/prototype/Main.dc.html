@@ -164,6 +164,12 @@ Download for Windows
 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8080A0" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></svg>
 <canvas ref="{{ setMeter }}" width="320" height="14" aria-hidden="true" style="flex: 1 1 auto; min-width: 0; height: 10px; display: block"></canvas>
 </div>
+<sc-if value="{{ isDemo }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<p style="margin: 0; flex: 1 1 auto; min-width: 0; font-size: 11px; line-height: 1.45; color: #8080A0">Music: <a href="{{ trackUrl }}" rel="noopener" style="color: #A6A6BE">{{ trackCredit }}</a></p>
+<button class="so-btn" type="button" onClick="{{ onTrack }}" aria-label="Next track" title="Next track" style="padding: 0 12px; flex: 0 0 auto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg><span class="so-mono" style="font-size: 12px">{{ trackPos }}</span></button>
+</div>
+</sc-if>
 <sc-if value="{{ engineFailed }}" hint-placeholder-val="{{ false }}">
 <p style="margin: 0; font-size: 13px; color: #FF8FB0">This browser could not start WebGL 2, so the stage stays dark here. The desktop app does not depend on your browser.</p>
 </sc-if>
@@ -494,7 +500,12 @@ class Component extends DCLogic {
     this.lvl = 0;
     this.peak = 0;
     this.lastSwitch = 0;
-    this.state = { cur: this.curated[0], source: 'idle', auto: true, muted: false, msg: '', page: 0, copied: false, failed: false, total: 98 };
+    this.state = { cur: this.curated[0], source: 'idle', auto: true, muted: false, msg: '', page: 0, copied: false, failed: false, total: 98, trk: 0 };
+    // Músicas da demo (Uppbeat, spec 019). No canvas o som é a faixa sintetizada; o site publicado toca as músicas.
+    this.tracks = [
+      { title: '24 Hrs In Tokyo', artist: 'Yawnathan', url: 'https://uppbeat.io/c/yawnathan' },
+      { title: 'Space Dancers', artist: '2050', url: 'https://uppbeat.io/c/2050-music' }
+    ];
 
     this.setCanvas = function (el) { self.canvas = el; };
     this.setMeter = function (el) { self.meter = el; };
@@ -514,6 +525,7 @@ class Component extends DCLogic {
     this.onShuffle = function () { self.shuffle(); };
     this.onAuto = function () { self.lastSwitch = performance.now(); self.setState({ auto: !self.state.auto }); };
     this.onMute = function () { self.toggleMute(); };
+    this.onTrack = function () { self.setState({ trk: (self.state.trk + 1) % self.tracks.length }); };
     this.onMore = function () { self.setState({ page: self.state.page + 1 }); };
     this.onCopy = function () {
       try { navigator.clipboard.writeText('winget install atempel.SonicObsidian'); } catch (e) {}
@@ -842,14 +854,17 @@ class Component extends DCLogic {
       setM1: this.setM1, setM2: this.setM2, setM3: this.setM3, setHeart: this.setHeart, setMark: this.setMark,
       isDemo: isDemo, notDemo: !isDemo, isMuted: !!st.muted, notMuted: !st.muted, isCopied: !!st.copied, notCopied: !st.copied,
       onDemo: this.onDemo, onMic: this.onMic, onNext: this.onNext, onPrev: this.onPrev, onShuffle: this.onShuffle,
-      onAuto: this.onAuto, onMute: this.onMute, onMore: this.onMore, onCopy: this.onCopy,
+      onAuto: this.onAuto, onMute: this.onMute, onMore: this.onMore, onCopy: this.onCopy, onTrack: this.onTrack,
+      trackCredit: '‘' + this.tracks[st.trk].title + '’ by ' + this.tracks[st.trk].artist + ' on Uppbeat',
+      trackUrl: this.tracks[st.trk].url,
+      trackPos: (st.trk + 1) + ' / ' + this.tracks.length,
       demoPressed: isDemo ? 'true' : 'false', micPressed: isMic ? 'true' : 'false',
       demoLabel: isDemo ? 'Stop demo' : 'Play demo',
       micLabel: isMic ? 'Stop mic' : 'Microphone',
       autoPressed: st.auto ? 'true' : 'false',
       soundPressed: st.muted ? 'false' : 'true',
       soundLabel: st.muted ? 'MUTED' : 'SOUND',
-      sourceLabel: isDemo ? 'DEMO · 122 BPM' : (isMic ? 'MIC · LIVE' : 'IDLE · PRESS PLAY'),
+      sourceLabel: isDemo ? 'DEMO · ' + this.tracks[st.trk].title.toUpperCase() : (isMic ? 'MIC · LIVE' : 'IDLE · PRESS PLAY'),
       curAuthor: p.author, curTitle: p.title,
       curPos: this.pad2((idx < 0 ? 0 : idx) + 1) + ' / ' + total,
       presetCount: String(total),
