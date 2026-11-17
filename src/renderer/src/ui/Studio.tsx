@@ -37,6 +37,11 @@ export interface StudioApi {
   levels(): [number, number, number] | null
   /** Grava e põe na biblioteca. Devolve o nome final (com "(2)" se já existia). */
   save(req: { preset: Preset; title: string; author: string; milk?: string }): Promise<{ name: string; id: string; meta: SoMineMeta }>
+  /**
+   * Renomear (027, fatia 9) o "meu" preset já salvo: só o título, sem versão nova. Devolve o nome
+   * final ("(2)" se outro preset já usa o nome); favoritos, coleções e recentes acompanham.
+   */
+  rename(title: string): Promise<{ name: string; id: string; meta: SoMineMeta }>
   /** Sai do Estúdio. `saved` = nome do último salvamento (vira o preset atual). */
   close(saved: string | null): void
   /** Troca o que está aberto pelo modelo do "Novo preset" (o Estúdio confirma antes o que não foi salvo). */
@@ -244,6 +249,9 @@ function Studio({ api }: { api: StudioApi }) {
   const [saved, setSaved] = useState<{ name: string; id: string; meta: SoMineMeta } | null>(api.mine ? { name: api.sourceName, ...api.mine } : null)
   const [title, setTitle] = useState(() => (api.mine ? api.sourceName : api.fresh ? t('studio.defaultTitle') : t('studio.remixOf', { name: originalCredit(api.sourceName).name.split(' - ').slice(1).join(' - ') || api.sourceName })))
   const [dirty, setDirty] = useState(false)
+  /** Nome editado num preset já salvo (027, fatia 9): salvar renomeia. Campo vazio = fica o nome atual. */
+  const renamed = !!saved && title.trim() !== '' && title.trim() !== saved.name
+  const unsaved = dirty || renamed
   const [askAuthor, setAskAuthor] = useState(false)
   const [authorDraft, setAuthorDraft] = useState('')
   const [escWarn, setEscWarn] = useState(false)
@@ -640,17 +648,33 @@ function Studio({ api }: { api: StudioApi }) {
       setAskAuthor(true)
       return
     }
-    if (!(await ready('toast.studio.fixErrors'))) return
+    // Só o nome mudou num preset já salvo: renomeia, sem versão nova (e sem depender da compilação).
+    const onlyRename = renamed && !dirty
+    if (!onlyRename && !(await ready('toast.studio.fixErrors'))) return
     const c = latest.current
     try {
-      const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
+      let cur = saved
+      if (saved && renamed) {
+        cur = await api.rename(title)
+        setSaved(cur)
+        setTitle(cur.name)
+      }
+      if (onlyRename && cur) {
+        setEscWarn(false)
+        showToast(t('toast.studio.renamed', { name: cur.name }), { force: true })
+        return
+      }
+      const name = (cur?.name ?? title.trim()) || t('studio.defaultTitle')
       const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author, milk: milkNow() })
       setSaved(r)
       setTitle(r.name)
       if (drawer) api.versions().then(setVersions, () => setVersions('error'))
       setDirty(false)
       setEscWarn(false)
-      showToast(saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }), { force: true })
+      showToast(
+        saved && renamed ? t('toast.studio.renamed', { name: r.name }) : saved ? t('toast.studio.saved') : t('toast.studio.savedNew', { name: r.name }),
+        { force: true }
+      )
     } catch (err) {
       // O main lança em inglês com código: a tela traduz, o log fica em inglês (spec 030, P1).
       api.log(`studio: save failed: ${mainErrorText(err)}`)
@@ -690,7 +714,7 @@ function Studio({ api }: { api: StudioApi }) {
   // ── Teclado: Ctrl+S, Ctrl+Enter, Esc ────────────────────
   const exit = (): void => {
     const now = performance.now()
-    if (dirty && !(escWarn && now - escAt.current < ESC_WINDOW_MS)) {
+    if (unsaved && !(escWarn && now - escAt.current < ESC_WINDOW_MS)) {
       escAt.current = now
       setEscWarn(true)
       showToast(t('toast.studio.unsaved'), { force: true })
@@ -702,7 +726,7 @@ function Studio({ api }: { api: StudioApi }) {
   const newAt = useRef(0)
   const newPreset = (): void => {
     const now = performance.now()
-    if (dirty && now - newAt.current >= ESC_WINDOW_MS) {
+    if (unsaved && now - newAt.current >= ESC_WINDOW_MS) {
       newAt.current = now
       showToast(t('toast.studio.unsavedNew'), { force: true })
       return
@@ -830,8 +854,7 @@ function Studio({ api }: { api: StudioApi }) {
             maxLength={200}
             spellcheck={false}
             autocomplete="off"
-            readOnly={!!saved}
-            title={saved ? t('studio.renameSoon') : undefined}
+            title={saved ? t('studio.renameTitle') : undefined}
             onInput={(e) => setTitle((e.target as HTMLInputElement).value)}
           />
           <div class="st-credit">{credit}</div>
@@ -956,7 +979,7 @@ function Studio({ api }: { api: StudioApi }) {
               {cmp && <span class="chip tl">{cmp.version ? t('studio.cmp.version', { time: verTime(cmp.version.savedAt) }) : t('studio.cmp.original')}</span>}
             </div>
             <div class="st-pane rmx" ref={rmxPane}>
-              <span class="chip tl">{dirty || !saved ? t(api.fresh || saved?.meta.basedOn === null ? 'studio.chip.new' : 'studio.chip.remix') : t('studio.chip.saved')}</span>
+              <span class="chip tl">{unsaved || !saved ? t(api.fresh || saved?.meta.basedOn === null ? 'studio.chip.new' : 'studio.chip.remix') : t('studio.chip.saved')}</span>
             </div>
             {stale && (
               <span class="chip tr warn">

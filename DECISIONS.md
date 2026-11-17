@@ -641,3 +641,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Título e crédito:** "Meu preset" (o padrão que já existia), crédito só do autor, sem "baseado em"; a prévia diz "Seu preset" em vez de "Seu remix". O "Comparar com o original" compara com o modelo. Sair sem salvar volta ao preset que tocava antes.
 - **Descartado:** modelo em JSON do Butterchurn (nasceria sem `.milk`); um modelo por estilo (fora da spec); atalho de teclado próprio (a lista de atalhos não tem tecla livre óbvia, e `E` já abre o Estúdio).
 
+## 2026-11-17 — Estúdio 027, fatia 9: Renomear (rodada, `agent-decided`)
+- **Onde:** no próprio campo do nome do Estúdio, como no protótipo (o campo é editável lá e o salvar usa o nome). Antes ele ficava só leitura depois do primeiro salvamento, com a dica "Renomear chega na próxima versão"; agora segue editável, com a dica "Digite outro nome e salve para renomear". Nome mudado conta como não salvo (a prévia sai de "Salvo" e o `Esc` avisa). Campo vazio não renomeia.
+- **Salvar só o nome não cria versão:** muda só o `title` do `meta.json` (`presets:renameMine`, pelo id; pasta, versões e `source.milk` ficam). Com nome e edição juntos, renomeia e grava a versão. Renomear não depende da compilação (o código salvo já compilou).
+- **O que acompanha:** favoritos, ocultos, recentes, coleções (na mesma posição), fps medido, último preset, favorito de abertura e o histórico do "Anterior" — o comando `library.renamePreset` troca o nome em todos de uma vez.
+- **Nome já usado** por outro preset (do pacote, importado ou meu) vira "<nome> (2)", a mesma regra do primeiro salvamento; o toast mostra o nome final.
+- **Descartado:** "Renomear" no menu da Biblioteca (o protótipo não desenha e o Estúdio já tem o campo); recusar nome repetido com erro (o primeiro salvamento já resolve com "(2)"); renomear a pasta (o id é a identidade; o nome é só o título).

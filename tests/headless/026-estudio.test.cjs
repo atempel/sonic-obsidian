@@ -147,7 +147,8 @@ function mainChecks() {
   ok('5b salvou um preset novo com meta e basedOn', !first.id && first.meta?.author === 'Alexandre' && first.meta?.basedOn?.name === c0, JSON.stringify(first.meta))
   ok('5c preset salvo leva a equação editada', String(first.preset?.frame_eqs_eel).includes('0.12*bass_att'))
   ok('5d crédito "por Alexandre · baseado em …"', /^por Alexandre · baseado em /.test(await page.$eval('.st-credit', e => e.textContent)))
-  ok('5e nome fica fixo depois de salvar', await page.$eval('#studio-name', e => e.readOnly))
+  // Desde a 027 (fatia 9) o nome segue editável: mudar e salvar renomeia (027-estudio-renomear).
+  ok('5e depois de salvar, o campo mostra o nome salvo', (await page.inputValue('#studio-name')) === first.meta?.title)
   ok('5f toast de salvo', (await text()).includes('salvo na biblioteca'))
   const saved = first.meta?.title
 

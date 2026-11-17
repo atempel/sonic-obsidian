@@ -88,6 +88,8 @@ contextBridge.exposeInMainWorld('so', {
     saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown>; milk?: string | null }): Promise<{ id: string; meta: MineMeta }> =>
       ipcRenderer.invoke('presets:saveMine', data),
     removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id)),
+    /** Renomear (spec 027, fatia 9): só o título; devolve o meta gravado. */
+    renameMine: (id: string, title: string): Promise<MineMeta> => ipcRenderer.invoke('presets:renameMine', String(id), String(title)),
     /** Histórico de um "meu" preset (spec 027, fatia 3), do mais novo para o mais antigo. */
     mineVersions: (id: string): Promise<MineVersion[]> => ipcRenderer.invoke('presets:mineVersions', String(id)),
     mineVersion: (id: string, n: number): Promise<Record<string, unknown>> => ipcRenderer.invoke('presets:mineVersion', String(id), Number(n)),

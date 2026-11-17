@@ -612,7 +612,7 @@ async function start(): Promise<void> {
       window.so.log(`studio: closed${saved ? ` with ${saved}` : ''}`)
       // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).
       if (saved) run('preset.play', { name: saved }, 'ui')
-      else if (s.applied && library.has(src)) run('preset.play', { name: src }, 'ui')
+      else if (s.applied && library.has(s.source)) run('preset.play', { name: s.source }, 'ui')
       rotation.restart(performance.now())
     }
     openStudio({
@@ -660,6 +660,26 @@ async function start(): Promise<void> {
         state.presetCount = library.count
         core.events.emit('stateChanged', { origin: 'ui' }) // Biblioteca e busca veem o novo
         return { name: finalName, id: r.id, meta: r.meta }
+      },
+      // Renomear (027, fatia 9): o título no disco, o nome na biblioteca e as referências (favoritos,
+      // coleções, recentes…) no core. Nome já usado por outro preset → "(2)", como no primeiro salvamento.
+      rename: async (title) => {
+        if (!mineRef) throw new Error('[invalid] no saved preset')
+        const from = mineRef.name
+        // A mesma limpeza do main (sem caracteres de controle; até 190, para o " (2)" caber nos 200 dele),
+        // para o nome livre escolhido aqui ser o gravado.
+        // eslint-disable-next-line no-control-regex
+        const want = title.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 190).trim()
+        if (!want || want === from) return { name: from, id: mineRef.id, meta: library.mineInfo(from)!.meta }
+        if (!window.so.presets.renameMine) throw new Error('[invalid] rename unavailable')
+        const meta = await window.so.presets.renameMine(mineRef.id, library.freeName(want))
+        const to = meta.title
+        if (!library.renameMine(from, to, meta)) throw new Error('[invalid] name already in use')
+        run('library.renamePreset', { from, to }, 'ui')
+        if (s.source === from) s.source = to
+        mineRef = { name: to, id: mineRef.id }
+        window.so.log(`studio: renamed ${from} to ${to}`)
+        return { name: to, id: mineRef.id, meta }
       },
       close,
       // Novo preset de dentro do Estúdio: fecha este (o Estúdio já confirmou o que não foi salvo) e abre o modelo.
