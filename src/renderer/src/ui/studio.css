@@ -37,6 +37,11 @@ body.studio-open .winctl { display: none !important; }
 .st-ask input:focus { outline: none; border-color: var(--violet-line); }
 .st-ask p { margin: 0; font-size: 12px; color: var(--text-2); }
 .st-ask-a { display: flex; justify-content: flex-end; gap: 6px; }
+.st-exp { width: 320px; }
+.st-exp h2 { margin: 0; font-size: 13px; font-weight: 600; }
+.st-exp .btn { justify-content: center; }
+.st-ask p.st-exp-warn { display: flex; gap: 6px; align-items: flex-start; color: var(--warn); }
+.st-exp-warn svg { flex: none; margin-top: 2px; }
 
 .st-main { display: grid; grid-template-columns: 58fr 42fr; min-height: 0; }
 .st-prev { display: flex; flex-direction: column; gap: 12px; padding: 16px; min-width: 0; min-height: 0; }

@@ -108,6 +108,25 @@ function registerStores(): void {
   // Código .milk (spec 027, fatia 6): a fonte de um importado (pelo nome) ou de um meu preset (pelo id).
   ipcMain.handle('presets:importedMilk', (_e, name: unknown) => readImportedMilk(name))
   ipcMain.handle('presets:mineMilk', (_e, id: unknown) => readMineMilk(id))
+  // Exportar (spec 027, fatia 7): o renderer manda o texto pronto e um nome sugerido; o caminho
+  // vem só do diálogo nativo. `.milk` até 256 KB (o que a importação aceita de volta), JSON até 2 MB.
+  ipcMain.handle('presets:exportFile', async (e, kind: unknown, name: unknown, text: unknown) => {
+    if (kind !== 'milk' && kind !== 'json') throw new Error('[invalid] bad export kind')
+    if (typeof text !== 'string') throw new Error('[invalid] bad export text')
+    if (text.length > (kind === 'milk' ? MAX_BYTES : 2_000_000)) throw new Error(`[too-big] file larger than ${kind === 'milk' ? '256 KB' : '2 MB'}`)
+    const base = (typeof name === 'string' ? name : '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '').replace(/[. ]+$/, '').trim().slice(0, 120) || 'preset'
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = {
+      title: mt(kind === 'milk' ? 'export.milkTitle' : 'export.jsonTitle'),
+      defaultPath: `${base}.${kind}`,
+      filters: [kind === 'milk' ? { name: mt('milk.filter'), extensions: ['milk'] } : { name: mt('export.jsonFilter'), extensions: ['json'] }]
+    }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true }
+    await writeFile(res.filePath, text, 'utf8')
+    log('main', `studio: exported ${kind} (${text.length} chars)`)
+    return { ok: true, name: basename(res.filePath) }
+  })
 }
 
 /**

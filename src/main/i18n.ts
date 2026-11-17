@@ -13,7 +13,10 @@ const en = {
   'collections.importTitle': 'Import collections',
   'collections.defaultFile': 'sonic-obsidian-collections.json',
   'milk.pickTitle': 'Import .milk presets',
-  'milk.filter': 'MilkDrop presets'
+  'milk.filter': 'MilkDrop presets',
+  'export.milkTitle': 'Export .milk',
+  'export.jsonTitle': 'Export Butterchurn JSON',
+  'export.jsonFilter': 'Butterchurn 3 preset'
 } as const
 
 type Key = keyof typeof en
@@ -22,7 +25,10 @@ const ptBR: Record<Key, string> = {
   'collections.importTitle': 'Importar coleções',
   'collections.defaultFile': 'sonic-obsidian-colecoes.json',
   'milk.pickTitle': 'Importar presets .milk',
-  'milk.filter': 'Presets MilkDrop'
+  'milk.filter': 'Presets MilkDrop',
+  'export.milkTitle': 'Exportar .milk',
+  'export.jsonTitle': 'Exportar JSON do Butterchurn',
+  'export.jsonFilter': 'Preset do Butterchurn 3'
 }
 
 /** `pt-*` → pt-BR; o resto → en (a mesma regra do renderer). */

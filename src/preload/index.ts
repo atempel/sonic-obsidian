@@ -93,7 +93,10 @@ contextBridge.exposeInMainWorld('so', {
     mineVersion: (id: string, n: number): Promise<Record<string, unknown>> => ipcRenderer.invoke('presets:mineVersion', String(id), Number(n)),
     /** Fonte .milk (spec 027, fatia 6): de um importado ou de um meu preset; `null` = não tem. */
     importedMilk: (name: string): Promise<string | null> => ipcRenderer.invoke('presets:importedMilk', String(name)),
-    mineMilk: (id: string): Promise<string | null> => ipcRenderer.invoke('presets:mineMilk', String(id))
+    mineMilk: (id: string): Promise<string | null> => ipcRenderer.invoke('presets:mineMilk', String(id)),
+    /** Exportar (spec 027, fatia 7): diálogo nativo no main; `canceled` = o usuário fechou o diálogo. */
+    exportFile: (kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }> =>
+      ipcRenderer.invoke('presets:exportFile', kind, String(name), String(text))
   },
   /** Atualização automática (spec 029): o main decide o que checar, baixar e abrir. */
   update: {
