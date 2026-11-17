@@ -55,10 +55,13 @@ interface Window {
       removeImported(name: string): Promise<void>
       pickMilk(): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }>
       listMine(): Promise<SoMineEntry[]>
-      saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: SoMineMeta }>
+      saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown>; milk?: string | null }): Promise<{ id: string; meta: SoMineMeta }>
       removeMine(id: string): Promise<void>
       mineVersions(id: string): Promise<SoMineVersion[]>
       mineVersion(id: string, n: number): Promise<Record<string, unknown>>
+      /** Fonte .milk (027, fatia 6); opcional no mock dos testes antigos. `null` = não tem. */
+      importedMilk?(name: string): Promise<string | null>
+      mineMilk?(id: string): Promise<string | null>
     }
     /** Opcional: os testes headless e o modo dev sem preload novo não têm. */
     update?: {

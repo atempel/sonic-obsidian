@@ -4,11 +4,12 @@ import type { Preset } from 'butterchurn'
 import type { Core } from '../core/commands'
 import { EQ_KEYS, type Block, type CompileResult, type MainBlock, type ShaderBlock, type SlotBlock, type StudioError, type StudioIssue } from '../studio/compile'
 import { SHAPE_PARAMS, SLOT_INDEXES, WAVE_PARAMS, slotBlockTitle, slotOfBlock, slotOn, slotValue, slotsOf, writeSlots, type SlotKind, type Slots } from '../studio/slots'
+import { milkShaders, presetToMilk, type Hlsl } from '../studio/milk'
 import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor, type BasicParam } from '../studio/basic'
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
 import { showToast } from './toast'
-import { fmtNum, getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey } from '../i18n'
+import { fmtNum, getLang, msgText, onLanguage, t, tn, type Lang, type MessageKey, type Msg } from '../i18n'
 import { mainError, mainErrorText } from '../main-error'
 import './studio.css'
 
@@ -33,7 +34,7 @@ export interface StudioApi {
   /** bass, mid, treb como as equações veem (depois da expressividade). */
   levels(): [number, number, number] | null
   /** Grava e põe na biblioteca. Devolve o nome final (com "(2)" se já existia). */
-  save(req: { preset: Preset; title: string; author: string }): Promise<{ name: string; id: string; meta: SoMineMeta }>
+  save(req: { preset: Preset; title: string; author: string; milk?: string }): Promise<{ name: string; id: string; meta: SoMineMeta }>
   /** Sai do Estúdio. `saved` = nome do último salvamento (vira o preset atual). */
   close(saved: string | null): void
   log(message: string): void
@@ -51,6 +52,13 @@ export interface StudioApi {
    */
   compareStart(host: HTMLElement, preset: Preset, onDrop: (fps: number) => void): { ok: true } | { ok: false; fps: number }
   compareStop(): void
+  /**
+   * Código .milk (027, fatia 6): a fonte `.milk` do preset aberto (importado ou meu preset vindo de
+   * um `.milk`), ou `null` (cópia de preset do pacote: a aba mostra o JSON em leitura).
+   */
+  milk: string | null
+  /** `.milk` → preset, pelo conversor do main (o mesmo da importação). */
+  convertMilk(text: string): Promise<Preset>
 }
 
 const DEBOUNCE_MS = 400
@@ -84,15 +92,23 @@ interface Snap {
   code: Code
   base: Base
   slots: Slots
+  /** Shaders HLSL da fonte `.milk` e o GLSL que eles dão (só em presets com `.milk`). */
+  hlsl?: HlslRef | null
+}
+/** O HLSL que vai no `.milk` e o GLSL em que ele se converteu (para saber se o GLSL foi editado à mão). */
+interface HlslRef {
+  src: Hlsl
+  glsl: Hlsl
 }
 
-/** Abas na ordem do protótipo; Código .milk chega numa próxima fatia da 027. */
+/** Abas na ordem do protótipo. */
 const TABS = [
   { id: 'basic', label: 'studio.tab.basic' },
   { id: 'eq', label: 'studio.tab.eq' },
   { id: 'waves', label: 'studio.tab.waves' },
   { id: 'shapes', label: 'studio.tab.shapes' },
-  { id: 'shaders', label: 'studio.tab.shaders' }
+  { id: 'shaders', label: 'studio.tab.shaders' },
+  { id: 'code', label: 'studio.tab.code' }
 ] as const satisfies readonly { id: string; label: MessageKey }[]
 type TabId = (typeof TABS)[number]['id']
 /** Última aba usada nesta abertura do app (reabrir o Estúdio volta nela). */
@@ -246,6 +262,22 @@ function Studio({ api }: { api: StudioApi }) {
   const verBtn = useRef<HTMLButtonElement>(null)
   const drClose = useRef<HTMLButtonElement>(null)
   const root = useRef<HTMLDivElement>(null)
+  // ── Código .milk (spec 027, fatia 6) ────────────────────
+  /** HLSL da fonte e o GLSL dele; `null` = sem `.milk` (a aba mostra o JSON em leitura). */
+  const hlsl = useRef<HlslRef | null>(api.milk ? { src: milkShaders(api.milk), glsl: { warp: initial.warp, comp: initial.comp } } : null)
+  /** O texto que o usuário está editando na aba (até outra aba mudar algo, a aba mostra o gerado). */
+  const [milkDraft, setMilkDraft] = useState<string | null>(null)
+  const milkDraftRef = useRef<string | null>(null)
+  const milkTimer = useRef<number | undefined>(undefined)
+  const milkPending = useRef<Promise<void> | null>(null)
+  /** O `.milk` não converteu: o motivo (do main), mostrado em Problemas. */
+  const [milkErr, setMilkErrState] = useState<Msg | null>(null)
+  const milkErrRef = useRef<Msg | null>(null)
+  const setMilkErr = (m: Msg | null): void => {
+    milkErrRef.current = m
+    setMilkErrState(m)
+  }
+  const milkTa = useRef<HTMLTextAreaElement | null>(null)
   // A troca de idioma redesenha o Estúdio (ele tem a própria raiz, fora do Overlay).
   const [, setLangTick] = useState(0)
   useEffect(() => onLanguage(() => setLangTick((n) => n + 1)), [])
@@ -266,7 +298,8 @@ function Studio({ api }: { api: StudioApi }) {
     if (r.ok) {
       // Parâmetros base mexidos durante a compilação também vão (são sempre válidos).
       if (load) api.apply(withCode(api.source, c, latestBase.current, latestSlots.current))
-      setStatus('ok')
+      // Um .milk que não converteu continua sendo um problema até ser corrigido.
+      setStatus(milkErrRef.current ? 'err' : 'ok')
       setErrors([])
       setHadValid(true)
       lastErrs.current = new Set()
@@ -283,7 +316,14 @@ function Studio({ api }: { api: StudioApi }) {
     return false
   }
 
-  const snapNow = (): Snap => ({ code: latest.current, base: latestBase.current, slots: latestSlots.current })
+  const snapNow = (): Snap => ({ code: latest.current, base: latestBase.current, slots: latestSlots.current, hlsl: hlsl.current })
+  /** Outra aba mudou o preset: a aba Código volta a mostrar o texto gerado. */
+  const dropDraft = (): void => {
+    window.clearTimeout(milkTimer.current)
+    milkDraftRef.current = null
+    setMilkDraft(null)
+    setMilkErr(null)
+  }
   /** Guarda o estado de antes de uma mudança. `group` igual em menos de 1 s = o mesmo passo; `null` = sempre um passo. */
   const remember = (group: string | null): void => {
     const now = performance.now()
@@ -296,7 +336,9 @@ function Studio({ api }: { api: StudioApi }) {
     if (undoStack.current.length > MAX_UNDO) undoStack.current.shift()
     redoStack.current = []
   }
-  const applySnap = (x: Snap): void => {
+  const applySnap = (x: Snap, keepDraft = false): void => {
+    if (x.hlsl !== undefined) hlsl.current = x.hlsl
+    if (!keepDraft) dropDraft()
     latest.current = x.code
     latestBase.current = x.base
     latestSlots.current = x.slots
@@ -420,9 +462,24 @@ function Studio({ api }: { api: StudioApi }) {
   useEffect(() => {
     void compile(initial, false)
   }, [])
+  // Meu preset vindo de um `.milk`: o GLSL salvo pode ter sido editado à mão. O que a fonte dá
+  // convertida diz se o HLSL do `.milk` ainda corresponde aos shaders (nota na aba Código).
+  useEffect(() => {
+    const first = hlsl.current
+    if (!api.milk || !first) return
+    api.convertMilk(api.milk).then(
+      (p) => {
+        if (hlsl.current !== first) return
+        hlsl.current = { src: first.src, glsl: { warp: String(p.warp ?? ''), comp: String(p.comp ?? '') } }
+        setLangTick((n) => n + 1)
+      },
+      (err: unknown) => api.log(`studio: .milk source did not convert: ${mainErrorText(err)}`)
+    )
+  }, [])
 
   const edit = (b: Block, v: string): void => {
     remember(`code:${b}`)
+    dropDraft()
     const next = { ...latest.current, [b]: v }
     setCode(next)
     setDirty(true)
@@ -434,6 +491,7 @@ function Studio({ api }: { api: StudioApi }) {
 
   /** Ondas e Formas: tudo passa pela compilação (com pausa de 400 ms), como as equações. */
   const changeSlots = (next: Slots): void => {
+    dropDraft()
     latestSlots.current = next
     setSlots(next)
     setDirty(true)
@@ -480,6 +538,7 @@ function Studio({ api }: { api: StudioApi }) {
     const range = rangeFor(p, baseValue(api.source.baseVals, p))
     const v = clampParam(p, raw, range)
     remember(`base:${p.key}`)
+    dropDraft()
     const next = { ...latestBase.current, [p.key]: v }
     latestBase.current = next
     setBase(next)
@@ -491,11 +550,66 @@ function Studio({ api }: { api: StudioApi }) {
     timer.current = window.setTimeout(() => void compile(latest.current), DEBOUNCE_MS)
   }
 
+  /**
+   * Código .milk: cada pausa de 400 ms converte o texto no main (o mesmo caminho da importação) e
+   * o resultado vira o editor inteiro (os controles das outras abas acompanham). Shaders: se o
+   * HLSL do texto não mudou, ficam os GLSL atuais (que podem ter sido editados na aba Shaders).
+   */
+  const editMilk = (v: string): void => {
+    remember('code:milk')
+    milkDraftRef.current = v
+    setMilkDraft(v)
+    setDirty(true)
+    setEscWarn(false)
+    setStatus('busy')
+    window.clearTimeout(timer.current)
+    window.clearTimeout(milkTimer.current)
+    milkTimer.current = window.setTimeout(() => {
+      milkPending.current = applyMilk(v)
+    }, DEBOUNCE_MS)
+  }
+  const applyMilk = async (v: string): Promise<void> => {
+    let p: Preset
+    try {
+      p = await api.convertMilk(v)
+    } catch (err) {
+      if (milkDraftRef.current !== v) return
+      setMilkErr(mainError(err))
+      setStatus('err')
+      api.log(`studio: .milk did not convert: ${mainErrorText(err)}`)
+      return
+    }
+    if (milkDraftRef.current !== v) return
+    setMilkErr(null)
+    const src = milkShaders(v)
+    const cur = hlsl.current
+    const next = snapOf(p)
+    if (cur && cur.src.warp === src.warp && cur.src.comp === src.comp) {
+      next.code = { ...next.code, warp: latest.current.warp, comp: latest.current.comp }
+      next.hlsl = cur
+    } else next.hlsl = { src, glsl: { warp: next.code.warp, comp: next.code.comp } }
+    applySnap(next, true)
+    api.log('studio: .milk applied')
+  }
+  /** O `.milk` do estado atual (com o HLSL da fonte), ou `undefined` se o preset não tem `.milk`. */
+  const milkNow = (): string | undefined =>
+    hlsl.current ? presetToMilk(withCode(api.source, latest.current, latestBase.current, latestSlots.current) as Record<string, unknown>, hlsl.current.src) : undefined
+
   // ── Salvar ──────────────────────────────────────────────
   const save = async (authorName?: string): Promise<void> => {
     if (settings.authorName === null && authorName === undefined && !saved) {
       setAuthorDraft('')
       setAskAuthor(true)
+      return
+    }
+    // Texto .milk esperando a pausa: converte antes; se não converte, não salva.
+    if (milkDraftRef.current !== null && milkTimer.current !== undefined) {
+      window.clearTimeout(milkTimer.current)
+      milkTimer.current = undefined
+      await applyMilk(milkDraftRef.current)
+    } else if (milkPending.current) await milkPending.current
+    if (milkErrRef.current) {
+      showToast(t('toast.studio.fixErrors'), { force: true })
       return
     }
     // Garante que o que vai para o disco é exatamente o que compilou.
@@ -509,7 +623,7 @@ function Studio({ api }: { api: StudioApi }) {
     }
     try {
       const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
-      const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author })
+      const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author, milk: milkNow() })
       setSaved(r)
       setTitle(r.name)
       if (drawer) api.versions().then(setVersions, () => setVersions('error'))
@@ -625,6 +739,15 @@ function Studio({ api }: { api: StudioApi }) {
   }
 
   const stale = status === 'err' && hadValid
+  const nErr = errors.length + (milkErr ? 1 : 0)
+  const goMilk = (): void => {
+    if (tabRef.current !== 'code') setTab('code')
+    requestAnimationFrame(() => milkTa.current?.focus())
+  }
+  // Aba Código: o `.milk` gerado (ou o que está sendo digitado), ou o JSON do preset em leitura.
+  const preset = tab === 'code' ? (withCode(api.source, code, base, slots) as Record<string, unknown>) : null
+  const codeText = !preset ? '' : hlsl.current ? (milkDraft ?? presetToMilk(preset, hlsl.current.src)) : JSON.stringify(preset, null, 2)
+  const shadersEdited = !!hlsl.current && (code.warp !== hlsl.current.glsl.warp || code.comp !== hlsl.current.glsl.comp)
 
   return (
     <div class="studio" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('studio.dialog')}>
@@ -662,7 +785,7 @@ function Studio({ api }: { api: StudioApi }) {
             ) : status === 'err' ? (
               <>
                 <Icon name="triangle-alert" small />
-                {tn('studio.errors', errors.length)}
+                {tn('studio.errors', nErr)}
               </>
             ) : (
               <>
@@ -825,6 +948,49 @@ function Studio({ api }: { api: StudioApi }) {
             ))}
             <p class="note">{t('studio.shaders.note')}</p>
           </div>
+          <div class="st-blocks st-code" role="tabpanel" id="studio-tp-code" aria-labelledby="studio-tab-code" hidden={tab !== 'code'}>
+            {hlsl.current ? (
+              <>
+                <p class="note">{t('studio.code.note')}</p>
+                {shadersEdited && (
+                  <p class="note st-code-warn">
+                    <Icon name="triangle-alert" small />
+                    {t('studio.code.shadersEdited')}
+                  </p>
+                )}
+                <Editor
+                  title=".milk"
+                  legend={t('studio.code.legend')}
+                  h={460}
+                  label={t('studio.code.label')}
+                  value={codeText}
+                  errLines={[]}
+                  bind={(el) => {
+                    milkTa.current = el
+                  }}
+                  onInput={editMilk}
+                />
+              </>
+            ) : (
+              <>
+                <p class="note">{t('studio.code.jsonNote')}</p>
+                <Editor
+                  title="JSON"
+                  legend="Butterchurn 3"
+                  legendNum
+                  h={460}
+                  label={t('studio.code.jsonLabel')}
+                  readOnly
+                  value={codeText}
+                  errLines={[]}
+                  bind={(el) => {
+                    milkTa.current = el
+                  }}
+                  onInput={() => {}}
+                />
+              </>
+            )}
+          </div>
           {(['wave', 'shape'] as SlotKind[]).map((kind) => {
             const id = kind === 'wave' ? 'waves' : 'shapes'
             return (
@@ -864,14 +1030,25 @@ function Studio({ api }: { api: StudioApi }) {
               <span class="chev">
                 <Icon name="chevron-right" small />
               </span>
-              {t('studio.problems')} <span class={errors.length ? 'cnt bad' : 'cnt'}>{errors.length}</span>
+              {t('studio.problems')} <span class={nErr ? 'cnt bad' : 'cnt'}>{nErr}</span>
             </button>
             {probsOpen && (
               <div class="probs-b">
-                {errors.length === 0 ? (
+                {nErr === 0 ? (
                   <p class="pempty">{t('studio.noProblems')}</p>
                 ) : (
                   <ul>
+                    {milkErr && (
+                      <li class="perr" key="milk">
+                        <Icon name="triangle-alert" small />
+                        <p class="selectable">
+                          <code>.milk</code>: {t('studio.code.err', { error: msgText(milkErr) })}
+                        </p>
+                        <button type="button" class="btn" onClick={goMilk}>
+                          {t('studio.goBlock')}
+                        </button>
+                      </li>
+                    )}
                     {errors.map((e) => (
                       <li class="perr" key={errKey(e)}>
                         <Icon name="triangle-alert" small />
@@ -931,8 +1108,8 @@ function Studio({ api }: { api: StudioApi }) {
       <footer class="st-foot">
         <span>
           {compiledAt
-            ? errors.length
-              ? tn('studio.foot.errorsSince', errors.length, { time: clock(compiledAt) })
+            ? nErr
+              ? tn('studio.foot.errorsSince', nErr, { time: clock(compiledAt) })
               : t('studio.foot.compiledAt', { time: clock(compiledAt) })
             : t('studio.foot.compiledAt', { time: '--:--:--' })}
         </span>

@@ -81,6 +81,17 @@ export async function saveImported(file: MilkFile): Promise<void> {
   await writeFile(join(dir(), `${id}.json`), JSON.stringify({ name, preset }))
 }
 
+/** O `.milk` de um importado, como veio (Estúdio, spec 027 fatia 6), ou `null` se não há. */
+export async function readImportedMilk(name: unknown): Promise<string | null> {
+  if (typeof name !== 'string') return null
+  try {
+    const text = await readFile(join(dir(), `${idOf(name)}.milk`), 'utf8')
+    return text.length > MAX_BYTES ? null : text
+  } catch {
+    return null
+  }
+}
+
 export async function removeImported(name: unknown): Promise<void> {
   if (typeof name !== 'string') return
   const id = idOf(name)

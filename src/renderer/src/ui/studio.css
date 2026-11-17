@@ -125,6 +125,9 @@ body.studio-open .winctl { display: none !important; }
 .slot-b[hidden] { display: none; }
 .slot.off .slot-t { color: var(--text-2); }
 .ed.ro .ed-ta { color: var(--text-2); }
+/* Código .milk (027, fatia 6): aviso de shaders editados em GLSL. */
+.st-code-warn { display: flex; gap: 6px; align-items: flex-start; color: var(--warn); }
+.st-code-warn svg { flex: none; margin-top: 2px; }
 @media (prefers-reduced-motion: reduce) { .slot-t .ico { transition: none; } }
 
 /* Gaveta "Versões" (spec 027, fatia 3) — protótipo, página Estúdio completo (027): 320 px à direita, por cima do editor. */
