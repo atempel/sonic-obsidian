@@ -39,13 +39,13 @@ const R = H.createResults('027-estudio-ondas'); const ok = R.ok
 
   // 1. Abas novas e teclado
   const tabs = await page.$$eval('.studio [role=tablist] [role=tab]', es => es.map(e => e.textContent.trim()))
-  ok('1a abas Básico, Equações, Ondas, Formas (ordem do protótipo)', tabs.join() === 'Básico,Equações,Ondas,Formas', tabs.join())
+  ok('1a abas Básico, Equações, Ondas, Formas, Shaders (ordem do protótipo)', tabs.join() === 'Básico,Equações,Ondas,Formas,Shaders', tabs.join())
   await page.keyboard.press('Control+3')
   ok('1b Ctrl+3 vai para Ondas', (await selected()).join() === 'Ondas' && (await page.isVisible('#studio-tp-waves')))
   await page.keyboard.press('Control+4')
   ok('1c Ctrl+4 vai para Formas', (await selected()).join() === 'Formas' && (await page.isVisible('#studio-tp-shapes')) && !(await page.isVisible('#studio-tp-waves')))
   await page.focus('#studio-tab-shapes'); await page.keyboard.press('Home'); await page.keyboard.press('End')
-  ok('1d End vai para a última (Formas)', (await selected()).join() === 'Formas')
+  ok('1d End vai para a última (Shaders)', (await selected()).join() === 'Shaders')
 
   // 2. Ondas: 4 slots, sanfona, desligado = só leitura
   await page.keyboard.press('Control+3')

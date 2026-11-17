@@ -2,6 +2,7 @@ import butterchurn, { type Preset, type Visualizer } from 'butterchurn'
 import type { PresetLibrary } from './presets'
 import { msgText, t, tn, type Lang, type Msg } from './i18n'
 import { mainError, mainErrorText } from './main-error'
+import { glslErrorLine, userShaderLine } from './studio/shader-lines'
 
 /**
  * Importar `.milk` (spec 022). A conversão é no main (texto → preset 3.x); aqui cada preset é
@@ -61,8 +62,11 @@ export function shaderError(viz: Visualizer): string | null {
   return f && `shader ${f.which} doesn't compile: ${f.detail}`
 }
 
-/** O mesmo, como dado (o Estúdio monta a frase no idioma do app, spec 030). */
-export function shaderFailure(viz: Visualizer): { which: 'warp' | 'comp'; detail: string } | null {
+/**
+ * O mesmo, como dado (o Estúdio monta a frase no idioma do app, spec 030). Com o `preset`
+ * carregado, `line` é a linha do erro no texto do shader do preset (027, fatia 5).
+ */
+export function shaderFailure(viz: Visualizer, preset?: Preset): { which: 'warp' | 'comp'; detail: string; line: number | null } | null {
   const r = (viz as unknown as { renderer?: RendererInternals }).renderer
   const gl = r?.gl
   if (!gl) return null
@@ -71,9 +75,18 @@ export function shaderFailure(viz: Visualizer): { which: 'warp' | 'comp'; detail
     ['comp', r?.compShader]
   ] as const) {
     const p = h?.shaderProgram
-    if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return { which, detail: glError(gl, p) }
+    if (p && !gl.getProgramParameter(p, gl.LINK_STATUS)) return { which, detail: glError(gl, p), line: preset ? shaderLine(gl, p, String(preset[which] ?? '')) : null }
   }
   return null
+}
+
+/** Linha do erro do fragment shader de `p`, contada em `user` (o texto do preset). */
+function shaderLine(gl: WebGL2RenderingContext, p: WebGLProgram, user: string): number | null {
+  const frag = (gl.getAttachedShaders(p) ?? []).find((s) => gl.getShaderParameter(s, gl.SHADER_TYPE) === gl.FRAGMENT_SHADER)
+  if (!frag || !user.trim()) return null
+  const at = glslErrorLine(gl.getShaderInfoLog(frag) ?? '')
+  const src = gl.getShaderSource(frag)
+  return at === null || !src ? null : userShaderLine(user, src, at)
 }
 
 /** Visualizador de 64×64 só para compilar; descartado ao fim do lote (e ao fechar o Estúdio, spec 026). */
@@ -94,14 +107,14 @@ export class Validator {
   }
 
   /** O mesmo, como dado (Estúdio, spec 030). */
-  async inspect(preset: Preset): Promise<{ kind: 'equations'; detail: string } | { kind: 'shader'; which: string; detail: string } | null> {
+  async inspect(preset: Preset): Promise<{ kind: 'equations'; detail: string } | { kind: 'shader'; which: 'warp' | 'comp'; detail: string; line: number | null } | null> {
     try {
       await this.viz.loadPreset(structuredClone(preset), 0)
       this.viz.render()
     } catch (err) {
       return { kind: 'equations', detail: (err instanceof Error ? err.message : String(err)).slice(0, 150) }
     }
-    const s = shaderFailure(this.viz)
+    const s = shaderFailure(this.viz, preset)
     return s && { kind: 'shader', ...s }
   }
 

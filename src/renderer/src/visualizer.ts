@@ -162,6 +162,16 @@ export class PresetVisualizer {
   }
 
   /**
+   * Shaders do preset que está tocando, lidos do motor (Estúdio, 027 fatia 5; para o HUD):
+   * impressão digital do texto (FNV-1a, 8 hex) de `warp` e `comp`, ou `-` sem shader.
+   */
+  liveShaders(): { warp: string; comp: string } | null {
+    const p = (this.visualizer as unknown as { renderer?: { preset?: { warp?: unknown; comp?: unknown } } }).renderer?.preset
+    if (!p) return null
+    return { warp: fingerprint(p.warp), comp: fingerprint(p.comp) }
+  }
+
+  /**
    * Segundo visual do Estúdio ("Comparar com o original", spec 027, fatia 4): os níveis de áudio
    * deste motor passam a ser cópia dos de `from` a cada quadro (depois da expressividade e do
    * silêncio), para os dois lados reagirem igual. `from` precisa desenhar antes, no mesmo quadro.
@@ -269,4 +279,16 @@ export class PresetVisualizer {
     const k = this.render_.canvasScale
     return { width: Math.max(2, Math.round(window.innerWidth * k)), height: Math.max(2, Math.round(window.innerHeight * k)) }
   }
+}
+
+/** FNV-1a de 32 bits do texto, em 8 hex (`-` para texto vazio). Igual ao do teste headless. */
+export function fingerprint(v: unknown): string {
+  const text = typeof v === 'string' ? v : ''
+  if (!text.trim()) return '-'
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h.toString(16).padStart(8, '0')
 }

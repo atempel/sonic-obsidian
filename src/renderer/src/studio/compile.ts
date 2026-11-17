@@ -1,6 +1,6 @@
 import type { Preset } from 'butterchurn'
 import { Validator } from '../importer'
-import type { Block, CheckReply, CheckRequest, MainBlock, SlotBlock, SlotCheck, StudioIssue, WorkerError } from './eel-worker'
+import type { Block, CheckReply, CheckRequest, MainBlock, ShaderBlock, SlotBlock, SlotCheck, StudioIssue, WorkerError } from './eel-worker'
 import { slotChecks } from './slots'
 
 /**
@@ -8,10 +8,11 @@ import { slotChecks } from './slots'
  * chegar ao visualizador principal:
  * 1. Worker com o eel-wasm: erros com bloco e linha, e um quadro rodado com teto de 1 s
  *    (laço sem fim não congela a interface: o Worker é encerrado e recriado);
- * 2. visualizador de teste de 64×64 (o da 022): equações no motor + shaders.
+ * 2. visualizador de teste de 64×64 (o da 022): equações no motor + shaders (erro de GLSL no
+ *    bloco `warp`/`comp`, com a linha, spec 027 fatia 5).
  * Pedidos em fila: vale o último.
  */
-export type { Block, MainBlock, SlotBlock, StudioIssue }
+export type { Block, MainBlock, ShaderBlock, SlotBlock, StudioIssue }
 export type StudioError = WorkerError
 export type CompileResult =
   | { ok: true; ms: number; frameMs: number }
@@ -68,6 +69,10 @@ export class StudioCompiler {
     this.validator ??= new Validator(this.ctx)
     const err = await this.validator.inspect(preset)
     if (seq !== this.seq || this.disposed) return { ok: false, superseded: true }
+    if (err?.kind === 'shader') {
+      // Shader (027, fatia 5): no bloco dele, com a linha no texto do preset e a mensagem do compilador.
+      return { ok: false, errors: [{ block: err.which, line: err.line, issue: { kind: 'glsl', detail: err.detail } }], ms: performance.now() - t0 }
+    }
     if (err) return { ok: false, errors: [{ block: 'frame', line: null, issue: err }], ms: performance.now() - t0 }
     return { ok: true, ms: performance.now() - t0, frameMs: check.frameMs }
   }

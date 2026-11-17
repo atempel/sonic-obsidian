@@ -14,7 +14,9 @@ export type MainBlock = 'init' | 'frame' | 'pixel'
 /** Blocos de ondas e formas (spec 027, fatia 2): `wave1_point` = `per_point` da Onda 2. */
 export type SlotIndex = 0 | 1 | 2 | 3
 export type SlotBlock = `wave${SlotIndex}_${'frame' | 'point'}` | `shape${SlotIndex}_frame`
-export type Block = MainBlock | SlotBlock
+/** Shaders (spec 027, fatia 5): erros vêm do motor (link do GLSL), não deste Worker. */
+export type ShaderBlock = 'warp' | 'comp'
+export type Block = MainBlock | SlotBlock | ShaderBlock
 /**
  * Problema das equações como dado, não como texto: a interface monta a frase no idioma do app
  * (spec 030), e a troca de idioma vale também para os erros já na tela.
@@ -31,6 +33,8 @@ export type StudioIssue =
   /** O motor recusou as equações (mensagem do Butterchurn, em inglês). */
   | { kind: 'equations'; detail: string }
   | { kind: 'shader'; which: string; detail: string }
+  /** Mensagem do compilador GLSL do motor (em inglês, como veio), já no bloco `warp`/`comp`. */
+  | { kind: 'glsl'; detail: string }
   /** Mensagem do compilador que não reconhecemos (em inglês, como veio). */
   | { kind: 'raw'; text: string }
 export interface WorkerError {

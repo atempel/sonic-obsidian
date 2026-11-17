@@ -583,8 +583,10 @@ async function start(): Promise<void> {
           .load(p, 'crossfade', 0.4)
           .then(() => {
             // HUD: o que o motor ligou de ondas e formas (027, fatia 2), lido de volta dele.
+            // E a impressão digital dos shaders (fatia 5), também do motor.
             const on = viz.liveSlots()
-            if (on && studio === s) state.studioSlots = `studio: live waves ${on.waves} · shapes ${on.shapes}`
+            const sh = viz.liveShaders()
+            if (on && studio === s) state.studioSlots = `studio: live waves ${on.waves} · shapes ${on.shapes}${sh ? ` · warp ${sh.warp} · comp ${sh.comp}` : ''}`
           })
           .catch((err: unknown) => window.so.log(`studio: version failed to load: ${err instanceof Error ? err.message : String(err)}`))
       },
