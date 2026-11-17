@@ -72,6 +72,8 @@ export interface PalcoBridge {
   isMine(name: string): boolean
   removeMine(name: string): Promise<void>
   openStudio(name?: string): void
+  /** Estúdio com o modelo do "Novo preset" (spec 027, fatia 8). */
+  newPreset(): void
 }
 
 /**
@@ -585,7 +587,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Edge core={core} />
       <Strip bridge={bridge} />
       <WindowControls core={core} />
-      <Library core={core} presets={presets} imports={{ is: bridge.isImported, count: bridge.importedCount, remove: bridge.removeImported, isMine: bridge.isMine, removeMine: bridge.removeMine, edit: bridge.openStudio }} />
+      <Library core={core} presets={presets} imports={{ is: bridge.isImported, count: bridge.importedCount, remove: bridge.removeImported, isMine: bridge.isMine, removeMine: bridge.removeMine, edit: bridge.openStudio, create: bridge.newPreset }} />
       <Palette core={core} presets={presets} />
       <QuickSettings core={core} blendTypesAvailable={bridge.blendTypesAvailable} expressionAvailable={bridge.expressionAvailable} />
       <Settings bridge={bridge} />
