@@ -570,7 +570,13 @@ async function start(): Promise<void> {
     const srcMine = library.mineInfo(src)
     let mineRef: { name: string; id: string } | null = srcMine ? { name: src, id: srcMine.id } : null
     const basedOn = srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
-    window.so.log(`studio: opened with ${src}`)
+    // Código .milk (027, fatia 6): a fonte, se o preset tem uma (importado, ou meu preset vindo de um .milk).
+    const P = window.so.presets
+    const milk = await (srcMine ? P.mineMilk?.(srcMine.id) : library.isImported(src) ? P.importedMilk?.(src) : undefined)?.catch((err: unknown) => {
+      window.so.log(`studio: .milk source unreadable: ${err instanceof Error ? err.message : String(err)}`)
+      return null
+    })
+    window.so.log(`studio: opened with ${src}${milk ? ' (.milk source)' : ''}`)
     openStudio({
       core,
       sourceName: src,
@@ -601,14 +607,14 @@ async function start(): Promise<void> {
         const v = audioVals()
         return v ? [v[0]!, v[1]!, v[2]!] : null
       },
-      save: async ({ preset, title, author }) => {
+      save: async ({ preset, title, author, milk }) => {
         if (mineRef) {
-          const r = await window.so.presets.saveMine({ id: mineRef.id, preset: preset as Record<string, unknown> })
+          const r = await window.so.presets.saveMine({ id: mineRef.id, preset: preset as Record<string, unknown>, milk })
           library.setMine(mineRef.name, r.id, r.meta, preset)
           return { name: mineRef.name, id: r.id, meta: r.meta }
         }
         const free = library.freeName(title)
-        const r = await window.so.presets.saveMine({ meta: { title: free, author, basedOn }, preset: preset as Record<string, unknown> })
+        const r = await window.so.presets.saveMine({ meta: { title: free, author, basedOn }, preset: preset as Record<string, unknown>, milk })
         const finalName = library.mineInfo(r.meta.title) || !library.has(r.meta.title) ? r.meta.title : library.freeName(r.meta.title)
         library.setMine(finalName, r.id, r.meta, preset)
         mineRef = { name: finalName, id: r.id }
@@ -644,7 +650,9 @@ async function start(): Promise<void> {
       // Comparar (fatia 4): o "original" de um meu preset é aquele em que ele se baseou, se ainda existe.
       original: structuredClone(srcMine?.meta.basedOn && library.has(srcMine.meta.basedOn.name) ? library.get(srcMine.meta.basedOn.name) : library.get(src)),
       compareStart: startCompare,
-      compareStop: stopCompare
+      compareStop: stopCompare,
+      milk: milk ?? null,
+      convertMilk: async (text) => (await window.so.presets.convertMilk(text)).preset as Preset
     })
   }
 

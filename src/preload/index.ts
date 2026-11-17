@@ -85,12 +85,15 @@ contextBridge.exposeInMainWorld('so', {
     pickMilk: (): Promise<{ files: { name: string; text: string }[]; tooBig: string[]; extra: number }> => ipcRenderer.invoke('presets:pickMilk'),
     /** Meus presets (Estúdio, spec 026): o main gera o id e sanitiza o preset. */
     listMine: (): Promise<MineEntry[]> => ipcRenderer.invoke('presets:listMine'),
-    saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown> }): Promise<{ id: string; meta: MineMeta }> =>
+    saveMine: (data: { id?: string; meta?: Omit<MineMeta, 'createdAt'>; preset: Record<string, unknown>; milk?: string | null }): Promise<{ id: string; meta: MineMeta }> =>
       ipcRenderer.invoke('presets:saveMine', data),
     removeMine: (id: string): Promise<void> => ipcRenderer.invoke('presets:removeMine', String(id)),
     /** Histórico de um "meu" preset (spec 027, fatia 3), do mais novo para o mais antigo. */
     mineVersions: (id: string): Promise<MineVersion[]> => ipcRenderer.invoke('presets:mineVersions', String(id)),
-    mineVersion: (id: string, n: number): Promise<Record<string, unknown>> => ipcRenderer.invoke('presets:mineVersion', String(id), Number(n))
+    mineVersion: (id: string, n: number): Promise<Record<string, unknown>> => ipcRenderer.invoke('presets:mineVersion', String(id), Number(n)),
+    /** Fonte .milk (spec 027, fatia 6): de um importado ou de um meu preset; `null` = não tem. */
+    importedMilk: (name: string): Promise<string | null> => ipcRenderer.invoke('presets:importedMilk', String(name)),
+    mineMilk: (id: string): Promise<string | null> => ipcRenderer.invoke('presets:mineMilk', String(id))
   },
   /** Atualização automática (spec 029): o main decide o que checar, baixar e abrir. */
   update: {

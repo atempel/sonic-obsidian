@@ -9,6 +9,8 @@ import { log } from './log'
  * `preset.json` (preset Butterchurn 3), `meta.json` (título, autor, `basedOn`, `createdAt`) e o
  * histórico (spec 027, fatia 3): cada salvamento vira `v0001.json`, `v0002.json`… (até 50; as mais
  * antigas saem). O `preset.prev.json` da 026 vira a primeira versão na migração.
+ * Fonte `.milk` (fatia 6): `source.milk`, só nos presets que vieram de um `.milk` (texto, até 256 KB);
+ * o Estúdio gera o texto a partir do preset, com o HLSL dos shaders da fonte.
  * O `<id>` é gerado aqui; nenhum caminho vem do renderer. A mesma barreira da 022:
  * só campos conhecidos, só `*_eel` (nenhum `*_str` nem `useJS`), até 256 KB.
  */
@@ -267,6 +269,7 @@ export async function readVersion(id: unknown, n: unknown): Promise<Record<strin
 export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMeta }> {
   const r = isObj(raw) ? raw : {}
   const preset = sanitizePreset(r.preset)
+  const milk = sanitizeMilk(r.milk)
   if (r.id !== undefined && r.id !== null) {
     if (typeof r.id !== 'string' || !ID.test(r.id)) throw new Error('[invalid] bad id')
     const folder = join(dir(), r.id)
@@ -279,6 +282,7 @@ export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMe
       before = null
     }
     await writeFile(join(folder, 'preset.json'), JSON.stringify(preset))
+    await writeMilk(folder, milk)
     await addVersion(folder, preset, before ? diffPresets(before, preset) : NONE)
     return { id: r.id, meta }
   }
@@ -288,8 +292,34 @@ export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMe
   await mkdir(folder, { recursive: true })
   await writeFile(join(folder, 'preset.json'), JSON.stringify(preset))
   await writeFile(join(folder, 'meta.json'), JSON.stringify(meta))
+  await writeMilk(folder, milk)
   await addVersion(folder, preset, NONE)
   return { id, meta }
+}
+
+// ── Fonte .milk (spec 027, fatia 6) ─────────────────────────
+/** `undefined` = não mexer; `null` = o preset não tem (mais) fonte `.milk`; texto = a fonte nova. */
+function sanitizeMilk(v: unknown): string | null | undefined {
+  if (v === undefined) return undefined
+  if (v === null) return null
+  if (typeof v !== 'string') throw new Error('[invalid] .milk must be text')
+  if (v.length > MAX_BYTES) throw new Error('[too-big] .milk larger than 256 KB')
+  return v
+}
+async function writeMilk(folder: string, milk: string | null | undefined): Promise<void> {
+  if (milk === undefined) return
+  if (milk === null) await rm(join(folder, 'source.milk'), { force: true })
+  else await writeFile(join(folder, 'source.milk'), milk, 'utf8')
+}
+/** A fonte `.milk` de um "meu" preset, ou `null` se ele não tem (cópia de um preset do pacote). */
+export async function readMineMilk(id: unknown): Promise<string | null> {
+  const folder = folderOf(id)
+  try {
+    const text = await readFile(join(folder, 'source.milk'), 'utf8')
+    return text.length > MAX_BYTES ? null : text
+  } catch {
+    return null
+  }
 }
 
 export async function removeMine(id: unknown): Promise<void> {

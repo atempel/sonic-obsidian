@@ -75,6 +75,7 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
     mine/<id>/preset.json         # meu preset (Estúdio): o preset Butterchurn 3
     mine/<id>/v0001.json…         # versões (027): {savedAt, summary, preset}, até 50; preset.prev.json da 026 migra para cá
     mine/<id>/meta.json           # título, autor, basedOn (crédito original), createdAt
+    mine/<id>/source.milk         # fonte .milk (027, fatia 6): só em meus presets vindos de um .milk; gerada do preset + HLSL da fonte
   library.json                    # favoritos, ocultos, recentes, coleções, fps medido
   settings.json
   ```
@@ -96,7 +97,7 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
 
 ### Estúdio
 - P0 (026): camada em tela cheia sobre o Palco; a prévia é o visualizador principal. Edita `per_frame_init`, `per_frame` e `per_pixel`; shaders só leitura.
-- P1 (027): abas Básico (parâmetros `baseVals`), Equações, Ondas, Formas, Shaders (`warp`, `comp`) — todas editam o mesmo preset em memória.
+- P1 (027): abas Básico (parâmetros `baseVals`), Equações, Ondas, Formas, Shaders (`warp`, `comp`) e Código `.milk` — todas editam o mesmo preset em memória. Código `.milk` (`src/renderer/src/studio/milk.ts`): texto gerado do preset com o HLSL da fonte; editar converte no main (`presets:convertMilk`, o mesmo da importação) e o resultado vira o editor inteiro. Sem fonte `.milk` (cópia do pacote), a aba mostra o JSON em leitura.
 - Compila com debounce de 400 ms pelo pipeline acima; com erro, continua tocando a última versão válida.
 - Variáveis de áudio expostas nas equações: `bass`, `mid`, `treb`, `bass_att`, `mid_att`, `treb_att`, `time`, `frame`, `fps`.
 - Cada salvamento e cada `update_preset` via MCP gera uma versão restaurável, com origem registrada.

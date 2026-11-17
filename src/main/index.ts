@@ -5,8 +5,8 @@ import { log, logMetrics, logPath } from './log'
 import { mark } from './startup'
 import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
-import { MAX_BYTES, listImported, pickMilkFiles, removeImported, saveImported, type MilkFile } from './imported'
-import { listMine, listVersions, readVersion, removeMine, saveMine } from './mine'
+import { MAX_BYTES, listImported, pickMilkFiles, readImportedMilk, removeImported, saveImported, type MilkFile } from './imported'
+import { listMine, listVersions, readMineMilk, readVersion, removeMine, saveMine } from './mine'
 import { flushUpdater, registerUpdater, updaterFirstFrame } from './updater'
 
 mark('main.js')
@@ -105,6 +105,9 @@ function registerStores(): void {
   // Versões (spec 027, fatia 3): o id e o número são conferidos no main; o caminho nunca vem do renderer.
   ipcMain.handle('presets:mineVersions', (_e, id: unknown) => listVersions(id))
   ipcMain.handle('presets:mineVersion', (_e, id: unknown, n: unknown) => readVersion(id, n))
+  // Código .milk (spec 027, fatia 6): a fonte de um importado (pelo nome) ou de um meu preset (pelo id).
+  ipcMain.handle('presets:importedMilk', (_e, name: unknown) => readImportedMilk(name))
+  ipcMain.handle('presets:mineMilk', (_e, id: unknown) => readMineMilk(id))
 }
 
 /**
