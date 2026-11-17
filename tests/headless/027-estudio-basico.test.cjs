@@ -34,7 +34,7 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
 
   // 1. Abas com ARIA, Básico primeiro
   const tabs = await page.$$eval('.studio [role=tablist] [role=tab]', es => es.map(e => ({ t: e.textContent.trim(), c: e.getAttribute('aria-controls'), ti: e.tabIndex })))
-  ok('1a abas Básico, Equações, Ondas e Formas, na ordem do protótipo', tabs.map(x => x.t).join() === 'Básico,Equações,Ondas,Formas', JSON.stringify(tabs))
+  ok('1a abas Básico, Equações, Ondas, Formas e Shaders, na ordem do protótipo', tabs.map(x => x.t).join() === 'Básico,Equações,Ondas,Formas,Shaders', JSON.stringify(tabs))
   ok('1b abre no Básico', (await selected()).join() === 'Básico')
   ok('1c aba ligada ao painel (aria-controls) e só a ativa no Tab', tabs.every(x => x.c) && tabs.filter(x => x.ti === 0).length === 1)
   ok('1d painel do Básico visível, o das equações escondido', (await page.isVisible('#studio-tp-basic')) && !(await page.isVisible('#studio-tp-eq')))
@@ -53,7 +53,7 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   await page.focus('#studio-tab-eq'); await page.keyboard.press('ArrowLeft')
   ok('3b seta para a esquerda volta ao Básico com o foco na aba', (await selected()).join() === 'Básico' && (await page.evaluate(() => document.activeElement?.id)) === 'studio-tab-basic')
   await page.keyboard.press('End')
-  ok('3c End vai para a última', (await selected()).join() === 'Formas')
+  ok('3c End vai para a última', (await selected()).join() === 'Shaders')
   await page.keyboard.press('Home')
   ok('3d Home volta para a primeira', (await selected()).join() === 'Básico')
 

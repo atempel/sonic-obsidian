@@ -260,7 +260,7 @@ const studioOnly = (from, to) => Object.entries(from).filter(([k, v]) => /^studi
 const studioTexts = () => {
   const out = []
   for (const el of document.querySelectorAll('.studio, .studio *')) {
-    if (el.closest('.ed-ta, .st-shaders pre, .st-credit, .num')) continue
+    if (el.closest('.ed-ta, .st-credit, .num')) continue
     for (const a of ['aria-label', 'title', 'placeholder']) if (el.getAttribute(a)) out.push(el.getAttribute(a))
     for (const n of el.childNodes) if (n.nodeType === 3 && n.textContent.trim()) out.push(n.textContent.trim())
   }
@@ -289,6 +289,7 @@ async function checkStudio(b, lang) {
   // Ondas e Formas (027, fatia 2): com a Onda 1 e a Forma 1 abertas.
   await p.keyboard.press('Control+3'); const cutWaves = await p.evaluate(clippedStudio)
   await p.keyboard.press('Control+4'); const cutShapes = await p.evaluate(clippedStudio)
+  await p.keyboard.press('Control+5'); const cutShaders = await p.evaluate(clippedStudio)
   await p.keyboard.press('Control+2')
   await p.fill('.studio .ed-ta >> nth=1', 'zoom = 1.01;\nrot = sin(time;')
   const errRe = lang === 'en' ? /^1 error$/ : /^1 erro$/
@@ -298,7 +299,7 @@ async function checkStudio(b, lang) {
   const title = await p.inputValue('#studio-name')
   await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
   const texts = await p.evaluate(studioTexts)
-  const cut = cutBasic.concat(cutWaves, cutShapes, await p.evaluate(clippedStudio))
+  const cut = cutBasic.concat(cutWaves, cutShapes, cutShaders, await p.evaluate(clippedStudio))
   const logs = await p.evaluate(() => window.__logs)
   await p.close()
   return { compiled, errored, err, foot, title, texts, cut, hud, logs }

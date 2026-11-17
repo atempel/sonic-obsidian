@@ -614,3 +614,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Achado:** no Butterchurn 3 o WebGL fica num `OffscreenCanvas` interno e o canvas da página recebe a cópia por 2D, então o `webglcontextlost` do canvas da página (recarga depois de um TDR, spec 012) nunca dispara. A comparação escuta o canvas interno; o do principal virou a issue #130 (`backlog`).
 - **Descartado:** reaproveitar o visual principal alternando presets (dobra o custo do mesmo jeito e mistura o estado de feedback); prévia em canvas pequeno do quadro inteiro (compara regiões diferentes).
 
+
+## 2026-11-17 — Estúdio 027, fatia 5: Shaders (rodada, `agent-decided`)
+- **Editar o GLSL que o motor usa**, para qualquer preset (do pacote, importado ou meu): os editores `warp` e `comp` mostram o texto do preset 3.x como está. O ciclo é o mesmo das equações: pausa de 400 ms, compila no visualizador de teste de 64×64 e só então vai para o visual; com erro, a última versão válida continua tocando.
+- **Linha do erro no texto do usuário:** o compilador GLSL conta as linhas no shader inteiro que o Butterchurn monta (uniforms + `main()` em volta). `studio/shader-lines.ts` acha o cabeçalho e o corpo do texto do usuário dentro da fonte montada (`gl.getShaderSource`) e converte a linha do primeiro `ERROR: 0:N:` do log. Linha que cai no modelo do motor fica sem número ("Ir para o bloco"). A mensagem é a do compilador, em inglês, com o prefixo "compilador GLSL:" no idioma do app.
+- **HUD:** a linha `studio: live waves … · shapes …` ganhou `· warp <hash> · comp <hash>` (FNV-1a do texto que o motor carregou), para o teste headless conferir que o motor ficou com o shader novo, e não com o rejeitado.
+- **Descartado:** destacar a sintaxe GLSL (fora de escopo na spec); checagem própria de chaves e `tex2d` (é o verificador, item 10); mostrar o HLSL original do `.milk` (não há volta GLSL → HLSL e o motor só usa o GLSL).

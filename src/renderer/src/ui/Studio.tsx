@@ -2,7 +2,7 @@ import { Fragment, render } from 'preact'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks'
 import type { Preset } from 'butterchurn'
 import type { Core } from '../core/commands'
-import { EQ_KEYS, type Block, type CompileResult, type MainBlock, type SlotBlock, type StudioError, type StudioIssue } from '../studio/compile'
+import { EQ_KEYS, type Block, type CompileResult, type MainBlock, type ShaderBlock, type SlotBlock, type StudioError, type StudioIssue } from '../studio/compile'
 import { SHAPE_PARAMS, SLOT_INDEXES, WAVE_PARAMS, slotBlockTitle, slotOfBlock, slotOn, slotValue, slotsOf, writeSlots, type SlotKind, type Slots } from '../studio/slots'
 import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor, type BasicParam } from '../studio/basic'
 import { Icon } from './icons'
@@ -65,11 +65,18 @@ const BLOCKS: { id: MainBlock; title: string; legend: MessageKey; h: number }[] 
 ]
 const MAIN_TITLE: Record<MainBlock, string> = { init: 'per_frame_init', frame: 'per_frame', pixel: 'per_pixel' }
 const isMain = (b: Block): b is MainBlock => b in MAIN_TITLE
-/** Nome do bloco como no `.milk`: `per_frame`, `wave_1_per_point`… (técnico, igual nos dois idiomas). */
-const blockTitle = (b: Block): string => (isMain(b) ? MAIN_TITLE[b] : slotBlockTitle(b))
+/** Shaders (fatia 5): `warp` e `comp`, como no protótipo. */
+const SHADERS: { id: ShaderBlock; legend: MessageKey }[] = [
+  { id: 'warp', legend: 'studio.shader.warp' },
+  { id: 'comp', legend: 'studio.shader.comp' }
+]
+const isShader = (b: Block): b is ShaderBlock => b === 'warp' || b === 'comp'
+/** Nome do bloco como no `.milk`: `per_frame`, `wave_1_per_point`, `warp`… (técnico, igual nos dois idiomas). */
+const blockTitle = (b: Block): string => (isMain(b) ? MAIN_TITLE[b] : isShader(b) ? b : slotBlockTitle(b))
 
 type Status = 'ok' | 'busy' | 'err'
-type Code = Record<MainBlock, string>
+/** Equações principais e shaders: texto que o editor muda e a compilação confere. */
+type Code = Record<MainBlock | ShaderBlock, string>
 /** Parâmetros base mudados no Básico (só as chaves mexidas). */
 type Base = Record<string, number>
 /** Um passo do desfazer: tudo o que o editor muda (spec 027, fatia 3). */
@@ -79,12 +86,13 @@ interface Snap {
   slots: Slots
 }
 
-/** Abas na ordem do protótipo; Shaders e Código .milk chegam nas próximas fatias da 027. */
+/** Abas na ordem do protótipo; Código .milk chega numa próxima fatia da 027. */
 const TABS = [
   { id: 'basic', label: 'studio.tab.basic' },
   { id: 'eq', label: 'studio.tab.eq' },
   { id: 'waves', label: 'studio.tab.waves' },
-  { id: 'shapes', label: 'studio.tab.shapes' }
+  { id: 'shapes', label: 'studio.tab.shapes' },
+  { id: 'shaders', label: 'studio.tab.shaders' }
 ] as const satisfies readonly { id: string; label: MessageKey }[]
 type TabId = (typeof TABS)[number]['id']
 /** Última aba usada nesta abertura do app (reabrir o Estúdio volta nela). */
@@ -119,6 +127,8 @@ function issueText(i: StudioIssue, l: Lang = getLang()): string {
       return msgText({ key: 'studio.err.equations', params: { detail: i.detail } }, l)
     case 'shader':
       return msgText({ key: 'studio.err.shader', params: { which: i.which, detail: i.detail } }, l)
+    case 'glsl':
+      return msgText({ key: 'studio.err.glsl', params: { detail: i.detail } }, l)
     case 'raw':
       return i.text
   }
@@ -130,12 +140,16 @@ const whereText = (e: StudioError): string => (e.line ? t('studio.atLine', { blo
 const codeOf = (p: Preset): Code => ({
   init: String(p[EQ_KEYS.init] ?? ''),
   frame: String(p[EQ_KEYS.frame] ?? ''),
-  pixel: String(p[EQ_KEYS.pixel] ?? '')
+  pixel: String(p[EQ_KEYS.pixel] ?? ''),
+  warp: String(p.warp ?? ''),
+  comp: String(p.comp ?? '')
 })
 
 function withCode(source: Preset, code: Code, base: Base = {}, slots?: Slots): Preset {
   const p = structuredClone(source)
   for (const b of ['init', 'frame', 'pixel'] as MainBlock[]) p[EQ_KEYS[b]] = code[b]
+  p.warp = code.warp
+  p.comp = code.comp
   if (slots) writeSlots(p, slots)
   if (Object.keys(base).length) p.baseVals = { ...(p.baseVals && typeof p.baseVals === 'object' ? (p.baseVals as Record<string, number>) : {}), ...base }
   return p
@@ -587,8 +601,8 @@ function Studio({ api }: { api: StudioApi }) {
   }, [])
 
   const goTo = (b: Block, line: number | null, retry = true): void => {
-    const want: TabId = isMain(b) ? 'eq' : slotOfBlock(b).kind === 'wave' ? 'waves' : 'shapes'
-    if (!isMain(b)) {
+    const want: TabId = isMain(b) ? 'eq' : isShader(b) ? 'shaders' : slotOfBlock(b).kind === 'wave' ? 'waves' : 'shapes'
+    if (!isMain(b) && !isShader(b)) {
       const { kind, idx } = slotOfBlock(b)
       setOpenSlot((o) => (o[kind] === idx ? o : { ...o, [kind]: idx }))
     }
@@ -611,10 +625,6 @@ function Studio({ api }: { api: StudioApi }) {
   }
 
   const stale = status === 'err' && hadValid
-  const shaders = [
-    ['warp', String(api.source.warp ?? '')],
-    ['comp', String(api.source.comp ?? '')]
-  ].filter(([, v]) => v.trim())
 
   return (
     <div class="studio" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('studio.dialog')}>
@@ -796,17 +806,24 @@ function Studio({ api }: { api: StudioApi }) {
             <p class="note">
               {t('studio.vars')} <span class="num">bass mid treb bass_att mid_att treb_att time frame fps</span>
             </p>
-            {shaders.length > 0 && (
-              <details class="st-shaders">
-                <summary>{t('studio.shaders')}</summary>
-                {shaders.map(([k, v]) => (
-                  <div key={k}>
-                    <h3 class="num">{k}</h3>
-                    <pre class="num selectable">{v}</pre>
-                  </div>
-                ))}
-              </details>
-            )}
+          </div>
+          <div class="st-blocks" role="tabpanel" id="studio-tp-shaders" aria-labelledby="studio-tab-shaders" hidden={tab !== 'shaders'}>
+            {SHADERS.map((x) => (
+              <Editor
+                key={x.id}
+                title={x.id}
+                legend={t(x.legend)}
+                h={210}
+                label={t('studio.shader.label', { which: x.id })}
+                value={code[x.id]}
+                errLines={errors.filter((e) => e.block === x.id && e.line).map((e) => e.line!)}
+                bind={(el) => {
+                  editors.current[x.id] = el
+                }}
+                onInput={(v) => edit(x.id, v)}
+              />
+            ))}
+            <p class="note">{t('studio.shaders.note')}</p>
           </div>
           {(['wave', 'shape'] as SlotKind[]).map((kind) => {
             const id = kind === 'wave' ? 'waves' : 'shapes'
