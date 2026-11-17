@@ -561,6 +561,14 @@ async function start(): Promise<void> {
     if (!src || !library.has(src)) return
     studioBusy = true
     if (src !== core.state.current) run('preset.play', { name: src }, 'ui')
+    // Código .milk (027, fatia 6): a fonte, se o preset tem uma (importado, ou meu preset vindo de um
+    // .milk). Lida antes de abrir a camada, para a abertura seguir na mesma ordem de antes.
+    const P = window.so.presets
+    const mineSrc = library.mineInfo(src)
+    const milk = await (mineSrc ? P.mineMilk?.(mineSrc.id) : library.isImported(src) ? P.importedMilk?.(src) : undefined)?.catch((err: unknown) => {
+      window.so.log(`studio: .milk source unreadable: ${err instanceof Error ? err.message : String(err)}`)
+      return null
+    })
     const { default: EelWorker } = await import('./studio/eel-worker?worker&inline')
     const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => ({ w: settings.render.meshWidth, h: settings.render.meshHeight }))
     const s: { compiler: StudioCompiler; source: string; applied: boolean } = { compiler, source: src, applied: false }
@@ -570,12 +578,6 @@ async function start(): Promise<void> {
     const srcMine = library.mineInfo(src)
     let mineRef: { name: string; id: string } | null = srcMine ? { name: src, id: srcMine.id } : null
     const basedOn = srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
-    // Código .milk (027, fatia 6): a fonte, se o preset tem uma (importado, ou meu preset vindo de um .milk).
-    const P = window.so.presets
-    const milk = await (srcMine ? P.mineMilk?.(srcMine.id) : library.isImported(src) ? P.importedMilk?.(src) : undefined)?.catch((err: unknown) => {
-      window.so.log(`studio: .milk source unreadable: ${err instanceof Error ? err.message : String(err)}`)
-      return null
-    })
     window.so.log(`studio: opened with ${src}${milk ? ' (.milk source)' : ''}`)
     openStudio({
       core,
