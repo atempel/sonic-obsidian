@@ -32,6 +32,8 @@ export interface ImportsApi {
   removeMine(name: string): Promise<void>
   /** Abre o Estúdio com uma cópia do preset (ou o próprio, se for meu). */
   edit(name: string): void
+  /** "Novo preset" (spec 027, fatia 8): abre o Estúdio com o modelo mínimo. */
+  create(): void
 }
 
 export function Library({ core, presets, imports }: { core: Core; presets: readonly string[]; imports: ImportsApi }) {
@@ -195,9 +197,15 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
             <Icon name="library" />
             {t('library.title')}
           </div>
-          <button class="ibtn" aria-label={t('library.close')} title={t('library.closeTitle')} onClick={close}>
-            <Icon name="x" />
-          </button>
+          <div class="lib-tools">
+            <button type="button" class="btn lib-new" title={t('library.newTitle')} onClick={() => imports.create()}>
+              <Icon name="plus" small />
+              {t('library.new')}
+            </button>
+            <button class="ibtn" aria-label={t('library.close')} title={t('library.closeTitle')} onClick={close}>
+              <Icon name="x" />
+            </button>
+          </div>
         </div>
         <div class="search">
           <span class="si">

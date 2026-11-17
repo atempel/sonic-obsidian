@@ -28,6 +28,7 @@ import { setActionRunner, type ActionId } from './ui/shortcuts'
 import { closeStudio, openStudio } from './ui/Studio'
 import { setMineLookup } from './ui/preset-name'
 import { StudioCompiler } from './studio/compile'
+import { TEMPLATE_MILK } from './studio/template'
 import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
@@ -467,7 +468,8 @@ async function start(): Promise<void> {
       state.presetCount = library.count
       core.events.emit('stateChanged', { origin: 'ui' })
     },
-    openStudio: (name?: string) => void openStudioFor(name)
+    openStudio: (name?: string) => void openStudioFor(name),
+    newPreset: () => void openStudioFor(undefined, true)
   })
   // Abrir em tela cheia (Configurações › Geral).
   if (settings.startFullscreen && !isFullScreen()) core.run('window.fullscreen', {}, 'startup')
@@ -555,34 +557,69 @@ async function start(): Promise<void> {
     }
   }
 
-  const openStudioFor = async (name?: string): Promise<void> => {
+  /**
+   * `fresh` (027, fatia 8): "Novo preset" — o modelo mínimo (`studio/template.ts`), convertido pelo
+   * main como um `.milk` importado. `src` fica sendo o preset que tocava, para onde a prévia volta
+   * ao sair sem salvar.
+   */
+  const openStudioFor = async (name?: string, fresh = false): Promise<void> => {
     if (studio || studioBusy) return
-    const src = name ?? core.state.current
-    if (!src || !library.has(src)) return
+    const src = fresh ? (core.state.current ?? '') : (name ?? core.state.current)
+    if (!fresh && (!src || !library.has(src))) return
     studioBusy = true
-    if (src !== core.state.current) run('preset.play', { name: src }, 'ui')
+    const P = window.so.presets
+    let template: Preset | null = null
+    if (fresh) {
+      try {
+        template = (await P.convertMilk(TEMPLATE_MILK)).preset as Preset
+      } catch (err) {
+        window.so.log(`studio: new preset template failed: ${err instanceof Error ? err.message : String(err)}`)
+        showToast(t('toast.studio.newFailed'), { force: true })
+        studioBusy = false
+        return
+      }
+    }
+    if (!fresh && src !== core.state.current) run('preset.play', { name: src }, 'ui')
     // Código .milk (027, fatia 6): a fonte, se o preset tem uma (importado, ou meu preset vindo de um
     // .milk). Lida antes de abrir a camada, para a abertura seguir na mesma ordem de antes.
-    const P = window.so.presets
-    const mineSrc = library.mineInfo(src)
-    const milk = await (mineSrc ? P.mineMilk?.(mineSrc.id) : library.isImported(src) ? P.importedMilk?.(src) : undefined)?.catch((err: unknown) => {
-      window.so.log(`studio: .milk source unreadable: ${err instanceof Error ? err.message : String(err)}`)
-      return null
-    })
+    const mineSrc = fresh ? null : library.mineInfo(src)
+    const milk = fresh
+      ? TEMPLATE_MILK
+      : await (mineSrc ? P.mineMilk?.(mineSrc.id) : library.isImported(src) ? P.importedMilk?.(src) : undefined)?.catch((err: unknown) => {
+          window.so.log(`studio: .milk source unreadable: ${err instanceof Error ? err.message : String(err)}`)
+          return null
+        })
     const { default: EelWorker } = await import('./studio/eel-worker?worker&inline')
     const compiler = new StudioCompiler(ctx, () => new EelWorker(), () => ({ w: settings.render.meshWidth, h: settings.render.meshHeight }))
     const s: { compiler: StudioCompiler; source: string; applied: boolean } = { compiler, source: src, applied: false }
     studio = s
     probe = null
     run('ui.open', { overlay: 'studio' }, 'ui')
-    const srcMine = library.mineInfo(src)
+    const srcMine = fresh ? null : library.mineInfo(src)
     let mineRef: { name: string; id: string } | null = srcMine ? { name: src, id: srcMine.id } : null
-    const basedOn = srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
-    window.so.log(`studio: opened with ${src}${milk ? ' (.milk source)' : ''}`)
+    const basedOn = fresh ? null : srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
+    const source = template ?? library.get(src)
+    window.so.log(fresh ? 'studio: opened with a new preset (template)' : `studio: opened with ${src}${milk ? ' (.milk source)' : ''}`)
+    const close = (saved: string | null): void => {
+      stopCompare()
+      closeStudio()
+      compiler.dispose()
+      studio = null
+      studioBusy = false
+      state.studio = undefined
+      state.studioSlots = undefined
+      run('ui.close', {}, 'ui')
+      window.so.log(`studio: closed${saved ? ` with ${saved}` : ''}`)
+      // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).
+      if (saved) run('preset.play', { name: saved }, 'ui')
+      else if (s.applied && library.has(src)) run('preset.play', { name: src }, 'ui')
+      rotation.restart(performance.now())
+    }
     openStudio({
       core,
-      sourceName: src,
-      source: structuredClone(library.get(src)),
+      sourceName: fresh ? '' : src,
+      fresh,
+      source: structuredClone(source),
       mine: srcMine,
       compile: (p) => compiler.compile(p),
       apply: (p) => {
@@ -624,20 +661,11 @@ async function start(): Promise<void> {
         core.events.emit('stateChanged', { origin: 'ui' }) // Biblioteca e busca veem o novo
         return { name: finalName, id: r.id, meta: r.meta }
       },
-      close: (saved) => {
-        stopCompare()
-        closeStudio()
-        compiler.dispose()
-        studio = null
-        studioBusy = false
-        state.studio = undefined
-        state.studioSlots = undefined
-        run('ui.close', {}, 'ui')
-        window.so.log(`studio: closed${saved ? ` with ${saved}` : ''}`)
-        // Salvo: o meu preset vira o atual. Sem salvar: volta o original (a prévia mostrava a edição).
-        if (saved) run('preset.play', { name: saved }, 'ui')
-        else if (s.applied && library.has(src)) run('preset.play', { name: src }, 'ui')
-        rotation.restart(performance.now())
+      close,
+      // Novo preset de dentro do Estúdio: fecha este (o Estúdio já confirmou o que não foi salvo) e abre o modelo.
+      newPreset: () => {
+        close(null)
+        void openStudioFor(undefined, true)
       },
       log: (m) => window.so.log(m),
       reportCost: (t) => {
@@ -650,7 +678,7 @@ async function start(): Promise<void> {
         return (await window.so.presets.mineVersion(mineRef.id, n)) as Preset
       },
       // Comparar (fatia 4): o "original" de um meu preset é aquele em que ele se baseou, se ainda existe.
-      original: structuredClone(srcMine?.meta.basedOn && library.has(srcMine.meta.basedOn.name) ? library.get(srcMine.meta.basedOn.name) : library.get(src)),
+      original: structuredClone(srcMine?.meta.basedOn && library.has(srcMine.meta.basedOn.name) ? library.get(srcMine.meta.basedOn.name) : source),
       compareStart: startCompare,
       compareStop: stopCompare,
       milk: milk ?? null,

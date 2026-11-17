@@ -21,8 +21,10 @@ import './studio.css'
  */
 export interface StudioApi {
   core: Core
-  /** Preset de origem (do pacote, importado ou meu). */
+  /** Preset de origem (do pacote, importado ou meu); vazio no "Novo preset". */
   sourceName: string
+  /** "Novo preset" (027, fatia 8): `source` é o modelo mínimo, sem origem nem crédito de terceiros. */
+  fresh?: boolean
   source: Preset
   /** Editando um preset meu: salvar sobrescreve este. */
   mine: { id: string; meta: SoMineMeta } | null
@@ -37,6 +39,8 @@ export interface StudioApi {
   save(req: { preset: Preset; title: string; author: string; milk?: string }): Promise<{ name: string; id: string; meta: SoMineMeta }>
   /** Sai do Estúdio. `saved` = nome do último salvamento (vira o preset atual). */
   close(saved: string | null): void
+  /** Troca o que está aberto pelo modelo do "Novo preset" (o Estúdio confirma antes o que não foi salvo). */
+  newPreset(): void
   log(message: string): void
   /** Custo da última compilação, para o HUD. */
   reportCost(text: string): void
@@ -238,7 +242,7 @@ function Studio({ api }: { api: StudioApi }) {
   const [hadValid, setHadValid] = useState(false)
   const [probsOpen, setProbsOpen] = useState(true)
   const [saved, setSaved] = useState<{ name: string; id: string; meta: SoMineMeta } | null>(api.mine ? { name: api.sourceName, ...api.mine } : null)
-  const [title, setTitle] = useState(() => (api.mine ? api.sourceName : t('studio.remixOf', { name: originalCredit(api.sourceName).name.split(' - ').slice(1).join(' - ') || api.sourceName })))
+  const [title, setTitle] = useState(() => (api.mine ? api.sourceName : api.fresh ? t('studio.defaultTitle') : t('studio.remixOf', { name: originalCredit(api.sourceName).name.split(' - ').slice(1).join(' - ') || api.sourceName })))
   const [dirty, setDirty] = useState(false)
   const [askAuthor, setAskAuthor] = useState(false)
   const [authorDraft, setAuthorDraft] = useState('')
@@ -289,7 +293,7 @@ function Studio({ api }: { api: StudioApi }) {
   const [, setLangTick] = useState(0)
   useEffect(() => onLanguage(() => setLangTick((n) => n + 1)), [])
 
-  const basedOn = api.mine ? api.mine.meta.basedOn : originalCredit(api.sourceName)
+  const basedOn = api.mine ? api.mine.meta.basedOn : api.fresh ? null : originalCredit(api.sourceName)
   const author = settings.authorName || t('credit.mine.defaultAuthor')
   const credit = t('credit.by', { author: mineCredit({ author: saved?.meta.author ?? author, basedOn }) })
 
@@ -466,8 +470,9 @@ function Studio({ api }: { api: StudioApi }) {
   }, [cmp])
 
   // A cópia aberta já está no visual; a primeira compilação só confere e mostra o status.
+  // O modelo do "Novo preset" ainda não está: a primeira compilação o leva ao visual.
   useEffect(() => {
-    void compile(initial, false)
+    void compile(initial, !!api.fresh)
   }, [])
   // Meu preset vindo de um `.milk`: o GLSL salvo pode ter sido editado à mão. O que a fonte dá
   // convertida diz se o HLSL do `.milk` ainda corresponde aos shaders (nota na aba Código).
@@ -693,6 +698,17 @@ function Studio({ api }: { api: StudioApi }) {
     }
     api.close(saved?.name ?? null)
   }
+  /** "Novo preset" (027, fatia 8): com mudanças não salvas, o primeiro clique só avisa; o segundo (em 3 s) descarta. */
+  const newAt = useRef(0)
+  const newPreset = (): void => {
+    const now = performance.now()
+    if (dirty && now - newAt.current >= ESC_WINDOW_MS) {
+      newAt.current = now
+      showToast(t('toast.studio.unsavedNew'), { force: true })
+      return
+    }
+    api.newPreset()
+  }
   const keyRef = useRef<(e: KeyboardEvent) => void>(() => {})
   keyRef.current = (e: KeyboardEvent) => {
     const tgt = e.target as HTMLElement | null
@@ -839,6 +855,10 @@ function Studio({ api }: { api: StudioApi }) {
               </>
             )}
           </div>
+          <button type="button" class="btn btn-ghost st-new" title={t('studio.newTitle')} aria-label={t('studio.new')} onClick={newPreset}>
+            <Icon name="plus" />
+            <span class="lbl">{t('studio.new')}</span>
+          </button>
           <button
             type="button"
             class="btn btn-ghost st-ver"
@@ -936,7 +956,7 @@ function Studio({ api }: { api: StudioApi }) {
               {cmp && <span class="chip tl">{cmp.version ? t('studio.cmp.version', { time: verTime(cmp.version.savedAt) }) : t('studio.cmp.original')}</span>}
             </div>
             <div class="st-pane rmx" ref={rmxPane}>
-              <span class="chip tl">{dirty || !saved ? t('studio.chip.remix') : t('studio.chip.saved')}</span>
+              <span class="chip tl">{dirty || !saved ? t(api.fresh || saved?.meta.basedOn === null ? 'studio.chip.new' : 'studio.chip.remix') : t('studio.chip.saved')}</span>
             </div>
             {stale && (
               <span class="chip tr warn">

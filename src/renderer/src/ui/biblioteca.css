@@ -43,6 +43,9 @@ body.lib-open .lib-scrim { opacity: 1; pointer-events: auto; transition-duration
 body.lib-open .lib { transform: none; visibility: visible; transition: transform 250ms var(--ease-out), visibility 0s; }
 body.lib-open .edge, body.palette-open .edge { opacity: 0; visibility: hidden; }
 .lib-head { height: 56px; flex: none; display: flex; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; }
+/* "Novo preset" (spec 027, fatia 8), como no protótipo (`.lib-tools`). */
+.lib-tools { display: flex; align-items: center; gap: 4px; }
+.lib-tools .btn { height: 30px; padding: 0 10px; font-size: 13px; }
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
 .brand svg { width: 16px; height: 16px; stroke: var(--violet); fill: none; stroke-width: 1.25; stroke-linejoin: round; stroke-linecap: round; }
 .lib .search { position: relative; margin: 0 12px 12px; }
