@@ -1,6 +1,6 @@
 # 027 — Estúdio de presets (P1): parâmetros, shaders, versões e exportar
 
-**Fase:** 3 · **Status:** Em andamento — fatias 1 (abas e Básico), 2 (Ondas e Formas), 3 (Histórico e desfazer) e 4 (Comparar com o original, também o "Comparar" da gaveta de versões) feitas em 2026-11-16; fatia 5 (Shaders) e fatia 6 (Código `.milk`) em 2026-11-17; próxima: fatia 7 (Exportar `.milk`). Perguntas fechadas pela rodada 2026-11-16 (`agent-decided`); uma fatia por PR · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
+**Fase:** 3 · **Status:** Em andamento — fatias 1 (abas e Básico), 2 (Ondas e Formas), 3 (Histórico e desfazer) e 4 (Comparar com o original, também o "Comparar" da gaveta de versões) feitas em 2026-11-16; fatias 5 (Shaders), 6 (Código `.milk`) e 7 (Exportar `.milk`) em 2026-11-17; próxima: fatia 8 (Novo preset). Perguntas fechadas pela rodada 2026-11-16 (`agent-decided`); uma fatia por PR · **Issue:** [#75](https://github.com/atempel/sonic-obsidian/issues/75) · **Personas:** Criador de Presets, Artista Independente ([personas](../research/mercado/personas.md)) · **Depende de:** [026](026-estudio-presets-p0.md)
 
 ## Problema
 Com a 026, o usuário edita as equações e salva. Falta o resto do que o desenho do Estúdio promete: mexer nos parâmetros sem escrever código, editar ondas, formas e shaders, voltar a uma versão anterior e levar o preset para fora do app.

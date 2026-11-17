@@ -62,6 +62,8 @@ interface Window {
       /** Fonte .milk (027, fatia 6); opcional no mock dos testes antigos. `null` = não tem. */
       importedMilk?(name: string): Promise<string | null>
       mineMilk?(id: string): Promise<string | null>
+      /** Exportar .milk ou JSON (027, fatia 7); opcional no mock dos testes antigos. */
+      exportFile?(kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
     }
     /** Opcional: os testes headless e o modo dev sem preload novo não têm. */
     update?: {

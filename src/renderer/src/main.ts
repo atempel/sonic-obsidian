@@ -654,7 +654,11 @@ async function start(): Promise<void> {
       compareStart: startCompare,
       compareStop: stopCompare,
       milk: milk ?? null,
-      convertMilk: async (text) => (await window.so.presets.convertMilk(text)).preset as Preset
+      convertMilk: async (text) => (await window.so.presets.convertMilk(text)).preset as Preset,
+      exportFile: async (kind, name, text) => {
+        if (!window.so.presets.exportFile) throw new Error('[invalid] export unavailable')
+        return window.so.presets.exportFile(kind, name, text)
+      }
     })
   }
 

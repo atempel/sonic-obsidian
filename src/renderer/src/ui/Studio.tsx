@@ -59,6 +59,8 @@ export interface StudioApi {
   milk: string | null
   /** `.milk` → preset, pelo conversor do main (o mesmo da importação). */
   convertMilk(text: string): Promise<Preset>
+  /** Exportar (027, fatia 7): grava pelo diálogo nativo do main. `canceled` = fechou o diálogo. */
+  exportFile(kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
 }
 
 const DEBOUNCE_MS = 400
@@ -260,6 +262,11 @@ function Studio({ api }: { api: StudioApi }) {
   const origPane = useRef<HTMLDivElement>(null)
   const rmxPane = useRef<HTMLDivElement>(null)
   const verBtn = useRef<HTMLButtonElement>(null)
+  const expBtn = useRef<HTMLButtonElement>(null)
+  const [expOpen, setExpOpen] = useState(false)
+  useEffect(() => {
+    if (expOpen) root.current?.querySelector<HTMLElement>('.st-exp-milk')?.focus()
+  }, [expOpen])
   const drClose = useRef<HTMLButtonElement>(null)
   const root = useRef<HTMLDivElement>(null)
   // ── Código .milk (spec 027, fatia 6) ────────────────────
@@ -596,31 +603,40 @@ function Studio({ api }: { api: StudioApi }) {
     hlsl.current ? presetToMilk(withCode(api.source, latest.current, latestBase.current, latestSlots.current) as Record<string, unknown>, hlsl.current.src) : undefined
 
   // ── Salvar ──────────────────────────────────────────────
-  const save = async (authorName?: string): Promise<void> => {
-    if (settings.authorName === null && authorName === undefined && !saved) {
-      setAuthorDraft('')
-      setAskAuthor(true)
-      return
-    }
-    // Texto .milk esperando a pausa: converte antes; se não converte, não salva.
+  /**
+   * Antes de gravar (salvar ou exportar): converte o `.milk` que espera a pausa e garante que o
+   * estado atual é exatamente o que compilou. `false` = há erro (o toast `errKey` já apareceu).
+   */
+  const ready = async (errKey: MessageKey): Promise<boolean> => {
     if (milkDraftRef.current !== null && milkTimer.current !== undefined) {
       window.clearTimeout(milkTimer.current)
       milkTimer.current = undefined
       await applyMilk(milkDraftRef.current)
     } else if (milkPending.current) await milkPending.current
     if (milkErrRef.current) {
-      showToast(t('toast.studio.fixErrors'), { force: true })
-      return
+      showToast(t(errKey), { force: true })
+      return false
     }
-    // Garante que o que vai para o disco é exatamente o que compilou.
     const c = latest.current
     if (status !== 'ok' || lastCompiled.current !== keyOf(c)) {
       const ok = await compile(c)
       if (!ok) {
-        showToast(t('toast.studio.fixErrors'), { force: true })
-        return
+        showToast(t(errKey), { force: true })
+        return false
       }
     }
+    return true
+  }
+
+  const save = async (authorName?: string): Promise<void> => {
+    if (settings.authorName === null && authorName === undefined && !saved) {
+      setExpOpen(false)
+      setAuthorDraft('')
+      setAskAuthor(true)
+      return
+    }
+    if (!(await ready('toast.studio.fixErrors'))) return
+    const c = latest.current
     try {
       const name = (saved?.name ?? title.trim()) || t('studio.defaultTitle')
       const r = await api.save({ preset: withCode(api.source, c, latestBase.current, latestSlots.current), title: name, author: authorName ?? author, milk: milkNow() })
@@ -634,6 +650,28 @@ function Studio({ api }: { api: StudioApi }) {
       // O main lança em inglês com código: a tela traduz, o log fica em inglês (spec 030, P1).
       api.log(`studio: save failed: ${mainErrorText(err)}`)
       showToast(t('toast.studio.notSaved', { error: msgText(mainError(err)) }), { force: true })
+    }
+  }
+
+  // ── Exportar (spec 027, fatia 7) ────────────────────────
+  /**
+   * `.milk` com o HLSL da fonte quando há uma; sem fonte (cópia de preset do pacote), só parâmetros
+   * e equações, com aviso antes. O JSON do Butterchurn 3 leva tudo, shaders GLSL inclusive.
+   */
+  const doExport = async (kind: 'milk' | 'json'): Promise<void> => {
+    setExpOpen(false)
+    expBtn.current?.focus()
+    if (!(await ready('toast.studio.fixErrorsExport'))) return
+    const p = withCode(api.source, latest.current, latestBase.current, latestSlots.current) as Record<string, unknown>
+    const text = kind === 'milk' ? presetToMilk(p, hlsl.current?.src ?? null) : `${JSON.stringify(p, null, 2)}\n`
+    try {
+      const r = await api.exportFile(kind, title.trim() || t('studio.defaultTitle'), text)
+      if (!r.ok) return
+      api.log(`studio: exported ${kind}${kind === 'milk' && !hlsl.current ? ' without shaders' : ''}`)
+      showToast(t('toast.studio.exported', { name: r.name ?? '' }), { force: true })
+    } catch (err) {
+      api.log(`studio: export failed: ${mainErrorText(err)}`)
+      showToast(t('toast.studio.notExported', { error: msgText(mainError(err)) }), { force: true })
     }
   }
 
@@ -697,6 +735,11 @@ function Studio({ api }: { api: StudioApi }) {
       setAskAuthor(false)
       return
     }
+    if (expOpen) {
+      setExpOpen(false)
+      expBtn.current?.focus()
+      return
+    }
     // Esc num campo só sai do campo; com a gaveta aberta, fecha a gaveta; senão, volta ao Palco.
     if (inField) tgt!.blur()
     else if (drawer) openDrawer(false)
@@ -748,6 +791,8 @@ function Studio({ api }: { api: StudioApi }) {
   const preset = tab === 'code' ? (withCode(api.source, code, base, slots) as Record<string, unknown>) : null
   const codeText = !preset ? '' : hlsl.current ? (milkDraft ?? presetToMilk(preset, hlsl.current.src)) : JSON.stringify(preset, null, 2)
   const shadersEdited = !!hlsl.current && (code.warp !== hlsl.current.glsl.warp || code.comp !== hlsl.current.glsl.comp)
+  /** Exportar: sem fonte `.milk`, os shaders (GLSL) do preset não vão no `.milk`. */
+  const expLosesShaders = !hlsl.current && !!(code.warp.trim() || code.comp.trim())
 
   return (
     <div class="studio" ref={root} tabIndex={-1} role="dialog" aria-modal="true" aria-label={t('studio.dialog')}>
@@ -807,9 +852,51 @@ function Studio({ api }: { api: StudioApi }) {
             <Icon name="history" />
             <span class="lbl">{t('studio.ver.title')}</span>
           </button>
+          <button
+            type="button"
+            class="btn btn-ghost st-exp-btn"
+            ref={expBtn}
+            title={t('studio.exp.button')}
+            aria-label={t('studio.exp.button')}
+            aria-expanded={expOpen}
+            aria-controls="studio-export"
+            onClick={() => {
+              setAskAuthor(false)
+              setExpOpen(!expOpen)
+            }}
+          >
+            <Icon name="download" />
+            <span class="lbl">{t('studio.exp.button')}</span>
+          </button>
           <button type="button" class="btn btn-primary st-save" title={t('studio.saveTitle')} onClick={() => void save()}>
             {t('studio.save')} <span class="save-k">Ctrl+S</span>
           </button>
+          {expOpen && (
+            <div class="st-ask st-exp" id="studio-export" role="dialog" aria-labelledby="studio-export-h">
+              <h2 id="studio-export-h">{t('studio.exp.title')}</h2>
+              {expLosesShaders ? (
+                <p class="st-exp-warn" role="note">
+                  <Icon name="triangle-alert" small />
+                  <span>{t('studio.exp.noShaders')}</span>
+                </p>
+              ) : shadersEdited ? (
+                <p class="st-exp-warn" role="note">
+                  <Icon name="triangle-alert" small />
+                  <span>{t('studio.exp.glslEdited')}</span>
+                </p>
+              ) : (
+                <p>{t('studio.exp.milkHelp')}</p>
+              )}
+              <button type="button" class="btn btn-primary st-exp-milk" onClick={() => void doExport('milk')}>
+                <Icon name="download" small />
+                {expLosesShaders ? t('studio.exp.milkNoShaders') : t('studio.exp.milk')}
+              </button>
+              <button type="button" class="btn st-exp-json" onClick={() => void doExport('json')}>
+                {t('studio.exp.json')}
+              </button>
+              <p>{t('studio.exp.jsonHelp')}</p>
+            </div>
+          )}
           {askAuthor && (
             <div class="st-ask" role="dialog" aria-label={t('studio.ask.title')}>
               <label for="studio-ask-in">{t('studio.ask.title')}</label>
