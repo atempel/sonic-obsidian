@@ -413,7 +413,7 @@ async function start(): Promise<void> {
         window.so.log(`preset shader doesn't compile on this GPU: ${name}: ${err}`)
         if (badShader.has(name)) return
         badShader.add(name)
-        showToast(t('toast.gpuSkipped'), { force: true })
+        showToast(t('toast.gpuSkipped'), { stage: true })
         core.run('preset.next', { cut: true }, 'rotation')
       })
       .catch((err: unknown) => {
@@ -777,11 +777,11 @@ async function start(): Promise<void> {
   }
   const toggleHold = (): void => {
     const r = core.run<boolean>('preset.hold', {}, 'keyboard')
-    if (r.ok) showToast(t(r.value ? 'toast.held' : 'toast.released'), { force: true })
+    if (r.ok) showToast(t(r.value ? 'toast.held' : 'toast.released'), { stage: true })
   }
   const toggleBreath = (): void => {
     const r = core.run<boolean>('audio.breath', {}, 'keyboard')
-    if (r.ok) showToast(t(r.value ? 'toast.breathOn' : 'toast.breathOff'), { force: true })
+    if (r.ok) showToast(t(r.value ? 'toast.breathOn' : 'toast.breathOff'), { stage: true })
   }
   const toggleRotation = (): void => {
     run('rotation.set', { enabled: !settings.rotation.enabled })
@@ -1021,7 +1021,7 @@ async function start(): Promise<void> {
       if (!name || broken.has(name)) return
       broken.add(name)
       window.so.log(`preset froze and was skipped: ${name}: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
-      showToast(t('toast.presetFroze'), { force: true })
+      showToast(t('toast.presetFroze'), { stage: true })
       run('preset.next', { cut: true }, 'rotation')
     }
   }

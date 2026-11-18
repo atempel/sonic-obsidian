@@ -70,6 +70,14 @@ const cmpState = (page) => page.evaluate(() => ({
     const s0 = await cmpState(page)
     ok('A1 switch "Comparar com o original" abaixo da prévia, desligado', s0.checked === false && !s0.split && s0.canvases === 0 && (await page.$eval('label[for=studio-cmp]', e => e.textContent.trim())) === 'Comparar com o original', JSON.stringify(s0))
     ok('A2 sem comparar: um painel só, com o selo "Seu remix"', s0.right === 'Seu remix' && !(await page.isVisible('.st-pane.orig')))
+    const solo = await page.evaluate(() => {
+      const r = document.querySelector('.st-pane.rmx').getBoundingClientRect(), m = document.getElementById('canvas').getBoundingClientRect()
+      const chip = document.querySelector('.st-pane.rmx .chip').getBoundingClientRect()
+      return { r: [r.left, r.top, r.right, r.bottom], m: [m.left, m.top, m.right, m.bottom], chip: [chip.left, chip.top], w: innerWidth, h: innerHeight }
+    })
+    const inside = (k, p) => k[0] >= p[0] - 1 && k[1] >= p[1] - 1 && k[2] <= p[2] + 1 && k[3] <= p[3] + 1
+    ok('A2b quadro inteiro na prévia: o visual cabe no painel "Seu remix", com a proporção da janela (#143)', inside(solo.m, solo.r) && Math.abs((solo.m[2] - solo.m[0]) / (solo.m[3] - solo.m[1]) - solo.w / solo.h) < 0.02 && (solo.m[2] - solo.m[0]) < solo.w, JSON.stringify(solo))
+    ok('A2c o selo "Seu remix" fica sobre o quadro', solo.chip[0] >= solo.m[0] && solo.chip[1] >= solo.m[1] - 1, JSON.stringify(solo))
 
     await turn(page, true)
     await page.waitForTimeout(300)
@@ -78,10 +86,16 @@ const cmpState = (page) => page.evaluate(() => ({
     const box = await page.evaluate(() => {
       const o = document.querySelector('.st-pane.orig').getBoundingClientRect(), r = document.querySelector('.st-pane.rmx').getBoundingClientRect()
       const c = document.querySelector('.st-cmp-canvas'), cr = c.getBoundingClientRect()
-      return { ow: o.width, rw: r.width, dx: r.left - o.left, cl: cr.left, ct: cr.top, cw: cr.width, ch: cr.height, w: innerWidth, h: innerHeight, glw: c.width }
+      const m = document.getElementById('canvas').getBoundingClientRect()
+      return { ow: o.width, rw: r.width, o: [o.left, o.top, o.right, o.bottom], r: [r.left, r.top, r.right, r.bottom], c: [cr.left, cr.top, cr.right, cr.bottom], m: [m.left, m.top, m.right, m.bottom], w: innerWidth, h: innerHeight, glw: c.width }
     })
+    // Quadro inteiro (#143): cada canvas cabe inteiro no seu painel, com a proporção da janela, e centrado.
+    const fits = (k, p) => k[0] >= p[0] - 1 && k[1] >= p[1] - 1 && k[2] <= p[2] + 1 && k[3] <= p[3] + 1 &&
+      Math.abs((k[2] - k[0]) / (k[3] - k[1]) - box.w / box.h) < 0.02 &&
+      (Math.abs(k[0] - p[0]) <= 1 || Math.abs(k[1] - p[1]) <= 1) &&
+      Math.abs((k[0] + k[2]) / 2 - (p[0] + p[2]) / 2) <= 1 && Math.abs((k[1] + k[3]) / 2 - (p[1] + p[3]) / 2) <= 1
     ok('A4 os dois painéis têm a mesma largura', Math.abs(box.ow - box.rw) <= 2, JSON.stringify(box))
-    ok('A5 o canvas do original mostra a mesma região do quadro que a direita (deslocado pela largura do painel)', Math.abs(box.cl + box.dx) <= 1 && Math.abs(box.ct) <= 1 && Math.abs(box.cw - box.w) <= 1 && Math.abs(box.ch - box.h) <= 1, JSON.stringify(box))
+    ok('A5 os dois quadros aparecem inteiros: o original no painel da esquerda e o remix no da direita (#143)', fits(box.c, box.o) && fits(box.m, box.r), JSON.stringify(box))
     ok('A6 o segundo motor desenha no tamanho da janela', box.glw >= Math.round(box.w * 0.5), String(box.glw))
     const hudOn = await H.poll(page, () => /studio: compare on · minimum 0 fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
     ok('A7 HUD mostra a comparação ligada e o mínimo de fps', hudOn, (await hud(page)).split('\n').filter(l => l.startsWith('studio')).join(' | '))
@@ -135,6 +149,8 @@ const cmpState = (page) => page.evaluate(() => ({
     await page.waitForTimeout(200)
     if (await page.$('.studio')) { await page.keyboard.press('Escape'); await page.waitForTimeout(300) }
     ok('A20 sair do Estúdio desliga a comparação', !(await page.$('.studio')) && (await page.$$('.st-cmp-canvas')).length === 0 && !/studio: compare/.test(await hud(page)))
+    const full = await page.evaluate(() => { const m = document.getElementById('canvas').getBoundingClientRect(); return [m.left, m.top, m.width, m.height, innerWidth, innerHeight] })
+    ok('A20b fora do Estúdio o visual volta à tela cheia (#143)', Math.abs(full[0]) <= 1 && Math.abs(full[1]) <= 1 && Math.abs(full[2] - full[4]) <= 1 && Math.abs(full[3] - full[5]) <= 1, JSON.stringify(full))
     ok('A21 sem erros na página', errs.length === 0, errs.join(' | '))
     await page.close()
 

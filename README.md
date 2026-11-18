@@ -42,7 +42,7 @@ Sonic Obsidian is a desktop app that turns the audio you choose to play — Spot
 Under the hood it runs [Butterchurn](https://github.com/jberg/butterchurn), a WebGL 2 implementation of MilkDrop 2, with its library of community presets. On top of that sits the Sonic Obsidian interface: a quiet, exact shell around something alive.
 
 > [!NOTE]
-> **Status:** in active development. Phase 2 (the full interface) is done and Phase 3 (sources and presets) is under way; the current version is **v0.7.0**, and the installed app now updates itself. The code is MIT-licensed.
+> **Status:** in active development. Phase 2 (the full interface) is done and Phase 3 (sources and presets) is under way; the current version is **v0.8.0**, with the full Preset Studio, and the installed app updates itself. The code is MIT-licensed.
 >
 > **Download (Windows 10/11, x64):** [installer](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (per user, no admin rights) · [portable zip](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [all releases](https://github.com/atempel/sonic-obsidian/releases). The app is not code-signed: if SmartScreen warns, click **More info → Run anyway**.
 
@@ -98,14 +98,14 @@ Every preset is someone's work. The preset name carries its authors, and the app
 - **Switch on the beat.** Change presets every N bars of the music; `Enter` holds the visual you like and `Shift+Enter` lets it rest without reacting.
 - **Expressiveness.** `+` / `−` set how strongly the visual reacts; `X` cycles its character and `Shift+X` its memory (four modes, including Live for steady tracks). The visual memory learns from sound only, and real silence means no pulsing.
 - **Normalize audio.** Optional automatic gain so quiet and loud tracks move the visuals alike, with the live gain shown in Quick settings. It never changes what you hear.
-- **Your own presets.** Import `.milk` files and organize collections right from the Stage. The Preset Studio (`E`) edits a preset's equations with a live preview and saves it as yours, keeping the original credit.
+- **Your own presets.** Import `.milk` files and organize collections right from the Stage. The Preset Studio (`E`) shows the whole frame in a live preview while you edit parameters, waves and shapes, equations, shaders or the `.milk` code itself; it checks for typos, keeps a version history, compares with the original, starts new presets from a template, and exports `.milk`. What you save is yours, keeping the original credit.
 - **English and Portuguese (Brazil).** The app follows the Windows language on first launch; switch any time in Settings › General › Language, with no restart.
 - **Automatic updates.** The installed app checks GitHub Releases once a day, downloads in the background and asks before restarting to update. Turn it off in Settings › About › Updates. The portable zip only tells you a new version exists.
 - **Silence state.** When nothing is playing, the app says so instead of showing a frozen frame.
 - **Persistence.** Settings and library survive restarts and updates.
 - **Diagnostics.** `Ctrl+Shift+D` shows a debug HUD (fps, memory, audio levels, reaction); a log file records crashes and GPU events.
 
-**Coming next** — the full Preset Studio (parameters, waves and shapes, shaders, version history, `.milk` export, new presets from scratch), the microphone as a source, a speed control for the visual, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
+**Coming next** — the microphone as a source, a speed control for the visual, and a local [MCP](https://modelcontextprotocol.io) server so the AI tool you already use can control the app live and author presets. The app itself never embeds AI. Full plan in [Roadmap](#roadmap).
 
 ## Keyboard
 
@@ -211,7 +211,7 @@ Each feature starts as a spec in [`docs/specs/`](docs/specs/), becomes a GitHub 
 | 0 — Spike | Prove loopback + Butterchurn in Electron | Done |
 | 1 — Core | Presets by keyboard, rotation, window, input signal | Done |
 | 2 — Interface v3 | Stage, Library, search, transitions, settings, setup, shortcuts | Done (v0.5.0) |
-| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | In progress (v0.6.0: `.milk` import, Studio P0, beat switching, audio reaction · v0.7.0: English/Portuguese, automatic updates · next, v0.8.0: full Studio) |
+| 3 — Sources and presets | Microphone, audio files, `.milk` import, preset Studio | In progress (v0.6.0: `.milk` import, Studio P0, beat switching, audio reaction · v0.7.0: English/Portuguese, automatic updates · v0.8.0: full Studio) |
 | 4 — MCP | Live control and preset authoring from your AI tool | Planned |
 | 5 — Extras | Multi-monitor rack, beat/BPM, installer, start with Windows | Planned (installer shipped in v0.5.0, automatic updates in v0.7.0) |
 
