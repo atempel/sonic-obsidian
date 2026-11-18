@@ -57,6 +57,8 @@ interface Window {
       listMine(): Promise<SoMineEntry[]>
       saveMine(data: { id?: string; meta?: Omit<SoMineMeta, 'createdAt'>; preset: Record<string, unknown>; milk?: string | null }): Promise<{ id: string; meta: SoMineMeta }>
       removeMine(id: string): Promise<void>
+      /** Renomear (027, fatia 9); opcional no mock dos testes antigos. */
+      renameMine?(id: string, title: string): Promise<SoMineMeta>
       mineVersions(id: string): Promise<SoMineVersion[]>
       mineVersion(id: string, n: number): Promise<Record<string, unknown>>
       /** Fonte .milk (027, fatia 6); opcional no mock dos testes antigos. `null` = não tem. */

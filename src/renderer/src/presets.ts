@@ -127,6 +127,24 @@ export class PresetLibrary {
     else this.addPresets({ [name]: preset })
   }
 
+  /**
+   * Renomear (027, fatia 9): o mesmo preset passa a responder pelo nome novo, inclusive no
+   * histórico do "Anterior". `to` precisa estar livre (quem chama usa `freeName`).
+   */
+  renameMine(from: string, to: string, meta: SoMineMeta): boolean {
+    const info = this.mine.get(from)
+    const preset = this.presets.get(from)
+    if (!info || !preset || from === to || this.presets.has(to)) return false
+    this.mine.delete(from)
+    this.mine.set(to, { id: info.id, meta })
+    this.presets.delete(from)
+    this.presets.set(to, preset)
+    this.names = [...this.presets.keys()].sort(compareText)
+    for (let i = 0; i < this.history.length; i++) if (this.history[i] === from) this.history[i] = to
+    if (this.current === from) this.current = to
+    return true
+  }
+
   removeMine(name: string): void {
     if (!this.mine.delete(name)) return
     this.presets.delete(name)

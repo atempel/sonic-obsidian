@@ -390,6 +390,44 @@ export class Core {
       return true
     },
 
+    /**
+     * Renomear um "meu" preset (027, fatia 9): favoritos, ocultos, recentes, coleções, fps medido,
+     * último preset e favorito de abertura passam para o nome novo. Quem chama já renomeou o preset
+     * na biblioteca (`to` precisa existir e `from` não).
+     */
+    'library.renamePreset': (a, origin) => {
+      const from = str(a.from, 'from')
+      const to = str(a.to, 'to')
+      if (!this.presets.has(to) || this.presets.has(from)) fail(`renomear: ${from} → ${to} fora da biblioteca`)
+      const lib = this.state.library
+      const swap = (list: string[]): void => {
+        const i = list.indexOf(from)
+        if (i < 0) return
+        if (list.includes(to)) list.splice(i, 1)
+        else list[i] = to
+      }
+      for (const list of [lib.favorites, lib.hidden, lib.hiddenPerf, lib.recents]) swap(list)
+      for (const c of lib.collections) swap(c.presets)
+      if (from in lib.presetFps) {
+        lib.presetFps[to] = lib.presetFps[from]!
+        delete lib.presetFps[from]
+      }
+      const st = this.state.settings
+      let settingsChanged = false
+      if (st.lastPreset === from) {
+        st.lastPreset = to
+        settingsChanged = true
+      }
+      if (st.startupFavorite === from) {
+        st.startupFavorite = to
+        settingsChanged = true
+      }
+      if (this.state.current === from) this.state.current = to
+      if (settingsChanged) this.changedSettings(origin)
+      this.changedLibrary(origin)
+      return to
+    },
+
     // ── coleções ────────────────────────────────────────────
     'collection.create': (a, origin) => {
       const cols = this.state.library.collections

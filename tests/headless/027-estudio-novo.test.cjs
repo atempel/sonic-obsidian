@@ -121,12 +121,12 @@ const srv = H.serve(5250)
   await page.waitForTimeout(200)
   await page.click('.st-new')
   await page.waitForTimeout(400)
-  ok('4b com mudança não salva: avisa e não troca', /Clique de novo em Novo preset/.test(await toastText()) && (await page.inputValue('#studio-name')) === 'Meu preset' && !!(await page.$('#studio-name[readonly]')), await toastText())
+  ok('4b com mudança não salva: avisa e não troca', /Clique de novo em Novo preset/.test(await toastText()) && (await page.inputValue('#studio-name')) === 'Meu preset' && (await page.$eval('.st-prev .chip.tl', e => e.textContent.trim())) === 'Seu preset' && (await page.evaluate(() => window.__logs)).filter(l => l === 'studio: opened with a new preset (template)').length === 1, await toastText())
   // O segundo clique precisa vir em até 3 s; o navegador do teste é lento, então os dois vão juntos (o primeiro rearma o aviso).
   await page.$eval('.st-new', (e) => { e.click(); e.click() })
-  await H.poll(page, () => { const n = document.querySelector('#studio-name'); return !!n && !n.readOnly }, { timeout: 8000 })
+  await H.poll(page, () => window.__logs.filter(l => l === 'studio: opened with a new preset (template)').length === 2, { timeout: 8000 })
   await compiled()
-  ok('4c o segundo clique abre o modelo (título editável)', !(await page.$eval('#studio-name', e => e.readOnly)) && (await page.inputValue('#studio-name')) === 'Meu preset' && (await page.$eval('#studio-p-zoom', e => Number(e.value))) !== 1.2)
+  ok('4c o segundo clique abre o modelo', (await page.inputValue('#studio-name')) === 'Meu preset' && (await page.$eval('#studio-p-zoom', e => Number(e.value))) !== 1.2)
   ok('4d o anterior fechou sem salvar', (await page.evaluate(() => window.__mineCalls.length)) === 1 && (await page.evaluate(() => window.__logs)).filter(l => l === 'studio: opened with a new preset (template)').length === 2)
 
   // 5. Sair sem salvar volta ao preset de antes

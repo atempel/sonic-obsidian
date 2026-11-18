@@ -6,7 +6,7 @@ import { mark } from './startup'
 import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
 import { MAX_BYTES, listImported, pickMilkFiles, readImportedMilk, removeImported, saveImported, type MilkFile } from './imported'
-import { listMine, listVersions, readMineMilk, readVersion, removeMine, saveMine } from './mine'
+import { listMine, listVersions, readMineMilk, readVersion, removeMine, renameMine, saveMine } from './mine'
 import { flushUpdater, registerUpdater, updaterFirstFrame } from './updater'
 
 mark('main.js')
@@ -102,6 +102,12 @@ function registerStores(): void {
     return r
   })
   ipcMain.handle('presets:removeMine', (_e, id: unknown) => removeMine(id))
+  // Renomear (spec 027, fatia 9): só o título no meta.json; o id é conferido aqui.
+  ipcMain.handle('presets:renameMine', async (_e, id: unknown, title: unknown) => {
+    const meta = await renameMine(id, title)
+    log('main', `studio: renamed ${String(id)} to ${meta.title}`)
+    return meta
+  })
   // Versões (spec 027, fatia 3): o id e o número são conferidos no main; o caminho nunca vem do renderer.
   ipcMain.handle('presets:mineVersions', (_e, id: unknown) => listVersions(id))
   ipcMain.handle('presets:mineVersion', (_e, id: unknown, n: unknown) => readVersion(id, n))

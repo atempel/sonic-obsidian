@@ -264,7 +264,7 @@ export async function readVersion(id: unknown, n: unknown): Promise<Record<strin
 /**
  * Salva. Sem `id`: cria uma pasta nova (id gerado aqui) e a primeira versão. Com `id`: sobrescreve
  * só aquele "meu" preset e grava uma versão nova com o resumo do que mudou; o título não muda
- * (renomear é outra fatia da 027).
+ * aqui (renomear é `renameMine`).
  */
 export async function saveMine(raw: unknown): Promise<{ id: string; meta: MineMeta }> {
   const r = isObj(raw) ? raw : {}
@@ -320,6 +320,18 @@ export async function readMineMilk(id: unknown): Promise<string | null> {
   } catch {
     return null
   }
+}
+
+/**
+ * Renomear (spec 027, fatia 9): só o `title` do `meta.json` muda; pasta, versões e fonte `.milk`
+ * ficam. O renderer manda o nome já livre na biblioteca; aqui só a mesma limpeza do salvar.
+ */
+export async function renameMine(id: unknown, title: unknown): Promise<MineMeta> {
+  const folder = folderOf(id)
+  const old = JSON.parse(await readFile(join(folder, 'meta.json'), 'utf8')) as MineMeta
+  const meta = sanitizeMeta({ ...old, title }, typeof old.createdAt === 'string' ? old.createdAt : '')
+  await writeFile(join(folder, 'meta.json'), JSON.stringify(meta))
+  return meta
 }
 
 export async function removeMine(id: unknown): Promise<void> {
