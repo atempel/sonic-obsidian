@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/031-feedback-github`
+**Fez:** Passos 0–4 da `rodada` sem trabalho (nenhum PR aberto, nenhuma issue `ready`/`in-progress`, nenhum bloco esperando teste). O milestone v0.9.0 só tem a #133 (testes), sem mudança de app: o bloco **não** foi fechado. Passo 5: #95 (a `backlog` mais antiga) reivindicada e planejada com `planejar-feature`: **spec 031 — Feedback e bugs pelo GitHub** (três portas no app, painel com switches antes de abrir o formulário, Copiar diagnóstico, grupo Feedback em Sobre, comandos na busca; templates, rótulos e seção Feedback no README/landing). Design: `v3-feedback.md` igual no artefato `1794680346-fb12` e no espelho `598c`. Três decisões pequenas em DECISIONS (`agent-decided`).
+**Deixou em:** PR desta branch; #95 `ready` + `agent-decided` no milestone v0.9.0. Próxima rodada: mergear este PR e implementar a #95 (`executar-task`).
+
 ### 2026-11-18 — Claude Code (nuvem, sessão com o usuário) — branch `docs/release-0.8.0`
 **Fez:** Documentação depois da publicação da v0.8.0 (pedido do usuário), no padrão da 0.7.0: README.pt-BR (status, Estúdio completo, próximos passos, roadmap, Modo limpo), README (Modo limpo), PROJECT (estado e "Agora" = v0.9.0), TASKS (027 feita), PRD (Estúdio ✅ v0.8.0), architecture (estado e prévia com o quadro inteiro), spec 027 publicada; landing EN/PT: a pergunta "Posso criar meus presets?" deixa de dizer "no roadmap".
 **Deixou em:** PR para o `main`. A mesma frase da landing ainda está antiga no canvas do Claude Design (o espelho `docs/design/landing/` é só leitura): atualizar lá na próxima sessão de design.
