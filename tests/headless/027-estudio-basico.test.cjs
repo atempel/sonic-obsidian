@@ -30,7 +30,7 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
 
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
-  await page.waitForSelector('.studio', { timeout: 5000 })
+  await page.waitForSelector('.studio', { timeout: 15000 })
 
   // 1. Abas com ARIA, Básico primeiro
   const tabs = await page.$$eval('.studio [role=tablist] [role=tab]', es => es.map(e => ({ t: e.textContent.trim(), c: e.getAttribute('aria-controls'), ti: e.tabIndex })))
@@ -61,7 +61,7 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   await page.keyboard.press('Control+Shift+d')
   await page.$eval('#studio-p-zoom', (e) => { e.value = '1.05'; e.dispatchEvent(new Event('input', { bubbles: true })) })
   // O HUD redesenha a cada segundo de quadros: no CI lento, espera até 5 s.
-  await H.poll(page, () => /studio: live zoom/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+  await H.poll(page, () => /studio: live zoom/.test(document.getElementById('hud').textContent), { timeout: 15000 })
   ok('4a valor mostrado em ciano atualiza', (await page.$eval('#studio-p-zoom', e => e.closest('.ctl').querySelector('output').textContent)) === '1.050')
   ok('4b o motor recebe o valor (HUD lê do runner)', /studio: live zoom = 1\.050/.test(await hud()), (await hud()).split('\n').find(l => l.startsWith('studio')))
   await page.$eval('#studio-p-warp', (e) => { e.value = '99'; e.dispatchEvent(new Event('input', { bubbles: true })) })
@@ -69,10 +69,10 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   const warp = await page.$eval('#studio-p-warp', e => e.closest('.ctl').querySelector('output').textContent)
   ok('4c fora da faixa fica preso a ela', Number(warp) <= 5 && Number(warp) >= 0, warp)
   await page.check('#studio-p-invert', { force: true })
-  await H.poll(page, () => /studio: live invert/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+  await H.poll(page, () => /studio: live invert/.test(document.getElementById('hud').textContent), { timeout: 15000 })
   ok('4d switch vira 1 no motor', /studio: live invert = 1\.000/.test(await hud()), (await hud()).split('\n').find(l => l.startsWith('studio')))
   await page.selectOption('#studio-p-wave_mode', '6')
-  await H.poll(page, () => /studio: live wave_mode/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+  await H.poll(page, () => /studio: live wave_mode/.test(document.getElementById('hud').textContent), { timeout: 15000 })
   ok('4e forma da onda vai para o motor', /studio: live wave_mode = 6\.000/.test(await hud()))
   ok('4f selo "Seu remix" com mudança', await page.isVisible('.chip.tl:has-text("Seu remix")'))
   await page.keyboard.press('Control+Shift+d')

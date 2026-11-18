@@ -20,7 +20,7 @@ const ok = R.ok
     ok('log da abertura diz "normalize audio off"', (await page.evaluate(() => window.__logs)).some((l) => /normalize audio off/.test(l)))
 
     await page.keyboard.press(',')
-    await page.waitForSelector('#autoGain', { state: 'attached', timeout: 5000 })
+    await page.waitForSelector('#autoGain', { state: 'attached', timeout: 15000 })
     const g0 = await page.evaluate(() => { const g = document.querySelector('#gain'); return { checked: document.querySelector('#autoGain').checked, max: g.max, value: g.value } })
     ok('desligado por padrão; Ganho vai a +12 e abre no padrão (+10)', !g0.checked && g0.max === '12' && g0.value === '10', JSON.stringify(g0))
 

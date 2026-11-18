@@ -230,12 +230,17 @@ async function checkSetup(b, lang) {
   // O rótulo só troca depois da cópia (assíncrona: monta o texto e chama o main); num runner lento passa de 150 ms.
   const sel = '.float.panel .actions .btn:nth-child(2) span'
   const before = await p.textContent(sel)
+  // O rótulo volta ao original 2 s depois, e o waitForFunction sonda por requestAnimationFrame, que fica
+  // parado numa aba que não está na frente: um MutationObserver anota cada rótulo, lido depois (#133).
+  await p.bringToFront()
+  await p.evaluate((s) => { window.__labels = []; const el = document.querySelector(s); new MutationObserver(() => window.__labels.push(el.textContent)).observe(el, { childList: true, characterData: true, subtree: true }) }, sel)
   await p.click('.float.panel .actions .btn:nth-child(2)')
-  await p.waitForFunction(([s, b]) => document.querySelector(s)?.textContent !== b, [sel, before], { timeout: 5000 }).catch(() => {})
-  const copiedLabel = await p.textContent('.float.panel .actions .btn:nth-child(2) span')
+  const copiedLabel = await H.poll(p, (b) => window.__labels.some((t) => t !== b), { timeout: 15000, every: 100, arg: before })
+    .then(() => p.evaluate((b) => window.__labels.find((t) => t !== b) ?? b, before))
   const copied = await p.evaluate(() => window.__copied.at(-1) || '')
-  await p.click('.float.panel .btn-primary'); await p.waitForTimeout(400)
-  const okLine = await p.textContent('.float.panel .okline').catch(() => '')
+  // A linha "Captura funcionando" só aparece depois do retryCapture (assíncrono) e some em 1,4 s: espera por ela, não por um tempo fixo (#133).
+  await p.click('.float.panel .btn-primary')
+  const okLine = await p.waitForSelector('.float.panel .okline', { timeout: 15000, state: 'attached' }).then((e) => e.textContent(), () => '')
   await p.close()
   return { welcome, capture, labels, kbd, texts, cut, copiedLabel, copied, okLine }
 }
@@ -281,7 +286,7 @@ async function checkStudio(b, lang) {
   await p.mouse.move(640, 400); await p.keyboard.press('e')
   await p.waitForSelector('.studio', { timeout: 8000 })
   const status = () => p.$eval('.cstat', e => e.textContent.trim())
-  const waitStatus = async (re, ms = 6000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(await status())) return true; await p.waitForTimeout(50) } return false }
+  const waitStatus = async (re, ms = 10000) => { const t = Date.now(); while (Date.now() - t < ms) { if (re.test(await status())) return true; await p.waitForTimeout(50) } return false }
   const okRe = lang === 'en' ? /^Compiled$/ : /^Compilado$/
   const compiled = await waitStatus(okRe)
   // Abre no Básico (027): o que corta ali é medido antes de ir às Equações (Ctrl+2).
@@ -297,7 +302,7 @@ async function checkStudio(b, lang) {
   const err = await p.$eval('.perr p', e => e.textContent).catch(() => '')
   const foot = await p.textContent('.st-foot span')
   const title = await p.inputValue('#studio-name')
-  await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 3000 }).catch(() => {})
+  await p.click('.st-save'); await p.waitForSelector('.st-ask', { timeout: 15000 }).catch(() => {})
   const texts = await p.evaluate(studioTexts)
   const cut = cutBasic.concat(cutWaves, cutShapes, cutShaders, await p.evaluate(clippedStudio))
   const logs = await p.evaluate(() => window.__logs)

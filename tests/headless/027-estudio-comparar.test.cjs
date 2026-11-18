@@ -41,7 +41,7 @@ async function openPage(b, minFps) {
   await page.keyboard.press('Control+Shift+d')
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
-  await page.waitForSelector('.studio', { timeout: 5000 })
+  await page.waitForSelector('.studio', { timeout: 15000 })
   await H.poll(page, () => /Compilado|Compiled/.test(document.querySelector('.cstat')?.textContent || ''), { timeout: 8000 })
   return { page, errs }
 }
@@ -64,7 +64,7 @@ const cmpState = (page) => page.evaluate(() => ({
   // ── A. Liga, desliga, versão, queda do contexto (limite 0 = sem limite: o runner sem GPU fica em poucos fps) ──
   {
     const { page, errs } = await openPage(b, 0)
-    await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+    await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
     const fpsAlone = await fpsOf(page)
 
     const s0 = await cmpState(page)
@@ -97,7 +97,7 @@ const cmpState = (page) => page.evaluate(() => ({
     ok('A4 os dois painéis têm a mesma largura', Math.abs(box.ow - box.rw) <= 2, JSON.stringify(box))
     ok('A5 os dois quadros aparecem inteiros: o original no painel da esquerda e o remix no da direita (#143)', fits(box.c, box.o) && fits(box.m, box.r), JSON.stringify(box))
     ok('A6 o segundo motor desenha no tamanho da janela', box.glw >= Math.round(box.w * 0.5), String(box.glw))
-    const hudOn = await H.poll(page, () => /studio: compare on · minimum 0 fps/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+    const hudOn = await H.poll(page, () => /studio: compare on · minimum 0 fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
     ok('A7 HUD mostra a comparação ligada e o mínimo de fps', hudOn, (await hud(page)).split('\n').filter(l => l.startsWith('studio')).join(' | '))
     ok('A8 log registra', await page.evaluate(() => window.__logs.some(l => /^studio: compare on \(minimum 0 fps\)$/.test(l))), JSON.stringify(await page.evaluate(() => window.__logs.filter(l => /compare/.test(l)))))
     await page.waitForTimeout(3000)
@@ -115,10 +115,10 @@ const cmpState = (page) => page.evaluate(() => ({
     for (let i = 0; i < 3; i++) {
       await page.evaluate(() => { document.activeElement?.blur(); document.querySelector('.studio').focus() })
       await page.keyboard.press('Control+s')
-      await H.poll(page, (n) => window.__vers.length >= n, { timeout: 5000, arg: i + 1 })
+      await H.poll(page, (n) => window.__vers.length >= n, { timeout: 15000, arg: i + 1 })
     }
     await page.click('.st-ver')
-    await page.waitForSelector('.st-vlist .ver', { timeout: 3000 })
+    await page.waitForSelector('.st-vlist .ver', { timeout: 15000 })
     const btns = await page.$$eval('.st-vlist .ver', es => es.map(e => [...e.querySelectorAll('.ver-a .btn')].map(x => x.textContent.trim()).join('+')))
     ok('A12 cada versão tem Restaurar e Comparar', btns.length === 3 && btns.every(x => x === 'Restaurar+Comparar'), JSON.stringify(btns))
     await page.click('.st-vlist .ver:last-child .ver-a .btn-ghost')
@@ -157,7 +157,7 @@ const cmpState = (page) => page.evaluate(() => ({
     // ── B. Sem folga de GPU: recusa e avisa ──
     {
       const { page, errs } = await openPage(b, 1000)
-      await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+      await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
       await turn(page, true)
       await page.waitForTimeout(300)
       const s = await cmpState(page)
@@ -171,10 +171,15 @@ const cmpState = (page) => page.evaluate(() => ({
     // ── C. O fps cai com os dois motores: desliga sozinho e avisa ──
     // Sem GPU, o segundo motor pesa como o primeiro: o fps cai bem abaixo de 85 % do que era.
     // Abaixo de ~10 fps (runner muito lento), a medida de 1 s oscila demais para este teste.
-    const min = Math.max(2, Math.floor(fpsAlone * 0.85))
+    // O mínimo fica no meio entre o fps sozinho e o com a comparação: o runner do CI oscila (mediu 14 fps,
+    // e 7 fps na hora de ligar, #133); com 85 % do sozinho a comparação era recusada em vez de ligar.
+    const min = Math.max(2, Math.round((fpsAlone + fpsBoth) / 2))
     if (fpsAlone >= 10 && fpsBoth < min * 0.8) {
       const { page, errs } = await openPage(b, min)
-      await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 5000 })
+      await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
+      // Liga só com o fps desta página acima do mínimo (até 15 s de espera por isso).
+      const ready = await H.poll(page, (m) => Number(document.getElementById('hud').textContent.match(/^(\d+) fps/)?.[1] ?? 0) >= m, { timeout: 15000, arg: min })
+      if (!ready) console.log(`(C: o fps desta página não chegou ao mínimo ${min} em 15 s — tenta ligar mesmo assim)`)
       // A medida antes de ligar oscila: tenta ligar até 3 vezes.
       let on = false
       for (let i = 0; i < 3 && !on; i++) {

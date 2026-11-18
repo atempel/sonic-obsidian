@@ -34,7 +34,7 @@ const R = H.createResults('027-estudio-ondas'); const ok = R.ok
   await page.keyboard.press('Control+Shift+d')
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
-  await page.waitForSelector('.studio', { timeout: 5000 })
+  await page.waitForSelector('.studio', { timeout: 15000 })
   await waitStatus(/^Compilado$/)
 
   // 1. Abas novas e teclado
