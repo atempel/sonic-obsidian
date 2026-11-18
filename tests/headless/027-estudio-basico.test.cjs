@@ -68,7 +68,9 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   await page.waitForTimeout(100)
   const warp = await page.$eval('#studio-p-warp', e => e.closest('.ctl').querySelector('output').textContent)
   ok('4c fora da faixa fica preso a ela', Number(warp) <= 5 && Number(warp) >= 0, warp)
-  await page.check('#studio-p-invert', { force: true })
+  // Clique no próprio input (o switch esconde o input): o check com force clica por coordenada, e num
+  // runner lento um toast por cima pegava o clique (#133).
+  await page.$eval('#studio-p-invert', (e) => { if (!e.checked) e.click() })
   await H.poll(page, () => /studio: live invert/.test(document.getElementById('hud').textContent), { timeout: 15000 })
   ok('4d switch vira 1 no motor', /studio: live invert = 1\.000/.test(await hud()), (await hud()).split('\n').find(l => l.startsWith('studio')))
   await page.selectOption('#studio-p-wave_mode', '6')
