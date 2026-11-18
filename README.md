@@ -91,7 +91,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 
 - **Zero-setup capture.** The app picks up system playback through Windows loopback and starts reacting in about two seconds, with no picker and no click.
 - **The Stage.** Frameless window or clean fullscreen. The control strip hides on its own; the cursor disappears in fullscreen.
-- **Preset signature.** On every change, the preset name and its authors appear briefly over the visual. Clean mode (`T`) turns overlay text off.
+- **Preset signature.** On every change, the preset name and its authors appear briefly over the visual. Clean mode (`T`) leaves the visual with no text or notice on top.
 - **Quick search and Library.** `/` or `Ctrl+K` finds any preset by name or author. The Library drawer (`L`) has tabs, favorites and recents.
 - **Transitions you choose.** Pick the transition type and duration, for manual changes and for auto-rotation separately. `Shift` on any change makes a hard cut.
 - **Auto-rotation** with an adjustable interval.
@@ -126,7 +126,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 | `L` | Library |
 | `E` | Preset Studio |
 | `F` or `F11` | Fullscreen |
-| `T` | Clean mode (no text over the visual) |
+| `T` | Clean mode (nothing over the visual) |
 | `H` | Hide the interface now |
 | `Esc` | Close what is open, or leave fullscreen |
 | `Ctrl+W` | Close the app |

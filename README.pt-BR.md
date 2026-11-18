@@ -42,7 +42,7 @@ O Sonic Obsidian é um app de desktop que transforma o áudio que você escolhe 
 Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma implementação em WebGL 2 do MilkDrop 2, com sua biblioteca de presets da comunidade. Por cima fica a interface do Sonic Obsidian: uma casca quieta e exata em volta de algo vivo.
 
 > [!NOTE]
-> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está pronta e a fase 3 (fontes e presets) está em andamento; a versão atual é a **v0.7.0**, e o app instalado agora se atualiza sozinho. O código está sob a licença MIT.
+> **Status:** em desenvolvimento ativo. A fase 2 (a interface completa) está pronta e a fase 3 (fontes e presets) está em andamento; a versão atual é a **v0.8.0**, com o Estúdio de presets completo, e o app instalado se atualiza sozinho. O código está sob a licença MIT.
 >
 > **Download (Windows 10/11, x64):** [instalador](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (por usuário, sem pedir admin) · [zip portátil](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [todas as versões](https://github.com/atempel/sonic-obsidian/releases). O app não tem assinatura de código: se o SmartScreen avisar, clique em **Mais informações → Executar assim mesmo**.
 
@@ -91,21 +91,21 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 
 - **Captura sem configuração.** O app capta a reprodução do sistema pelo loopback do Windows e começa a reagir em cerca de dois segundos, sem seletor e sem clique.
 - **O Palco.** Janela sem moldura ou tela cheia limpa. A faixa de controle se esconde sozinha; em tela cheia, o cursor some.
-- **Assinatura do preset.** A cada troca, o nome do preset e seus autores aparecem por um instante sobre o visual. O Modo limpo (`T`) desliga o texto sobreposto.
+- **Assinatura do preset.** A cada troca, o nome do preset e seus autores aparecem por um instante sobre o visual. O Modo limpo (`T`) deixa o visual sem nenhum texto nem aviso por cima.
 - **Busca rápida e Biblioteca.** `/` ou `Ctrl+K` encontra qualquer preset por nome ou autor. A gaveta da Biblioteca (`L`) tem abas, favoritos e recentes.
 - **Transições à sua escolha.** Escolha o tipo e a duração da transição, separadamente para trocas manuais e para a rotação automática. `Shift` em qualquer troca faz um corte seco.
 - **Rotação automática** com intervalo ajustável.
 - **Troca no beat.** Muda de preset a cada N compassos da música; `Enter` segura o visual de que você gostou e `Shift+Enter` o deixa em Respiro, sem reagir.
 - **Expressividade.** `+` / `−` definem a intensidade da reação do visual; `X` alterna o Caráter e `Shift+X` a Memória (quatro modos, incluindo o Ao vivo para faixas constantes). A Memória aprende só com o som, e silêncio de verdade não pulsa.
 - **Normalizar áudio.** Ganho automático opcional para que faixas baixas e altas movam o visual por igual, com o ganho ao vivo nos Ajustes rápidos. Nunca muda o que você ouve.
-- **Seus próprios presets.** Importe arquivos `.milk` e organize coleções direto do Palco. O Estúdio de presets (`E`) edita as equações de um preset com prévia ao vivo e salva como seu, mantendo o crédito original.
+- **Seus próprios presets.** Importe arquivos `.milk` e organize coleções direto do Palco. O Estúdio de presets (`E`) mostra o quadro inteiro numa prévia ao vivo enquanto você edita parâmetros, ondas e formas, equações, shaders ou o próprio código `.milk`; ele aponta erros de digitação, guarda o histórico de versões, compara com o original, cria presets novos a partir de um modelo e exporta `.milk`. O que você salva é seu, mantendo o crédito original.
 - **Inglês e português (Brasil).** No primeiro uso o app segue o idioma do Windows; troque quando quiser em Configurações › Geral › Idioma, sem reiniciar.
 - **Atualização automática.** O app instalado consulta o GitHub Releases uma vez por dia, baixa em segundo plano e pergunta antes de reiniciar para atualizar. Dá para desligar em Configurações › Sobre › Atualizações. O zip portátil só avisa que há versão nova.
 - **Estado de silêncio.** Quando nada está tocando, o app avisa em vez de mostrar um quadro congelado.
 - **Persistência.** Configurações e biblioteca sobrevivem ao reinício e às atualizações.
 - **Diagnóstico.** `Ctrl+Shift+D` mostra um HUD de depuração (fps, memória, níveis de áudio, reação); um arquivo de log registra travamentos e eventos da GPU.
 
-**Próximos passos** — o Estúdio completo (parâmetros, ondas e formas, shaders, histórico de versões, exportar `.milk`, preset novo do zero), o microfone como fonte, um controle de velocidade do visual e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
+**Próximos passos** — o microfone como fonte, um controle de velocidade do visual e um servidor [MCP](https://modelcontextprotocol.io) local para que a ferramenta de IA que você já usa possa controlar o app ao vivo e criar presets. O app em si nunca embute IA. Plano completo no [Roadmap](#roadmap).
 
 ## Teclado
 
@@ -126,7 +126,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 | `L` | Biblioteca |
 | `E` | Estúdio de presets |
 | `F` ou `F11` | Tela cheia |
-| `T` | Modo limpo (sem texto sobre o visual) |
+| `T` | Modo limpo (nada sobre o visual) |
 | `H` | Esconde a interface agora |
 | `Esc` | Fecha o que estiver aberto, ou sai da tela cheia |
 | `Ctrl+W` | Fecha o app |
@@ -211,7 +211,7 @@ Cada feature começa como uma spec em [`docs/specs/`](docs/specs/), vira uma iss
 | 0 — Spike | Provar loopback + Butterchurn no Electron | Concluída |
 | 1 — Núcleo | Presets pelo teclado, rotação, janela, sinal de entrada | Concluída |
 | 2 — Interface v3 | Palco, Biblioteca, busca, transições, configurações, setup, atalhos | Feita (v0.5.0) |
-| 3 — Fontes e presets | Microfone, arquivos de áudio, importação de `.milk`, Estúdio de presets | Em andamento (v0.6.0: importar `.milk`, Estúdio P0, troca no beat, reação ao áudio · v0.7.0: inglês/português, atualização automática · próxima, v0.8.0: Estúdio completo) |
+| 3 — Fontes e presets | Microfone, arquivos de áudio, importação de `.milk`, Estúdio de presets | Em andamento (v0.6.0: importar `.milk`, Estúdio P0, troca no beat, reação ao áudio · v0.7.0: inglês/português, atualização automática · v0.8.0: Estúdio completo) |
 | 4 — MCP | Controle ao vivo e criação de presets pela sua ferramenta de IA | Planejada |
 | 5 — Extras | Rack multi-monitor, beat/BPM, instalador, iniciar com o Windows | Planejada (instalador na v0.5.0, atualização automática na v0.7.0) |
 
