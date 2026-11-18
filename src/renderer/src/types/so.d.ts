@@ -66,6 +66,8 @@ interface Window {
       mineMilk?(id: string): Promise<string | null>
       /** Exportar .milk ou JSON (027, fatia 7); opcional no mock dos testes antigos. */
       exportFile?(kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
+      /** Capturar quadro (027, fatia 11): PNG pelo diálogo nativo; opcional no mock dos testes antigos. */
+      exportFrame?(name: string, data: Uint8Array): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
     }
     /** Opcional: os testes headless e o modo dev sem preload novo não têm. */
     update?: {

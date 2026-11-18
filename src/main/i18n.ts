@@ -16,7 +16,10 @@ const en = {
   'milk.filter': 'MilkDrop presets',
   'export.milkTitle': 'Export .milk',
   'export.jsonTitle': 'Export Butterchurn JSON',
-  'export.jsonFilter': 'Butterchurn 3 preset'
+  'export.jsonFilter': 'Butterchurn 3 preset',
+  'export.frameTitle': 'Capture frame',
+  'export.frameSuffix': '-frame',
+  'export.frameFilter': 'PNG image'
 } as const
 
 type Key = keyof typeof en
@@ -28,7 +31,10 @@ const ptBR: Record<Key, string> = {
   'milk.filter': 'Presets MilkDrop',
   'export.milkTitle': 'Exportar .milk',
   'export.jsonTitle': 'Exportar JSON do Butterchurn',
-  'export.jsonFilter': 'Preset do Butterchurn 3'
+  'export.jsonFilter': 'Preset do Butterchurn 3',
+  'export.frameTitle': 'Capturar quadro',
+  'export.frameSuffix': '-quadro',
+  'export.frameFilter': 'Imagem PNG'
 }
 
 /** `pt-*` → pt-BR; o resto → en (a mesma regra do renderer). */

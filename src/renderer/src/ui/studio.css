@@ -174,3 +174,15 @@ body.studio-open .winctl { display: none !important; }
 .st-pbar { display: flex; align-items: center; gap: 8px; flex: none; min-height: 32px; }
 /* A coluna da prévia é transparente (o visual aparece atrás): o switch ganha fundo para ser lido. */
 .st-pbar .switch { padding: 4px 12px 4px 6px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }
+
+/* Extras da prévia (spec 027, fatia 11) — protótipo, página Estúdio: "Testar troca" e "Capturar quadro" à direita do switch;
+   a assinatura (nome e crédito) no pé da prévia, com a linha violeta correndo pelo tempo da transição. */
+.st-pbar .sp { flex: 1; }
+.st-pbar { flex-wrap: wrap; }
+.st-card { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 40px 20px 18px; background: linear-gradient(to top, rgba(8, 8, 9, 0.92) 15%, rgba(8, 8, 9, 0)); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease-out); }
+.st-card.show { opacity: 1; transition-duration: 180ms; }
+.st-card h2 { margin: 0; font-size: clamp(20px, 3vw, 34px); font-weight: 600; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
+.st-card p { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+.st-card .sweep { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; }
+.st-card .sweep i { display: block; height: 100%; width: 0; background: var(--violet); }
+@media (prefers-reduced-motion: reduce) { .st-card, .st-card.show { transition: none; } }
