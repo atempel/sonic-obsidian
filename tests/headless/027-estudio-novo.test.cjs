@@ -69,7 +69,7 @@ const srv = H.serve(5250)
   await page.mouse.move(700, 400)
 
   // 1. Biblioteca: botão "Novo preset" no topo, como no protótipo; a dica de "Meus" vazio fala dele
-  await page.keyboard.press('l'); await page.waitForSelector('.lib', { timeout: 3000 })
+  await page.keyboard.press('l'); await page.waitForSelector('.lib', { timeout: 15000 })
   await page.waitForTimeout(300)
   ok('1a "Novo preset" no topo da Biblioteca, antes do fechar', await page.$eval('.lib-head .lib-tools', (e) => {
     const bs = [...e.querySelectorAll('button')]
@@ -92,7 +92,7 @@ const srv = H.serve(5250)
   // 2. Fonte .milk editável (criado do zero = tem fonte)
   await page.keyboard.press('Control+6')
   const ta = '#studio-tp-code textarea'
-  await page.waitForSelector(ta, { timeout: 3000 })
+  await page.waitForSelector(ta, { timeout: 15000 })
   const milkText = await page.inputValue(ta)
   ok('2a aba Código: .milk editável com o círculo e o grave', !(await page.$eval(ta, e => e.readOnly)) && /^shapecode_0_enabled=1$/m.test(milkText) && /^shape_0_per_frame1=rad = 0\.1 \+ 0\.15\*bass_att;$/m.test(milkText), milkText.slice(0, 120))
 
@@ -106,7 +106,7 @@ const srv = H.serve(5250)
     JSON.stringify(c1.meta))
   ok('3b o preset salvo é o modelo com a edição', c1.preset?.baseVals?.zoom === 1.05 && c1.preset?.shapes?.[0]?.baseVals?.enabled === 1)
   await page.keyboard.press('Escape')
-  await H.poll(page, () => !document.querySelector('.studio'), { timeout: 5000 })
+  await H.poll(page, () => !document.querySelector('.studio'), { timeout: 15000 })
   ok('3c ao sair, o salvo vira o atual', (await cur()) === 'Meu preset', await cur())
 
   // 4. Novo preset de dentro do Estúdio: com mudanças, o primeiro clique só avisa
@@ -131,7 +131,7 @@ const srv = H.serve(5250)
 
   // 5. Sair sem salvar volta ao preset de antes
   await page.keyboard.press('Escape')
-  await H.poll(page, () => !document.querySelector('.studio'), { timeout: 5000 })
+  await H.poll(page, () => !document.querySelector('.studio'), { timeout: 15000 })
   ok('5a Esc sem mudanças sai e volta ao preset de antes', (await cur()) === 'Meu preset')
 
   ok('6a sem erros na página', errs.length === 0, errs.slice(0, 3).join(' | '))

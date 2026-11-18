@@ -22,8 +22,10 @@ const R = H.createResults('010-busca'); const ok = R.ok
   await page.fill(input, 'modo limpo'); await page.waitForTimeout(400)
   const cmds = await page.$$eval('.palette .prow.cmd .r-title', es => es.map(e => e.textContent))
   ok('3 "modo limpo" mostra o comando', cmds.some(t => /modo limpo/i.test(t)), JSON.stringify(cmds))
-  await page.keyboard.press('Escape'); await page.waitForTimeout(400)
-  ok('4 Esc fecha', await page.waitForSelector('.palette', { state: 'hidden', timeout: 3000 }).then(() => true, () => false) && !(await page.evaluate(() => document.body.classList.contains('palette-open'))))
+  // Esc no próprio campo: o page.press foca o input antes; com o teclado solto, num runner lento o foco
+  // ainda podia não estar na paleta e o Esc ia para outro lugar (#133).
+  await page.press(input, 'Escape')
+  ok('4 Esc fecha', await page.waitForSelector('.palette', { state: 'hidden', timeout: 15000 }).then(() => true, () => false) && !(await page.evaluate(() => document.body.classList.contains('palette-open'))))
   ok('sem erros na página', errs.length === 0, JSON.stringify(errs.slice(0, 5)))
   const code = await R.finish()
   await b.close(); srv.close(); process.exit(code)

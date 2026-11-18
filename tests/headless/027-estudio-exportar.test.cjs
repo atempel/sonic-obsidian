@@ -66,7 +66,12 @@ const srv = H.serve(5249)
   }
   const exportsOf = (page) => page.evaluate(() => window.__exports)
   const toastText = (page) => page.$eval('.gtoast', e => e.textContent).catch(() => '')
-  const openMenu = async (page) => { await page.click('.st-exp-btn'); await page.waitForSelector('.st-exp', { timeout: 3000 }) }
+  // Espera o menu e o foco nele: o foco vai para o primeiro item depois da montagem, e num runner lento
+  // a leitura logo depois do waitForSelector ainda via o foco no botão (#133).
+  const openMenu = async (page) => {
+    await page.click('.st-exp-btn'); await page.waitForSelector('.st-exp', { timeout: 15000 })
+    await H.poll(page, () => document.querySelector('.st-exp-btn')?.getAttribute('aria-expanded') === 'true' && !!document.activeElement?.closest('.st-exp'), { timeout: 15000, every: 100 })
+  }
 
   // 1. Importado: o botão, o menu e o .milk com o HLSL da fonte, que volta igual (critério 6)
   let page = await open(IMPORTED)

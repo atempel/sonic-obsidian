@@ -79,7 +79,7 @@ const srv = H.serve(5233)
   await page.keyboard.press('Control+Shift+d')
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
-  await page.waitForSelector('.studio', { timeout: 5000 })
+  await page.waitForSelector('.studio', { timeout: 15000 })
   await waitStatus(/^Compilado$/)
 
   // 1. A aba
