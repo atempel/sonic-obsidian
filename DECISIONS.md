@@ -663,3 +663,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Capturar quadro:** PNG do **quadro inteiro** do visual (o canvas da página, no tamanho dele: com "Tamanho do canvas" em 75 % ou 50 %, a imagem sai menor), não só o pedaço visto pela prévia. O Butterchurn 3 copia cada quadro para esse canvas por 2D, então o `toBlob` pega o que está na tela. O arquivo é gravado pelo **diálogo nativo** (`presets:exportFrame`: só PNG, assinatura conferida, até 64 MB), com o nome "<preset>-quadro.png" / "<preset>-frame.png"; o protótipo usa o download do navegador. Toasts "Quadro capturado como <arquivo>." e, na falha, o texto do protótipo ("Não foi possível capturar o quadro. Tente de novo.").
 - **Descartado:** captar só a região da prévia (o quadro inteiro é o que se usa como capa/miniatura); atalho de teclado para os dois botões (a spec não pede, e não há tecla livre óbvia no Estúdio); salvar direto em Imagens sem diálogo (o resto do app sempre pergunta onde gravar).
 
+## 2026-11-18 — Bloco v0.8.0 fecha com a 027 sozinha (rodada, `agent-decided`)
+- **Decisão:** o v0.8.0 fecha só com a #75 (Estúdio P1, spec 027), sem esperar ~5 issues: são 11 PRs de app (#123–#139), mais que um bloco normal, e não há outra issue `ready`. O passo 3 da `rodada` só exige o milestone sem issues abertas.
+- **README e landing** mudam na publicação da 0.8.0 (o "next, v0.8.0: full Studio" vira entregue), como no bloco v0.7.0: o Pages publica a cada merge e a landing baixa a release publicada.
+- **Descartado:** planejar uma issue do `backlog` só para engordar o bloco; adiar o teste do Estúdio para juntar com outra feature (o roteiro já é longo).
+
