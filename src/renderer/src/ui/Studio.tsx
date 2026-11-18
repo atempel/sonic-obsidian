@@ -71,6 +71,14 @@ export interface StudioApi {
   convertMilk(text: string): Promise<Preset>
   /** Exportar (027, fatia 7): grava pelo diálogo nativo do main. `canceled` = fechou o diálogo. */
   exportFile(kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
+  /**
+   * Testar troca (027, fatia 11): corta para outro preset da biblioteca e, logo depois, volta para
+   * `back()` com a transição do Palco (tipo e tempo das trocas manuais). Devolve o tempo da volta
+   * em segundos, ou `null` se não há outro preset para trocar.
+   */
+  testSwap(back: () => Preset): { leadMs: number; seconds: number } | null
+  /** Capturar quadro (027, fatia 11): PNG do quadro atual do visual, gravado pelo diálogo nativo. */
+  captureFrame(name: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
 }
 
 const DEBOUNCE_MS = 400
@@ -333,13 +341,16 @@ function Studio({ api }: { api: StudioApi }) {
   const basedOn = api.mine ? api.mine.meta.basedOn : api.fresh ? null : originalCredit(api.sourceName)
   const author = settings.authorName || t('credit.mine.defaultAuthor')
   const credit = t('credit.by', { author: mineCredit({ author: saved?.meta.author ?? author, basedOn }) })
+  /** As equações e os slots da última compilação que passou (o que a prévia toca com erro na tela). */
+  const lastValid = useRef<{ code: Code; slots: Slots }>({ code: initial, slots: origSlots })
 
   // ── Compilar ────────────────────────────────────────────
   const compile = async (c: Code, load = true): Promise<boolean> => {
     window.clearTimeout(timer.current)
     const key = keyOf(c)
     setStatus('busy')
-    const r = await api.compile(withCode(api.source, c, latestBase.current, latestSlots.current))
+    const sl = latestSlots.current
+    const r = await api.compile(withCode(api.source, c, latestBase.current, sl))
     if ('superseded' in r) return false
     lastCompiled.current = key
     const w = lint({ code: c, slots: latestSlots.current, base: (api.source.baseVals as Record<string, unknown> | undefined) ?? {} })
@@ -349,6 +360,7 @@ function Studio({ api }: { api: StudioApi }) {
     lastWarns.current = wk
     setCompiledAt(new Date())
     if (r.ok) {
+      lastValid.current = { code: c, slots: sl }
       // Parâmetros base mexidos durante a compilação também vão (são sempre válidos).
       if (load) api.apply(withCode(api.source, c, latestBase.current, latestSlots.current))
       // Um .milk que não converteu continua sendo um problema até ser corrigido.
@@ -749,6 +761,54 @@ function Studio({ api }: { api: StudioApi }) {
     }
   }
 
+  // ── Extras da prévia (spec 027, fatia 11) ───────────────
+  /**
+   * Testar troca: a prévia corta para outro preset e volta para este com a transição do Palco, e a
+   * assinatura (nome e crédito) aparece no pé da prévia, como no Palco. Com erro na tela, volta para
+   * a última versão válida (a que a prévia tocava).
+   */
+  const card = useRef<HTMLDivElement>(null)
+  const cardSweep = useRef<HTMLElement>(null)
+  const cardTimer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(cardTimer.current), [])
+  const testSwap = (): void => {
+    const r = api.testSwap(() => withCode(api.source, lastValid.current.code, latestBase.current, lastValid.current.slots))
+    if (!r) {
+      showToast(t('toast.studio.noSwap'), { force: true })
+      return
+    }
+    const el = card.current
+    const sw = cardSweep.current
+    if (!el || !sw) return
+    const sigMs = r.leadMs + (r.seconds > 0 ? r.seconds * 1000 : 400)
+    sw.style.transition = 'none'
+    sw.style.width = '0'
+    void sw.offsetWidth // reinicia a barra
+    sw.style.transition = `width ${sigMs}ms linear`
+    sw.style.width = '100%'
+    el.classList.add('show')
+    window.clearTimeout(cardTimer.current)
+    cardTimer.current = window.setTimeout(() => el.classList.remove('show'), Math.max(4000, sigMs + 1500))
+  }
+  /** Capturar quadro: PNG do quadro que está na tela, com o nome do preset. */
+  const [capturing, setCapturing] = useState(false)
+  const captureFrame = async (): Promise<void> => {
+    if (capturing) return
+    setCapturing(true)
+    try {
+      const r = await api.captureFrame(title.trim() || t('studio.defaultTitle'))
+      if (r.ok) {
+        api.log('studio: frame captured')
+        showToast(t('toast.studio.captured', { name: r.name ?? '' }), { force: true })
+      }
+    } catch (err) {
+      api.log(`studio: frame capture failed: ${mainErrorText(err)}`)
+      showToast(t('toast.studio.notCaptured'), { force: true })
+    } finally {
+      setCapturing(false)
+    }
+  }
+
   const confirmAuthor = (): void => {
     const v = authorDraft.trim()
     core.run('settings.set', { authorName: v }, 'ui')
@@ -1033,6 +1093,13 @@ function Studio({ api }: { api: StudioApi }) {
                 {t('studio.stale')}
               </span>
             )}
+            <div class="st-card" ref={card} aria-live="polite">
+              <h2>{title.trim() || t('studio.defaultTitle')}</h2>
+              <p>{credit}</p>
+              <div class="sweep">
+                <i ref={cardSweep} />
+              </div>
+            </div>
           </div>
           <div class="st-pbar">
             <label class="switch" for="studio-cmp">
@@ -1040,6 +1107,15 @@ function Studio({ api }: { api: StudioApi }) {
               <span class="track" />
               <span>{t('studio.cmp.switch')}</span>
             </label>
+            <span class="sp" />
+            <button type="button" class="btn st-swap" onClick={testSwap}>
+              <Icon name="skip-forward" />
+              {t('studio.swap')}
+            </button>
+            <button type="button" class="btn st-cap" disabled={capturing} onClick={() => void captureFrame()}>
+              <Icon name="camera" />
+              {t('studio.capture')}
+            </button>
           </div>
           <Levels api={api} />
         </section>

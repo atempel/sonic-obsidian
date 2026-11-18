@@ -46,6 +46,8 @@ const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s
 const STARTUP_EXTRAS_WAIT_MS = 1000
 /** Cadência do medidor de nível da faixa (~30×/s). */
 const LEVEL_TICK_MS = 33
+/** Testar troca do Estúdio (027, fatia 11): quanto o outro preset fica na tela antes da volta (o protótipo usa 500 ms). */
+const SWAP_LEAD_MS = 500
 /** Estúdio, "Comparar com o original" (spec 027): abaixo disto, o segundo visual desliga. */
 const COMPARE_MIN_FPS = 50
 
@@ -600,7 +602,10 @@ async function start(): Promise<void> {
     const basedOn = fresh ? null : srcMine ? srcMine.meta.basedOn : { name: src, author: src.indexOf(' - ') > 0 ? src.slice(0, src.indexOf(' - ')).trim() : '' }
     const source = template ?? library.get(src)
     window.so.log(fresh ? 'studio: opened with a new preset (template)' : `studio: opened with ${src}${milk ? ' (.milk source)' : ''}`)
+    /** Testar troca (027, fatia 11): a volta para o preset em edição, depois do corte. */
+    let swapTimer: number | undefined
     const close = (saved: string | null): void => {
+      window.clearTimeout(swapTimer)
       stopCompare()
       closeStudio()
       compiler.dispose()
@@ -706,6 +711,34 @@ async function start(): Promise<void> {
       exportFile: async (kind, name, text) => {
         if (!window.so.presets.exportFile) throw new Error('[invalid] export unavailable')
         return window.so.presets.exportFile(kind, name, text)
+      },
+      // Testar troca (027, fatia 11): corte para outro preset (sorteado entre os não ocultos, sem mexer
+      // no histórico do "Anterior") e, meio segundo depois, a volta com a transição das trocas manuais.
+      testSwap: (back) => {
+        const pool = library.all().filter((n) => n !== s.source && n !== mineRef?.name && !library.isSkipped(n))
+        if (!pool.length) return null
+        const other = pool[Math.floor(Math.random() * pool.length)]!
+        const { type, seconds } = settings.blend.manual
+        s.applied = true
+        window.clearTimeout(swapTimer)
+        void viz.load(library.get(other), 'cut', 0)
+        state.studio = `studio: test swap via ${other}`
+        window.so.log(`studio: test swap via ${other}`)
+        swapTimer = window.setTimeout(() => {
+          if (studio !== s) return
+          void viz.load(back(), type, seconds).then((ok) => {
+            if (ok && studio === s) state.studio = `studio: test swap back (${type}, ${seconds} s)`
+          })
+        }, SWAP_LEAD_MS)
+        return { leadMs: SWAP_LEAD_MS, seconds: type === 'cut' ? 0 : seconds }
+      },
+      // Capturar quadro (027, fatia 11): o Butterchurn 3 copia cada quadro para este canvas (2D), então o
+      // `toBlob` pega o quadro que está na tela, no tamanho do canvas (Configurações › Renderização).
+      captureFrame: async (name) => {
+        if (!window.so.presets.exportFrame) throw new Error('[invalid] capture unavailable')
+        const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'))
+        if (!blob) throw new Error('[invalid] empty frame')
+        return window.so.presets.exportFrame(name, new Uint8Array(await blob.arrayBuffer()))
       }
     })
   }

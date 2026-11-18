@@ -120,7 +120,7 @@ function registerStores(): void {
     if (kind !== 'milk' && kind !== 'json') throw new Error('[invalid] bad export kind')
     if (typeof text !== 'string') throw new Error('[invalid] bad export text')
     if (text.length > (kind === 'milk' ? MAX_BYTES : 2_000_000)) throw new Error(`[too-big] file larger than ${kind === 'milk' ? '256 KB' : '2 MB'}`)
-    const base = (typeof name === 'string' ? name : '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '').replace(/[. ]+$/, '').trim().slice(0, 120) || 'preset'
+    const base = exportBase(name)
     const win = BrowserWindow.fromWebContents(e.sender)
     const opts = {
       title: mt(kind === 'milk' ? 'export.milkTitle' : 'export.jsonTitle'),
@@ -133,6 +133,30 @@ function registerStores(): void {
     log('main', `studio: exported ${kind} (${text.length} chars)`)
     return { ok: true, name: basename(res.filePath) }
   })
+  // Capturar quadro (spec 027, fatia 11): o renderer manda o PNG pronto (`toBlob` do canvas) e o nome
+  // do preset; o caminho vem só do diálogo nativo. Só PNG (assinatura conferida) e até 64 MB (8K cabe).
+  ipcMain.handle('presets:exportFrame', async (e, name: unknown, data: unknown) => {
+    if (!(data instanceof Uint8Array)) throw new Error('[invalid] bad frame data')
+    if (data.length > 64 * 1024 * 1024) throw new Error('[too-big] frame larger than 64 MB')
+    if (data.length < 8 || !PNG_SIGNATURE.every((b, i) => data[i] === b)) throw new Error('[invalid] frame is not a PNG')
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = {
+      title: mt('export.frameTitle'),
+      defaultPath: `${exportBase(name)}${mt('export.frameSuffix')}.png`,
+      filters: [{ name: mt('export.frameFilter'), extensions: ['png'] }]
+    }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true }
+    await writeFile(res.filePath, data)
+    log('main', `studio: frame captured (${data.length} bytes)`)
+    return { ok: true, name: basename(res.filePath) }
+  })
+}
+
+const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+/** Nome de arquivo sugerido a partir do título: sem caracteres que o Windows recusa, até 120. */
+function exportBase(name: unknown): string {
+  return (typeof name === 'string' ? name : '').replace(/[\\/:*?"<>|\x00-\x1f]+/g, '').replace(/[. ]+$/, '').trim().slice(0, 120) || 'preset'
 }
 
 /**

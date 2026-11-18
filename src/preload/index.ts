@@ -98,7 +98,10 @@ contextBridge.exposeInMainWorld('so', {
     mineMilk: (id: string): Promise<string | null> => ipcRenderer.invoke('presets:mineMilk', String(id)),
     /** Exportar (spec 027, fatia 7): diálogo nativo no main; `canceled` = o usuário fechou o diálogo. */
     exportFile: (kind: 'milk' | 'json', name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }> =>
-      ipcRenderer.invoke('presets:exportFile', kind, String(name), String(text))
+      ipcRenderer.invoke('presets:exportFile', kind, String(name), String(text)),
+    /** Capturar quadro (spec 027, fatia 11): o PNG do canvas, gravado pelo diálogo nativo do main. */
+    exportFrame: (name: string, data: Uint8Array): Promise<{ ok: boolean; canceled?: boolean; name?: string }> =>
+      ipcRenderer.invoke('presets:exportFrame', String(name), data)
   },
   /** Atualização automática (spec 029): o main decide o que checar, baixar e abrir. */
   update: {
