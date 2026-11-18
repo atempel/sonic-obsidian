@@ -163,19 +163,24 @@ const cmpState = (page) => page.evaluate(() => ({
       await H.poll(page, () => /^\d+ fps/.test(document.getElementById('hud').textContent), { timeout: 15000 })
       // Liga só com o fps desta página acima do mínimo (até 15 s de espera por isso).
       const ready = await H.poll(page, (m) => Number(document.getElementById('hud').textContent.match(/^(\d+) fps/)?.[1] ?? 0) >= m, { timeout: 15000, arg: min })
-      if (!ready) console.log(`(C: o fps desta página não chegou ao mínimo ${min} em 15 s — tenta ligar mesmo assim)`)
+      // Mesma pré-condição do guarda acima (runner rápido o bastante), medida nesta página: no CI ela já
+      // ficou em 1 fps por 15 s com a página A a 10+ fps; aí ligar é recusado (o B testa a recusa) e o C
+      // não tem o que medir.
+      if (!ready) console.log(`(C pulado: esta página não chegou ao mínimo de ${min} fps em 15 s — runner lento demais)`)
       // A medida antes de ligar oscila: tenta ligar até 3 vezes.
       let on = false
-      for (let i = 0; i < 3 && !on; i++) {
+      for (let i = 0; ready && i < 3 && !on; i++) {
         await turn(page, true)
         await page.waitForTimeout(200)
         on = (await cmpState(page)).checked
         if (!on) await page.waitForTimeout(1500)
       }
       const dropped = on && (await H.poll(page, () => !document.getElementById('studio-cmp').checked, { timeout: 15000 }))
-      ok('C1 com o fps abaixo do mínimo por 2 s, a comparação desliga sozinha', dropped, `mínimo ${min} · ligou ${on}`)
-      ok('C2 e avisa com o fps', /Comparação desligada: o visual caiu para \d+ fps/.test(await toast(page)), await toast(page))
-      ok('C3 log registra o motivo', await page.evaluate(() => window.__logs.some(l => /^studio: compare turned off: \d+ fps, below \d+$/.test(l))))
+      if (ready) {
+        ok('C1 com o fps abaixo do mínimo por 2 s, a comparação desliga sozinha', dropped, `mínimo ${min} · ligou ${on}`)
+        ok('C2 e avisa com o fps', /Comparação desligada: o visual caiu para \d+ fps/.test(await toast(page)), await toast(page))
+        ok('C3 log registra o motivo', await page.evaluate(() => window.__logs.some(l => /^studio: compare turned off: \d+ fps, below \d+$/.test(l))))
+      }
       ok('C4 sem erros na página', errs.length === 0, errs.join(' | '))
       await page.close()
     } else console.log(`(C pulado: sozinho ${fpsAlone} fps, com a comparação ${fpsBoth} fps — lento demais ou sem queda clara)`)
