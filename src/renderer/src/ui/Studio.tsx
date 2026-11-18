@@ -5,6 +5,7 @@ import type { Core } from '../core/commands'
 import { EQ_KEYS, type Block, type CompileResult, type MainBlock, type ShaderBlock, type SlotBlock, type StudioError, type StudioIssue } from '../studio/compile'
 import { SHAPE_PARAMS, SLOT_INDEXES, WAVE_PARAMS, slotBlockTitle, slotOfBlock, slotOn, slotValue, slotsOf, writeSlots, type SlotKind, type Slots } from '../studio/slots'
 import { milkShaders, presetToMilk, type Hlsl } from '../studio/milk'
+import { applyFix, lint, suggestFunction, type LintIssue, type StudioWarning } from '../studio/lint'
 import { BASIC_GROUPS, BASIC_PARAMS, WAVE_MODES, baseValue, clampParam, rangeFor, type BasicParam } from '../studio/basic'
 import { Icon } from './icons'
 import { mineCredit } from './preset-name'
@@ -91,6 +92,11 @@ const SHADERS: { id: ShaderBlock; legend: MessageKey }[] = [
 ]
 const isShader = (b: Block): b is ShaderBlock => b === 'warp' || b === 'comp'
 /** Nome do bloco como no `.milk`: `per_frame`, `wave_1_per_point`, `warp`… (técnico, igual nos dois idiomas). */
+/** Texto de um bloco de onda ou forma. */
+const slotText = (s: Slots, b: SlotBlock): string => {
+  const { kind, idx, field } = slotOfBlock(b)
+  return kind === 'wave' ? (field === 'point' ? s.waves[idx]!.point_eqs_eel : s.waves[idx]!.frame_eqs_eel) : s.shapes[idx]!.frame_eqs_eel
+}
 const blockTitle = (b: Block): string => (isMain(b) ? MAIN_TITLE[b] : isShader(b) ? b : slotBlockTitle(b))
 
 type Status = 'ok' | 'busy' | 'err'
@@ -159,6 +165,26 @@ function issueText(i: StudioIssue, l: Lang = getLang()): string {
     case 'raw':
       return i.text
   }
+}
+/** A frase do aviso do verificador (spec 027, fatia 10), no idioma do app ou em `l`. */
+function warnText(i: LintIssue, l: Lang = getLang()): string {
+  switch (i.kind) {
+    case 'unknownVar': {
+      const s = msgText({ key: 'studio.warn.unknownVar', params: { name: i.name } }, l)
+      return i.suggest ? `${s} ${msgText({ key: 'studio.warn.didYouMean', params: { name: i.suggest } }, l)}` : s
+    }
+    case 'tex2d':
+      return msgText({ key: 'studio.warn.tex2d', params: { name: i.name } }, l)
+    case 'braces':
+      return msgText(i.extra ? 'studio.warn.bracesExtra' : 'studio.warn.bracesOpen', l)
+  }
+}
+const warnKey = (w: StudioWarning): string => `w:${w.block}:${w.line}:${JSON.stringify(w.issue)}`
+/** Função desconhecida (erro do compilador) com um nome parecido: o "Corrigir" troca na linha. */
+const fixOfError = (e: StudioError): { from: string; to: string } | null => {
+  if (e.issue.kind !== 'undefined' || !e.line) return null
+  const to = suggestFunction(e.issue.fn)
+  return to ? { from: e.issue.fn, to } : null
 }
 /** Onde: `per_frame, linha 2` / `per_frame, line 2`, ou só o bloco. */
 const whereText = (e: StudioError): string => (e.line ? t('studio.atLine', { block: blockTitle(e.block), line: String(e.line) }) : blockTitle(e.block))
@@ -242,6 +268,9 @@ function Studio({ api }: { api: StudioApi }) {
   }
   const [status, setStatus] = useState<Status>('busy')
   const [errors, setErrors] = useState<StudioError[]>([])
+  /** Avisos do verificador (não bloqueiam; recalculados a cada compilação). */
+  const [warnings, setWarnings] = useState<StudioWarning[]>([])
+  const lastWarns = useRef<Set<string>>(new Set())
   const [compiledAt, setCompiledAt] = useState<Date | null>(null)
   /** Já houve uma versão válida (o selo "última versão válida" só faz sentido depois dela). */
   const [hadValid, setHadValid] = useState(false)
@@ -313,6 +342,11 @@ function Studio({ api }: { api: StudioApi }) {
     const r = await api.compile(withCode(api.source, c, latestBase.current, latestSlots.current))
     if ('superseded' in r) return false
     lastCompiled.current = key
+    const w = lint({ code: c, slots: latestSlots.current, base: (api.source.baseVals as Record<string, unknown> | undefined) ?? {} })
+    setWarnings(w)
+    const wk = new Set(w.map(warnKey))
+    for (const x of w) if (!lastWarns.current.has(warnKey(x))) api.log(`studio: warning in ${blockTitle(x.block)}, line ${x.line}: ${warnText(x.issue, 'en')}`)
+    lastWarns.current = wk
     setCompiledAt(new Date())
     if (r.ok) {
       // Parâmetros base mexidos durante a compilação também vão (são sempre válidos).
@@ -550,6 +584,17 @@ function Studio({ api }: { api: StudioApi }) {
       },
       field
     )
+  }
+
+  /** "Corrigir" de um aviso ou erro: troca a palavra na linha, como se o usuário tivesse digitado (entra no desfazer). */
+  const applyWordFix = (b: Block, line: number, fix: { from: string; to: string }): void => {
+    const text = isMain(b) || isShader(b) ? latest.current[b] : slotText(latestSlots.current, b)
+    const next = applyFix(text, line, fix.from, fix.to)
+    if (next === text) return
+    if (isMain(b) || isShader(b)) edit(b, next)
+    else setSlotCode(b, next)
+    api.log(`studio: fixed ${fix.from} -> ${fix.to} in ${blockTitle(b)}, line ${line}`)
+    showToast(t('toast.studio.fixed', fix), { force: true })
   }
 
   const valueOf = (p: BasicParam): number => (p.key in base ? base[p.key]! : baseValue(api.source.baseVals, p))
@@ -823,6 +868,7 @@ function Studio({ api }: { api: StudioApi }) {
 
   const stale = status === 'err' && hadValid
   const nErr = errors.length + (milkErr ? 1 : 0)
+  const nProbs = nErr + warnings.length
   const goMilk = (): void => {
     if (tabRef.current !== 'code') setTab('code')
     requestAnimationFrame(() => milkTa.current?.focus())
@@ -1050,6 +1096,7 @@ function Studio({ api }: { api: StudioApi }) {
                 h={b.h}
                 value={code[b.id]}
                 errLines={errors.filter((e) => e.block === b.id && e.line).map((e) => e.line!)}
+                warnLines={warnings.filter((w) => w.block === b.id).map((w) => w.line)}
                 bind={(el) => {
                   editors.current[b.id] = el
                 }}
@@ -1070,6 +1117,7 @@ function Studio({ api }: { api: StudioApi }) {
                 label={t('studio.shader.label', { which: x.id })}
                 value={code[x.id]}
                 errLines={errors.filter((e) => e.block === x.id && e.line).map((e) => e.line!)}
+                warnLines={warnings.filter((w) => w.block === x.id).map((w) => w.line)}
                 bind={(el) => {
                   editors.current[x.id] = el
                 }}
@@ -1131,6 +1179,7 @@ function Studio({ api }: { api: StudioApi }) {
                   original={kind === 'wave' ? origSlots.waves : origSlots.shapes}
                   open={openSlot[kind]}
                   errors={errors}
+                  warnings={warnings}
                   onOpen={(i) => setOpenSlot((o) => ({ ...o, [kind]: o[kind] === i ? -1 : i }))}
                   onToggle={(i, on) =>
                     updateSlot(
@@ -1160,11 +1209,11 @@ function Studio({ api }: { api: StudioApi }) {
               <span class="chev">
                 <Icon name="chevron-right" small />
               </span>
-              {t('studio.problems')} <span class={nErr ? 'cnt bad' : 'cnt'}>{nErr}</span>
+              {t('studio.problems')} <span class={nErr ? 'cnt bad' : warnings.length ? 'cnt warn' : 'cnt'}>{nProbs}</span>
             </button>
             {probsOpen && (
               <div class="probs-b">
-                {nErr === 0 ? (
+                {nProbs === 0 ? (
                   <p class="pempty">{t('studio.noProblems')}</p>
                 ) : (
                   <ul>
@@ -1179,14 +1228,39 @@ function Studio({ api }: { api: StudioApi }) {
                         </button>
                       </li>
                     )}
-                    {errors.map((e) => (
-                      <li class="perr" key={errKey(e)}>
+                    {errors.map((e) => {
+                      const fix = fixOfError(e)
+                      return (
+                        <li class="perr" key={errKey(e)}>
+                          <Icon name="triangle-alert" small />
+                          <p class="selectable">
+                            <code>{whereText(e)}</code>: {issueText(e.issue)}
+                            {fix && <> {t('studio.warn.didYouMean', { name: fix.to })}</>}
+                          </p>
+                          {fix && (
+                            <button type="button" class="btn st-fix" title={t('studio.fixTitle', fix)} onClick={() => applyWordFix(e.block, e.line!, fix)}>
+                              {t('studio.fix')}
+                            </button>
+                          )}
+                          <button type="button" class="btn btn-ghost" onClick={() => goTo(e.block, e.line)}>
+                            {e.line ? t('studio.goLine') : t('studio.goBlock')}
+                          </button>
+                        </li>
+                      )
+                    })}
+                    {warnings.map((w) => (
+                      <li class="perr pwarn" key={warnKey(w)}>
                         <Icon name="triangle-alert" small />
                         <p class="selectable">
-                          <code>{whereText(e)}</code>: {issueText(e.issue)}
+                          <span class="pwarn-tag">{t('studio.warn.label')}</span> <code>{t('studio.atLine', { block: blockTitle(w.block), line: String(w.line) })}</code>: {warnText(w.issue)}
                         </p>
-                        <button type="button" class="btn" onClick={() => goTo(e.block, e.line)}>
-                          {e.line ? t('studio.goLine') : t('studio.goBlock')}
+                        {w.fix && (
+                          <button type="button" class="btn st-fix" title={t('studio.fixTitle', w.fix)} onClick={() => applyWordFix(w.block, w.line, w.fix!)}>
+                            {t('studio.fix')}
+                          </button>
+                        )}
+                        <button type="button" class="btn btn-ghost" onClick={() => goTo(w.block, w.line)}>
+                          {t('studio.goLine')}
                         </button>
                       </li>
                     ))}
@@ -1313,11 +1387,12 @@ function WaveSwatch({ rgb }: { rgb: number[] }) {
   )
 }
 
-function Editor(props: { title: string; legend: string; legendNum?: boolean; h: number; value: string; errLines: number[]; label?: string; readOnly?: boolean; bind(el: HTMLTextAreaElement | null): void; onInput(v: string): void }) {
+function Editor(props: { title: string; legend: string; legendNum?: boolean; h: number; value: string; errLines: number[]; warnLines?: number[]; label?: string; readOnly?: boolean; bind(el: HTMLTextAreaElement | null): void; onInput(v: string): void }) {
   const { value, errLines } = props
   const gut = useRef<HTMLDivElement>(null)
   const lines = Math.max(1, value.split('\n').length)
   const errs = new Set(errLines)
+  const warns = new Set(props.warnLines ?? [])
   return (
     <div class="ed-block">
       <div class="ed-label">
@@ -1327,7 +1402,7 @@ function Editor(props: { title: string; legend: string; legendNum?: boolean; h: 
       <div class={props.readOnly ? 'ed ro' : 'ed'} style={{ '--h': `${props.h}px` }}>
         <div class="ed-gut" ref={gut} aria-hidden="true">
           {Array.from({ length: lines }, (_, i) => (
-            <div key={i} class={errs.has(i + 1) ? 'err' : undefined}>
+            <div key={i} class={errs.has(i + 1) ? 'err' : warns.has(i + 1) ? 'warn' : undefined}>
               {i + 1}
             </div>
           ))}
@@ -1373,6 +1448,7 @@ function SlotList(props: {
   original: AnySlot[]
   open: number
   errors: StudioError[]
+  warnings: StudioWarning[]
   onOpen(i: number): void
   onToggle(i: number, on: boolean): void
   onParam(i: number, p: BasicParam, v: number): void
@@ -1430,6 +1506,7 @@ function SlotList(props: {
                   readOnly={!on}
                   value={x.value}
                   errLines={props.errors.filter((e) => e.block === x.b && e.line).map((e) => e.line!)}
+                  warnLines={props.warnings.filter((w) => w.block === x.b).map((w) => w.line)}
                   bind={(el) => props.bind(x.b, el)}
                   onInput={(v) => props.onCode(x.b, v)}
                 />
