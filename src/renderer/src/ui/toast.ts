@@ -9,10 +9,12 @@ const listeners = new Set<Listener>()
 export const TOAST_MS = 4000
 
 export interface ToastOptions {
-  /** Falhas e ações da IA (Fase 4): passam por "Só importantes" e pelo Modo limpo (spec 014). */
+  /** Falhas e ações da IA (Fase 4): passam por "Só importantes" (spec 014), não pelo Modo limpo (#142). */
   important?: boolean
-  /** Sempre aparece (ex.: a confirmação do próprio Modo limpo). */
+  /** Passa por cima de "Avisos" (ex.: a confirmação do próprio Modo limpo, respostas dentro do Estúdio). */
   force?: boolean
+  /** Aviso sobre o Palco (`Enter`, `Shift+Enter`, preset pulado): forçado, mas some no Modo limpo (#142). */
+  stage?: boolean
 }
 
 /** Quem decide o que aparece: `settings.overlayText` (ligado pelo main.ts). */
@@ -24,10 +26,12 @@ export function setToastPolicy(fn: typeof policy): void {
 
 /** Toasts de resposta a tecla (ganho, rotação, transição, favoritos) não são importantes. */
 export function showToast(text: string, opts: ToastOptions = {}): void {
-  if (!opts.force) {
-    const { toasts, clean } = policy()
+  const { toasts, clean } = policy()
+  // Modo limpo (#142): no Palco nada aparece além da confirmação do próprio T (que vem com `force`).
+  if (clean && (opts.stage || !opts.force)) return
+  if (!opts.force && !opts.stage) {
     if (toasts === 'none') return
-    if ((toasts === 'important' || clean) && !opts.important) return
+    if (toasts === 'important' && !opts.important) return
   }
   for (const fn of listeners) fn(text)
 }
