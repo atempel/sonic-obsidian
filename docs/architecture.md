@@ -1,6 +1,6 @@
 # Arquitetura v3 — Sonic Obsidian
 
-> Estado: **planejamento** (8/nov/2026), implementado aos poucos — na v0.7.0 (16/nov) o núcleo de comandos, a interface v3, o Butterchurn 3, o pipeline `.milk`, o Estúdio P0, a atualização automática e os idiomas já estão no código; MCP e fontes extras ainda não. Este documento descreve para onde ele cresce para suportar a interface v3, as fontes de áudio, presets do usuário e o MCP. Decisões em [DECISIONS.md](../DECISIONS.md) (2026-11-08); interface em [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md).
+> Estado: **planejamento** (8/nov/2026), implementado aos poucos — na v0.8.0 (18/nov) o núcleo de comandos, a interface v3, o Butterchurn 3, o pipeline `.milk`, o Estúdio completo (026 e 027), a atualização automática e os idiomas já estão no código; MCP e fontes extras ainda não. Este documento descreve para onde ele cresce para suportar a interface v3, as fontes de áudio, presets do usuário e o MCP. Decisões em [DECISIONS.md](../DECISIONS.md) (2026-11-08); interface em [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md).
 
 ## 1. Princípio: um único núcleo de comandos
 
@@ -96,7 +96,7 @@ Trocar de fonte é o comando `source.set`; título de faixa usa `launchSongTitle
 - **No P0 do Estúdio (026)** a validação tem duas barreiras antes do visualizador principal: um Worker com o `eel-wasm` (erro com bloco e linha, e um quadro rodado com teto de 1 s, porque `loop(n, …)` não tem limite e `while` limita a ~1 milhão de voltas por chamada, o que em `per_pixel` multiplica pelos pontos da malha) e o visualizador de teste de 64×64 da 022. CSP: `worker-src blob:`.
 
 ### Estúdio
-- P0 (026): camada em tela cheia sobre o Palco; a prévia é o visualizador principal. Edita `per_frame_init`, `per_frame` e `per_pixel`; shaders só leitura.
+- P0 (026): camada em tela cheia sobre o Palco; a prévia é o visualizador principal (desde a 0.8.0, #143, encolhido por `transform` do CSS para caber inteiro no painel da prévia, com a proporção da janela; o motor segue no tamanho da janela). Edita `per_frame_init`, `per_frame` e `per_pixel`; shaders só leitura.
 - P1 (027): abas Básico (parâmetros `baseVals`), Equações, Ondas, Formas, Shaders (`warp`, `comp`) e Código `.milk` — todas editam o mesmo preset em memória. Código `.milk` (`src/renderer/src/studio/milk.ts`): texto gerado do preset com o HLSL da fonte; editar converte no main (`presets:convertMilk`, o mesmo da importação) e o resultado vira o editor inteiro. Sem fonte `.milk` (cópia do pacote), a aba mostra o JSON em leitura. Exportar (fatia 7): o renderer monta o texto (`.milk` com o HLSL da fonte, ou sem shaders numa cópia do pacote, avisando antes; ou o JSON do Butterchurn 3) e o main grava pelo diálogo nativo (`presets:exportFile`; o caminho nunca vem do renderer; `.milk` até 256 KB, JSON até 2 MB).
 - Compila com debounce de 400 ms pelo pipeline acima; com erro, continua tocando a última versão válida.
 - Variáveis de áudio expostas nas equações: `bass`, `mid`, `treb`, `bass_att`, `mid_att`, `treb_att`, `time`, `frame`, `fps`.

@@ -36,7 +36,7 @@ Um app desktop para Windows que:
 | **0 — Spike** ✅ | Provar que loopback + Butterchurn funcionam no Electron | [spec 001](specs/001-spike-electron-butterchurn.md) |
 | **1 — Núcleo** ✅ | App usável sem UI elaborada, já sobre o núcleo de comandos | Presets por teclado, rotação, janela, ganho (specs 002–005) |
 | **2 — Interface v3** ✅ | O Sonic Obsidian de verdade (v0.5.0) | Palco, Biblioteca, busca, ajustes rápidos, Configurações, setup, persistência |
-| **3 — Fontes e presets** 🔄 | Ouvir outras coisas e criar visuais próprios (v0.6.0 e v0.7.0 publicadas; v0.8.0 = Estúdio P1) | Microfone, SoundCloud (se viável), importar `.milk`, Estúdio (arquivo de áudio adiado) |
+| **3 — Fontes e presets** 🔄 | Ouvir outras coisas e criar visuais próprios (v0.6.0, v0.7.0 e v0.8.0 publicadas; a 0.8.0 trouxe o Estúdio completo) | Microfone, SoundCloud (se viável), importar `.milk`, Estúdio (arquivo de áudio adiado) |
 | **4 — MCP** | Controle e criação pela IA do usuário | Servidor local, stdio + HTTP, escopos, ferramentas, registro de atividade |
 | **5 — Extras** | O que sobra para "terminar" | Rack/multi-monitor, beat/BPM, instalador, iniciar com o Windows |
 
@@ -66,7 +66,7 @@ Referência: [design/v3-modelo-de-navegacao.md](design/v3-modelo-de-navegacao.md
 | ~~Fonte: arquivo (escolher/arrastar) com transporte~~ | Adiada: volta com a história "performance sincronizada" (DECISIONS 2026-11-10) |
 | Fonte: microfone | P1 |
 | Importar `.milk` (escolher/arrastar), rótulo "Importado" | P0 |
-| Estúdio de presets: editar cópia, novo, compilação ao vivo, erros por linha, versões, exportar | P1 |
+| Estúdio de presets: editar cópia, novo, compilação ao vivo, erros por linha, versões, exportar | ✅ v0.8.0 ([spec 027](specs/027-estudio-presets-p1.md)) |
 | Spike 007 — SoundCloud; se aprovado, fonte SoundCloud com crédito e link | P1 |
 
 ### Fase 4 — MCP

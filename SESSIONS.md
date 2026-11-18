@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-18 — Claude Code (nuvem, sessão com o usuário) — branch `docs/release-0.8.0`
+**Fez:** Documentação depois da publicação da v0.8.0 (pedido do usuário), no padrão da 0.7.0: README.pt-BR (status, Estúdio completo, próximos passos, roadmap, Modo limpo), README (Modo limpo), PROJECT (estado e "Agora" = v0.9.0), TASKS (027 feita), PRD (Estúdio ✅ v0.8.0), architecture (estado e prévia com o quadro inteiro), spec 027 publicada; landing EN/PT: a pergunta "Posso criar meus presets?" deixa de dizer "no roadmap".
+**Deixou em:** PR para o `main`. A mesma frase da landing ainda está antiga no canvas do Claude Design (o espelho `docs/design/landing/` é só leitura): atualizar lá na próxima sessão de design.
+
 ### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `fix/133-perf-win`
 **Fez:** Continuação da #133 (mesma rodada do #145): o `perf:win` (`tests/perf/windows.cjs`, função `play`) estourou os 5 s esperando o campo da busca no runner Windows sem GPU. Espera do campo e do "preset entrou" → 15 s, e a linha do preset na busca passa a ser esperada (antes, 300 ms fixos). Conferido na nuvem com `PERF_QUICK=1` (Electron sob xvfb): passou (41 s). O CI deste PR pegou mais um da família, `027-estudio-versoes` 3a (terceiro Ctrl+S antes de a edição compilar): espera os salvamentos terminarem (contador no `saveMine` simulado) e a compilação da edição começar e terminar; 39/39 aqui. O #146 (para a `rc/v0.8.0`) foi fechado: o #149 já tinha levado os quatro commits.
 **Deixou em:** PR desta branch com `Closes #133`. O passo de desempenho do build Windows confere de verdade no próximo build do bloco (com a label ou disparo manual).
