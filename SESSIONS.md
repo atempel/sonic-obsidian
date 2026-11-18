@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.8.0`
+**Fez:** Passo 3 da `rodada` (nenhum PR aberto, nenhum bloco esperando teste, milestone v0.8.0 sem issues abertas depois da #75): **fecha o bloco v0.8.0**. `package.json` 0.7.0 → 0.8.0, `.github/release-notes.md` com o Estúdio completo, DECISIONS (bloco com uma issue só, `agent-decided`).
+**Deixou em:** depois do merge, branch `rc/v0.8.0` neste commit, `build-windows` disparado nela e a issue "Testar bloco v0.8.0" (`test-block`, atribuída ao atempel) com o roteiro das 11 fatias. Nenhuma release antes do ok dele. Áudio, fps e visual não verificados aqui (só no Windows, no bloco).
+
 ### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/027-extras-previa`
 **Fez:** Passo 4 da `rodada` (nenhum PR aberto, nenhum bloco esperando teste, #75 `ready` no v0.8.0): #75 reivindicada, **fatia 11 da 027** (Extras da prévia), a última. Design: artefato em `1794680346-fb12` (espelho ainda em `598c`, sync pendente na #124); botões e assinatura do protótipo do Estúdio. "Testar troca" corta o visual para outro preset (sorteado, sem mexer no atual nem no histórico) e, 500 ms depois, volta para o preset em edição (última versão válida) com a transição das trocas manuais; assinatura com nome e crédito no pé da prévia. "Capturar quadro": `toBlob` do canvas principal → `presets:exportFrame` (diálogo nativo, só PNG, até 64 MB). Teste novo `027-estudio-extras` 17/17; `026-estudio` 52/52, `027-estudio-exportar` 20/20, `027-estudio-comparar` 25/25, `030-idiomas` 97/97. DECISIONS, DIVERGENCIAS, AGENTS e spec (Implementada, falta o Windows).
 **Deixou em:** PR desta branch com `Closes #75` (a 027 termina aqui). Com o merge, o milestone v0.8.0 fica sem issues abertas e a próxima rodada fecha o bloco (`chore: versão 0.8.0`, `rc/v0.8.0`, issue "Testar bloco v0.8.0"). Não verificado: a transição da troca e o PNG gravado no disco, no Windows (vai para o bloco v0.8.0).

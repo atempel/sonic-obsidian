@@ -1,14 +1,26 @@
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
-## What's new in 0.7.0
+## What's new in 0.8.0 — the full Preset Studio
 
-- **Automatic updates:** the installed app checks GitHub Releases once a day, downloads new versions in the background and shows a small note when one is ready — **Restart and update** installs it silently and reopens where you left off. Turn it off, or check by hand, in Settings › About › Updates. The portable zip only tells you a new version exists and opens its page.
-- **English and Portuguese (Brazil):** the whole app is translated. On first launch it follows the Windows language; switch any time in Settings › General › Language, with no restart. The installer, file dialogs and screen-reader key names follow too. The log, the debug HUD and copied diagnostics stay in English so they can be pasted into issues.
-- **Clearer Quick settings:** Normalize audio shows its live gain (`auto +N dB`) next to its name; Character and Memory are side-by-side buttons; defaults are marked with a dot; **Restore default** sits next to the Expressiveness title.
+Press `E` on any preset to open the Studio. Every change shows up on the visual within half a second, and a mistake never breaks what is playing: the last version that worked keeps running until you fix it.
 
-### Updating from 0.6.0 or earlier
+- **Basic:** zoom, rotation, warp, decay, colors, wave mode and the rest, live *while you drag* — no reload, no flicker.
+- **Waves and Shapes:** turn on up to 4 custom waves and 4 shapes, with their own equations, sample count, spectrum mode, sides and radius.
+- **Shaders:** edit the `warp` and `comp` shaders; GLSL errors point to your line, with **Go to line**.
+- **`.milk` code:** for imported presets, edit the `.milk` text itself and every tab follows. Presets from the built-in pack show their Butterchurn JSON, read-only.
+- **Checker:** typos like `bas_att` show a warning with **Fix → `bass_att`** (the preset still runs); unknown functions suggest the closest one.
+- **Version history:** every save is a version you can **restore** or **compare** side by side. `Ctrl+Z` / `Ctrl+Shift+Z` undo and redo inside the Studio.
+- **Compare with the original:** split preview, original on the left and your remix on the right, reacting to the same beat. It turns itself off if the visual drops below 50 fps.
+- **New preset:** start from a simple template that pulses with the bass (Library › **New preset**, or in the Studio).
+- **Rename** your presets from the name field; favorites, collections and recents follow the new name.
+- **Export `.milk`** (or Butterchurn JSON). Copies of built-in presets export without their shaders, with a clear note first.
+- **Test switch** previews the transition into your preset with its name and credit; **Capture frame** saves the current frame as a PNG.
 
-Install this version by hand **once** (run `SonicObsidian-Setup.exe` over the old one — your presets, favorites, collections and settings are kept). From then on the app updates itself.
+Original authors' credits are always kept: a remix says "based on …".
+
+### Updating from 0.7.0
+
+The installed app updates itself (or check now in Settings › About › Updates). From 0.6.0 or earlier, install this version by hand **once** — your presets, favorites, collections and settings are kept.
 
 ## Download
 
