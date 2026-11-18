@@ -116,12 +116,14 @@ async function processes(app) {
 async function play(page, name) {
   await page.mouse.move(640, 360)
   await page.keyboard.press('Control+KeyK')
-  await page.waitForSelector('.palette input', { state: 'visible', timeout: 5000 })
+  // Esperas por estado, largas: o runner Windows sem GPU leva 100–165 ms por quadro e já estourou
+  // os 5 s com o campo visível (#133). Quando passa, nada fica mais lento.
+  await page.waitForSelector('.palette input', { state: 'visible', timeout: 15000 })
   await page.fill('.palette input', name)
-  await page.waitForTimeout(300)
-  const clicked = await page.evaluate((n) => { const b = [...document.querySelectorAll('.palette .r-btn')].find((e) => e.title === n); if (b) b.click(); return !!b }, name)
+  const found = await H.poll(page, (n) => [...document.querySelectorAll('.palette .r-btn')].some((e) => e.title === n), { arg: name, timeout: 15000, every: 100 })
+  const clicked = found && await page.evaluate((n) => { const b = [...document.querySelectorAll('.palette .r-btn')].find((e) => e.title === n); if (b) b.click(); return !!b }, name)
   if (!clicked) throw new Error(`preset não encontrado na busca: ${name}`)
-  const okNow = await H.poll(page, (n) => document.querySelector('.now-title')?.getAttribute('title') === n, { arg: name, timeout: 8000 })
+  const okNow = await H.poll(page, (n) => document.querySelector('.now-title')?.getAttribute('title') === n, { arg: name, timeout: 15000 })
   if (!okNow) throw new Error(`o preset não entrou: ${name}`)
 }
 

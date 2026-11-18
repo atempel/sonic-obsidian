@@ -4,6 +4,9 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `fix/133-perf-win`
+**Fez:** Continuação da #133 (mesma rodada do #145): o `perf:win` (`tests/perf/windows.cjs`, função `play`) estourou os 5 s esperando o campo da busca no runner Windows sem GPU. Espera do campo e do "preset entrou" → 15 s, e a linha do preset na busca passa a ser esperada (antes, 300 ms fixos). Conferido na nuvem com `PERF_QUICK=1` (Electron sob xvfb): passou (41 s). O #146 (para a `rc/v0.8.0`) foi fechado: o #149 já tinha levado os quatro commits.
+**Deixou em:** PR desta branch com `Closes #133`. O passo de desempenho do build Windows confere de verdade no próximo build do bloco (com a label ou disparo manual).
 ### 2026-11-18 — Claude Code (nuvem, sessão com o usuário) — release v0.8.0
 **Fez:** Ok do usuário no bloco v0.8.0 (#141). Notas da release com as correções do teste (#150); correção dos testes intermitentes da rodada levada à `rc/v0.8.0` por cherry-pick (#149, no lugar do #146, que conflitava). Release **v0.8.0 publicada** pelo workflow `release` na `rc/v0.8.0` (`b9e6879`; app igual ao `9a5b6b2` testado). `rc/v0.8.0 → main` com o README da 0.8.0.
 **Deixou em:** v0.8.0 publicada; #141 e milestone v0.8.0 fechados. Fica na #133: o `perf:win` (`tests/perf/windows.cjs:119`). Próximo milestone: v0.9.0.
