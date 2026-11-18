@@ -157,7 +157,7 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 
 ### 2026-11-10 — Estúdio P0 (spec 026), protótipo `1794281099-42d3`, página `Sonic Obsidian Estúdio.html`
 **No app:**
-- **Camada em tela cheia** sobre o Palco (decisão do usuário), não uma página. A prévia é o próprio visual principal, visto pela coluna da esquerda (moldura com "Seu remix"), e não um canvas 16:9 à parte. Sem "Comparar com o original", "Testar troca", "Capturar quadro", "Versões" e "Exportar .milk" (027).
+- **Camada em tela cheia** sobre o Palco (decisão do usuário), não uma página. A prévia é o próprio visual principal, visto pela coluna da esquerda (moldura com "Seu remix"), e não um canvas 16:9 à parte. **Revisto em 2026-11-18 (#143, pedido do usuário no teste do bloco v0.8.0):** o visual principal encolhe para caber **inteiro** na moldura "Seu remix", com a proporção da janela, como o canvas da prévia do protótipo; "Comparar" mostra dois quadros inteiros. Continua sendo o mesmo visual (sem segundo canvas para a prévia). Sem "Comparar com o original", "Testar troca", "Capturar quadro", "Versões" e "Exportar .milk" (027).
 - **Só a aba "Código"**, com os três blocos de equações. Shaders aparecem num bloco recolhível só de leitura. As abas Básico/Ondas/Formas/Shaders são da 027.
 - **Medidores de "Áudio agora"** em barra contínua, não em segmentos.
 - **Nome do autor:** no primeiro salvamento, um balão abaixo de "Salvar na biblioteca" pergunta "Seu nome nos presets" (decisão do usuário). Depois, o campo fica em Configurações › Geral › Meus presets.

@@ -310,6 +310,7 @@ function Studio({ api }: { api: StudioApi }) {
   const [cmp, setCmp] = useState<{ version: SoMineVersion | null } | null>(null)
   const origPane = useRef<HTMLDivElement>(null)
   const rmxPane = useRef<HTMLDivElement>(null)
+  const stage = useRef<HTMLDivElement>(null)
   const verBtn = useRef<HTMLButtonElement>(null)
   const expBtn = useRef<HTMLButtonElement>(null)
   const [expOpen, setExpOpen] = useState(false)
@@ -500,28 +501,61 @@ function Studio({ api }: { api: StudioApi }) {
     }
   }
   useEffect(() => () => api.compareStop(), [])
-  // O segundo canvas tem o tamanho da janela e mostra, à esquerda, o mesmo pedaço do quadro que
-  // o visual principal mostra à direita (a mesma região dos dois presets, lado a lado).
+  // Quadro inteiro na prévia (#143; protótipo do Estúdio, coluna da prévia): o visual principal encolhe, pela
+  // transformação do CSS, para caber inteiro no painel "Seu remix", com a proporção da janela. O motor segue
+  // desenhando no tamanho da janela (o "Capturar quadro" grava o quadro em tamanho real). No "Comparar", o
+  // segundo canvas (também do tamanho da janela) encolhe do mesmo jeito no painel da esquerda.
   useLayoutEffect(() => {
-    if (!cmp) return
+    const main = document.getElementById('canvas')
     const place = (): void => {
-      const o = origPane.current?.getBoundingClientRect()
-      const r = rmxPane.current?.getBoundingClientRect()
-      const cv = origPane.current?.querySelector<HTMLCanvasElement>('.st-cmp-canvas')
-      if (!o || !r || !cv) return
-      // Canvas na tela em x = −(r.left − o.left), y = 0 (o principal está em 0, 0); relativo ao painel:
-      cv.style.left = `${-r.left}px`
-      cv.style.top = `${-o.top}px`
+      const st = stage.current, rp = rmxPane.current, op = origPane.current
+      if (!st || !rp) return
+      const W = window.innerWidth, H = window.innerHeight
+      const fit = (r: DOMRect): { x: number; y: number; w: number; h: number; s: number } => {
+        const s = Math.max(0.01, Math.min(r.width / W, r.height / H))
+        const w = W * s, h = H * s
+        return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - h) / 2, w, h, s }
+      }
+      const vars = (el: HTMLElement, f: { x: number; y: number; w: number; h: number }, ox: number, oy: number): void => {
+        el.style.setProperty('--fl', `${f.x - ox}px`)
+        el.style.setProperty('--ft', `${f.y - oy}px`)
+      }
+      const rr = rp.getBoundingClientRect()
+      const fr = fit(rr)
+      if (main) main.style.transform = `translate(${fr.x}px, ${fr.y}px) scale(${fr.s})`
+      vars(rp, fr, rr.left, rr.top)
+      // Assinatura e selo "última versão válida" ficam sobre o quadro do remix (coordenadas da prévia, dentro da borda).
+      const sr = st.getBoundingClientRect()
+      const sx = sr.left + st.clientLeft, sy = sr.top + st.clientTop
+      st.style.setProperty('--rl', `${fr.x - sx}px`)
+      st.style.setProperty('--rt', `${fr.y - sy}px`)
+      st.style.setProperty('--rw', `${fr.w}px`)
+      st.style.setProperty('--rb', `${st.clientHeight - (fr.y - sy + fr.h)}px`)
+      st.style.setProperty('--rr', `${st.clientWidth - (fr.x - sx + fr.w)}px`)
+      if (cmp && op) {
+        const or = op.getBoundingClientRect()
+        const fo = fit(or)
+        vars(op, fo, or.left, or.top)
+        const cv = op.querySelector<HTMLCanvasElement>('.st-cmp-canvas')
+        if (cv) cv.style.transform = `translate(${fo.x - or.left}px, ${fo.y - or.top}px) scale(${fo.s})`
+      }
     }
     place()
+    // O canvas do "Comparar" entra no painel logo depois de ligar (pelo main): reposiciona no próximo quadro.
+    const raf = requestAnimationFrame(place)
     window.addEventListener('resize', place)
     const ro = new ResizeObserver(place)
-    if (origPane.current) ro.observe(origPane.current)
+    for (const el of [stage.current, rmxPane.current, origPane.current]) if (el) ro.observe(el)
+    const mo = new MutationObserver(place)
+    if (origPane.current) mo.observe(origPane.current, { childList: true })
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('resize', place)
       ro.disconnect()
+      mo.disconnect()
     }
   }, [cmp])
+  useLayoutEffect(() => () => void document.getElementById('canvas')?.style.removeProperty('transform'), [])
 
   // A cópia aberta já está no visual; a primeira compilação só confere e mostra o status.
   // O modelo do "Novo preset" ainda não está: a primeira compilação o leva ao visual.
@@ -1080,7 +1114,7 @@ function Studio({ api }: { api: StudioApi }) {
 
       <div class="st-main">
         <section class="st-prev" aria-label={t('studio.preview')}>
-          <div class={cmp ? 'st-stage cmp' : 'st-stage'}>
+          <div class={cmp ? 'st-stage cmp' : 'st-stage'} ref={stage}>
             <div class="st-pane orig" ref={origPane}>
               {cmp && <span class="chip tl">{cmp.version ? t('studio.cmp.version', { time: verTime(cmp.version.savedAt) }) : t('studio.cmp.original')}</span>}
             </div>

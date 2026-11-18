@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-18 — Claude Code (nuvem, sessão com o usuário) — branches `fix/142-modo-limpo` e `fix/143-previa-inteira`
+**Fez:** Teste do bloco v0.8.0 pelo usuário (#141): dois problemas viraram #142 e #143 com as escolhas dele. #142: Modo limpo sem nenhum aviso no Palco (só a confirmação do `T`; toast `stage`; silêncio e captura recusada escondidos), teste `142-modo-limpo`. #143: o `#canvas` encolhe por `transform` para caber inteiro no painel "Seu remix" (e o do Comparar no da esquerda), selos e assinatura sobre o quadro; testes A2b/A2c/A5/A20b no `027-estudio-comparar`. DECISIONS, DIVERGENCIAS (Estúdio P0 revista) e spec 014 atualizadas. #133 (testes intermitentes) ficou `ready` + `prioridade` no v0.9.0 a pedido do usuário.
+**Deixou em:** PRs para a `rc/v0.8.0`; depois do merge, build novo da `rc/v0.8.0`, roteiro só do que mudou na #141 e PR `rc/v0.8.0 → main`. No Windows não verificado: o visual encolhido na prévia (nitidez e fps) e os avisos sumindo de verdade.
+
 ### 2026-11-18 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.8.0`
 **Fez:** Passo 3 da `rodada` (nenhum PR aberto, nenhum bloco esperando teste, milestone v0.8.0 sem issues abertas depois da #75): **fecha o bloco v0.8.0**. `package.json` 0.7.0 → 0.8.0, `.github/release-notes.md` com o Estúdio completo, DECISIONS (bloco com uma issue só, `agent-decided`).
 **Deixou em:** depois do merge, branch `rc/v0.8.0` neste commit, `build-windows` disparado nela e a issue "Testar bloco v0.8.0" (`test-block`, atribuída ao atempel) com o roteiro das 11 fatias. Nenhuma release antes do ok dele. Áudio, fps e visual não verificados aqui (só no Windows, no bloco).
