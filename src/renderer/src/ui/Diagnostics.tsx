@@ -75,6 +75,13 @@ function CopyButton({ text, ghost = true }: { text: () => Promise<string>; ghost
   )
 }
 
+/** Modo limpo (#142): o Palco fica sem avisos (silêncio e captura recusada também). */
+function useClean(core: Core): boolean {
+  const [clean, setClean] = useState(core.state.settings.overlayText.clean)
+  useLayoutEffect(() => core.events.on('stateChanged', () => setClean(core.state.settings.overlayText.clean)), [core])
+  return clean
+}
+
 // ── Primeira abertura ─────────────────────────────────────────
 export function WelcomeCard({ core }: { core: Core }) {
   const [show, setShow] = useState(false)
@@ -158,7 +165,8 @@ export function SilenceNotice({ core }: { core: Core }) {
     const t = window.setTimeout(() => setTesting(false), 3000)
     return () => (off(), window.clearTimeout(t))
   }, [core, testing])
-  const visible = notice && !closed && capture === 'ok'
+  const clean = useClean(core)
+  const visible = notice && !closed && capture === 'ok' && !clean
   useDismiss(() => (visible ? (setClosed(true), true) : false))
   const { mounted, cls } = useFloat(visible)
   if (!mounted) return null
@@ -206,7 +214,8 @@ export function CaptureDiag({ bridge }: { bridge: PalcoBridge }) {
     return () => (offs.forEach((off) => off()), window.clearTimeout(closeTimer.current))
   }, [core])
   // Fica aberto enquanto a captura está recusada, e durante "Captura funcionando" depois de um "Tentar de novo".
-  const visible = capture === 'denied' || retrying || okLine
+  const clean = useClean(core)
+  const visible = (capture === 'denied' || retrying || okLine) && !clean
   const { mounted, cls } = useFloat(visible)
   if (!mounted) return null
   const retry = async (): Promise<void> => {
