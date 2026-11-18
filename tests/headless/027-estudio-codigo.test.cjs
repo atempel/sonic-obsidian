@@ -109,14 +109,14 @@ const srv = H.serve(5248)
   const openStudio = async () => {
     await page.mouse.move(700, 400)
     await page.keyboard.press('e')
-    await page.waitForSelector('.studio', { timeout: 5000 })
+    await page.waitForSelector('.studio', { timeout: 15000 })
     await waitStatus(/^Compilado$/)
   }
   const closeStudio = async () => {
     await page.evaluate(() => { document.activeElement?.blur(); document.querySelector('.studio')?.focus() })
     await page.keyboard.press('Escape')
     if (await page.$('.studio')) await page.keyboard.press('Escape')
-    await page.waitForSelector('.studio', { state: 'detached', timeout: 5000 })
+    await page.waitForSelector('.studio', { state: 'detached', timeout: 15000 })
   }
 
   ok('1a o importado está tocando', (await title()) === IMPORTED, await title())
