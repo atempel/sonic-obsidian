@@ -89,8 +89,11 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   await page.fill('.studio .ed-ta >> nth=1', 'rot = sin(time;')
   const gotErr = await H.poll(page, () => !!document.querySelector('.perr .btn'), { timeout: 10000 })
   await page.keyboard.press('Control+1')
+  // Clica só com o Básico já na tela: num runner lento o clique chegava antes da troca de aba, e a
+  // troca para o Básico vinha depois do "Ir para a linha" (#133).
+  await H.poll(page, () => document.querySelector('.studio [role=tab][aria-selected=true]')?.textContent.trim() === 'Básico', { timeout: 15000, every: 100 })
   if (gotErr) await page.click('.perr .btn')
-  const focused = await H.poll(page, () => document.activeElement === document.querySelectorAll('.studio .ed-ta')[1], { timeout: 3000, every: 100 })
+  const focused = await H.poll(page, () => document.activeElement === document.querySelectorAll('.studio .ed-ta')[1], { timeout: 15000, every: 100 })
   ok('6a "Ir para a linha" abre Equações e foca o bloco', gotErr && focused && (await selected()).join() === 'Equações', `erro=${gotErr} foco=${focused} aba=${await selected()}`)
 
   // 7. Fim
