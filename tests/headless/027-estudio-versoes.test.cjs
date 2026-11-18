@@ -93,7 +93,8 @@ async function mainChecks() {
     const un = async (p) => { const r = await p; if ('err' in r) throw new Error(r.err); return r.ok }
     Object.assign(window.so.presets, {
       listMine: async () => [],
-      saveMine: (d) => un(window.__saveMine(d)),
+      // __nSaves conta os salvamentos terminados: o teste espera por eles em vez de 400 ms fixos (#133).
+      saveMine: (d) => un(window.__saveMine(d)).then((r) => { window.__nSaves = (window.__nSaves || 0) + 1; return r }),
       mineVersions: (id) => un(window.__mineVersions(id)),
       mineVersion: (id, n) => un(window.__mineVersion(id, n)),
       removeMine: async () => {}
@@ -108,7 +109,9 @@ async function mainChecks() {
   const toast = () => page.$eval('.gtoast', e => e.textContent).catch(() => '')
   const items = () => page.$$eval('.st-vlist .ver', es => es.map(e => ({ t: e.querySelector('p').textContent, cur: e.classList.contains('cur') })))
   const blur = () => page.evaluate(() => { document.activeElement?.blur(); document.querySelector('.studio').focus() })
-  const waitStatusOk = () => H.poll(page, () => /Compilado|Compiled/.test(document.querySelector('.cstat')?.textContent || ''), { timeout: 8000 })
+  const waitStatusOk = () => H.poll(page, () => /Compilado|Compiled/.test(document.querySelector('.cstat')?.textContent || ''), { timeout: 15000 })
+  const saves = () => page.evaluate(() => window.__nSaves || 0)
+  const waitSaves = (n) => H.poll(page, (n) => (window.__nSaves || 0) >= n, { arg: n, timeout: 15000, every: 100 })
 
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
@@ -153,16 +156,20 @@ async function mainChecks() {
   await blur(); await page.keyboard.press('Control+1')
 
   // 3. Salvar três vezes = três versões
+  const s0 = await saves()
   await page.keyboard.press('Control+s')
   ok('3 primeiro salvamento', await H.poll(page, () => /salvo na biblioteca/.test(document.querySelector('.gtoast')?.textContent || ''), { timeout: 8000 }), await toast())
+  await waitSaves(s0 + 1)
   await setZoom('1.09'); await blur()
-  await page.keyboard.press('Control+s'); await page.waitForTimeout(400)
+  await page.keyboard.press('Control+s'); await waitSaves(s0 + 2)
   await page.keyboard.press('Control+2')
   const frame0 = await page.inputValue('.studio .ed-ta >> nth=1')
   await page.fill('.studio .ed-ta >> nth=1', frame0 + '\nrot = rot + 0.001;')
+  // Espera a compilação desta edição começar e terminar (o "Compilado" anterior ainda estava na tela).
+  await H.poll(page, () => !/Compilado|Compiled/.test(document.querySelector('.cstat')?.textContent || ''), { timeout: 3000, every: 50 })
   await waitStatusOk(); await page.waitForTimeout(500)
   await blur()
-  await page.keyboard.press('Control+s'); await page.waitForTimeout(400)
+  await page.keyboard.press('Control+s'); await waitSaves(s0 + 3)
   await page.click('.st-ver')
   await H.poll(page, () => document.querySelectorAll('.st-vlist .ver').length >= 3, { timeout: 15000 })
   const it = await items()
