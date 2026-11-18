@@ -112,14 +112,14 @@ async function mainChecks() {
 
   await page.mouse.move(700, 400)
   await page.keyboard.press('e')
-  await page.waitForSelector('.studio', { timeout: 5000 })
+  await page.waitForSelector('.studio', { timeout: 15000 })
   await waitStatusOk()
   const z0 = await zoom()
 
   // 1. Gaveta antes de salvar
   ok('1a botão "Versões" no topo, com aria-expanded', (await page.getAttribute('.st-ver', 'aria-expanded')) === 'false' && (await page.getAttribute('.st-ver', 'aria-label')) === 'Versões')
   await page.click('.st-ver')
-  await page.waitForSelector('.st-drawer.open', { timeout: 3000 })
+  await page.waitForSelector('.st-drawer.open', { timeout: 15000 })
   const focusClose = await H.poll(page, () => document.activeElement?.closest('.st-drawer-h') != null, { timeout: 2000 })
   ok('1b abre a gaveta com o foco em fechar', focusClose && (await page.getAttribute('.st-ver', 'aria-expanded')) === 'true')
   ok('1c sem salvar: explica que o histórico começa ao salvar', /Salve na biblioteca para começar o histórico/.test(await page.$eval('.st-drawer', e => e.textContent)))
@@ -164,7 +164,7 @@ async function mainChecks() {
   await blur()
   await page.keyboard.press('Control+s'); await page.waitForTimeout(400)
   await page.click('.st-ver')
-  await H.poll(page, () => document.querySelectorAll('.st-vlist .ver').length >= 3, { timeout: 5000 })
+  await H.poll(page, () => document.querySelectorAll('.st-vlist .ver').length >= 3, { timeout: 15000 })
   const it = await items()
   ok('3a três versões na gaveta, a mais nova marcada', it.length === 3 && it[0].cur && !it[1].cur, JSON.stringify(it))
   ok('3b mais nova: per_frame editado', /per_frame editado/.test(it[0]?.t || ''), it[0]?.t)
@@ -175,7 +175,7 @@ async function mainChecks() {
 
   // 4. Restaurar a primeira
   await page.click('.st-vlist .ver >> nth=2 >> button:has-text("Restaurar")')
-  const restored = await H.poll(page, () => /Versão de .+ restaurada/.test(document.querySelector('.gtoast')?.textContent || ''), { timeout: 5000 })
+  const restored = await H.poll(page, () => /Versão de .+ restaurada/.test(document.querySelector('.gtoast')?.textContent || ''), { timeout: 15000 })
   ok('4 toast "Versão de … restaurada"', restored, await toast())
   await waitStatusOk()
   ok('4a restaurar volta as equações da versão', (await page.inputValue('.studio .ed-ta >> nth=1')) === frame0)

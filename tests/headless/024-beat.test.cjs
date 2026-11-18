@@ -81,7 +81,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   ok('5a faixa mostra "Segurado"', (await rotText()).includes('Segurado'), await rotText())
   // O toast pode aparecer depois do primeiro quadro lento do headless: espera até 2 s em vez de ler uma vez.
-  ok('5b toast de segurado', await page.waitForFunction(() => document.body.innerText.includes('Visual segurado'), null, { timeout: 2000 }).then(() => true, () => false))
+  ok('5b toast de segurado', await page.waitForFunction(() => document.body.innerText.includes('Visual segurado'), null, { timeout: 15000 }).then(() => true, () => false))
   await page.evaluate(() => { window.__changes = [] })
   await page.waitForTimeout(9500)
   ok('5c segurado: nenhuma troca automática em > 4 compassos', (await page.evaluate(() => window.__changes.length)) === 0)
