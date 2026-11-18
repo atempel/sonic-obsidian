@@ -161,16 +161,20 @@ body.studio-open .winctl { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .st-drawer, .st-drawer.open { transition: none; } }
 
 /* Comparar com o original (spec 027, fatia 4) — protótipo, página Estúdio completo (027): prévia em duas, 1 px entre elas (a da direita fica transparente).
-   À direita, o visual principal visto pela camada; à esquerda, o segundo visual (canvas do tamanho da janela, deslocado
-   para mostrar a mesma região do quadro). */
+   Quadro inteiro (#143): à direita, o visual principal encolhido (transform no #canvas, pelo Studio.tsx) para caber no
+   painel com a proporção da janela; à esquerda, o segundo visual (canvas do tamanho da janela) encolhido do mesmo jeito.
+   As variáveis --fl/--ft (por painel) e --rl/--rt/--rw/--rb/--rr (na prévia) põem os rótulos e a assinatura sobre o quadro. */
+body.studio-open #canvas { transform-origin: 0 0; }
 .st-stage { display: grid; grid-template-columns: 1fr; overflow: hidden; }
 .st-stage.cmp { grid-template-columns: 1fr 1fr; }
 .st-pane { position: relative; min-width: 0; overflow: hidden; }
 .st-pane.orig { display: none; background: var(--bg-00); }
 .st-stage.cmp .st-pane.orig { display: block; }
 .st-stage.cmp .st-pane.rmx { border-left: 1px solid var(--line-2); }
-.st-cmp-canvas { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; }
+.st-cmp-canvas { position: absolute; left: 0; top: 0; width: 100vw; height: 100vh; display: block; pointer-events: none; transform-origin: 0 0; }
 .st-pane .chip { z-index: 1; }
+.st-pane .chip.tl { left: calc(var(--fl, 0px) + 8px); top: calc(var(--ft, 0px) + 8px); }
+.st-stage > .chip.tr { z-index: 1; top: calc(var(--rt, 0px) + 8px); right: calc(var(--rr, 0px) + 8px); }
 .st-pbar { display: flex; align-items: center; gap: 8px; flex: none; min-height: 32px; }
 /* A coluna da prévia é transparente (o visual aparece atrás): o switch ganha fundo para ser lido. */
 .st-pbar .switch { padding: 4px 12px 4px 6px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); }
@@ -179,7 +183,7 @@ body.studio-open .winctl { display: none !important; }
    a assinatura (nome e crédito) no pé da prévia, com a linha violeta correndo pelo tempo da transição. */
 .st-pbar .sp { flex: 1; }
 .st-pbar { flex-wrap: wrap; }
-.st-card { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 40px 20px 18px; background: linear-gradient(to top, rgba(8, 8, 9, 0.92) 15%, rgba(8, 8, 9, 0)); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease-out); }
+.st-card { position: absolute; z-index: 1; left: var(--rl, 0px); width: var(--rw, 100%); bottom: var(--rb, 0px); box-sizing: border-box; padding: 40px 20px 18px; background: linear-gradient(to top, rgba(8, 8, 9, 0.92) 15%, rgba(8, 8, 9, 0)); opacity: 0; pointer-events: none; transition: opacity 400ms var(--ease-out); }
 .st-card.show { opacity: 1; transition-duration: 180ms; }
 .st-card h2 { margin: 0; font-size: clamp(20px, 3vw, 34px); font-weight: 600; line-height: 1.1; text-wrap: balance; overflow-wrap: anywhere; }
 .st-card p { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
