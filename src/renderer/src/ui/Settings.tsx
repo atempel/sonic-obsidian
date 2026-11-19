@@ -13,6 +13,7 @@ import {
   FPS_LIMITS,
   GAIN_MAX_DB,
   GAIN_MIN_DB,
+  VISUAL_DELAY_MAX_MS,
   MESH_SIZES,
   PIXEL_RATIOS,
   TEXTURE_RATIOS,
@@ -380,6 +381,12 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         </Row>
         <Row id="st-gain" label={t('settings.capture.gain')} help={t('settings.capture.gainHelp')} kw="volume db ganho gain">
           <Rng id="st-gain" value={s.gainDefaultDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(s.gainDefaultDb)} onInput={(v) => run('settings.set', { gainDefaultDb: v })} />
+        </Row>
+      </Grp>
+      {/* Spec 032: sem linha no protótipo; componentes que já existem (DIVERGENCIAS). */}
+      <Grp title={t('settings.capture.syncGroup')}>
+        <Row id="st-delay" label={t('settings.capture.delay')} help={t('settings.capture.delayHelp')} kw="latência latency atraso delay sincronia sync bluetooth hdmi">
+          <Rng id="st-delay" value={s.visualDelayMs} min={0} max={VISUAL_DELAY_MAX_MS} step={10} text={`${fmtNum(s.visualDelayMs)} ms`} onInput={(v) => run('audio.visualDelay', { ms: v })} />
         </Row>
       </Grp>
     </>

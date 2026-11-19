@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-19 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/032-sincronia-visual`
+**Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada; bloco v0.9.0 sem resposta na #157; nenhum PR aberto; v0.10.0 com issue aberta). Passo 4: #96 reivindicada e implementada pela spec 032, P0: `DelayNode` logo depois da fonte (ganho, Butterchurn, silêncio, batida e medidor andam juntos; rampa de 50 ms), `visualDelayMs` 0–500 (passo 10) com comando `audio.visualDelay` e sanitização, grupo "Sincronia" › "Atrasar o visual" em Configurações › Captura (busca por bluetooth/latency/atraso), linha `sync` no HUD e `[sync]` no log (na captura e a cada 5 min, com p95 e o maior intervalo entre quadros). `src/renderer/src/sync.ts` novo. Teste `032-sincronia` (21/21; a média de 33 ms a 30 fps só roda em runner rápido). P1 virou a #160. DECISIONS e DIVERGENCIAS 2026-11-19.
+**Deixou em:** PR desta branch com `Closes #96`. Não verificado (bloco v0.10.0, Windows): o atraso real de 300 ms com metrônomo, o ajuste com fone Bluetooth, nenhuma mudança com 0 ms, se o Chromium informa a latência da captura.
+
 ### 2026-11-19 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #159
 **Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (#157, bloco v0.9.0, sem comentário do usuário). Passo 2: PR #159 (spec 032, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 032 livre) → esta entrada e merge em squash.
 **Deixou em:** spec 032 no `main`; #96 `ready` + `agent-decided` no v0.10.0. Próxima rodada: implementar a #96 (`executar-task`). Bloco v0.9.0 segue esperando o teste do usuário (#157).

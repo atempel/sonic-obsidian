@@ -19,6 +19,7 @@ import {
   RECENTS_MAX,
   BEAT_BARS,
   BEAT_LEAD_MAX_MS,
+  VISUAL_DELAY_MAX_MS,
   type BeatBars,
   num,
   sanitizeRender,
@@ -248,6 +249,14 @@ export class Core {
       if (s.autoGain) s.gainDb = Math.max(-FINE_GAIN_DB, Math.min(FINE_GAIN_DB, s.gainDb))
       this.changedSettings(origin)
       return s.autoGain
+    },
+    /** Atrasar o visual (spec 032): `{ ms }`, 0–500 em passos de 10. Atrasa o som de tudo o que desenha. */
+    'audio.visualDelay': (a, origin) => {
+      const ms = optNum(a.ms, 'ms', 0, VISUAL_DELAY_MAX_MS)
+      if (ms === undefined) fail('ms obrigatório')
+      this.state.settings.visualDelayMs = Math.round(ms! / 10) * 10
+      this.changedSettings(origin)
+      return this.state.settings.visualDelayMs
     },
     /** `{ target: 'manual' | 'auto', type?, seconds? }` (spec 013). */
     'blend.set': (a, origin) => {
