@@ -13,6 +13,8 @@ export interface HudState {
   heapMb?: number
   /** Spec 024: BPM, confiança, compassos e custo da detecção. */
   beat?: string
+  /** Spec 032: partes do atraso do som até a tela que o app conhece. */
+  sync?: string
   /** Spec 026: custo da última compilação do Estúdio. */
   studio?: string
   /** Spec 027: ondas e formas ligadas no motor (lido de volta dele). */
@@ -38,6 +40,7 @@ export class Hud {
       `${s.presetCount} presets · rotation ${s.rotation} · gain ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressiveness unavailable'}\n` +
       `${s.beat ?? 'beat: waiting'}\n` +
+      (s.sync ? `${s.sync}\n` : '') +
       (s.studio ? `${s.studio}\n` : '') +
       (s.studioSlots ? `${s.studioSlots}\n` : '') +
       (s.studioCompare ? `${s.studioCompare}\n` : '') +

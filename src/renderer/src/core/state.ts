@@ -19,6 +19,8 @@ export const BEAT_BARS = [1, 2, 4, 8, 16] as const
 export type BeatBars = (typeof BEAT_BARS)[number]
 export const BEAT_LEAD_DEFAULT_MS = 70
 export const BEAT_LEAD_MAX_MS = 200
+/** Atrasar o visual (spec 032): 0–500 ms, passo 10. */
+export const VISUAL_DELAY_MAX_MS = 500
 
 /** Tipos de transição (spec 013), na ordem que `B` percorre. */
 export const BLEND_TYPES = ['cut', 'crossfade', 'wipe', 'plasma', 'radial', 'random'] as const
@@ -106,6 +108,8 @@ export interface Settings {
   gainDefaultDb: number
   /** Normalizar áudio (spec 028, P1): ganho automático antes do motor; o manual vira ajuste fino de ±6 dB. */
   autoGain: boolean
+  /** Atrasar o visual (spec 032): para fone Bluetooth, TV ou roteador de áudio (ms, 0–500, passo 10). */
+  visualDelayMs: number
   rotation: {
     enabled: boolean
     intervalSeconds: number
@@ -172,6 +176,7 @@ export function defaultSettings(): Settings {
     gainDb: 0,
     gainDefaultDb: 0,
     autoGain: false,
+    visualDelayMs: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { ...EXPRESSION_DEFAULT },
@@ -274,6 +279,7 @@ export function sanitizeSettings(raw: unknown): Settings {
     gainDb: raw.autoGain === true ? Math.max(-FINE_GAIN_DB, Math.min(FINE_GAIN_DB, gainDefaultDb)) : gainDefaultDb,
     gainDefaultDb,
     autoGain: bool(raw.autoGain, d.autoGain),
+    visualDelayMs: Math.round(num(raw.visualDelayMs, 0, VISUAL_DELAY_MAX_MS, d.visualDelayMs) / 10) * 10,
     rotation: {
       enabled: bool(rot.enabled, d.rotation.enabled),
       intervalSeconds: num(rot.intervalSeconds, 5, 600, d.rotation.intervalSeconds),

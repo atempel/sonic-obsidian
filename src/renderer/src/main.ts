@@ -34,6 +34,7 @@ import { TEMPLATE_MILK } from './studio/template'
 import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
+import { FrameStats, syncLine, type SyncParts } from './sync'
 import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 import { checkUpdates, configureUpdates, installUpdate, startUpdates, updateState } from './update'
@@ -42,6 +43,8 @@ const canvas = document.getElementById('canvas') as HTMLCanvasElement
 setupWindowChrome()
 const hudEl = document.getElementById('hud') as HTMLElement
 const hud = new Hud(hudEl)
+/** Butterchurn 3 analisa 1024 amostras (`numSamps` 512 × 2); a metade da janela entra no atraso (spec 032). */
+const BUTTERCHURN_FFT = 1024
 const state: HudState = { fps: 0, preset: '—', presetCount: 0, rotation: '30 s', fpsMode: 'monitor', gainDb: 0, audio: 'waiting', level: 0 }
 
 /** Quanto esperar pelos pacotes extras quando o último preset está neles (critério < 3 s). */
@@ -97,6 +100,13 @@ async function start(): Promise<void> {
   const meter = ctx.createAnalyser()
   meter.fftSize = 1024
   gain.connect(meter)
+  // Atrasar o visual (spec 032): logo depois da fonte, antes de tudo o que desenha ou mede
+  // (ganho, Butterchurn, silêncio, batida, medidor). Um atraso só: a batida segue alinhada com a reação.
+  const delay = ctx.createDelay(1)
+  delay.connect(gain)
+  delay.connect(preGain)
+  let captureLatencyMs = Number.NaN
+  const frameStats = new FrameStats()
   const samples = new Float32Array(meter.fftSize)
 
   // Antes de criar o motor: os shaders são compilados na criação (onda em pontos, 2026-11-10).
@@ -156,6 +166,22 @@ async function start(): Promise<void> {
       p.sum = 0
       p.sumSq = 0
     }, 5 * 60 * 1000)
+  // Spec 032: o que o app sabe do atraso do som até a tela (HUD e log).
+  const syncParts = (): SyncParts => ({
+    captureMs: captureLatencyMs,
+    ctxMs: (ctx.baseLatency ?? Number.NaN) * 1000,
+    windowMs: (BUTTERCHURN_FFT / 2 / ctx.sampleRate) * 1000,
+    frameAvgMs: frameStats.avg,
+    frameP95Ms: frameStats.p95,
+    cap: settings.fpsLimit === 'monitor' ? 'monitor' : `cap ${settings.fpsLimit}`,
+    delayMs: delay.delayTime.value * 1000,
+    leadMs: settings.rotation.beatLeadMs
+  })
+  window.setInterval(() => {
+    const long = frameStats.takeLong()
+    const f = (v: number): string => (Number.isFinite(v) ? v.toFixed(1) : '?')
+    window.so.log(`[sync] ${syncLine(syncParts())} · last 5 min: frame p95 ${f(long.p95)} ms · longest ${f(long.max)} ms (${long.n} frames)`)
+  }, 5 * 60 * 1000)
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)
   // ── Batida (spec 024): só mudanças de estado vão para o log, nunca cada batida ──
@@ -294,9 +320,12 @@ async function start(): Promise<void> {
         core.setCapture('denied')
       })
       source = ctx.createMediaStreamSource(stream)
-      source.connect(gain)
-      source.connect(preGain)
+      source.connect(delay)
       core.setCapture('ok')
+      // Spec 032: latência da captura, se o Chromium informar (não está nos tipos do DOM).
+      const lat = (ts as MediaTrackSettings & { latency?: number }).latency
+      captureLatencyMs = typeof lat === 'number' && Number.isFinite(lat) ? lat * 1000 : Number.NaN
+      window.so.log(`[sync] capture started · ${syncLine(syncParts())}`)
       // 4. Sinal: até 3 s; sem música, a captura funciona do mesmo jeito.
       const signal = await waitSignal(3000)
       setCheck(3, signal ? { state: 'ok', detail: 'setup.check.signalFound' } : { state: 'pending', detail: 'setup.check.noSignal' })
@@ -319,6 +348,17 @@ async function start(): Promise<void> {
       gain.gain.setTargetAtTime(targetGain, ctx.currentTime, core.state.breath ? 0.3 : back ? 0.04 : 0.02)
     }
   }
+  // Spec 032: mudar o atraso com música vai em rampa de 50 ms (sem estalo nem buraco).
+  let appliedDelayMs = 0
+  const applyDelay = (): void => {
+    const ms = settings.visualDelayMs
+    if (ms === appliedDelayMs) return
+    appliedDelayMs = ms
+    const now = ctx.currentTime
+    delay.delayTime.cancelScheduledValues(now)
+    delay.delayTime.setValueAtTime(delay.delayTime.value, now)
+    delay.delayTime.linearRampToValueAtTime(ms / 1000, now + 0.05)
+  }
   let rotationKey = ''
   let renderKey = JSON.stringify(settings.render)
   const applyState = (): void => {
@@ -335,6 +375,7 @@ async function start(): Promise<void> {
       core.events.emit('autoGainTick', { db: 0 })
     }
     applyGain()
+    applyDelay()
     beat.leadMs = settings.rotation.beatLeadMs
     // Ligar a rotação ou mudar o intervalo recomeça a contagem (teclado ou faixa).
     // Trocar no beat, compassos e segurar/soltar também recomeçam (spec 024).
@@ -1104,6 +1145,7 @@ async function start(): Promise<void> {
     // Sem som (aviso visível) ou sem captura: a rotação espera, como no protótipo.
     if (silence.showNotice || core.state.capture !== 'ok' || studioBusy) rotation.hold(now - lastLoop)
     lastLoop = now
+    frameStats.frame(now)
     const dt = Math.min(0.1, Math.max(0.001, (now - lastRender) / 1000))
     lastRender = now
     const speed = silence.step(dt)
@@ -1170,6 +1212,7 @@ async function start(): Promise<void> {
       state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`
       beatCost = 0
       beatFrames = 0
+      state.sync = syncLine(syncParts())
       const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory
       if (mem) state.heapMb = Math.round(mem.usedJSHeapSize / 1048576)
       if (!hudEl.hidden) hud.show(state)

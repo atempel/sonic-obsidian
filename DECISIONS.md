@@ -696,3 +696,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** com captura ao vivo não dá para reagir antes de o som chegar; o que se prevê (batida e trocas) a 024 já adianta. O caso que dá para corrigir é o som chegando **depois** do loopback (Bluetooth, TV por HDMI, Voicemeeter), e só com um atraso. O relato não diz o sentido nem o tamanho: medir primeiro.
 - **Descartado:** um controle único de −200 a +500 ms juntando o "Adiantar o visual" (o lado negativo só valeria para batida e trocas); mexer em `latencyHint`/`fftSize` sem números; o ajuste nos Ajustes rápidos (é de uma vez por saída de som).
 - **Milestone:** v0.10.0 (o v0.9.0 está congelado em teste).
+
+## 2026-11-19 — Sincronia: o P0 sai antes do P1 "Medir a captura" (rodada, `agent-decided`)
+- **Decisão:** a #96 entra só com o P0 da spec 032 (HUD `sync`, log `[sync]`, "Atrasar o visual"); o P1 (clique pela saída medido no loopback) virou a #160 (`ready`, v0.10.0). O `frame` do HUD ignora intervalos acima de 2 s (janela oculta = pausa, não queda de fps).
+- **Por quê:** uma unidade de trabalho por rodada; o P1 só se verifica no Windows e não muda o P0. Com o P0 o próximo relato já vem com números.
+- **Descartado:** implementar os dois num PR só.

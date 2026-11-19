@@ -201,3 +201,8 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **URL:** saída de áudio vai no campo próprio `audio` do formulário (o protótipo junta Windows, GPU e áudio em `system`); `system` leva Windows e GPU.
 **Status:** Aberta (aguarda a sessão de design).
 
+
+### 2026-11-19 — Sincronia do visual (spec 032), página Configurações (versão `1794603894-598c`)
+**No app:**
+- **Configurações › Captura ganhou o grupo "Sincronia"**, abaixo de "Nível", com uma linha: "Atrasar o visual" (faixa de 0 a 500 ms, passo 10, valor em `ms`) e a ajuda "Para fone Bluetooth, TV ou roteador de áudio…". O protótipo não tem a linha; entrou com os componentes que já existem (`Row` + `Rng`), como a "Adiantar o visual" da 024.
+**Status:** Aberta (aguarda a sessão de design).
