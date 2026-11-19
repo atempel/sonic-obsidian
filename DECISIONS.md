@@ -685,3 +685,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Diagnóstico com o log anterior:** se o `sonic-obsidian.log` tiver menos de 200 linhas (logo depois da rotação de 1 MB), o `.1.log` completa. Acima de 64 KB, corta pelo começo, nunca no meio de uma linha.
 - **Descartado:** reaproveitar o leitor de GPU do Diagnóstico (ele mora dentro do componente do erro de WebGL; o painel lê a mesma string num contexto WebGL próprio, liberado em seguida com `WEBGL_lose_context`).
 
+
+## 2026-11-19 — Bloco v0.9.0 fecha com a 031 (rodada, `agent-decided`)
+- **Decisão:** o v0.9.0 fecha com a #95 (Feedback e bugs, spec 031) e a #133 (testes intermitentes e `perf:win`, sem mudança de app). O passo 3 da `rodada` só exige o milestone sem issues abertas; mesmo critério do bloco v0.8.0.
+- **Por quê:** não há issue `ready`; o resto da fila é `backlog` sem spec. Segurar o bloco para planejar e implementar mais 3–4 issues adiaria o teste do feedback por dias.
+- **Descartado:** planejar issues do `backlog` só para engordar o bloco.

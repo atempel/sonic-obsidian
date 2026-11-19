@@ -1,28 +1,16 @@
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
-## What's new in 0.8.0 — the full Preset Studio
+## What's new in 0.9.0 — feedback and bug reports
 
-Press `E` on any preset to open the Studio. The whole frame of the preset shows in the preview next to the editor, and every change shows up on it within half a second, and a mistake never breaks what is playing: the last version that worked keeps running until you fix it.
+Tell us what broke, what you'd like, or ask a question, straight from the app. Nothing leaves the app on its own: it only opens your browser or copies text.
 
-- **Basic:** zoom, rotation, warp, decay, colors, wave mode and the rest, live *while you drag* — no reload, no flicker.
-- **Waves and Shapes:** turn on up to 4 custom waves and 4 shapes, with their own equations, sample count, spectrum mode, sides and radius.
-- **Shaders:** edit the `warp` and `comp` shaders; GLSL errors point to your line, with **Go to line**.
-- **`.milk` code:** for imported presets, edit the `.milk` text itself and every tab follows. Presets from the built-in pack show their Butterchurn JSON, read-only.
-- **Checker:** typos like `bas_att` show a warning with **Fix → `bass_att`** (the preset still runs); unknown functions suggest the closest one.
-- **Version history:** every save is a version you can **restore** or **compare** side by side. `Ctrl+Z` / `Ctrl+Shift+Z` undo and redo inside the Studio.
-- **Compare with the original:** two whole frames side by side, original on the left and your remix on the right, reacting to the same beat. It turns itself off if the visual drops below 50 fps.
-- **New preset:** start from a simple template that pulses with the bass (Library › **New preset**, or in the Studio).
-- **Rename** your presets from the name field; favorites, collections and recents follow the new name.
-- **Export `.milk`** (or Butterchurn JSON). Copies of built-in presets export without their shaders, with a clear note first.
-- **Test switch** previews the transition into your preset with its name and credit; **Capture frame** saves the current frame as a PNG.
+- **Feedback button** in Quick settings (the speech bubble next to the close button, or press `,`): **Report a problem**, **Suggest an idea**, **Ask a question** and **Copy diagnostics**.
+- **Report a problem** shows what goes into the report first — version, Windows, GPU, audio output and current preset — each with a switch to leave it out. **Open on GitHub** opens the *Bug report* form already filled in.
+- **Ideas and questions** open a new discussion in GitHub Discussions (Ideas and Q&A).
+- **Copy diagnostics** copies the last 200 lines of the app's log, with your user folder replaced by `~`, ready to paste into a report.
+- The same actions are in **Settings › About › Feedback** (plus **Open the log folder**) and in the quick search.
 
-Original authors' credits are always kept: a remix says "based on …".
-
-### Also in 0.8.0
-
-- **Clean mode (`T`) is really clean now:** nothing is shown over the visual — no hold/rest notes, no "no sound coming in" card, no skipped-preset notes — except the confirmation of `T` itself. Turn it off to see them again.
-
-### Updating from 0.7.0
+### Updating from 0.8.0
 
 The installed app updates itself (or check now in Settings › About › Updates). From 0.6.0 or earlier, install this version by hand **once** — your presets, favorites, collections and settings are kept.
 
