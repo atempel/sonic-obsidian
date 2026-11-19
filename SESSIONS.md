@@ -4,6 +4,14 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-19 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #159
+**Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (#157, bloco v0.9.0, sem comentário do usuário). Passo 2: PR #159 (spec 032, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 032 livre) → esta entrada e merge em squash.
+**Deixou em:** spec 032 no `main`; #96 `ready` + `agent-decided` no v0.10.0. Próxima rodada: implementar a #96 (`executar-task`). Bloco v0.9.0 segue esperando o teste do usuário (#157).
+
+### 2026-11-19 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/032-sincronia-visual`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; bloco v0.9.0 sem resposta do usuário na #157; nenhum PR aberto; nenhuma issue `ready`). Passo 5: #96 (a `backlog` mais antiga) reivindicada e planejada com `planejar-feature`: **spec 032 — Sincronia do visual com o som** (HUD `sync` e log `[sync]` com as partes do atraso; "Atrasar o visual" 0–500 ms em Configurações › Captura › Sincronia por um `DelayNode` logo depois da fonte; P1: "Medir atraso da captura" com um clique pela saída). Adiantar a reação fica fora (impossível com captura ao vivo). Decisões em DECISIONS (`agent-decided`); milestone v0.10.0 criado.
+**Deixou em:** PR desta branch; #96 `ready` + `agent-decided` no v0.10.0. Próxima rodada: mergear este PR e implementar a #96 (`executar-task`). Áudio e sentido do atraso só se verificam no Windows, no bloco.
+
 ### 2026-11-19 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.9.0`
 **Fez:** Passos 0–2 sem trabalho (nenhuma reivindicação expirada, nenhum bloco esperando teste, nenhum PR aberto). Passo 3: milestone v0.9.0 sem issues abertas (#95 e #133 fechadas) → **fecha o bloco v0.9.0**. `package.json` 0.8.0 → 0.9.0, `.github/release-notes.md` com o Feedback e bugs, DECISIONS (`agent-decided`).
 **Deixou em:** depois do merge, branch `rc/v0.9.0` neste commit, `build-windows` disparado nela e a issue "Testar bloco v0.9.0" (`test-block`, atribuída ao atempel) com o roteiro do #155. Nenhuma release antes do ok dele. Áudio, fps e visual não verificados aqui (só no Windows, no bloco).
