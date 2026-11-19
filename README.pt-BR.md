@@ -25,6 +25,7 @@
   <a href="#recursos">Recursos</a> ·
   <a href="#teclado">Teclado</a> ·
   <a href="#privacidade">Privacidade</a> ·
+  <a href="#feedback">Feedback</a> ·
   <a href="#desenvolvimento">Desenvolvimento</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#créditos">Créditos</a> ·
@@ -139,6 +140,16 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 - **O áudio é analisado em memória e nunca é salvo nem enviado.** O app não tem conta nem telemetria. A única chamada de rede que ele faz por conta própria é uma checagem diária no GitHub por versões novas (a partir da 0.7.0); dá para desligar em Configurações › Sobre › Atualizações.
 - Ele visualiza o áudio que você escolhe tocar. Conteúdo protegido por DRM está fora do escopo, e o app não tenta contornar a proteção.
 - A integração com ferramentas de IA será opcional, apenas local (`127.0.0.1`), desligada por padrão, com token e permissões restritas.
+
+## Feedback
+
+Tudo passa pelo GitHub (é preciso uma conta no GitHub para enviar); o app não tem servidor próprio e não envia nada sozinho.
+
+- **Relatar um problema** → [formulário de bug](https://github.com/atempel/sonic-obsidian/issues/new?template=bug_report.yml). No app, Ajustes rápidos › balão (ou Configurações › Sobre › Feedback) abre o formulário já preenchido com versão, Windows, GPU, saída de áudio e preset, e mostra cada item antes. **Copiar diagnóstico** põe as últimas 200 linhas do log na área de transferência para colar no formulário.
+- **Sugerir uma ideia** → [Discussions › Ideas](https://github.com/atempel/sonic-obsidian/discussions/new?category=ideas).
+- **Fazer uma pergunta** → [Discussions › Q&A](https://github.com/atempel/sonic-obsidian/discussions/new?category=q-a).
+
+Os formulários estão em inglês, mas respostas em português são bem-vindas.
 
 ## Requisitos
 

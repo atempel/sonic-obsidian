@@ -1,5 +1,11 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
+  - name: Suggest an idea
+    url: https://github.com/atempel/sonic-obsidian/discussions/new?category=ideas
+    about: Ideas start as a conversation in Discussions › Ideas. The maintainer turns them into issues when it's time.
+  - name: Ask a question
+    url: https://github.com/atempel/sonic-obsidian/discussions/new?category=q-a
+    about: Questions and help in Discussions › Q&A, where a marked answer helps the next person.
   - name: Security issue
     url: https://github.com/atempel/sonic-obsidian/security/advisories/new
     about: Report vulnerabilities privately, not in a public issue.

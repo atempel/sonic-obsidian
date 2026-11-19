@@ -52,6 +52,8 @@ contextBridge.exposeInMainWorld('so', {
   mark: (name: string): void => ipcRenderer.send('startup:mark', String(name).slice(0, 40)),
   /** Abre a pasta do log no Explorer (Ctrl+Shift+L). */
   showLog: (): Promise<void> => ipcRenderer.invoke('log:show'),
+  /** Últimas 200 linhas do log, com a pasta do usuário trocada por `~` (spec 031); `null` = sem log. */
+  logTail: (): Promise<string | null> => ipcRenderer.invoke('log:tail'),
   system: {
     /** Abre Configurações › Som do Windows (URL fixa no main). */
     openSoundSettings: (): Promise<void> => ipcRenderer.invoke('system:openSoundSettings'),
@@ -61,6 +63,8 @@ contextBridge.exposeInMainWorld('so', {
     openLink: (url: string): Promise<void> => ipcRenderer.invoke('system:openLink', url),
     /** Copia texto (diagnóstico) para a área de transferência. */
     copyText: (text: string): Promise<void> => ipcRenderer.invoke('system:copyText', text),
+    /** Versão do Windows para o "Relatar um problema" (spec 031): `Windows 11 (build 22631)`. */
+    osInfo: (): Promise<string> => ipcRenderer.invoke('system:osInfo'),
     /** Driver e ids da GPU (diagnóstico de WebGL 2). */
     gpuInfo: (): Promise<{ driver: string; ids: string }> => ipcRenderer.invoke('system:gpuInfo'),
     /** Flags de teste lidas de test-flags.json (spec 012). */

@@ -192,3 +192,12 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - *Fatia 11 (Extras da prévia), mesma versão:* "Testar troca" (`skip-forward`) e "Capturar quadro" (`camera`) à direita do switch, como no protótipo. A troca corta para outro preset e volta com a **transição das trocas manuais** do usuário (o protótipo usa sempre 2 s); a assinatura no pé da prévia é a do protótipo (gradiente, nome, crédito, linha violeta), com a linha correndo pelo tempo da transição. O quadro capturado é o **quadro inteiro** do visual (não só a região que a prévia mostra) e vai pelo **diálogo nativo** do Windows em vez do download do navegador; o toast de sucesso diz o nome do arquivo ("Quadro capturado como …").
 **Status:** Aberta (aguarda a sessão de design).
 
+### 2026-11-19 — Feedback e bugs (spec 031), páginas Palco integrado e Configurações (versão `1794680346-fb12`)
+**No app:**
+- **Botão `message-square` ao lado do fechar** dos Ajustes rápidos: o app ainda não tem o "Todas as configurações" no cabeçalho (#109); quando ele entrar, fica entre os dois, como no protótipo.
+- **"Copiar diagnóstico" no menu deixa o menu aberto**, para o ícone `check` de 1,5 s aparecer (no protótipo o menu fecha antes da troca do ícone, e o `check` não se vê). As outras três ações fecham o menu.
+- **Configurações › Sobre › Feedback:** "Relatar um problema" abre **o mesmo painel** dos Ajustes rápidos (no protótipo de Configurações abre o formulário direto e vazio; spec 031, DECISIONS 2026-11-18). O grupo fica depois de Créditos e antes de Links (o app já tem Licenças dentro de Créditos). "Copiar diagnóstico" troca o texto do botão para "Copiado" por 1,5 s em vez do selo "Salvo" do cabeçalho.
+- **Item vazio no painel** (ex.: GPU que o WebGL não identifica): "Não identificada", riscado, com o switch desligado e travado (o protótipo não tem esse estado).
+- **URL:** saída de áudio vai no campo próprio `audio` do formulário (o protótipo junta Windows, GPU e áudio em `system`); `system` leva Windows e GPU.
+**Status:** Aberta (aguarda a sessão de design).
+

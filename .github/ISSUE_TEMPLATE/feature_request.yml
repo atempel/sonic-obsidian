@@ -1,10 +1,10 @@
 name: Feature idea
-description: Suggest something new or a change.
+description: An idea already talked through in Discussions. New ideas start in Discussions › Ideas.
 labels: [enhancement]
 body:
   - type: markdown
     attributes:
-      value: Check the [roadmap](https://github.com/atempel/sonic-obsidian/blob/main/docs/PRD.md) first; some things are out of scope on purpose (recording, DRM content, embedded AI).
+      value: New ideas start as a conversation in [Discussions › Ideas](https://github.com/atempel/sonic-obsidian/discussions/new?category=ideas); use this form for an idea that has already been discussed. Check the [roadmap](https://github.com/atempel/sonic-obsidian/blob/main/docs/PRD.md) first; some things are out of scope on purpose (recording, DRM content, embedded AI).
   - type: textarea
     id: problem
     attributes:

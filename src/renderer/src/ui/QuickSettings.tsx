@@ -23,6 +23,7 @@ import {
   expressionCurveLabel
 } from '../core/state'
 import { Icon } from './icons'
+import { FeedbackButton } from './Feedback'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
 import { Kbd } from './Kbd'
 import { showToast } from './toast'
@@ -258,9 +259,13 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
     <aside class="sheet" ref={ref} tabIndex={-1} aria-label={t('quick.title')} aria-hidden={!open} inert={!open}>
       <header>
         <h2>{t('quick.title')}</h2>
-        <button class="ibtn" aria-label={t('quick.close')} title={t('quick.closeTitle')} onClick={() => core.run('ui.close', {}, 'ui')}>
-          <Icon name="x" />
-        </button>
+        <div class="hbtns">
+          {/* Feedback e bugs (spec 031): ao lado do fechar, como `#fbBtn` no protótipo. */}
+          <FeedbackButton core={core} visible={open} />
+          <button class="ibtn" aria-label={t('quick.close')} title={t('quick.closeTitle')} onClick={() => core.run('ui.close', {}, 'ui')}>
+            <Icon name="x" />
+          </button>
+        </div>
       </header>
       <div class="body">
         <section>

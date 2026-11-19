@@ -44,6 +44,8 @@ interface Window {
       openNotices(): Promise<string>
       openLink(url: string): Promise<void>
       copyText(text: string): Promise<void>
+      /** Spec 031; opcional no mock dos testes antigos. */
+      osInfo?(): Promise<string>
       gpuInfo(): Promise<{ driver: string; ids: string }>
       testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean; compareMinFps?: number }>
     }
@@ -85,5 +87,7 @@ interface Window {
     log(message: string): void
     mark(name: string): void
     showLog(): Promise<void>
+    /** Últimas 200 linhas do log (spec 031); `null` = sem log. Opcional no mock dos testes antigos. */
+    logTail?(): Promise<string | null>
   }
 }

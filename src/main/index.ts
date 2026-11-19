@@ -2,6 +2,7 @@ import { app, BrowserWindow, clipboard, desktopCapturer, dialog, ipcMain, sessio
 import { readFile, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { log, logMetrics, logPath } from './log'
+import { COPY_MAX, logTail, osInfo } from './feedback'
 import { mark } from './startup'
 import { mt, setMainLanguage, systemLang } from './i18n'
 import { milkToPreset3 } from './milk'
@@ -45,6 +46,10 @@ function registerStores(): void {
   })
   // Mostra o arquivo de log no Explorer (caminho fixo, definido aqui).
   ipcMain.handle('log:show', () => shell.showItemInFolder(logPath()))
+  // Copiar diagnóstico (spec 031): caminho fixo, sem parâmetro; a pasta do usuário vira `~`.
+  ipcMain.handle('log:tail', () => logTail())
+  // "Relatar um problema" (spec 031): `Windows 11 (build 22631)`.
+  ipcMain.handle('system:osInfo', () => osInfo())
   // URL fixa: o renderer não escolhe o que abrir.
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
   ipcMain.handle('app:version', () => app.getVersion())
@@ -65,7 +70,7 @@ function registerStores(): void {
   registerUpdater({ flush: flushStores })
   // Diagnóstico (spec 012): texto curto para a área de transferência, GPU e flags de teste.
   ipcMain.handle('system:copyText', (_e, text: unknown) => {
-    if (typeof text === 'string' && text.length <= 20_000) clipboard.writeText(text)
+    if (typeof text === 'string' && text.length <= COPY_MAX) clipboard.writeText(text)
   })
   ipcMain.handle('system:gpuInfo', async () => {
     try {
