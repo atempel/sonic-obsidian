@@ -42,6 +42,7 @@
 | 028 | [Reação ao áudio e Normalizar áudio](specs/028-reatividade-ganho-automatico.md) | 3 |
 | 029 | [Atualização automática pelo GitHub Releases](specs/029-atualizacao-automatica.md) | 5 |
 | 030 | [Idiomas: inglês e português (Brasil)](specs/030-idiomas.md) | 3 |
+| 031 | [Feedback e bugs pelo GitHub](specs/031-feedback-github.md) | Abertura |
 
 Estado de cada uma: issues e milestones do GitHub ([TASKS.md](../TASKS.md) fica como índice histórico).
 

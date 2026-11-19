@@ -678,3 +678,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Windows** pelo build de `os.release()` (≥ 22000 = Windows 11), com o número do build; **GPU** pela string `UNMASKED_RENDERER_WEBGL` que o Diagnóstico já lê (o `getGPUInfo('basic')` só dá ids de fabricante e placa).
 - **Copiar diagnóstico** troca a pasta do usuário por `~` antes de copiar: o texto vai para uma issue pública e o design avisa que o log pode ter caminhos pessoais.
 - **Descartado:** conferir as categorias do Discussions pela API (só existem no GraphQL, que não funciona na nuvem; os slugs `ideas` e `q-a` são os padrão e o teste no bloco confere); mandar o log na URL (o design proíbe).
+
+## 2026-11-19 — Feedback e bugs: detalhes da implementação (rodada, `agent-decided`)
+- **Item vazio** no painel "Relatar um problema" (vale para qualquer um, não só a GPU): "Não identificada" e switch desligado e travado; nada vazio vai na URL.
+- **"Copiar diagnóstico" no menu deixa o menu aberto** para o `check` aparecer (a spec pede o ícone por 1,5 s; com o menu fechando, como no protótipo, ele não se veria). DIVERGENCIAS 2026-11-19.
+- **Diagnóstico com o log anterior:** se o `sonic-obsidian.log` tiver menos de 200 linhas (logo depois da rotação de 1 MB), o `.1.log` completa. Acima de 64 KB, corta pelo começo, nunca no meio de uma linha.
+- **Descartado:** reaproveitar o leitor de GPU do Diagnóstico (ele mora dentro do componente do erro de WebGL; o painel lê a mesma string num contexto WebGL próprio, liberado em seguida com `WEBGL_lose_context`).
+

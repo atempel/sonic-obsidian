@@ -20,6 +20,7 @@ import { Palette } from './Palette'
 import { QuickSettings } from './QuickSettings'
 import { Settings } from './Settings'
 import { ShortcutsPanel, isShortcutsOpen, toggleShortcuts } from './ShortcutsPanel'
+import { FeedbackDialog, isFeedbackOpen } from './Feedback'
 import { CaptureDiag, SilenceNotice, SlowChip, WelcomeCard } from './Diagnostics'
 import { UpdateNotice } from './UpdateNotice'
 import { updateState } from '../update'
@@ -593,6 +594,7 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
       <Settings bridge={bridge} />
       <WelcomeCard core={core} />
       <ShortcutsPanel core={core} />
+      <FeedbackDialog core={core} />
       <DropZone bridge={bridge} />
       <GlobalToast />
     </>
@@ -642,6 +644,6 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   const { state } = bridge.core
   return setupIdle(
     // "Atualizando…" (spec 029): a faixa fica presa visível até a janela fechar.
-    () => state.settings.pinControls || updateState().phase === 'installing' || state.overlay !== null || isShortcutsOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
+    () => state.settings.pinControls || updateState().phase === 'installing' || state.overlay !== null || isShortcutsOpen() || isFeedbackOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
   )
 }

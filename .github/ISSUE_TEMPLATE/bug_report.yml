@@ -4,7 +4,10 @@ labels: [bug]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time. A clear report makes the fix much faster.
+      value: |
+        Thanks for taking the time. A clear report makes the fix much faster.
+        In the app, **Report a problem** (Quick settings › speech bubble, or Settings › About › Feedback) fills in version, system, audio output and preset for you.
+        Answers in Portuguese are welcome. Respostas em português são bem-vindas.
   - type: textarea
     id: what
     attributes:
@@ -30,8 +33,14 @@ body:
   - type: input
     id: system
     attributes:
-      label: Windows version, GPU and audio output
-      placeholder: Windows 11 24H2, RTX 3070, USB headphones
+      label: Windows version and GPU
+      placeholder: Windows 11 (build 22631), NVIDIA GeForce RTX 3070
+  - type: input
+    id: audio
+    attributes:
+      label: Audio output
+      description: The Windows default output while it happened.
+      placeholder: Speakers (Realtek), USB headphones…
   - type: input
     id: preset
     attributes:
@@ -40,6 +49,6 @@ body:
   - type: textarea
     id: log
     attributes:
-      label: Log
-      description: If the app froze or closed, press Ctrl+Shift+L, open sonic-obsidian.log and paste the last lines.
+      label: Diagnostics
+      description: In the app, use **Copy diagnostics** (last 200 lines of the log) and paste here. If the app won't open, press Ctrl+Shift+L or open `logs/sonic-obsidian.log` in the app data folder and paste the last lines.
       render: text

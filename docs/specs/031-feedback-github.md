@@ -1,6 +1,6 @@
 # 031 — Feedback e bugs pelo GitHub
 
-**Fase:** Abertura · **Status:** Pronta (rodada 2026-11-18) · **Issue:** [#95](https://github.com/atempel/sonic-obsidian/issues/95) · **Milestone:** v0.9.0 · **Personas:** todas (quem usa o app público precisa de um caminho para relatar problema); Nostálgico do Winamp (não quer configurar nada: o formulário já vem preenchido)
+**Fase:** Abertura · **Status:** Implementada (rodada 2026-11-19, PR da #95; critérios 7–11 no bloco v0.9.0) · **Issue:** [#95](https://github.com/atempel/sonic-obsidian/issues/95) · **Milestone:** v0.9.0 · **Personas:** todas (quem usa o app público precisa de um caminho para relatar problema); Nostálgico do Winamp (não quer configurar nada: o formulário já vem preenchido)
 
 ## Problema
 O app é público, sem conta e sem servidor. Hoje, quem acha um bug precisa descobrir sozinho o repositório, abrir o formulário vazio e procurar versão, GPU e log. Ideia e pergunta caem nas issues junto com bug. O mantenedor recebe relatos sem versão nem sistema e precisa perguntar de volta.

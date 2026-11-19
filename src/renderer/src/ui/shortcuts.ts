@@ -121,6 +121,10 @@ export type ActionId =
   | 'studio'
   | 'updateCheck'
   | 'updateInstall'
+  | 'feedbackBug'
+  | 'feedbackIdea'
+  | 'feedbackAsk'
+  | 'feedbackDiag'
 
 export interface Command {
   id: ActionId
@@ -151,7 +155,12 @@ export const COMMANDS: Command[] = [
   { id: 'favorite', label: 'shortcuts.cmd.favorite', keys: [], icon: 'star' },
   // Atualização automática (spec 029): sem tecla; nada muda no painel `?`.
   { id: 'updateCheck', label: 'shortcuts.cmd.checkUpdates', keys: [], icon: 'refresh-cw' },
-  { id: 'updateInstall', label: 'shortcuts.cmd.installUpdate', keys: [], icon: 'rotate-cw', when: () => updateState().phase === 'ready' }
+  { id: 'updateInstall', label: 'shortcuts.cmd.installUpdate', keys: [], icon: 'rotate-cw', when: () => updateState().phase === 'ready' },
+  // Feedback e bugs (spec 031): sem tecla; nada muda no painel `?`.
+  { id: 'feedbackBug', label: 'feedback.bug', keys: [], icon: 'bug' },
+  { id: 'feedbackIdea', label: 'feedback.idea', keys: [], icon: 'lightbulb' },
+  { id: 'feedbackAsk', label: 'feedback.ask', keys: [], icon: 'circle-help' },
+  { id: 'feedbackDiag', label: 'feedback.diag', keys: [], icon: 'clipboard-copy' }
 ]
 
 /** Nome da tecla no idioma do app (`Space` / `Espaço`); as outras saem como estão. */

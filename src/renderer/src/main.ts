@@ -24,6 +24,8 @@ import { AutoRotation } from './rotation'
 import { mountOverlay, toggleOverlay } from './ui/Overlay'
 import { dismissFloat, mountWebglError } from './ui/Diagnostics'
 import { closeShortcuts, isShortcutsOpen, toggleShortcuts } from './ui/ShortcutsPanel'
+import { closeBugReport, isFeedbackOpen, openBugReport } from './ui/Feedback'
+import { copyDiagnostics, openIdeas, openQuestion } from './feedback'
 import { setActionRunner, type ActionId } from './ui/shortcuts'
 import { closeStudio, openStudio } from './ui/Studio'
 import { setMineLookup } from './ui/preset-name'
@@ -821,7 +823,12 @@ async function start(): Promise<void> {
     updateInstall: () => {
       idle.wake()
       installUpdate()
-    }
+    },
+    // Feedback e bugs (spec 031): os mesmos do menu dos Ajustes rápidos.
+    feedbackBug: () => openBugReport(core),
+    feedbackIdea: openIdeas,
+    feedbackAsk: openQuestion,
+    feedbackDiag: () => void copyDiagnostics()
   }
   setActionRunner((id) => actions[id]())
 
@@ -837,6 +844,14 @@ async function start(): Promise<void> {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyL') {
       void window.so.showLog()
       e.preventDefault()
+      return
+    }
+    // "Relatar um problema" aberto (spec 031): modal; as teclas do app ficam atrás dele.
+    if (isFeedbackOpen()) {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        closeBugReport(true)
+      }
       return
     }
     // Estúdio aberto (spec 026): as teclas são dele (Ctrl+S, Ctrl+Enter, Esc, Tab nos campos).

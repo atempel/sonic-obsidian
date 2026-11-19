@@ -25,6 +25,7 @@
   <a href="#features">Features</a> ·
   <a href="#keyboard">Keyboard</a> ·
   <a href="#privacy">Privacy</a> ·
+  <a href="#feedback">Feedback</a> ·
   <a href="#development">Development</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#credits">Credits</a> ·
@@ -139,6 +140,16 @@ Every preset is someone's work. The preset name carries its authors, and the app
 - **Audio is analyzed in memory and never saved or uploaded.** The app has no account and no telemetry. The only network call it makes on its own is a daily check on GitHub for new versions (from 0.7.0); you can turn it off in Settings › About › Updates.
 - It visualizes what your system is playing. Content protected by DRM is out of scope, and the app does not try to work around it.
 - Integration with AI tools will be opt-in, local only (`127.0.0.1`), off by default, with a token and scoped permissions.
+
+## Feedback
+
+Everything goes through GitHub (you need a GitHub account to post); the app has no server of its own and sends nothing by itself.
+
+- **Report a problem** → [bug form](https://github.com/atempel/sonic-obsidian/issues/new?template=bug_report.yml). In the app, Quick settings › speech bubble (or Settings › About › Feedback) opens it already filled in with version, Windows, GPU, audio output and preset, and shows you each item first. **Copy diagnostics** puts the last 200 lines of the log on the clipboard to paste into the form.
+- **Suggest an idea** → [Discussions › Ideas](https://github.com/atempel/sonic-obsidian/discussions/new?category=ideas).
+- **Ask a question** → [Discussions › Q&A](https://github.com/atempel/sonic-obsidian/discussions/new?category=q-a).
+
+Portuguese is welcome everywhere.
 
 ## Requirements
 

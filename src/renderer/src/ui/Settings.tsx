@@ -24,6 +24,8 @@ import {
   blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
+import { openBugReport, useCopyDiagnostics } from './Feedback'
+import { openIdeas, openQuestion } from '../feedback'
 import { LANG_NAME, getLang, getSystemLang, fmtNum, fmtSeconds, includesText, t, tn, type LanguagePref, type MessageKey } from '../i18n'
 import { Meter, type PalcoBridge } from './Overlay'
 import { splitPresetName } from './preset-name'
@@ -818,12 +820,49 @@ function Sobre({ core, run }: { core: Core; run: Run }) {
           </button>
         </Row>
       </Grp>
+      <FeedbackGroup core={core} />
       <Grp title={t('settings.about.links')}>
         <Row label={t('settings.about.repo')} help={link('https://github.com/atempel/sonic-obsidian', 'github.com/atempel/sonic-obsidian')} kw="github" />
         <Row label="Butterchurn" help={link('https://github.com/jberg/butterchurn', 'github.com/jberg/butterchurn')} kw="github" />
         <Row label="Butterchurn Visualizer" help={link('https://butterchurnviz.com', 'butterchurnviz.com')} />
       </Grp>
     </>
+  )
+}
+
+/**
+ * Configurações › Sobre › Feedback (spec 031; protótipo "Configurações", versão 1794680346-fb12).
+ * "Relatar um problema" abre o mesmo painel dos Ajustes rápidos (DECISIONS 2026-11-18).
+ */
+function FeedbackGroup({ core }: { core: Core }) {
+  const [copied, copy] = useCopyDiagnostics()
+  const open = (icon: 'external-link' | 'folder-open', onClick: (e: MouseEvent) => void) => (
+    <button class="btn sm" type="button" onClick={onClick}>
+      <Icon name={icon} small />
+      {t('settings.about.open')}
+    </button>
+  )
+  return (
+    <Grp title={t('settings.about.feedback')}>
+      <Row label={t('feedback.bug')} help={t('settings.about.fbBugHelp')} kw="feedback bug erro problema github issue error problem report">
+        {open('external-link', (e) => openBugReport(core, e.currentTarget as HTMLElement))}
+      </Row>
+      <Row label={t('feedback.idea')} help={t('settings.about.fbIdeaHelp')} kw="feedback ideia sugestão github discussions idea suggestion">
+        {open('external-link', openIdeas)}
+      </Row>
+      <Row label={t('feedback.ask')} help={t('settings.about.fbAskHelp')} kw="feedback pergunta dúvida github discussions question help">
+        {open('external-link', openQuestion)}
+      </Row>
+      <Row label={t('feedback.diag')} help={t('settings.about.fbDiagHelp')} kw="feedback diagnóstico log copiar diagnostics copy">
+        <button class="btn sm" type="button" data-fb="diag" onClick={copy}>
+          <Icon name={copied ? 'check' : 'clipboard-copy'} small />
+          {copied ? t('setup.copied') : t('settings.about.copy')}
+        </button>
+      </Row>
+      <Row label={t('settings.about.fbLog')} help={t('settings.about.fbLogHelp')} kw="feedback log pasta explorer folder">
+        {open('folder-open', () => void window.so.showLog())}
+      </Row>
+    </Grp>
   )
 }
 
