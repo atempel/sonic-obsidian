@@ -52,6 +52,7 @@ const ROOT = path.join(__dirname, '..', '..')
 
   // 2. Testar troca: corte para outro preset, volta com a transição do Palco, assinatura com nome e crédito
   await page.click('.st-swap')
+  await page.waitForSelector('.st-card.show', { timeout: 4000 }).catch(() => {}) // a classe entra depois do clique (runner lento)
   const card = await page.$eval('.st-card', e => ({ show: e.classList.contains('show'), h: e.querySelector('h2').textContent, p: e.querySelector('p').textContent }))
   const via = ((await page.evaluate(() => window.__logs)).find(l => l.startsWith('studio: test swap via ')) || '').replace('studio: test swap via ', '')
   ok('2a corta para outro preset da biblioteca', !!via && via !== src, via)
