@@ -1,16 +1,14 @@
 **Sonic Obsidian** — MilkDrop-style audio visualizer for Windows. It listens to what your computer is playing; nothing to configure.
 
-## What's new in 0.9.0 — feedback and bug reports
+## What's new in 0.10.0 — visual and sound in sync
 
-Tell us what broke, what you'd like, or ask a question, straight from the app. Nothing leaves the app on its own: it only opens your browser or copies text.
+If you listen through Bluetooth headphones, a TV or an audio router, the sound reaches you a little after the app hears it, and the visual seems to react early. Now you can line them up.
 
-- **Feedback button** in Quick settings (the speech bubble next to the close button, or press `,`): **Report a problem**, **Suggest an idea**, **Ask a question** and **Copy diagnostics**.
-- **Report a problem** shows what goes into the report first — version, Windows, GPU, audio output and current preset — each with a switch to leave it out. **Open on GitHub** opens the *Bug report* form already filled in.
-- **Ideas and questions** open a new discussion in GitHub Discussions (Ideas and Q&A).
-- **Copy diagnostics** copies the last 200 lines of the app's log, with your user folder replaced by `~`, ready to paste into a report.
-- The same actions are in **Settings › About › Feedback** (plus **Open the log folder**) and in the quick search.
+- **Delay the visual** in **Settings › Capture › Sync** (0–500 ms, default 0): raise it until the visual matches what you hear. The beat dot and beat-synced switches move with it.
+- **Measure capture delay** in the quick search (`/`, type "measure"): plays three short clicks and shows how long the app takes to hear the system sound.
+- The debug HUD (`Ctrl+Shift+D`) has a new `sync` line with the parts of the delay, and the log gets `[sync]` lines — handy to paste into a bug report.
 
-### Updating from 0.8.0
+### Updating from an earlier version
 
 The installed app updates itself (or check now in Settings › About › Updates). From 0.6.0 or earlier, install this version by hand **once** — your presets, favorites, collections and settings are kept.
 

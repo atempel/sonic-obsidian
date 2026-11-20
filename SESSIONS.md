@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.10.0`
+**Fez:** Passos 0–2 sem trabalho (nenhuma reivindicação expirada; #157, bloco v0.9.0, sem comentário do usuário; nenhum PR aberto). Passo 3: o milestone v0.10.0 está sem issues abertas (#96 e #160, spec 032) e só há um bloco em teste → fecha o bloco v0.10.0: `package.json` 0.10.0 e `.github/release-notes.md` (sincronia). Depois do merge: branch `rc/v0.10.0`, build Windows nela e issue "Testar bloco v0.10.0" atribuída ao usuário. DECISIONS 2026-11-20.
+**Deixou em:** dois blocos esperando o teste do usuário (v0.9.0 #157 e v0.10.0). Próximas rodadas: só `bug` (ex.: #158, ainda `backlog`) e planejar a `backlog` mais antiga; nenhum bloco novo até o usuário responder a um dos dois.
+
 ### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `feat/032-medir-captura`
 **Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada; #157, bloco v0.9.0, sem comentário do usuário; nenhum PR aberto; v0.10.0 com issue aberta). Passo 4: #160 reivindicada e implementada (spec 032, P1): comando "Medir atraso da captura" na busca; `src/renderer/src/capture-latency.ts` (clique de 10 ms por um `AudioContext` à parte, achado por filtro casado no ramo cru da captura antes do `DelayNode`, relógio do áudio dos dois lados, três cliques, mediana); toast "Captura: N ms" ou o aviso; log `[sync] measured capture …`. Teste novo `032-medir-captura` 19/19; `030-idiomas`, `020`, `010`, `032-sincronia`, `031` passaram. DECISIONS 2026-11-20.
 **Deixou em:** PR desta branch com `Closes #160`. Não verificado (bloco v0.10.0, Windows): o número real do loopback, a variação em três execuções, se o loopback do Electron inclui o som do próprio app (se não incluir, o comando sempre mostra o aviso), o aviso com o som mudo.
