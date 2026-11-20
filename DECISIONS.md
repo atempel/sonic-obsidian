@@ -718,3 +718,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** é uma constante (reversível) e só afeta quem liga o Normalizar. O silêncio congela o AGC e o medidor de silêncio fica antes do ganho, então o ruído sem música não vira sinal.
 - **Descartado:** baixar a referência (o motor receberia menos nível de faixas altas para todo mundo com o volume alto, o caso que a 028 corrigiu); medir antes do volume do Windows (API nativa no main, dependência nova); controle de teto na interface.
 - **Milestone:** v0.11.0 (criado; v0.9.0 e v0.10.0 estão em teste).
+
+## 2026-11-20 — Memória do renderer: medir antes de consertar (rodada, `agent-decided`, #98)
+- **Decisão:** spec 034: `[mem]` com memória privada por processo e linha do renderer com heap JS e nós do DOM; `perf:win` com série por minuto e até 60 min só no disparo manual (`memoria_min`); teste headless `034-memoria` (150 trocas e painéis, GC forçado). Vazamento = memória privada do `Tab` subindo mais de 30 MB entre os minutos 30 e 60; no headless, heap > 8 MB ou nós > 5 % entre as trocas 50 e 150.
+- **Por quê:** o `perf:win` de 5 min mostra o `Tab` caindo nos quatro blocos (o runner não reproduz o uso real e o *working set* é aparado), e o log do usuário (184 → 300 MB em 15 min) não separa aquecimento de vazamento. Limiar e duração são números (reversíveis).
+- **Descartado:** consertar às cegas (sem saber se é JS/DOM ou nativo); rodar 60 min em todo build Windows (o job de rotina ficaria 1 h mais lento); pedir ao usuário uma sessão de 1 h antes de haver o que medir no log.
+- **Milestone:** v0.11.0.
