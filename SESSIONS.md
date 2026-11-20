@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/034-memoria-renderer`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; dois blocos em teste e nenhuma `bug` pronta). Passo 5: planejou a `backlog` mais antiga, #98 (memória do renderer): spec 034, só medição (log com memória privada e heap/nós, `perf:win` com série e até 60 min no disparo manual, teste headless `034-memoria`); limiares `agent-decided` (DECISIONS). Os `perf-<sha>` dos blocos v0.7.0–v0.10.0 mostram o `Tab` caindo em 5 min, por isso a medida nova.
+**Deixou em:** #98 `ready` no v0.11.0 (com a #97). Com dois blocos esperando teste, a implementação espera (só `bug` entra); próxima rodada planeja a #158 (bug, testes intermitentes) ou a `backlog` seguinte (#99, preset preto).
+
 ### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/033-normalizar-teto`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; dois blocos em teste e nenhuma issue `ready`). Passo 5: planejou a `backlog` mais antiga, #97 (Normalizar no teto de +12 dB): spec 033, teto +18 dB com a referência mantida (`agent-decided`, DECISIONS), milestone novo v0.11.0, issue `ready`.
 **Deixou em:** #97 `ready` no v0.11.0. Com dois blocos esperando teste, a implementação da 033 espera (só `bug` entra); próximas rodadas planejam a `backlog` seguinte (#98, memória do renderer) ou a #158 (bug, ainda `backlog`).
