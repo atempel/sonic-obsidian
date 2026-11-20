@@ -712,3 +712,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** não há issue `ready`; o resto da fila é `backlog` sem spec. A sincronia só se confere no Windows (metrônomo, Bluetooth, loopback) e o usuário pode testá-la junto com o v0.9.0. Com dois blocos em teste, as próximas rodadas só implementam `bug` e planejam.
 - **Notas da release:** "Updating from an earlier version" (a 0.9.0 ainda não saiu; quem está na 0.8.0 também atualiza sozinho).
 - **Descartado:** planejar issues do `backlog` só para engordar o bloco.
+
+## 2026-11-20 — Normalizar áudio: teto +18 dB, referência mantida (rodada, `agent-decided`, #97)
+- **Decisão:** spec 033: `AGC.maxDb` de +12 para **+18 dB**; referência (−14 dBFS), janela, ataque, soltura e piso iguais. Com o nível medido no teste do v0.6.0 (−24 a −33 dBFS), o AGC chega perto da referência em vez de ficar no teto.
+- **Por quê:** é uma constante (reversível) e só afeta quem liga o Normalizar. O silêncio congela o AGC e o medidor de silêncio fica antes do ganho, então o ruído sem música não vira sinal.
+- **Descartado:** baixar a referência (o motor receberia menos nível de faixas altas para todo mundo com o volume alto, o caso que a 028 corrigiu); medir antes do volume do Windows (API nativa no main, dependência nova); controle de teto na interface.
+- **Milestone:** v0.11.0 (criado; v0.9.0 e v0.10.0 estão em teste).

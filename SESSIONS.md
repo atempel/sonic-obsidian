@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/033-normalizar-teto`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; dois blocos em teste e nenhuma issue `ready`). Passo 5: planejou a `backlog` mais antiga, #97 (Normalizar no teto de +12 dB): spec 033, teto +18 dB com a referência mantida (`agent-decided`, DECISIONS), milestone novo v0.11.0, issue `ready`.
+**Deixou em:** #97 `ready` no v0.11.0. Com dois blocos esperando teste, a implementação da 033 espera (só `bug` entra); próximas rodadas planejam a `backlog` seguinte (#98, memória do renderer) ou a #158 (bug, ainda `backlog`).
+
 ### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `chore/versao-0.10.0`
 **Fez:** Passos 0–2 sem trabalho (nenhuma reivindicação expirada; #157, bloco v0.9.0, sem comentário do usuário; nenhum PR aberto). Passo 3: o milestone v0.10.0 está sem issues abertas (#96 e #160, spec 032) e só há um bloco em teste → fecha o bloco v0.10.0: `package.json` 0.10.0 e `.github/release-notes.md` (sincronia). Depois do merge: branch `rc/v0.10.0`, build Windows nela e issue "Testar bloco v0.10.0" atribuída ao usuário. DECISIONS 2026-11-20. O CI deste PR falhou no `027-estudio-extras` 2b (no runner lento a volta da troca trava o thread e a assinatura de 4 s some antes da leitura; reproduzido aqui): o teste agora registra a assinatura por um `MutationObserver` no momento em que ela aparece. Passou localmente.
 **Deixou em:** dois blocos esperando o teste do usuário (v0.9.0 #157 e v0.10.0). Próximas rodadas: só `bug` (ex.: #158, ainda `backlog`) e planejar a `backlog` mais antiga; nenhum bloco novo até o usuário responder a um dos dois.
