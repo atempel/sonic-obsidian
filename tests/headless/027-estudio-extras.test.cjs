@@ -51,8 +51,17 @@ const ROOT = path.join(__dirname, '..', '..')
   ok('1b assinatura escondida antes da troca', !(await page.$eval('.st-card', e => e.classList.contains('show'))))
 
   // 2. Testar troca: corte para outro preset, volta com a transição do Palco, assinatura com nome e crédito
+  // A assinatura fica 4 s; no runner lento a volta da troca trava o thread e ela pode sumir antes de uma
+  // leitura depois do clique. Um observador registra o momento em que ela aparece.
+  await page.evaluate(() => {
+    const el = document.querySelector('.st-card')
+    window.__card = null
+    const seen = () => { if (!window.__card && el.classList.contains('show')) window.__card = { show: true, h: el.querySelector('h2').textContent, p: el.querySelector('p').textContent } }
+    new MutationObserver(seen).observe(el, { attributes: true, attributeFilter: ['class'] })
+  })
   await page.click('.st-swap')
-  const card = await page.$eval('.st-card', e => ({ show: e.classList.contains('show'), h: e.querySelector('h2').textContent, p: e.querySelector('p').textContent }))
+  await H.poll(page, () => !!window.__card, { timeout: 10000 }).catch(() => {})
+  const card = (await page.evaluate(() => window.__card)) || await page.$eval('.st-card', e => ({ show: e.classList.contains('show'), h: e.querySelector('h2').textContent, p: e.querySelector('p').textContent }))
   const via = ((await page.evaluate(() => window.__logs)).find(l => l.startsWith('studio: test swap via ')) || '').replace('studio: test swap via ', '')
   ok('2a corta para outro preset da biblioteca', !!via && via !== src, via)
   const title = (await page.inputValue('#studio-name')).trim() // o campo pode ter espaço no fim (vem do nome do preset)
