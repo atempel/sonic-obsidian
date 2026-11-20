@@ -72,6 +72,10 @@ ok('main: cabe no limite do copyText (64 KB), cortando pelo começo', big.length
       return b && { label: b.getAttribute('aria-label'), pop: b.getAttribute('aria-haspopup'), nextIsClose: b.parentElement.lastElementChild?.getAttribute('aria-label') }
     })
     ok('1a botão "Feedback e bugs" no cabeçalho dos Ajustes, antes do fechar', !!btn && btn.label === 'Feedback e bugs' && btn.pop === 'menu' && /Fechar/.test(btn.nextIsClose || ''), JSON.stringify(btn))
+    // Os Ajustes entram deslizando (transform na .sheet). Enquanto o transform não é `none`, o menu
+    // (position: fixed dentro dela) se posiciona pela .sheet e não pela janela: num runner lento os
+    // 500 ms acima não bastam. Abre o menu só com a folha parada.
+    await H.poll(page, () => getComputedStyle(document.querySelector('.sheet')).transform === 'none', { timeout: 5000, every: 100 })
     await openMenu()
     const items = await page.$$eval('#fbMenu [role=menuitem]', (els) => els.map((e) => e.textContent.trim()))
     ok('1b menu com as quatro ações', items.join('|') === 'Relatar um problema|Sugerir uma ideia|Fazer uma pergunta|Copiar diagnóstico', items.join('|'))
@@ -115,7 +119,9 @@ ok('main: cabe no limite do copyText (64 KB), cortando pelo começo', big.length
     // Sem GPU identificada: "Não identificada" e switch desligado.
     await page.evaluate(() => { const orig = HTMLCanvasElement.prototype.getContext; window.__origGetContext = orig; HTMLCanvasElement.prototype.getContext = function (k, o) { return k === 'webgl' ? null : orig.call(this, k, o) } })
     await openMenu(); await pick('bug')
-    await page.waitForTimeout(300)
+    // Num runner lento o painel ainda mostra os dados da abertura anterior por alguns quadros:
+    // espera a coleta nova (até 5 s) antes de ler.
+    await H.poll(page, () => document.querySelector('.fb-list li[data-key="gpu"] .fb-v')?.textContent === 'Não identificada', { timeout: 5000, every: 100 })
     const noGpu = await page.evaluate(() => { const li = document.querySelector('.fb-list li[data-key="gpu"]'); return [li.querySelector('.fb-v').textContent, li.querySelector('input').checked, li.querySelector('input').disabled] })
     await page.$eval('.fb-dialog .btn-primary', (e) => e.click()); await page.waitForTimeout(200)
     await page.evaluate(() => { HTMLCanvasElement.prototype.getContext = window.__origGetContext })
@@ -161,9 +167,11 @@ ok('main: cabe no limite do copyText (64 KB), cortando pelo começo', big.length
     ok('5c Esc fecha só o painel (as Configurações ficam) e o foco volta ao botão', !(await dlgOpen()) && await page.evaluate(() => document.body.classList.contains('settings-open') && !!document.activeElement?.closest('.settings .row')))
     await rowBtn('Sugerir uma ideia'); await page.waitForTimeout(200)
     ok('5d "Sugerir uma ideia" nas Configurações', (await links()).pop() === 'https://github.com/atempel/sonic-obsidian/discussions/new?category=ideas')
-    await rowBtn('Copiar diagnóstico'); await page.waitForTimeout(200)
-    const diagBtn = await page.$eval('.settings button[data-fb="diag"]', (e) => e.textContent)
-    ok('5e "Copiar diagnóstico" copia e o botão diz "Copiado"', diagBtn === 'Copiado' && (await page.evaluate(() => window.__copied.slice(-1)[0])) === 'linha 1\nlinha 2', diagBtn)
+    await rowBtn('Copiar diagnóstico')
+    // A cópia é assíncrona (log:tail + copyText) e, num runner lento, passa de 200 ms: espera o
+    // "Copiado" (que fica 1,5 s) em vez de ler o botão depois de um tempo fixo.
+    const sawCopied = await H.poll(page, () => document.querySelector('.settings button[data-fb="diag"]')?.textContent === 'Copiado', { timeout: 5000, every: 50 })
+    ok('5e "Copiar diagnóstico" copia e o botão diz "Copiado"', sawCopied && (await page.evaluate(() => window.__copied.slice(-1)[0])) === 'linha 1\nlinha 2', await page.$eval('.settings button[data-fb="diag"]', (e) => e.textContent))
     const found = async (qq) => {
       await page.fill('#st-search', qq); await page.waitForTimeout(250)
       return page.evaluate(() => [...document.querySelectorAll('.settings .row.hit')].map((r) => r.querySelector('.lbl')?.textContent))

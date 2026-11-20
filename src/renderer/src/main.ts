@@ -26,6 +26,7 @@ import { dismissFloat, mountWebglError } from './ui/Diagnostics'
 import { closeShortcuts, isShortcutsOpen, toggleShortcuts } from './ui/ShortcutsPanel'
 import { closeBugReport, isFeedbackOpen, openBugReport } from './ui/Feedback'
 import { copyDiagnostics, openIdeas, openQuestion } from './feedback'
+import { measureCapture, webClickPlayer } from './capture-latency'
 import { setActionRunner, type ActionId } from './ui/shortcuts'
 import { closeStudio, openStudio } from './ui/Studio'
 import { setMineLookup } from './ui/preset-name'
@@ -105,6 +106,10 @@ async function start(): Promise<void> {
   const delay = ctx.createDelay(1)
   delay.connect(gain)
   delay.connect(preGain)
+  // "Medir atraso da captura" (spec 032, P1): o som cru da captura, antes do DelayNode.
+  const rawTap = ctx.createAnalyser()
+  rawTap.fftSize = 32768
+  let measuring = false
   let captureLatencyMs = Number.NaN
   const frameStats = new FrameStats()
   const samples = new Float32Array(meter.fftSize)
@@ -321,6 +326,7 @@ async function start(): Promise<void> {
       })
       source = ctx.createMediaStreamSource(stream)
       source.connect(delay)
+      source.connect(rawTap)
       core.setCapture('ok')
       // Spec 032: latência da captura, se o Chromium informar (não está nos tipos do DOM).
       const lat = (ts as MediaTrackSettings & { latency?: number }).latency
@@ -869,7 +875,38 @@ async function start(): Promise<void> {
     feedbackBug: () => openBugReport(core),
     feedbackIdea: openIdeas,
     feedbackAsk: openQuestion,
-    feedbackDiag: () => void copyDiagnostics()
+    feedbackDiag: () => void copyDiagnostics(),
+    // Sincronia (spec 032, P1): três cliques pela saída, medidos antes do "Atrasar o visual".
+    captureMeasure: () => {
+      idle.wake()
+      if (measuring) return
+      if (!source) {
+        window.so.log('[sync] measured capture: not capturing')
+        showToast(t('sync.measureNoCapture'), { force: true })
+        return
+      }
+      measuring = true
+      showToast(t('sync.measuring'), { force: true })
+      void measureCapture(rawTap, ctx, webClickPlayer())
+        .then((r) => {
+          const runs = r.runs.map((v) => (v === null ? 'none' : v.toFixed(1))).join(', ')
+          if (r.ms === null) {
+            window.so.log(`[sync] measured capture: no click found (${runs} ms)`)
+            showToast(t('sync.measureFail'), { force: true })
+          } else {
+            window.so.log(`[sync] measured capture ${r.ms.toFixed(1)} ms (${runs} ms) · ${syncLine(syncParts())}`)
+            showToast(t('sync.measured', { ms: Math.round(r.ms) }), { force: true })
+          }
+        })
+        .catch((err: unknown) => {
+          window.so.log(`[sync] measured capture failed: ${err instanceof Error ? err.message : String(err)}`)
+          showToast(t('sync.measureFail'), { force: true })
+        })
+        .finally(() => {
+          measuring = false
+          idle.wake()
+        })
+    }
   }
   setActionRunner((id) => actions[id]())
 
