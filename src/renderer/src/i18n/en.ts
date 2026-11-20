@@ -401,6 +401,11 @@ export const en = {
   'update.toastDownloading': 'Downloading version {version}…',
   'update.toastError': "Couldn't check right now.",
   'shortcuts.cmd.checkUpdates': 'Check for updates',
+  'shortcuts.cmd.measureCapture': 'Measure capture delay',
+  'sync.measuring': 'Measuring: three short clicks…',
+  'sync.measured': 'Capture: {ms} ms',
+  'sync.measureFail': "Couldn't measure: system sound is muted or too loud",
+  'sync.measureNoCapture': "Couldn't measure: system audio isn't being captured",
   'shortcuts.cmd.installUpdate': 'Restart and update',
 
   // ── My presets: credit ──────────────────────────────────

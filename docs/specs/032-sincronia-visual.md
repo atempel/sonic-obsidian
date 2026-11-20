@@ -1,6 +1,6 @@
 # 032 — Sincronia do visual com o som
 
-**Fase:** 5 — Extras (reatividade) · **Status:** P0 implementado (PR da rodada 2026-11-19; P1 "Medir a captura" na #160) · decisões `agent-decided` · **Issue:** [#96](https://github.com/atempel/sonic-obsidian/issues/96) · **Milestone:** v0.10.0 · **Personas:** Nostálgico do Winamp (TV por HDMI, fone Bluetooth: o som chega depois do visual), DJ de Festa (projetor e caixa do local com atraso próprio)
+**Fase:** 5 — Extras (reatividade) · **Status:** P0 e P1 implementados (P0 no #161; P1 "Medir a captura" na #160, rodada 2026-11-20) · decisões `agent-decided` · **Issue:** [#96](https://github.com/atempel/sonic-obsidian/issues/96) · **Milestone:** v0.10.0 · **Personas:** Nostálgico do Winamp (TV por HDMI, fone Bluetooth: o som chega depois do visual), DJ de Festa (projetor e caixa do local com atraso próprio)
 
 ## Problema
 No teste do bloco v0.6.0 (#91, item 3) o usuário viu "às vezes o visual alguns milissegundos dessincronizado com a música". Não sabemos o tamanho nem o sentido do atraso, e o app não mostra nada que ajude a descobrir.

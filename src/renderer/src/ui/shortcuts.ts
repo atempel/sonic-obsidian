@@ -125,6 +125,7 @@ export type ActionId =
   | 'feedbackIdea'
   | 'feedbackAsk'
   | 'feedbackDiag'
+  | 'captureMeasure'
 
 export interface Command {
   id: ActionId
@@ -160,7 +161,9 @@ export const COMMANDS: Command[] = [
   { id: 'feedbackBug', label: 'feedback.bug', keys: [], icon: 'bug' },
   { id: 'feedbackIdea', label: 'feedback.idea', keys: [], icon: 'lightbulb' },
   { id: 'feedbackAsk', label: 'feedback.ask', keys: [], icon: 'circle-help' },
-  { id: 'feedbackDiag', label: 'feedback.diag', keys: [], icon: 'clipboard-copy' }
+  { id: 'feedbackDiag', label: 'feedback.diag', keys: [], icon: 'clipboard-copy' },
+  // Sincronia (spec 032, P1): sem tecla; nada muda no painel `?`.
+  { id: 'captureMeasure', label: 'shortcuts.cmd.measureCapture', keys: [], icon: 'clock' }
 ]
 
 /** Nome da tecla no idioma do app (`Space` / `Espaço`); as outras saem como estão. */

@@ -401,6 +401,11 @@ export const ptBR: Messages = {
   'update.toastDownloading': 'Baixando a versão {version}…',
   'update.toastError': 'Não deu para verificar agora.',
   'shortcuts.cmd.checkUpdates': 'Verificar atualizações',
+  'shortcuts.cmd.measureCapture': 'Medir atraso da captura',
+  'sync.measuring': 'Medindo: três cliques curtos…',
+  'sync.measured': 'Captura: {ms} ms',
+  'sync.measureFail': 'Não deu para medir: o som do sistema está mudo ou muito alto',
+  'sync.measureNoCapture': 'Não deu para medir: o áudio do sistema não está sendo capturado',
   'shortcuts.cmd.installUpdate': 'Reiniciar e atualizar',
 
   // ── Meus presets: crédito ───────────────────────────────
