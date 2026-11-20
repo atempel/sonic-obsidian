@@ -75,6 +75,14 @@ ok('main: cabe no limite do copyText (64 KB), cortando pelo começo', big.length
     await openMenu()
     const items = await page.$$eval('#fbMenu [role=menuitem]', (els) => els.map((e) => e.textContent.trim()))
     ok('1b menu com as quatro ações', items.join('|') === 'Relatar um problema|Sugerir uma ideia|Fazer uma pergunta|Copiar diagnóstico', items.join('|'))
+    // Os Ajustes entram deslizando da direita: num runner lento o menu ainda está fora da janela
+    // logo depois de abrir. Mede depois que a posição para de mudar (até 3 s).
+    await H.poll(page, () => {
+      const r = document.querySelector('#fbMenu').getBoundingClientRect()
+      const same = window.__fbRight === r.right
+      window.__fbRight = r.right
+      return same
+    }, { timeout: 3000, every: 150 })
     const box = await page.$eval('#fbMenu', (e) => { const r = e.getBoundingClientRect(); return { w: r.width, right: r.right, vw: innerWidth } })
     ok('1c menu de 224 px dentro da janela', Math.round(box.w) === 224 && box.right <= box.vw - 7, JSON.stringify(box))
     ok('1d foco no primeiro item; setas andam', (await focusId()) === 'bug' && (await (async () => { await page.keyboard.press('ArrowDown'); return focusId() })()) === 'idea')
