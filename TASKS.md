@@ -57,6 +57,7 @@ Ordem combinada: **013 → 011 (com o design f126) → 012.**
 - [ ] Fonte microfone (P1, depois do Estúdio)
 - [ ] **Controle de velocidade do visual** (`time`; pedido do usuário) — [queue](queue/2026-11-11-controle-velocidade.md), planejar
 - [x] **Reação ao áudio: corrigir a Memória, medir no HUD e ganho automático** (v0.6.0; ajustes de interface do design 598c na v0.7.0, issue #94) — [spec 028](docs/specs/028-reatividade-ganho-automatico.md) · issue [#81](https://github.com/atempel/sonic-obsidian/issues/81)
+- [ ] **Normalizar áudio: teto de +18 dB para o volume baixo do Windows** (v0.11.0) — [spec 033](docs/specs/033-normalizar-teto.md) · issue [#97](https://github.com/atempel/sonic-obsidian/issues/97)
 - [ ] **Beat na batida principal** (bumbo/caixa, não outros instrumentos; relato do usuário) — [queue](queue/2026-11-10-beat-batida-principal.md), planejar
 - ~~Fonte arquivo de áudio~~ — adiada até a história "performance sincronizada" ([queue](queue/2026-11-10-performance-sincronizada.md), DECISIONS 2026-11-10) · PR #65 (falta o teste no Windows)
 - [x] **Adicionar o preset atual a coleções pelo Palco** (pedido do usuário) — [spec 023](docs/specs/023-colecoes-no-palco.md) · issue [#66](https://github.com/atempel/sonic-obsidian/issues/66) · PR #65, validada no Windows
