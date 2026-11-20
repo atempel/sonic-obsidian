@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/035-testes-intermitentes`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e nenhuma está `ready`). Passo 5: planejou a #158 (bug, testes intermitentes) em vez da #99 (`backlog` mais antiga), porque com os blocos parados só `bug` pode ser implementada e a #158 não muda o app. Spec 035: espera de estado no `028-normalizar`, `029-atualizacao`, `024-beat` 4b e `028-expressividade` 6 (este último visto no build da `rc/v0.10.0`, run 44679753527 — o artifact do Windows saiu mesmo assim); `031-feedback` 1c já corrigido no #162.
+**Deixou em:** PR desta branch; #158 `bug` + `ready` no v0.11.0. Próxima rodada: mergear este PR e implementar a #158; depois planejar a #99.
+
 ### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/034-memoria-renderer`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; dois blocos em teste e nenhuma `bug` pronta). Passo 5: planejou a `backlog` mais antiga, #98 (memória do renderer): spec 034, só medição (log com memória privada e heap/nós, `perf:win` com série e até 60 min no disparo manual, teste headless `034-memoria`); limiares `agent-decided` (DECISIONS). Os `perf-<sha>` dos blocos v0.7.0–v0.10.0 mostram o `Tab` caindo em 5 min, por isso a medida nova.
 **Deixou em:** #98 `ready` no v0.11.0 (com a #97). Com dois blocos esperando teste, a implementação espera (só `bug` entra); próxima rodada planeja a #158 (bug, testes intermitentes) ou a `backlog` seguinte (#99, preset preto).
