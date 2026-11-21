@@ -1118,17 +1118,35 @@ async function start(): Promise<void> {
       run('preset.next', { cut: true }, 'rotation')
     }
   }
-  /** 9 pontos do quadro recém-desenhado, todos quase pretos. Lido logo depois do render. */
+  // Spec 036: miniatura 64×36 do quadro inteiro (não 9 pontos), para preset escuro com detalhe
+  // pequeno não dar falso "preto". O framebuffer é refeito quando o contexto muda (perda/recriação).
+  const THUMB_W = 64
+  const THUMB_H = 36
+  let thumb: { gl: WebGL2RenderingContext; fb: WebGLFramebuffer; rb: WebGLRenderbuffer; px: Uint8Array } | null = null
+  /** Quadro recém-desenhado todo quase preto (R, G e B ≤ 6 em toda a miniatura). Lido logo depois do render. */
   const isBlackFrame = (): boolean => {
     const gl = (viz.visualizer as unknown as { renderer?: { gl?: WebGL2RenderingContext } }).renderer?.gl
-    if (!gl) return false
-    const px = new Uint8Array(4)
+    if (!gl || gl.isContextLost()) return false
+    if (!thumb || thumb.gl !== gl) {
+      const fb = gl.createFramebuffer()
+      const rb = gl.createRenderbuffer()
+      if (!fb || !rb) return false
+      gl.bindRenderbuffer(gl.RENDERBUFFER, rb)
+      gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, THUMB_W, THUMB_H)
+      gl.bindRenderbuffer(gl.RENDERBUFFER, null)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+      gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rb)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      thumb = { gl, fb, rb, px: new Uint8Array(THUMB_W * THUMB_H * 4) }
+    }
+    const { fb, px } = thumb
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null)
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, fb)
+    gl.blitFramebuffer(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, 0, THUMB_W, THUMB_H, gl.COLOR_BUFFER_BIT, gl.LINEAR)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb)
+    gl.readPixels(0, 0, THUMB_W, THUMB_H, gl.RGBA, gl.UNSIGNED_BYTE, px)
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
-    for (const fx of [0.2, 0.5, 0.8])
-      for (const fy of [0.2, 0.5, 0.8]) {
-        gl.readPixels(Math.floor(gl.drawingBufferWidth * fx), Math.floor(gl.drawingBufferHeight * fy), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px)
-        if (px[0]! > 6 || px[1]! > 6 || px[2]! > 6) return false
-      }
+    for (let i = 0; i < px.length; i += 4) if (px[i]! > 6 || px[i + 1]! > 6 || px[i + 2]! > 6) return false
     return true
   }
   const loop = (now: number): void => {
