@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `fix/testes-intermitentes-2`
+**Fez:** Passos 0–3 sem trabalho (blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto). Passo 4: implementou a #158 (spec 035) — `028-normalizar` e `028-expressividade` 6 com `H.poll`, `024-beat` 4b com `MutationObserver`, `029-atualizacao` sondando o botão dentro da página (e o clique de instalar com `pointerdown`, que fazia falhar "a faixa fica presa visível" com a máquina carregada — P1). Harness: `SO_CPU_THROTTLE=N` (CDP `setCPUThrottlingRate`) e a regra no comentário do `poll`; AGENTS.md cita os dois.
+**Deixou em:** PR desta branch (`Closes #158`). Os quatro testes passaram 3× seguidas com `SO_CPU_THROTTLE=6`; o `029` antigo só falhava com dois testes em paralelo sob throttle (reproduz o `[false,false,true]` do CI) e o novo passou assim. Com carga extrema ainda saem `024-beat` 1c/5g (tempo de compasso) — não vistos no CI, fora da spec. Critério 3 (duas verdes seguidas no job `typecheck`) fica para a próxima rodada conferir. Próxima rodada: mergear o PR; depois a #99 (planejar) com os blocos ainda parados.
+
 ### 2026-11-20 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/035-testes-intermitentes`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e nenhuma está `ready`). Passo 5: planejou a #158 (bug, testes intermitentes) em vez da #99 (`backlog` mais antiga), porque com os blocos parados só `bug` pode ser implementada e a #158 não muda o app. Spec 035: espera de estado no `028-normalizar`, `029-atualizacao`, `024-beat` 4b e `028-expressividade` 6 (este último visto no build da `rc/v0.10.0`, run 44679753527 — o artifact do Windows saiu mesmo assim); `031-feedback` 1c já corrigido no #162.
 **Deixou em:** PR desta branch; #158 `bug` + `ready` no v0.11.0. Próxima rodada: mergear este PR e implementar a #158; depois planejar a #99.
