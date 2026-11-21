@@ -1,6 +1,6 @@
 # 036 — "Preset preto" no log de um preset que desenha (detector de 9 pontos)
 
-**Fase:** 3 (diagnóstico) · **Status:** pronta · **Issue:** [#99](https://github.com/atempel/sonic-obsidian/issues/99) · **Milestone:** v0.11.0 · **Personas:** — (só o log; nada muda na tela)
+**Fase:** 3 (diagnóstico) · **Status:** implementada (PR da #99; Windows no bloco v0.11.0) · **Issue:** [#99](https://github.com/atempel/sonic-obsidian/issues/99) · **Milestone:** v0.11.0 · **Personas:** — (só o log; nada muda na tela)
 
 ## Problema
 No teste do bloco v0.6.0 (#91) o log trouxe `black preset: martin - reflections on black tiles (shaders compiled; 3 s all black with sound playing)`. O usuário não relatou tela preta, só a linha do log.

@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `fix/detector-preset-preto`
+**Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto). Passo 4: #99 (`bug`, spec 036) reivindicada e implementada: `isBlackFrame` em `src/renderer/src/main.ts` agora copia o quadro para um framebuffer 64×36 (`blitFramebuffer`, `LINEAR`, refeito quando o `gl` muda) e lê tudo num `readPixels`; mesmo limite ≤ 6 e mesma regra de 3 leituras. Teste novo `036-preset-preto` (6/6): o preset do martin roda a checagem sem log em 8 s; o preto de verdade registra em ~3 s com 3 leituras; o quadradinho de 2,9 % fora da grade antiga (nenhum dos 9 pontos aceso) não registra. O quadradinho do critério 3 é desenhado pelo `comp`, não por uma forma (com `comp` preto a forma não aparece) — mesmo efeito.
+**Deixou em:** PR desta branch com `Closes #99`. Não verificado (bloco v0.11.0, Windows): o log sem `black preset` para o preset do martin com música.
+
 ### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #169
 **Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: PR #169 (spec 036, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 036 livre) → esta entrada e merge em squash.
 **Deixou em:** #99 `bug` + `ready` no v0.11.0 com a spec 036 no `main`. Próxima rodada: implementar a #99 (é `bug`, entra mesmo com os dois blocos parados).
