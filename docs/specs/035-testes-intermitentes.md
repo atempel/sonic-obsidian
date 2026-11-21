@@ -1,6 +1,6 @@
 # 035 — Testes headless intermitentes no runner do CI (segunda leva)
 
-**Fase:** Manutenção (CI) · **Status:** pronta (rodada 2026-11-20) · **Issue:** [#158](https://github.com/atempel/sonic-obsidian/issues/158) · **Milestone:** v0.11.0 · **Personas:** — (só testes; o app não muda)
+**Fase:** Manutenção (CI) · **Status:** implementada (PR da rodada 2026-11-21) · **Issue:** [#158](https://github.com/atempel/sonic-obsidian/issues/158) · **Milestone:** v0.11.0 · **Personas:** — (só testes; o app não muda)
 
 ## Problema
 O job `typecheck` do `build-windows.yml` (Ubuntu, Chromium headless a ~5 fps) falha em testes diferentes a cada execução e passa na seguinte, sem mudança de código. Na nuvem os mesmos testes passam. É a mesma família da #133: checagem por tempo fixo ou leitura única logo depois de um estado aparecer.
