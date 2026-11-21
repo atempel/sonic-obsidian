@@ -61,12 +61,20 @@ const BPM = 124, BEAT_S = 60 / BPM
   const before = await page.$eval('.now-title', e => e.getAttribute('title'))
   const r4 = await page.evaluate(() => new Promise((res) => {
     const t = performance.now(); let dashed = false
+    // O tracejado é registrado por MutationObserver (a ~5 fps o setInterval perde a classe que entra e sai
+    // entre duas amostras); o tempo de espera (4a) segue medido pelo setInterval.
+    const sel = 'button[aria-label="Próximo preset"].wait'
+    const seen = () => { if (!dashed && document.querySelector(sel)) dashed = true }
+    const mo = new MutationObserver(seen)
+    mo.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class'] })
+    const done = (r) => { clearInterval(id); seen(); mo.disconnect(); res(r) }
     document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', key: 'ArrowRight', bubbles: true }))
+    seen()
     const id = setInterval(() => {
-      if (document.querySelector('button[aria-label="Próximo preset"].wait')) dashed = true
+      seen()
       const n = window.__changes.at(-1)
-      if (n && n.at > t) { clearInterval(id); res({ wait: n.at - t, dashed }) }
-      if (performance.now() - t > 3000) { clearInterval(id); res({ wait: -1, dashed }) }
+      if (n && n.at > t) { done({ wait: n.at - t, dashed }); return }
+      if (performance.now() - t > 3000) done({ wait: -1, dashed })
     }, 5)
   }))
   // A troca sai no primeiro quadro depois da batida: no headless (~5 fps) isso soma até ~1 quadro.

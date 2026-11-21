@@ -182,9 +182,12 @@ async function ui() {
     // O Restaurar leva o foco ao Nível; o Esc o devolve ao visual — esperar, senão a tecla cai no slider.
     await page.waitForFunction(() => !document.activeElement || !document.activeElement.closest('.sheet'), null, { timeout: 15000 })
     await page.keyboard.press('Control+Shift+D')
-    await page.waitForTimeout(1500)
+    // Espera as três linhas no HUD (runner lento: nem todas aparecem no primeiro quadro), até 10 s.
+    const hudOk6 = (t) => /imm [\d.]+ · engine avg [\d.—]+/.test(t) && /RMS [−\-\d.∞]+ dBFS · peak [−\-\d.∞]+ dBFS/.test(t) && /gain in effect/.test(t)
+    // (a CSP da página não deixa recriar a função lá dentro: mesmas três expressões, repetidas no poll)
+    await H.poll(page, () => { const t = document.querySelector('#hud').textContent; return /imm [\d.]+ · engine avg [\d.—]+/.test(t) && /RMS [−\-\d.∞]+ dBFS · peak [−\-\d.∞]+ dBFS/.test(t) && /gain in effect/.test(t) }, { timeout: 10000 })
     const hud = await page.$eval('#hud', (e) => e.textContent)
-    ok('6 HUD com imm, média do motor, RMS/pico em dBFS e ganho em vigor', /imm [\d.]+ · engine avg [\d.—]+/.test(hud) && /RMS [−\-\d.∞]+ dBFS · peak [−\-\d.∞]+ dBFS/.test(hud) && /gain in effect/.test(hud), hud.split('\n').slice(3, 5).join(' | '))
+    ok('6 HUD com imm, média do motor, RMS/pico em dBFS e ganho em vigor', hudOk6(hud), hud.split('\n').slice(3, 5).join(' | '))
     ok('sem erros na página', errs.length === 0, errs.join(' '))
   } finally {
     await b.close(); srv.close()

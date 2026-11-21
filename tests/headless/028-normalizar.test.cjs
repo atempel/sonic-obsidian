@@ -47,8 +47,12 @@ const ok = R.ok
     const hudOk = await H.poll(page, () => /gain in effect [+−\-]?[\d.]+ dB \(manual -6\.0 \+ auto [+−\-]?[\d.]+, measured level -[\d.]+ dBFS\)/.test(document.querySelector('#hud').textContent), { timeout: 10000 })
     const hud = await page.$eval('#hud', (e) => (e.textContent.match(/gain in effect[^\n]*/) || [''])[0])
     ok('HUD: ganho em vigor = manual + auto, com o nível medido', hudOk, hud)
-    const auto = Number((hud.match(/auto ([+\-]?[\d.]+)/) || [])[1])
-    ok('o bumbo simulado move o ganho automático (≠ 0)', Number.isFinite(auto) && Math.abs(auto) >= 0.1, String(auto))
+    // Espera o AGC andar (runner lento: a linha aparece antes de o ganho sair do zero). Mesmo limite: |auto| ≥ 0,1 dB.
+    const autoOf = (t) => Number(((t || '').match(/auto ([+\-]?[\d.]+)/) || [])[1])
+    await H.poll(page, () => { const m = document.querySelector('#hud').textContent.match(/auto ([+\-]?[\d.]+)/); return !!m && Math.abs(Number(m[1])) >= 0.1 }, { timeout: 10000 })
+    const hudAuto = await page.$eval('#hud', (e) => (e.textContent.match(/gain in effect[^\n]*/) || [''])[0])
+    const auto = autoOf(hudAuto)
+    ok('o bumbo simulado move o ganho automático (≠ 0)', Number.isFinite(auto) && Math.abs(auto) >= 0.1, `${auto} · ${hudAuto}`)
 
     // Silêncio congela: o ganho não anda em 4 s sem som.
     await page.evaluate(() => window.__audio('silence'))

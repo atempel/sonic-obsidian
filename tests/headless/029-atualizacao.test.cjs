@@ -62,12 +62,34 @@ const ok = R.ok
     const hidden = async () => !(await shown(false))
     // Botão da plaquinha: acorda a faixa, confere que o ponteiro alcança o botão (nada por cima) e clica
     // pelo DOM (o page.click espera o "estável" e, num runner lento, a faixa volta ao ocioso no meio).
+    // Espera do estado (spec 035): depois de mexer o mouse, a página sonda a cada quadro, por até 2 s, se o
+    // `elementFromPoint` cai dentro do botão e, no mesmo instante, clica — num runner lento as idas e vindas
+    // ao Playwright passam dos 2,5 s do ocioso. Acorda a faixa de novo a cada tentativa (mouse do Playwright
+    // e um mousemove na própria página), até 5 s (no mínimo 3 tentativas); vale o resultado da última.
     const hits = []
+    const reachAndClick = (e) => new Promise((res) => {
+      const reach = () => { const r = e.getBoundingClientRect(); const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!top && e.contains(top) }
+      // Acorda a faixa aqui dentro também: com a máquina carregada, entre o mouse.move do Playwright e
+      // esta sondagem podem passar mais que os 2,5 s do ocioso.
+      window.dispatchEvent(new MouseEvent('mousemove'))
+      const t0 = performance.now()
+      const tick = () => {
+        if (reach()) { e.click(); res(true); return }
+        if (performance.now() - t0 > 2000) { res(false); return }
+        requestAnimationFrame(tick)
+      }
+      tick()
+    })
     const press = async (sel) => {
-      await page.mouse.move(600, 500); await page.mouse.move(605, 505)
-      await shown()
-      hits.push(await page.$eval(sel, (e) => { const r = e.getBoundingClientRect(); const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!top && e.contains(top) }))
-      await page.$eval(sel, (e) => e.click())
+      const end = Date.now() + 5000
+      let hit = false
+      for (let i = 0; ; i++) {
+        await page.mouse.move(600 + (i % 2) * 10, 500); await page.mouse.move(605 + (i % 2) * 10, 505)
+        hit = await page.$eval(sel, reachAndClick)
+        if (hit || (i >= 2 && Date.now() > end)) break
+      }
+      hits.push(hit)
+      if (!hit) await page.$eval(sel, (e) => e.click())
     }
     await page.mouse.move(600, 500); await page.mouse.move(610, 500)
     ok('sem versão nova, nada acima da faixa', (await hidden()))
@@ -136,8 +158,10 @@ const ok = R.ok
     await page.keyboard.press('Escape')
 
     // Reiniciar e atualizar: "Atualizando…" no lugar e, ~800 ms depois, o pedido ao main.
+    // O clique de verdade vem com pointerdown, que acorda a faixa; o clique pelo DOM não — no runner lento a
+    // faixa pode já estar no ocioso quando ele chega. Mandar o pointerdown junto imita o clique do usuário.
     await page.mouse.move(600, 500); await page.mouse.move(605, 505); await shown()
-    const t0 = await page.$eval('.upd .btn-primary', (e) => { const t = performance.now(); e.click(); return t })
+    const t0 = await page.$eval('.upd .btn-primary', (e) => { const t = performance.now(); e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); e.click(); return t })
     const busy = await page.$eval('.upd', (e) => e.textContent)
     ok('"Atualizando… o app reabre sozinho" no lugar', /Atualizando… o app reabre sozinho/.test(busy), busy)
     await H.poll(page, () => window.__upd.calls.some((c) => c[0] === 'install'), { timeout: 15000 })

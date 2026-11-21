@@ -17,8 +17,18 @@ function serve(port) {
   }).listen(port)
 }
 
-function launch() {
-  return chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] })
+async function launch() {
+  const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'] })
+  // SO_CPU_THROTTLE=N: cada página nova roda com a CPU N× mais lenta (imita o runner do CI; spec 035).
+  const rate = Number(process.env.SO_CPU_THROTTLE)
+  if (rate > 1) {
+    const throttle = async (p) => { const s = await p.context().newCDPSession(p); await s.send('Emulation.setCPUThrottlingRate', { rate }) }
+    const newPage = b.newPage.bind(b)
+    b.newPage = async (...a) => { const p = await newPage(...a); await throttle(p); return p }
+    const newContext = b.newContext.bind(b)
+    b.newContext = async (...a) => { const c = await newContext(...a); const np = c.newPage.bind(c); c.newPage = async (...x) => { const p = await np(...x); await throttle(p); return p }; return c }
+  }
+  return b
 }
 
 // window.so simulado. `settings` e `library` são objetos serializáveis; `logs` (padrão true) guarda
@@ -82,6 +92,10 @@ async function click(page, sel, { tries = 3 } = {}) {
 
 // Espera `fn` (na página) ficar verdadeira, sondando a cada `every` ms até `timeout`. Devolve true/false.
 // Para critérios que dependem de o motor já ter desenhado alguns quadros (runner lento demora mais).
+// REGRA (spec 035): estado lido depois de animação, de medição de áudio ou do HUD se lê sempre com
+// `poll`/`waitForFunction`/`MutationObserver`, nunca com `waitForTimeout` + leitura única — o runner do
+// CI roda a ~5 fps e a leitura única vira teste intermitente. Para imitar o runner localmente:
+// `SO_CPU_THROTTLE=6 node tests/headless/<teste>.test.cjs` (CDP Emulation.setCPUThrottlingRate em toda página).
 async function poll(page, fn, { timeout = 8000, every = 250, arg } = {}) {
   const end = Date.now() + timeout
   for (;;) {
