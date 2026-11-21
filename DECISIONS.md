@@ -724,3 +724,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** o `perf:win` de 5 min mostra o `Tab` caindo nos quatro blocos (o runner não reproduz o uso real e o *working set* é aparado), e o log do usuário (184 → 300 MB em 15 min) não separa aquecimento de vazamento. Limiar e duração são números (reversíveis).
 - **Descartado:** consertar às cegas (sem saber se é JS/DOM ou nativo); rodar 60 min em todo build Windows (o job de rotina ficaria 1 h mais lento); pedir ao usuário uma sessão de 1 h antes de haver o que medir no log.
 - **Milestone:** v0.11.0.
+
+## 2026-11-21 — "Preset preto" é falso positivo do detector de 9 pontos (rodada, `agent-decided`, #99)
+- **Achado:** "martin - reflections on black tiles" desenha no headless (5–23 % dos pixels acesos em 8 s): é escuro de propósito, com formas pequenas que andam. Os 9 pontos do `isBlackFrame` caem no fundo e o log acusa `black preset`.
+- **Decisão:** spec 036: ler uma miniatura do quadro inteiro (64×36 por `blitFramebuffer` + um `readPixels`), "preto" só se todos os pixels ficarem ≤ 6; o resto da regra igual. Tamanho e limite são números (reversíveis).
+- **Por quê:** o alarme falso esconde o caso de verdade (a onda em pontos do PR #80). Uma leitura só, e só nos ~3 s depois da troca.
+- **Descartado:** mexer no preset; pular presets pretos (DECISIONS 2026-11-10); mais pontos na grade (cada `readPixels` trava o pipeline; a miniatura cobre tudo com uma leitura).
+- **Milestone:** v0.11.0, como `bug` (o diagnóstico mente; com dois blocos em teste, só `bug` entra).
