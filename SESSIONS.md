@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #169
+**Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: PR #169 (spec 036, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 036 livre) → esta entrada e merge em squash.
+**Deixou em:** #99 `bug` + `ready` no v0.11.0 com a spec 036 no `main`. Próxima rodada: implementar a #99 (é `bug`, entra mesmo com os dois blocos parados).
+
 ### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/036-detector-preset-preto`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e nenhuma está `ready`). Passo 5: planejou a #99 (`backlog` mais antiga, preset preto). No headless o preset "martin - reflections on black tiles" desenha (5–23 % dos pixels acesos; escuro de propósito, formas pequenas): o `black preset` do log é falso positivo dos 9 pontos do `isBlackFrame`. Spec 036: miniatura 64×36 do quadro inteiro por `blitFramebuffer` + um `readPixels`; teste `036-preset-preto` (sem alarme falso, preto de verdade detectado, detalhe pequeno visto). DECISIONS 2026-11-21 (`agent-decided`).
 **Deixou em:** PR desta branch; #99 `bug` + `ready` + `agent-decided` no v0.11.0. Próxima rodada: mergear este PR e implementar a #99 (é `bug`, entra mesmo com os blocos v0.9.0/v0.10.0 parados); depois planejar a `backlog` seguinte (#109).
