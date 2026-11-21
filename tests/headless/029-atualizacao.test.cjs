@@ -64,11 +64,14 @@ const ok = R.ok
     // pelo DOM (o page.click espera o "estável" e, num runner lento, a faixa volta ao ocioso no meio).
     // Espera do estado (spec 035): depois de mexer o mouse, a página sonda a cada quadro, por até 2 s, se o
     // `elementFromPoint` cai dentro do botão e, no mesmo instante, clica — num runner lento as idas e vindas
-    // ao Playwright passam dos 2,5 s do ocioso. Acorda a faixa de novo a cada tentativa, até 5 s (no mínimo
-    // 3 tentativas); vale o resultado da última.
+    // ao Playwright passam dos 2,5 s do ocioso. Acorda a faixa de novo a cada tentativa (mouse do Playwright
+    // e um mousemove na própria página), até 5 s (no mínimo 3 tentativas); vale o resultado da última.
     const hits = []
     const reachAndClick = (e) => new Promise((res) => {
       const reach = () => { const r = e.getBoundingClientRect(); const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!top && e.contains(top) }
+      // Acorda a faixa aqui dentro também: com a máquina carregada, entre o mouse.move do Playwright e
+      // esta sondagem podem passar mais que os 2,5 s do ocioso.
+      window.dispatchEvent(new MouseEvent('mousemove'))
       const t0 = performance.now()
       const tick = () => {
         if (reach()) { e.click(); res(true); return }
