@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/037-ajustes-cabecalho`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e não há `bug` `ready`). Passo 5: #109 (a `backlog` mais antiga) reivindicada e planejada: spec 037 (Ajustes rápidos: rolagem volta ao topo depois da saída, ícones de 16 px nas cinco seções, "Todas as configurações" no cabeçalho entre Feedback e Fechar). Design checado: artefato em `1794680346-fb12`, espelho em `598c` (#124), mas `v3-modelo-de-navegacao.md` igual nas duas. Sem pergunta em aberto (tudo vem do protótipo). Milestone v0.12.0 criado (v0.11.0 com 5 issues).
+**Deixou em:** PR desta branch; #109 `ready` no v0.12.0. Próxima rodada: mergear este PR; depois, enquanto os blocos v0.9.0/v0.10.0 não forem testados, planejar a `backlog` seguinte (#110) — a #109 só se implementa quando houver vaga de bloco.
+
 ### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `fix/detector-preset-preto`
 **Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto). Passo 4: #99 (`bug`, spec 036) reivindicada e implementada: `isBlackFrame` em `src/renderer/src/main.ts` agora copia o quadro para um framebuffer 64×36 (`blitFramebuffer`, `LINEAR`, refeito quando o `gl` muda) e lê tudo num `readPixels`; mesmo limite ≤ 6 e mesma regra de 3 leituras. Teste novo `036-preset-preto` (6/6): o preset do martin roda a checagem sem log em 8 s; o preto de verdade registra em ~3 s com 3 leituras; o quadradinho de 2,9 % fora da grade antiga (nenhum dos 9 pontos aceso) não registra. O quadradinho do critério 3 é desenhado pelo `comp`, não por uma forma (com `comp` preto a forma não aparece) — mesmo efeito.
 **Deixou em:** PR desta branch com `Closes #99`. Não verificado (bloco v0.11.0, Windows): o log sem `black preset` para o preset do martin com música.
