@@ -731,3 +731,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** o alarme falso esconde o caso de verdade (a onda em pontos do PR #80). Uma leitura só, e só nos ~3 s depois da troca.
 - **Descartado:** mexer no preset; pular presets pretos (DECISIONS 2026-11-10); mais pontos na grade (cada `readPixels` trava o pipeline; a miniatura cobre tudo com uma leitura).
 - **Milestone:** v0.11.0, como `bug` (o diagnóstico mente; com dois blocos em teste, só `bug` entra).
+
+## 2026-11-22 — Perfis de ajustes: o que cada grupo guarda (rodada, `agent-decided`, #110)
+- **Decisão:** spec 038, seguindo `v3-perfis.md` (aprovado pelo usuário em 10/11/2026), com estes detalhes que o design deixa abertos ou que divergem do app: o perfil **Padrão** usa os padrões do app (transição automática Aleatório 2,7 s; o protótipo diz Crossfade 2,7 s); **Rotação** guarda ligada, intervalo e trocar no beat (como o protótipo), sem ordem/coleção, compassos nem adiantamento; **Sinal** = ganho + Normalizar; **Texto** sem o Modo limpo; a **curva por frequência** entra no grupo Expressividade quando a #112 existir; perfis do usuário em `profiles.json`, ativo e "Perfil ao abrir" em `settings.json`; Configurações › Perfis depois de Visual (como o protótipo).
+- **Por quê:** o Padrão tem de ser "o motor como sempre" (intenção do design), e o app nunca teve Crossfade como padrão; ordem/coleção e calibração dependem do conteúdo e do equipamento, não do clima. Tudo reversível (valores e campos de um JSON novo).
+- **Descartado:** mudar o padrão do app para Crossfade (mexeria em quem não usa perfis); guardar a coleção no perfil (perfil por coleção é o P2 do design, no sentido inverso).
+- **Milestone:** v0.12.0, com a #109.
