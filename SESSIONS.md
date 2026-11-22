@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-22 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #171
+**Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: PR #171 (spec 037, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 037 livre) mergeado em squash. Esta entrada vai num PR próprio porque o merge saiu antes de ela entrar na branch do #171.
+**Deixou em:** #109 `ready` no v0.12.0 com a spec 037 no `main`. Próxima rodada: com os blocos v0.9.0/v0.10.0 ainda sem teste só `bug` se implementa, então planejar a `backlog` seguinte (#110, perfis de ajustes). Não verificado nesta rodada: só merge, sem código novo.
+
 ### 2026-11-21 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/037-ajustes-cabecalho`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e não há `bug` `ready`). Passo 5: #109 (a `backlog` mais antiga) reivindicada e planejada: spec 037 (Ajustes rápidos: rolagem volta ao topo depois da saída, ícones de 16 px nas cinco seções, "Todas as configurações" no cabeçalho entre Feedback e Fechar). Design checado: artefato em `1794680346-fb12`, espelho em `598c` (#124), mas `v3-modelo-de-navegacao.md` igual nas duas. Sem pergunta em aberto (tudo vem do protótipo). Milestone v0.12.0 criado (v0.11.0 com 5 issues).
 **Deixou em:** PR desta branch; #109 `ready` no v0.12.0. Próxima rodada: mergear este PR; depois, enquanto os blocos v0.9.0/v0.10.0 não forem testados, planejar a `backlog` seguinte (#110) — a #109 só se implementa quando houver vaga de bloco.
