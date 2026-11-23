@@ -48,7 +48,7 @@ export interface PalcoBridge {
   rotationBars(): number | null
   /** Batida estável agora (spec 024). */
   beatLocked(): boolean
-  /** Troca manual que espera a próxima batida com "Trocar no beat" (M23). */
+  /** Troca manual que espera a próxima batida com "Trocas manuais no beat" (M23). */
   request(key: WaitKey): void
   /** Refaz a captura passo a passo (spec 012); `true` se funcionou. */
   retryCapture(): Promise<boolean>
@@ -227,6 +227,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   const { settings, current, held } = core.state
   const rotOn = settings.rotation.enabled
   const onBeat = settings.rotation.onBeat
+  // O ponto de beat aparece com qualquer uma das duas opções de beat (spec 043).
+  const anyBeat = onBeat || settings.rotation.manualOnBeat
   const fav = core.isFavorite(current)
   const fullscreen = bridge.isFullScreen()
 
@@ -398,7 +400,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
             <Icon name={held ? 'lock' : 'repeat'} />
             <span>{t(held ? 'strip.held' : 'strip.rotation')}</span>
             <span class="num" ref={time} hidden={held} />
-            {onBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label={t('strip.beatLocked')} title={t('strip.beatLocked')} />}
+            {anyBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label={t('strip.beatLocked')} title={t('strip.beatLocked')} />}
           </button>
         </div>
         <div class="tail">

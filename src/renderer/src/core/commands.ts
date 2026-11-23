@@ -202,6 +202,8 @@ export class Core {
       if (lead !== undefined) rot.beatLeadMs = Math.round(lead / 10) * 10
       const onBeat = optBool(a.onBeat, 'onBeat')
       if (onBeat !== undefined) rot.onBeat = onBeat
+      const manualOnBeat = optBool(a.manualOnBeat, 'manualOnBeat')
+      if (manualOnBeat !== undefined) rot.manualOnBeat = manualOnBeat
       if (a.bars !== undefined) {
         if (!BEAT_BARS.includes(a.bars as BeatBars)) fail(`bars: ${BEAT_BARS.join(', ')}`)
         rot.bars = a.bars as BeatBars
