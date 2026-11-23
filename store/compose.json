@@ -1,0 +1,26 @@
+{
+  "nota": "Caminhos relativos a store/. crop = [x, y, largura] em px da janela de 1920×1080 (recorte 16:9 da captura, só ampliado).",
+  "cover": "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-peak-2.png",
+  "bg": "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-calm-1.png",
+  "reactivity": {
+    "name": "flexi - swing out on the spiral",
+    "frames": [
+      "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-calm-1.png",
+      "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-peak-3.png",
+      "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-peak-1.png"
+    ]
+  },
+  "variety": [],
+  "byLang": {
+    "en": {
+      "library": { "file": "raw/3840x2160/screens/en/biblioteca.png", "crop": [0, 0, 1100] },
+      "studio": { "file": "raw/3840x2160/screens/en/estudio.png", "crop": [0, 0, 1920] },
+      "audio": { "file": "raw/3840x2160/screens/en/ajustes-rapidos.png", "crop": [820, 0, 1100] }
+    },
+    "pt-BR": {
+      "library": { "file": "raw/3840x2160/screens/pt-BR/biblioteca.png", "crop": [0, 0, 1100] },
+      "studio": { "file": "raw/3840x2160/screens/pt-BR/estudio.png", "crop": [0, 0, 1920] },
+      "audio": { "file": "raw/3840x2160/screens/pt-BR/ajustes-rapidos.png", "crop": [820, 0, 1100] }
+    }
+  }
+}

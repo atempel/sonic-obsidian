@@ -42,3 +42,7 @@ site/assets/audio/
 # Testes headless (spec 025)
 test-results/
 perf.json
+
+# Microsoft Store (store/README.md): capturas cruas e HTML intermediário, pesados e refeitos pelo script
+store/raw/
+store/.build/

@@ -1,0 +1,18 @@
+{
+  "en": {
+    "01-cover": { "title": "The music you play, turned into light.", "sub": "MilkDrop visualizer for Windows" },
+    "02-reactivity": { "title": "Moves with every beat.", "sub": "The same preset, a few seconds apart.", "labels": ["Quiet part", "On the beat", "Full drop"] },
+    "03-library": { "title": "Hundreds of presets. Find yours fast." },
+    "04-studio": { "title": "Edit any preset with a live preview." },
+    "05-audio": { "title": "Play your music. The visuals follow." },
+    "06-variety": { "title": "Twenty years of MilkDrop art, credited by name." }
+  },
+  "pt-BR": {
+    "01-cover": { "title": "A música que você toca, virando luz.", "sub": "Visualizador MilkDrop para Windows" },
+    "02-reactivity": { "title": "Se move a cada batida.", "sub": "O mesmo preset, com poucos segundos de diferença.", "labels": ["Parte calma", "Na batida", "No drop"] },
+    "03-library": { "title": "Centenas de presets. Ache o seu rápido." },
+    "04-studio": { "title": "Edite qualquer preset com prévia ao vivo." },
+    "05-audio": { "title": "Toque sua música. O visual acompanha." },
+    "06-variety": { "title": "Vinte anos de arte MilkDrop, com o crédito de cada autor." }
+  }
+}
