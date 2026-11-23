@@ -749,3 +749,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** o spike (`spike/040/`) mostrou que o gancho é o mesmo da Expressividade, que o motor corta as zonas em 320 Hz e 2,8 kHz e ignora tudo acima de 11 kHz, e que o `freqArray` dele (raias de 43 Hz, `equalize` quase zero no grave) não separa 20/31,5/50 Hz. Com a razão, a curva plana deixa o motor intacto por construção, as médias do motor e a Memória continuam valendo (como o design descreve) e o tempo da batida segue o do motor. Custo medido: 0,05 ms por quadro (0,28 ms com a CPU 6× mais lenta).
 - **Descartado:** trocar o `imm` depois do motor (as médias do motor ficariam sem a curva e a Memória Curta não desfaria uma zona inteira); usar só o `freqArray` do motor (três bandas mortas e outras duas acima de 11 kHz); FFT 8192 (janela de ~180 ms borra o bumbo; o dobro do custo); FFT 2048 (20 e 31,5 Hz nas mesmas raias).
 - **Milestone:** v0.12.0, com a #109, a #110 e a #111.
+
+## 2026-11-23 — Teste do "Medir atraso da captura" aceita um clique perdido (rodada, `agent-decided`, #178)
+- **Decisão:** o `032-medir-captura` 7f passa a exigir dois dos três cliques achados (o `CLICK.MIN_FOUND` do app) com variação < 20 ms entre eles, em vez dos três. O `036-preset-preto` 2 trata `CI=true` como runner lento, como o comentário do teste já dizia. Spec 041.
+- **Por quê:** no runner do CI o desenho prende o thread da página por mais que o buffer de 0,68 s do analyser e um clique vira silêncio; o app foi feito para tolerar isso, e a spec 032 pede três medições estáveis, não três cliques.
+- **Descartado:** `retries` (escondem regressão); gravar o clique num `AudioWorklet` (mudança de app para um caso que só existe abaixo de ~2 fps).
