@@ -117,6 +117,8 @@ export interface Settings {
     collectionId: string | null
     /** Trocar no beat (spec 024): conta compassos em vez de segundos quando há batida estável. */
     onBeat: boolean
+    /** Trocas manuais esperam a próxima batida (M23), separado da rotação (spec 043). */
+    manualOnBeat: boolean
     bars: BeatBars
     /** Quanto adiantar a batida mostrada (ms): compensa captura e desenho (spec 024). */
     beatLeadMs: number
@@ -177,7 +179,7 @@ export function defaultSettings(): Settings {
     gainDefaultDb: 0,
     autoGain: false,
     visualDelayMs: 0,
-    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
+    rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, manualOnBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
     expression: { ...EXPRESSION_DEFAULT },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
@@ -286,6 +288,7 @@ export function sanitizeSettings(raw: unknown): Settings {
       order: oneOf(rot.order, ['random', 'collection'], d.rotation.order),
       collectionId: typeof rot.collectionId === 'string' ? rot.collectionId : null,
       onBeat: bool(rot.onBeat, d.rotation.onBeat),
+      manualOnBeat: bool(rot.manualOnBeat, d.rotation.manualOnBeat),
       bars: BEAT_BARS.includes(rot.bars as BeatBars) ? (rot.bars as BeatBars) : rot.bars === 32 ? 16 : d.rotation.bars,
       beatLeadMs: Math.round(num(rot.beatLeadMs, 0, BEAT_LEAD_MAX_MS, d.rotation.beatLeadMs) / 10) * 10
     },
