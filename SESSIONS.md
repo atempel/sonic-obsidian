@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #175
+**Fez:** Passos 0–1 sem trabalho (nenhuma `in-progress`; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: mergeou o PR #175 (spec 039, Modo Simples, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 039 livre).
+**Deixou em:** `main` com a spec 039; #111 `ready` + `agent-decided` no v0.12.0 (com #109 e #110). Com dois blocos esperando teste só `bug` entra; próxima rodada: planejar a `backlog` seguinte (#112, curva por frequência). Sem código novo.
+
 ### 2026-11-23 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/039-modo-simples`
 **Fez:** Passos 0–4 sem trabalho (nenhuma `in-progress`; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e não há `bug` `ready`). Passo 5: #111 (a `backlog` mais antiga) reivindicada e planejada: spec 039 (Modo Simples: `uiMode` em `settings.json`, padrão Completo; faixa curta, Ajustes rápidos com Ganho/Rotação/Texto + "Todos os ajustes…", Biblioteca com Favoritos/Todos/Coleções, `?` com 10 atalhos + "Ver todos"; Configurações › Geral › Interface no lugar de "Abrir em"; "Modo simples"/"Modo completo" na busca). Design checado: artefato em `1794680346-fb12`, espelho em `598c` (#124), `v3-modos.md` e a página Modos idênticos. Sem pergunta para o usuário; detalhes abertos em DECISIONS 2026-11-23 (`agent-decided`).
 **Deixou em:** PR desta branch; #111 `ready` + `agent-decided` no v0.12.0 (com a #109 e a #110). Próxima rodada: mergear este PR; enquanto os blocos v0.9.0/v0.10.0 não forem testados, planejar a `backlog` seguinte (#112, curva por frequência).
