@@ -1,0 +1,65 @@
+name: ci
+
+# Typecheck + testes headless (barato, Ubuntu). Roda em todo PR e sempre reporta o check `typecheck`,
+# para ele poder ser obrigatório no `main` e o auto-merge do GitHub esperar por ele (DECISIONS 2026-11-23):
+# PR só de docs pula o job, e job pulado conta como aprovado. Sem `labeled`: a label `build-windows`
+# não gera outro `typecheck` (pulado) no mesmo commit.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -z "$BASE" ]; then echo "app=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # Na dúvida, roda: se o diff falhar, o job não pode ser pulado (pulado = aprovado).
+          files=$(git diff --name-only "$BASE"...HEAD) || { echo "app=true" >> "$GITHUB_OUTPUT"; exit 0; }
+          echo "$files"
+          # O mesmo filtro do antigo paths-ignore: site/, docs/, queue/ e qualquer .md.
+          app=$(echo "$files" | grep -vE '^(site|docs|queue)/|\.md$' | grep -q . && echo true || echo false)
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+
+  typecheck:
+    # PR só de docs, `queue/`, `site/` ou markdown: o job é pulado (conta como aprovado no check obrigatório).
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: ubuntu-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run build
+      # Testes headless (spec 025). Sem devDependency por enquanto: Playwright entra só no CI, com --no-save.
+      - run: npx -y playwright@1.63.0 install --with-deps chromium
+      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0
+      - run: npm run test:ui
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ github.sha }}
+          path: test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+

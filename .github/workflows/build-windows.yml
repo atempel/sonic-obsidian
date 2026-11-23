@@ -1,8 +1,9 @@
 name: build-windows
 
 on:
-  # Typecheck + testes headless em todo PR que mexe no app (barato, Ubuntu).
-  # Build Windows só sob demanda (DECISIONS 2026-11-13): label `build-windows` no PR ou disparo manual.
+  # Só o build Windows, sob demanda (DECISIONS 2026-11-13): label `build-windows` no PR ou disparo manual.
+  # O typecheck e os testes headless ficam no `ci.yml`, que a label não dispara: assim pôr a label não
+  # cria um `typecheck` "pulado" no mesmo commit (check obrigatório pulado conta como aprovado).
   # O teste do usuário é por release, e o `release.yml` builda o Windows dela.
   # Sem `push` no main: o PR já foi checado antes do merge e a release checa de novo.
   pull_request:
@@ -11,38 +12,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # Pôr uma label não cancela o typecheck que está rodando para o mesmo commit.
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event.action == 'labeled' && 'label' || 'code' }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Pôr outra label (bug, ready…) não cancela um build que já está rodando; um push novo cancela.
+  cancel-in-progress: ${{ github.event.action != 'labeled' }}
 
 jobs:
-  typecheck:
-    # Label nova não é código novo: não repete o typecheck.
-    if: github.event.action != 'labeled'
-    runs-on: ubuntu-latest
-    env:
-      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run typecheck
-      - run: npm run build
-      # Testes headless (spec 025). Sem devDependency por enquanto: Playwright entra só no CI, com --no-save.
-      - run: npx -y playwright@1.63.0 install --with-deps chromium
-      - run: npm install --no-save --no-audit --no-fund playwright@1.63.0
-      - run: npm run test:ui
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-results-${{ github.sha }}
-          path: test-results/
-          retention-days: 7
-          if-no-files-found: ignore
-
   build-windows:
     # Só com a label `build-windows` (ao pôr a label, ou em push num PR que já a tem) ou disparo manual.
     if: >-
