@@ -209,7 +209,7 @@ async function start(): Promise<void> {
     }),
     () => beat.locked
   )
-  // Troca manual no beat (M23): vale o último pedido; sai na próxima batida ou na hora sem batida.
+  // Troca manual no beat (M23, "Trocas manuais no beat", spec 043): vale o último pedido; sai na próxima batida ou na hora sem batida.
   let pending: { key: WaitKey; go: () => void; since: number } | null = null
   const setPending = (p: typeof pending): void => {
     pending = p
@@ -224,7 +224,7 @@ async function start(): Promise<void> {
   const WAIT_CMD: Record<WaitKey, string> = { next: 'preset.next', previous: 'preset.previous', random: 'preset.random' }
   const request = (key: WaitKey, cut = false, origin: Origin = 'keyboard'): void => {
     const go = (): void => void run(WAIT_CMD[key], { cut }, origin)
-    if (!settings.rotation.onBeat || !beat.locked) {
+    if (!settings.rotation.manualOnBeat || !beat.locked) {
       if (pending) setPending(null)
       go()
       return
@@ -391,7 +391,7 @@ async function start(): Promise<void> {
       rotationKey = key
       rotation.restart(performance.now())
     }
-    if (!r.onBeat) flushPending()
+    if (!r.manualOnBeat) flushPending()
     state.gainDb = settings.gainDb
     state.audio = state.audio.replace(/ · rest$/, '') + (core.state.breath ? ' · rest' : '')
     state.rotation = core.state.held
@@ -1012,7 +1012,7 @@ async function start(): Promise<void> {
     // Shift na troca = corte seco na hora, sem mudar o ajuste salvo (spec 013).
     const cut = e.shiftKey
     // Atalhos v3 (docs/design/v3-modelo-de-navegacao.md), agora como comandos do Core.
-    // Com "Trocar no beat", as trocas esperam a próxima batida (M23), Shift incluído.
+    // Com "Trocas manuais no beat", as trocas esperam a próxima batida (M23), Shift incluído.
     if (e.code === 'ArrowRight') {
       request('next', cut)
     } else if (e.code === 'ArrowLeft') {

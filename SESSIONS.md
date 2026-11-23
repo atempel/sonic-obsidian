@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `feat/manual-on-beat`
+**Fez:** #183 + spec 043: "Trocas manuais no beat" (`rotation.manualOnBeat`, padrão desligado) separado de "Trocar no beat", que passa a valer só para a rotação automática. Switch nos Ajustes rápidos e linha em Configurações › Visual › Transição (en/pt-BR); ponto de beat e "Adiantar o visual" com qualquer um dos dois. Teste novo `043-beat-manual` (13/13); `024-beat` (38/38, agora com as duas ligadas), 030, 011 e 020 passando. Divergência registrada em DIVERGENCIAS (2026-11-23).
+**Deixou em:** PR desta branch (`Closes #183`). Não verificado: atraso com música real no Windows (teste do bloco v0.11.0).
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `ci/auto-merge`
 **Fez:** Preparou o auto-merge: `ci.yml` novo com o job `typecheck` sempre reportado (pulado em PR só de docs/queue/site/md, por diff dentro do job), `build-windows.yml` só com o build Windows (cancelamento só em push, não em label), skill `rodada` liga o auto-merge ao abrir PR para o `main` (ferramenta MCP, sem REST), AGENTS e DECISIONS.
 **Deixou em:** PR desta branch. Falta o usuário ligar "Allow auto-merge" e exigir o `typecheck` no `main`; depois, testar ligando o auto-merge num PR. PRs já abertos (#182, #184) só ganham o `ci.yml` depois de um push novo.

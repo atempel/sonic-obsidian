@@ -16,7 +16,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   const b = await H.launch()
   const page = await b.newPage({ viewport: { width: 1280, height: 800 } }); R.attach(page)
   const errs = []; page.on('pageerror', e => errs.push(String(e))); page.on('console', m => { if (m.type() === 'error') errs.push(m.text()) })
-  await H.mockSo(page, { saveSettings: true, library: LIGHT_LIB, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, bars: 4, order: 'collection', collectionId: 'leves' }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
+  await H.mockSo(page, { saveSettings: true, library: LIGHT_LIB, settings: { welcomeSeen: true, rotation: { enabled: true, intervalSeconds: 30, onBeat: true, manualOnBeat: true, bars: 4, order: 'collection', collectionId: 'leves' }, render: { meshWidth: 32, meshHeight: 24, pixelRatio: 1, textureRatio: 0.5, fxaa: false, canvasScale: 0.5, extraImages: false } } })
   await H.mockAudio(page, { bpm: BPM })
   // Trocas de preset com o tempo (performance.now) em que aconteceram.
   await page.addInitScript(() => {
@@ -56,7 +56,7 @@ const BPM = 124, BEAT_S = 60 / BPM
   const gaps = ch.slice(1).map((c, i) => (c.at - ch[i].at) / 1000)
   ok('1c trocas a cada 4 compassos (16 × 60/124 ≈ 7,74 s)', gaps.length >= 1 && gaps.every(g => Math.abs(g - 16 * BEAT_S) < 0.5), JSON.stringify({ n: ch.length, gaps: gaps.map(g => g.toFixed(2)) }))
 
-  // 4. Troca manual espera a batida, botão tracejado.
+  // 4. Troca manual espera a batida, botão tracejado ("Trocas manuais no beat" ligado, spec 043).
   await page.mouse.move(640, 400)
   const before = await page.$eval('.now-title', e => e.getAttribute('title'))
   const r4 = await page.evaluate(() => new Promise((res) => {
