@@ -18,6 +18,11 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 Protótipo: o grupo Atualizações (spec 029) tem a versão instalada, a chave "Buscar atualizações automaticamente", "Verificar agora" e a última verificação; não existe a versão da Store.
 Código: na versão da Microsoft Store (pacote MSIX) a Store atualiza o app, então o grupo mostra só a linha da versão instalada (com "O que mudou") e, embaixo, no estilo da linha da última verificação, "As atualizações vêm da Microsoft Store." (en "Updates come from the Microsoft Store."). A busca rápida não oferece "Verificar atualizações" nessa versão. Pedido à sessão de design: desenhar a variante da Store desse grupo (e, quando houver, o botão "Get it from Microsoft" na landing).
 PR/spec: #188 · docs/specs/044-microsoft-store-msix.md
+
+### 2026-11-23 — Trocas manuais no beat separadas (spec 043), páginas Palco integrado e Configurações (versão `1794680346-fb12`)
+Protótipo: um switch só, "Trocar no beat", faz a rotação automática trocar na batida **e** faz `Espaço`/setas esperarem a batida (M23, `v3-microinteracoes.md`; `#beatSwitch` nos Ajustes rápidos, linha `beat` em Configurações › Visual › Rotação).
+Código: dois switches independentes (pedido do usuário: o detector às vezes atrasa e a troca manual atrasa junto). "Trocar no beat" = só a rotação automática; **"Trocas manuais no beat"** (en "Manual switches on beat", padrão desligado) = a espera do M23. Ajustes rápidos: o switch novo logo abaixo de "Trocar no beat" (e da nota dele). Configurações › Visual › Transição: linha nova abaixo de "Trocar no beat", com a ajuda "Próximo, anterior e aleatório esperam a próxima batida. Sem batida estável, trocam na hora."; a ajuda de "Trocar no beat" virou "A rotação automática troca de preset numa batida forte.". O ponto de beat da faixa aparece com qualquer um dos dois ligado. Pedido à sessão de design: desenhar o par de switches (ou um segmentado "Trocar no beat: Rotação · Manual · As duas") e atualizar o M23.
+PR/spec: #183 · docs/specs/043-trocas-manuais-no-beat.md
 Status: Aberta (aguarda a sessão de design).
 
 ### 2026-11-08 — Atalhos e Ajustes rápidos · expressividade

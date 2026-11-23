@@ -457,8 +457,11 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         <Row id="st-beat" label={t('quick.onBeat')} help={t('settings.visual.onBeatHelp')} kw="bpm compasso batida segurar beat bar hold">
           <Sw id="st-beat" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
         </Row>
+        <Row id="st-mbeat" label={t('quick.manualOnBeat')} help={t('settings.visual.manualOnBeatHelp')} kw="bpm batida beat manual próximo anterior aleatório espaço setas">
+          <Sw id="st-mbeat" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
+        </Row>
         <Row id="st-lead" label={t('settings.visual.lead')} help={t('settings.visual.leadHelp')} kw="latência latency atraso delay">
-          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${fmtNum(rot.beatLeadMs)} ms`} disabled={!rot.onBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
+          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${fmtNum(rot.beatLeadMs)} ms`} disabled={!rot.onBeat && !rot.manualOnBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
         </Row>
         <Row id="st-bars" label={t('settings.visual.bars')} help={t('settings.visual.barsHelp')} kw="compassos bars">
           <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
