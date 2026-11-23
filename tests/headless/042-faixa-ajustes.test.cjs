@@ -49,6 +49,8 @@ const center = (page, sel) => page.evaluate((s) => {
     await page.mouse.move(640, 300)
     await H.click(page, '.strip [data-sheet-btn]')
     ok('3a o botão abre os Ajustes', await H.poll(page, () => document.body.classList.contains('sheet-open'), { timeout: 10000 }))
+    // O painel entra deslizando (250 ms, bem mais no runner lento): clicar antes de ele parar acerta o visual.
+    ok('3a2 painel parado no lugar', await H.poll(page, () => getComputedStyle(document.querySelector('.sheet')).transform === 'none', { timeout: 10000 }))
     const head = await center(page, '.sheet header h2')
     await page.mouse.click(head.x, head.y)
     ok('3b clique dentro do painel não fecha', await quickOpen(page))
