@@ -1,6 +1,6 @@
 # 042 — Faixa presa sob o mouse e Ajustes rápidos fechando com clique fora
 
-**Fase:** Manutenção (interface) · **Status:** implementada · **Issue:** [#181](https://github.com/atempel/sonic-obsidian/issues/181) · **Design:** `Palco integrado`, versão `1794680346-fb12`
+**Fase:** Manutenção (interface) · **Status:** implementada · **Issue:** [#181](https://github.com/atempel/sonic-obsidian/issues/181) · **Design:** `Palco integrado`, versão `1794680346-fb12` (o item 1 diverge: DIVERGENCIAS 2026-11-23)
 
 ## Problema (pedido do usuário, 2026-11-23)
 1. Com o ponteiro parado em cima da faixa de controle, ela some depois de 2,5 s como se o mouse estivesse sobre o visual.

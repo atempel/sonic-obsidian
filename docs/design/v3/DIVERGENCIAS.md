@@ -14,6 +14,12 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-23 — Faixa presa sob o mouse e Ajustes rápidos fechando com clique fora (spec 042), página Palco integrado (versão `1794680346-fb12`)
+Protótipo: o auto-hide (`wake()`) esconde a faixa depois de 2,5 s sem mexer o mouse mesmo com o ponteiro parado em cima dela (só não esconde com foco dentro dela ou painel aberto). O clique fora fecha os Ajustes rápidos no `pointerdown`, em qualquer lugar.
+Código: (1) com o ponteiro sobre o `.strip-wrap` (faixa, plaquinha de atualização, painel de coleções) a faixa e o cursor não somem; ao sair, somem em 2,5 s; `H` continua escondendo na hora (pedido do usuário). (2) O clique fora fecha como no protótipo, mas **dentro da faixa** fecha no `click`: ao fechar, a faixa perde os 356 px reservados ao painel e se desloca, e com `pointerdown` o botão sairia de baixo do ponteiro e o clique se perderia. O painel de atalhos `?` também não fecha os Ajustes. Pedido à sessão de design: incluir o "ponteiro em cima segura a faixa" no M-catálogo/`v3-modelo-de-navegacao.md` (e no protótipo), e conferir o deslocamento da faixa ao fechar os Ajustes.
+PR/spec: #181 · docs/specs/042-faixa-hover-ajustes-fora.md
+Status: Aberta (aguarda a sessão de design).
+
 ### 2026-11-08 — Atalhos e Ajustes rápidos · expressividade
 Protótipo (`1794165177-f126`): não existe controle de expressividade. O ganho é um slider nos Ajustes rápidos, sem tecla.
 Código (spec 015): `+`/`−`/`0` mudam a **Expressividade** (−3…+3), `X` o **Caráter** (Contraste / Energia / Nervo) e `Shift+X` a **Memória** (Curta / Longa / Fixa). O ganho fica só no slider, como no protótipo. Motivo: o motor normaliza os níveis em ~4 s e o ganho só tem efeito passageiro (DECISIONS).
