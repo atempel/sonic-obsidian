@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-22 — Claude Code (nuvem, rodada do ciclo automático) — branch `docs/038-perfis-ajustes`
+**Fez:** Passos 0–4 sem trabalho (nenhuma `in-progress`; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário; nenhum PR aberto; com dois blocos em teste só `bug` entra e não há `bug` `ready`). Passo 5: #110 (a `backlog` mais antiga) reivindicada e planejada: spec 038 (Perfis de ajustes: cinco grupos, quatro perfis do app, `profiles.json`, barra fixa nos Ajustes rápidos com modificado/Desfazer/Atualizar/Salvar como novo, `Alt+1…9`, comandos na busca; P1 Configurações › Perfis com renomear, duplicar, apagar, importar/exportar `.json` e "Perfil ao abrir"). Design checado: artefato em `1794680346-fb12`, espelho em `598c` (#124), `v3-perfis.md` idêntico. Sem pergunta para o usuário; detalhes abertos decididos (Padrão = padrões do app, não Crossfade; Rotação sem ordem/coleção; curva por frequência só com a #112) em DECISIONS 2026-11-22 (`agent-decided`).
+**Deixou em:** PR desta branch; #110 `ready` + `agent-decided` no v0.12.0 (com a #109). Próxima rodada: mergear este PR; enquanto os blocos v0.9.0/v0.10.0 não forem testados, planejar a `backlog` seguinte (#111, Modo Simples).
+
 ### 2026-11-22 — Claude Code (nuvem, rodada do ciclo automático) — merge do PR #171
 **Fez:** Passo 0 sem trabalho (nenhuma `in-progress`). Passo 1 sem trabalho (blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: PR #171 (spec 037, só docs, sem checks, autor `atempel`, branch do repo, sem pedido de mudança, número 037 livre) mergeado em squash. Esta entrada vai num PR próprio porque o merge saiu antes de ela entrar na branch do #171.
 **Deixou em:** #109 `ready` no v0.12.0 com a spec 037 no `main`. Próxima rodada: com os blocos v0.9.0/v0.10.0 ainda sem teste só `bug` se implementa, então planejar a `backlog` seguinte (#110, perfis de ajustes). Não verificado nesta rodada: só merge, sem código novo.
