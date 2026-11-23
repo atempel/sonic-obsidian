@@ -737,3 +737,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** o Padrão tem de ser "o motor como sempre" (intenção do design), e o app nunca teve Crossfade como padrão; ordem/coleção e calibração dependem do conteúdo e do equipamento, não do clima. Tudo reversível (valores e campos de um JSON novo).
 - **Descartado:** mudar o padrão do app para Crossfade (mexeria em quem não usa perfis); guardar a coleção no perfil (perfil por coleção é o P2 do design, no sentido inverso).
 - **Milestone:** v0.12.0, com a #109.
+
+## 2026-11-23 — Modo Simples: detalhes que o design deixa abertos (rodada, `agent-decided`, #111)
+- **Decisão:** spec 039, seguindo `v3-modos.md` (decidido pelo usuário em 10/11/2026) e a página Modos. Detalhes decididos pela rodada: os **10 atalhos essenciais** do `?` (Espaço, ←, →, R, Enter, H, L, / ou Ctrl+K, `,`, F ou F11) mais "Ver todos"; **"Todos os ajustes…"** mostra as seções escondidas no próprio painel (a engrenagem do cabeçalho, spec 037, já abre as Configurações); nos Ajustes, Sinal só com o Ganho e Rotação sem "Trocar no beat", Texto inteira; na Biblioteca saem também Recentes, os filtros Importados/Meus e "Novo preset"; a aba da borda continua (caminho do mouse até a Biblioteca); "Modo simples"/"Modo completo" na busca mostram só o que não está ativo; toast na troca; a linha "Abrir em" dá lugar a "Interface" (Rack desabilitado, Fase 5).
+- **Por quê:** tudo reversível e de densidade, sem mudar o que o app faz; o design define o princípio e as listas por superfície, não os itens exatos.
+- **Descartado:** a pergunta "Como você vai usar?" no cartão de boas-vindas agora (com o Rack ainda na Fase 5 só haveria duas opções; entra com o Rack); um link "Todos os ajustes…" que só abrisse as Configurações (repetiria a engrenagem).
+- **Milestone:** v0.12.0, com a #109 e a #110.
