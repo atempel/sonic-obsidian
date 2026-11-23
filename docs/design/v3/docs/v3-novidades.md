@@ -4,6 +4,9 @@
 
 | Data | O que | Status | Onde |
 | --- | --- | --- | --- |
+| 14/11 | Página "Estúdio" agora é o P0 (camada sobre o Palco). A versão anterior, com todas as abas, virou "Estúdio completo (027)": referência de conteúdo da 027, mas com o layout de página já substituído | Referência | páginas Estúdio e Estúdio completo (027) |
+| 14/11 | Respostas às divergências da 024 (segurar, ponto de beat, compassos, Respiro com ícone `wind` em `text-2`, Adiantar o visual em Captura) e da 026 (Estúdio como camada, só a aba Código, nome do autor, Biblioteca "Meus") | Aprovado (desenho acompanha o app) | `v3-respostas-divergencias.md` › Rodada de 14/11 · Palco integrado, Configurações, Estúdio |
+| 13/11 | Idiomas: inglês como fonte e pt-BR como tradução completa; o app segue o Windows na primeira abertura e troca na hora em Configurações › Geral; catálogos tipados, sem dependência nova; o log fica em inglês | Aprovado | `v3-idiomas.md` · Configurações › Geral, prova PT/EN no Palco integrado |
 | 13/11 | Atualização automática: aviso persistente acima da faixa à esquerda, variante portátil, "Atualizando…", Sobre › Atualizações, comando na busca | Aprovado (spec 029) | `v3-modelo-de-navegacao.md` › Atualização automática · Palco integrado, Configurações |
 | 13/11 | Sinal e Expressividade (028): Normalizar áudio confirmado; "auto +N dB" em ciano; o padrão é marcado por um ponto, não por "· padrão" no rótulo; Memória em 4 (Viva em teste) | Aprovado, com correções | `v3-modelo-de-navegacao.md` › Sinal e Expressividade |
 | 10/11 | Perfis de ajustes (salvar e aplicar combinações de Expressividade, Transições, Rotação…), com `Alt+1`…`Alt+9` | Aprovado | `v3-perfis.md` · Palco integrado › Ajustes rápidos, Configurações › Perfis |
