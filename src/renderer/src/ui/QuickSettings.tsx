@@ -245,6 +245,34 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
     // Abrir leva o foco ao painel (Tab percorre os controles); fechar o devolve ao visual (Overlay).
     if (open) ref.current?.focus({ preventScroll: true })
   }, [open])
+  // Clique fora fecha (protótipo "Palco integrado", versão 1794680346-fb12; spec 042). Ficam de
+  // fora o botão da faixa (ele mesmo alterna), o menu e o diálogo de Feedback abertos daqui e o
+  // painel de atalhos. O clique segue para o alvo: um botão da faixa fecha os Ajustes e faz o seu.
+  // Na faixa, fecha no `click`, não no `pointerdown`: fechar desloca a faixa (ela abre espaço para
+  // o painel) e o botão sairia de baixo do ponteiro antes de soltar, perdendo o clique.
+  useEffect(() => {
+    if (!open) return
+    const outside = (e: Event): boolean => {
+      const el = e.target as Element | null
+      return !!el?.closest && !el.closest('.sheet, [data-sheet-btn], .fb-menu, .fb-dialog, .scrim.fb, .kpanel, .scrim.k')
+    }
+    const inStrip = (e: Event): boolean => !!(e.target as Element | null)?.closest?.('.strip-wrap')
+    const close = (): void => {
+      if (core.state.overlay === 'quick') void core.run('ui.close', {}, 'ui')
+    }
+    const onDown = (e: PointerEvent): void => {
+      if (outside(e) && !inStrip(e)) close()
+    }
+    const onClick = (e: MouseEvent): void => {
+      if (outside(e) && inStrip(e)) close()
+    }
+    document.addEventListener('pointerdown', onDown, true)
+    document.addEventListener('click', onClick, true)
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true)
+      document.removeEventListener('click', onClick, true)
+    }
+  }, [open])
   const { settings } = core.state
   const run = (name: string, args: Record<string, unknown>): void => void core.run(name, args, 'ui')
   const rot = settings.rotation

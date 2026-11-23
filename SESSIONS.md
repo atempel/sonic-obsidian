@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/181-faixa-hover-ajustes-fora`
+**Fez:** Conferiu que nenhuma issue, spec ou stub cobria os dois pedidos e criou a #181 (`bug`, v0.11.0) com a spec 042: a faixa não some com o ponteiro parado em cima (`.strip-wrap:hover` no bloqueio do auto-hide, `Overlay.tsx`) e os Ajustes rápidos fecham com clique fora (`QuickSettings.tsx`; no `pointerdown` fora da faixa, no `click` dentro dela, porque a faixa se desloca ao fechar). Teste novo `042-faixa-ajustes` (14/14, também com `SO_CPU_THROTTLE=6`); 010, 011, 020, 023, 029, 030, 031 e 142 seguem passando.
+**Deixou em:** PR desta branch (`Closes #181`). Não verificado: mouse de verdade no Windows (vai para o teste do bloco v0.11.0). O PR #180 (sincronização do design fb12) continua aberto esperando merge.
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `feat/manual-on-beat`
 **Fez:** #183 + spec 043: "Trocas manuais no beat" (`rotation.manualOnBeat`, padrão desligado) separado de "Trocar no beat", que passa a valer só para a rotação automática. Switch nos Ajustes rápidos e linha em Configurações › Visual › Transição (en/pt-BR); ponto de beat e "Adiantar o visual" com qualquer um dos dois. Teste novo `043-beat-manual` (13/13); `024-beat` (38/38, agora com as duas ligadas), 030, 011 e 020 passando. Divergência registrada em DIVERGENCIAS (2026-11-23).
 **Deixou em:** PR desta branch (`Closes #183`). Não verificado: atraso com música real no Windows (teste do bloco v0.11.0).
