@@ -28,3 +28,26 @@ Regra geral: o que já foi validado no Windows é o fato. O protótipo vai ao ap
 ## Fora desta rodada
 - Modos de interface (Simples · Completo · Rack): proposta em `docs/v3-modos.md`, **ainda não decidida**. Nada a implementar.
 - O design system (tokens, *App › Keyboard*, *States*) recebe os mesmos textos e teclas na próxima publicação dele.
+
+## Rodada de 14/11/2026: specs 024 (troca no beat, segurar, respiro) e 026 (Estúdio P0)
+O app já implementou as duas sem desenho, e o protótipo foi atualizado para acompanhar.
+
+### 024: troca no beat e segurar
+| Entrada | Resposta |
+| --- | --- |
+| **Segurar (`Enter`)** | **Aceita.** No botão da rotação, o ícone `repeat` vira `lock` e o texto "Rotação 0:24" vira "Segurado"; a contagem some. Toasts: "Visual segurado. Enter solta." / "Visual solto.". A faixa não muda de cor. |
+| **Ponto de beat** | **Aceito**, dentro do botão da rotação, depois da contagem: 6 px, cor `beat`, piscando no beat (`t-beat-in`/`t-beat-out`). Só aparece com "Trocar no beat" ligado e a batida estável. O Rack continua com o dele. |
+| **Compassos** | **Aceito.** Com "Trocar no beat" ligado, "Trocar a cada" lista 4 · 8 · 16 · 32 compassos, e a nota diz "Sem batida estável, troca a cada 30 s. Enter segura o visual.". Desligado, volta aos segundos. Nas Configurações › Visual › Rotação, a linha "Compassos" fica logo abaixo do switch. |
+| **M23, segundo pedido** | **Aceito:** um segundo pedido durante a espera substitui o primeiro (é mais previsível); `Esc` cancela a espera. |
+| **Respiro (`Shift+Enter`)** | **Aceito, com correção de lugar e cor.** O indicador fica ao lado do indicador do Modo limpo, na linha do título (o título encurta com reticências), com o ícone **`wind`** e "Respiro" em `text-2`, 12 px. Sem violeta, porque violeta é marca e seleção. Sem `volume-x`, que é o ícone do estado "sem som" e confundiria os dois. Toasts: "Respiro: o visual segue sem o áudio." / "Respiro desligado.". |
+| **Adiantar o visual** | **Aceito.** Fica em Configurações › Captura (é sobre o tempo do áudio, não sobre o visual): slider de 0 a 200 ms, padrão 70, valor em mono. Ajuda: "Compensa o atraso entre o som e a imagem. Aumente se o visual parecer atrasado." Ele também ajuda na latência relatada na issue #96. |
+
+### 026: Estúdio P0
+| Entrada | Resposta |
+| --- | --- |
+| **Camada em tela cheia sobre o Palco** | **Aceita** (decisão do usuário). A coluna da esquerda é transparente e emoldura o visual principal com o rótulo "Seu remix", e o editor ocupa a direita sobre `overlay`. `Esc` fecha; se houver mudança não salva, pergunta primeiro. |
+| **Só a aba Código** | **Aceita.** As abas Básico, Ondas, Formas e Shaders não aparecem no P0 (entram juntas na 027). Os shaders ficam num bloco recolhível, só de leitura, com a nota "Edição de shaders na próxima versão.". |
+| **Medidores "Áudio agora" contínuos** | **Aceitos.** Não são o medidor de nível da faixa: são leituras de `bass`, `mid` e `treb`. Barras finas contínuas em ciano, com o valor em mono ao lado. |
+| **Nome do autor no primeiro salvamento** | **Aceito.** É um balão ancorado em "Salvar na biblioteca": "Seu nome nos presets", um campo e "Salvar". Depois, o nome fica em Configurações › Geral › Meus presets. O crédito sai como "por <nome>". |
+| **Erros do motor** | **Aceitos.** A mensagem fica sob o bloco, com o ícone `circle-alert` em `warn` e "Linha 4: …". Os erros de laço seguem como estão no app. |
+| **Biblioteca** | **Aceita:** o rótulo "Meu preset", o filtro "Meus" ao lado de "Importados" e, no menu "…", "Editar uma cópia no Estúdio" (ou "Editar no Estúdio", se o preset for seu) e "Remover meu preset". |
