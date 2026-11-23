@@ -417,6 +417,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
             aria-label={t('strip.quick')}
             title={t('strip.quickTitle')}
             aria-expanded={core.state.overlay === 'quick'}
+            data-sheet-btn
             onClick={() => toggleOverlay(core, 'quick')}
           >
             <Icon name="sliders-horizontal" />
@@ -644,6 +645,8 @@ export function mountOverlay(el: HTMLElement, bridge: PalcoBridge): Idle {
   const { state } = bridge.core
   return setupIdle(
     // "Atualizando…" (spec 029): a faixa fica presa visível até a janela fechar.
-    () => state.settings.pinControls || updateState().phase === 'installing' || state.overlay !== null || isShortcutsOpen() || isFeedbackOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
+    // Ponteiro parado em cima da faixa (ou da plaquinha e do painel de coleções, no mesmo
+    // `.strip-wrap`) também a mantém: ela só some depois que o ponteiro sai (spec 042).
+    () => state.settings.pinControls || !!document.querySelector('.strip-wrap:hover') || updateState().phase === 'installing' || state.overlay !== null || isShortcutsOpen() || isFeedbackOpen() || !!document.activeElement?.closest('.strip') || !!document.querySelector('.menu.collect')
   )
 }

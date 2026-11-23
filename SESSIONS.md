@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/181-faixa-hover-ajustes-fora`
+**Fez:** Conferiu que nenhuma issue, spec ou stub cobria os dois pedidos e criou a #181 (`bug`, v0.11.0) com a spec 042: a faixa não some com o ponteiro parado em cima (`.strip-wrap:hover` no bloqueio do auto-hide, `Overlay.tsx`) e os Ajustes rápidos fecham com clique fora (`QuickSettings.tsx`; no `pointerdown` fora da faixa, no `click` dentro dela, porque a faixa se desloca ao fechar). Teste novo `042-faixa-ajustes` (14/14, também com `SO_CPU_THROTTLE=6`); 010, 011, 020, 023, 029, 030, 031 e 142 seguem passando.
+**Deixou em:** PR desta branch (`Closes #181`). Não verificado: mouse de verdade no Windows (vai para o teste do bloco v0.11.0). O PR #180 (sincronização do design fb12) continua aberto esperando merge.
+
 ### 2026-11-23 — Claude Code (nuvem, rodada do ciclo automático) — branch `test/178-intermitentes`
 **Fez:** Passos 0–1 sem trabalho (nenhuma `in-progress`; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: o PR #177 (spec 040) seguiu vermelho na terceira execução (`036-preset-preto` 2, 6,6 s). Para consertar, reivindicou a #178 e escreveu a spec 041: `036` 2 trata `CI=true` como runner lento; `032` 7f aceita um clique perdido (o `MIN_FOUND` do app; causa: o desenho prende o thread por mais que o buffer de 0,68 s); `027` 6a só ganhou diagnóstico (não reproduziu em 5 execuções com a CPU 6× mais lenta). DECISIONS 2026-11-23 (`agent-decided`).
 **Deixou em:** PR #179 mergeado (verde na primeira execução; `Refs #178`, que volta a `backlog` aberta só pelo 027 6a). Branch do #177 atualizada com o `main` (conflito em SESSIONS/DECISIONS, mantidas as duas entradas); o `typecheck` novo do #177 falhou em outro intermitente (`027-estudio-extras` 4a, anotado na #178). Próxima rodada: diagnóstico/correção do 4a (#178) e então mergear o #177. Só testes; nada do app mudou.
