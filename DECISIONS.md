@@ -744,6 +744,12 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Descartado:** a pergunta "Como você vai usar?" no cartão de boas-vindas agora (com o Rack ainda na Fase 5 só haveria duas opções; entra com o Rack); um link "Todos os ajustes…" que só abrisse as Configurações (repetiria a engrenagem).
 - **Milestone:** v0.12.0, com a #109 e a #110.
 
+## 2026-11-23 — Curva por frequência: como a curva chega ao motor (rodada, `agent-decided`, #112)
+- **Decisão:** spec 040. Um `AnalyserNode` próprio (FFT 4096) mede, por zona do motor, a razão entre a energia pesada pela curva e a energia sem peso; antes do `updateAudioLevels` original, as raias do `freqArray` do motor em cada zona são multiplicadas por essa razão. Zonas pelos cortes do motor (20–320 Hz, 320–2 800 Hz, 2 800 Hz em diante), não pelos 250 Hz/4 kHz do design; bandas acima de 11 kHz contam para o `treb` na razão. Mudar a curva não refaz a semente da Memória Fixa. `Home` zera a banda em foco. Nomes `curve16`/`curvePreset` do design.
+- **Por quê:** o spike (`spike/040/`) mostrou que o gancho é o mesmo da Expressividade, que o motor corta as zonas em 320 Hz e 2,8 kHz e ignora tudo acima de 11 kHz, e que o `freqArray` dele (raias de 43 Hz, `equalize` quase zero no grave) não separa 20/31,5/50 Hz. Com a razão, a curva plana deixa o motor intacto por construção, as médias do motor e a Memória continuam valendo (como o design descreve) e o tempo da batida segue o do motor. Custo medido: 0,05 ms por quadro (0,28 ms com a CPU 6× mais lenta).
+- **Descartado:** trocar o `imm` depois do motor (as médias do motor ficariam sem a curva e a Memória Curta não desfaria uma zona inteira); usar só o `freqArray` do motor (três bandas mortas e outras duas acima de 11 kHz); FFT 8192 (janela de ~180 ms borra o bumbo; o dobro do custo); FFT 2048 (20 e 31,5 Hz nas mesmas raias).
+- **Milestone:** v0.12.0, com a #109, a #110 e a #111.
+
 ## 2026-11-23 — Teste do "Medir atraso da captura" aceita um clique perdido (rodada, `agent-decided`, #178)
 - **Decisão:** o `032-medir-captura` 7f passa a exigir dois dos três cliques achados (o `CLICK.MIN_FOUND` do app) com variação < 20 ms entre eles, em vez dos três. O `036-preset-preto` 2 trata `CI=true` como runner lento, como o comentário do teste já dizia. Spec 041.
 - **Por quê:** no runner do CI o desenho prende o thread da página por mais que o buffer de 0,68 s do analyser e um clique vira silêncio; o app foi feito para tolerar isso, e a spec 032 pede três medições estáveis, não três cliques.

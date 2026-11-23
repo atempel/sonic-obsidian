@@ -206,3 +206,9 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 **No app:**
 - **Configurações › Captura ganhou o grupo "Sincronia"**, abaixo de "Nível", com uma linha: "Atrasar o visual" (faixa de 0 a 500 ms, passo 10, valor em `ms`) e a ajuda "Para fone Bluetooth, TV ou roteador de áudio…". O protótipo não tem a linha; entrou com os componentes que já existem (`Row` + `Rng`), como a "Adiantar o visual" da 024.
 **Status:** Aberta (aguarda a sessão de design).
+
+### 2026-11-23 — Curva por frequência (spec 040), `docs/v3-reatividade.md` e página Palco integrado (versão `1794680346-fb12`)
+**No app:**
+- **Zonas atrás do EQ nos cortes do motor:** `bass` até 320 Hz, `mid` até 2,8 kHz, `treb` daí em diante (o doc fala em 250 Hz e 4 kHz; medido no Butterchurn 3 no spike `spike/040/`). O motor ignora o que passa de 11 kHz; as barras de 12,5k e 20k Hz agem pelo `treb` (ver a spec).
+- **`Home`** com o EQ em foco volta a banda a 0 dB (o doc só define setas e duplo clique).
+**Status:** Aberta (aguarda a sessão de design).
