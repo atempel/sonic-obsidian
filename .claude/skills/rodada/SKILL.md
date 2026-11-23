@@ -34,6 +34,7 @@ Na nuvem não há GraphQL: `gh issue list`, `gh pr create` e afins **falham**. U
 - PR: `gh api -X POST …/pulls -f title=… -f head=<branch> -f base=main -f body=…`
 - checks: `gh api …/commits/<sha>/check-runs --jq '.check_runs[]|{name,status,conclusion}'`
 - merge: `gh api -X PUT …/pulls/N/merge -f merge_method=squash`
+- auto-merge (o GitHub mergeia sozinho quando o check obrigatório `typecheck` fica verde): não há REST para isso e o GraphQL não funciona aqui; usar a ferramenta MCP `enable_pr_auto_merge` do GitHub (`owner: atempel`, `repo: sonic-obsidian`, `pullNumber: N`, `mergeMethod: SQUASH`). Falhou (opção desligada no repo, permissão negada) → seguir sem ele: o passo 2 de uma rodada futura mergeia.
 - build do bloco: `gh api -X POST …/actions/workflows/build-windows.yml/dispatches -f ref=rc/vX.Y.Z`; o link do artifact sai de `…/actions/runs/<id>` (`…/actions/runs?branch=rc/vX.Y.Z&event=workflow_dispatch`)
 - release (**só depois do ok do usuário**; tags não sobem da nuvem; a sessão não pode criar nem editar releases pela API, quem cria é o workflow): `gh api -X POST …/actions/workflows/release.yml/dispatches -f ref=rc/vX.Y.Z -f 'inputs[version]=X.Y.Z' -F 'inputs[publicar]=true'` (sem `publicar` → rascunho, para quando o usuário disse que publica ele mesmo)
 - build Windows de um PR (só quando o usuário pedir um artifact daquele PR): `-X POST …/issues/<PR>/labels -f 'labels[]=build-windows'`
@@ -59,7 +60,7 @@ Antes: `git fetch` e partir do `main` atualizado. Ler `AGENTS.md` e `CONTEXT.md`
 - `needs-decision` com resposta dele → incorporar à spec (branch `docs/…`, PR), tirar a atribuição, label `ready`.
 - PR com comentário dele não respondido → tratar no próprio PR.
 
-**2. Mergear o que está verde.** PRs abertos por sessões do Claude (rodada ou manual) — autor `atempel` e branch deste repositório (`head.repo.full_name == "atempel/sonic-obsidian"`), nunca de fork —, com todos os checks `success` ou `skipped` (o build Windows só roda com a label `build-windows`; PR que o CI ignora por só mexer em docs/markdown/`site/` e não tem check nenhum conta como verde) e sem pedido de mudança do usuário:
+**2. Mergear o que está verde.** PR com auto-merge ligado não precisa de nada aqui: o GitHub mergeia quando o `typecheck` passa (vermelho → consertar, como abaixo). Os demais: PRs abertos por sessões do Claude (rodada ou manual) — autor `atempel` e branch deste repositório (`head.repo.full_name == "atempel/sonic-obsidian"`), nunca de fork —, com todos os checks `success` ou `skipped` (o build Windows só roda com a label `build-windows`; PR que o CI ignora por só mexer em docs/markdown/`site/` e não tem check nenhum conta como verde) e sem pedido de mudança do usuário:
 - só `docs/`, `queue/`, testes, `site/`, `.claude/`, `.github/` → mergear. Pergunta pequena em aberto no PR → decidir pela sugestão (`agent-decided` na issue ligada, DECISIONS.md) antes; conflito (ex.: número de spec repetido) → corrigir na branch do PR;
 - mudança no app → mergear se o PR traz a tabela de critérios preenchida (verificado / "testar no bloco") e os testes headless passam. O teste no Windows **não** acontece aqui — acontece no bloco. Check vermelho → consertar na mesma rodada ou comentar o motivo e seguir.
 
@@ -74,7 +75,7 @@ Com 2 blocos esperando teste, **não** fechar outro: seguir para os passos 5–6
 1. **Reivindicar antes de ler qualquer arquivo:** label `in-progress` (tirar `ready`) e comentar `Reivindicada por <link da sessão> em <data/hora UTC>`. Reler os comentários: se outra reivindicação chegou primeiro, devolver e escolher outra.
 2. Seguir a skill `executar-task`, com estas diferenças: não esperar o teste do usuário; o PR leva `Closes #N`, a tabela de critérios e uma seção **"Testar no bloco"** com o que só se vê no Windows (áudio, fps, visual), escrito como passos que o usuário segue sem contexto. Tarefa de interface → `sincronizar-design` (checar) antes; se o desenho não cobre o caso, `needs-design` + atribuir ao usuário + comentário do que falta, tirar `in-progress`, e voltar ao passo 4 com outra issue.
 3. Implementar só a spec. Ideia nova → issue `backlog` (não fazer agora).
-4. Ao abrir o PR, tirar `in-progress`. O merge (passo 2 de uma rodada futura, ou desta mesma se os checks ficarem verdes a tempo) fecha a issue.
+4. Ao abrir o PR, tirar `in-progress` e **ligar o auto-merge** (ver API) quando o PR é para o `main` e já pode ser mergeado pelas regras do passo 2 (não em PR para `rc/…`, que não tem check obrigatório, nem com pergunta aberta para o usuário). O merge (pelo GitHub, ou pelo passo 2 se o auto-merge não ligou) fecha a issue.
 
 **5. Planejar.** Nada `ready`: pegar a `backlog` mais antiga (ou um stub `Status: Pending` de `queue/` sem issue — criar a issue `backlog` antes) e seguir `planejar-feature`. Perguntas da spec:
 - **reversível e pequena** (valor padrão, faixa de um controle, texto, ordem de itens) → decidir pela opção recomendada, registrar em DECISIONS.md, label `agent-decided`, seguir como `ready`;
