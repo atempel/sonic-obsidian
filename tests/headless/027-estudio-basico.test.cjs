@@ -96,7 +96,7 @@ const R = H.createResults('027-estudio-basico'); const ok = R.ok
   await H.poll(page, () => document.querySelector('.studio [role=tab][aria-selected=true]')?.textContent.trim() === 'Básico', { timeout: 15000, every: 100 })
   if (gotErr) await page.click('.perr .btn')
   const focused = await H.poll(page, () => document.activeElement === document.querySelectorAll('.studio .ed-ta')[1], { timeout: 15000, every: 100 })
-  ok('6a "Ir para a linha" abre Equações e foca o bloco', gotErr && focused && (await selected()).join() === 'Equações', `erro=${gotErr} foco=${focused} aba=${await selected()}`)
+  ok('6a "Ir para a linha" abre Equações e foca o bloco', gotErr && focused && (await selected()).join() === 'Equações', `erro=${gotErr} foco=${focused} aba=${await selected()} ativo=${await page.evaluate(() => { const a = document.activeElement; return a ? `${a.tagName}.${a.className}` : '-' })}`)
 
   // 7. Fim
   await page.evaluate(() => document.activeElement?.blur())

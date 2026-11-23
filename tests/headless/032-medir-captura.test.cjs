@@ -134,7 +134,10 @@ async function mockLoopback(page) {
     const runs = ((line.match(/ms \(([^)]*) ms\)/) || [])[1] || '').split(', ').map(Number)
     ok('7d log: "[sync] measured capture <n> ms (três cliques)" com a linha sync', Number.isFinite(ms) && runs.length === 3 && / · sync · capture /.test(line), line)
     ok('7e loopback simulado de 40 ms: resultado entre 20 e 150 ms', ms >= 20 && ms <= 150, String(ms))
-    ok('7f os três cliques com variação menor que 20 ms', runs.every(Number.isFinite) && Math.max(...runs) - Math.min(...runs) < 20, JSON.stringify(runs))
+    // O app aceita um clique perdido (CLICK.MIN_FOUND = 2): com o thread da página preso pelo desenho
+    // (CI a ~5 fps), um clique às vezes não aparece (#178). Os achados continuam dentro de 20 ms.
+    const found = runs.filter(Number.isFinite)
+    ok('7f pelo menos dois dos três cliques achados, com variação menor que 20 ms', found.length >= 2 && Math.max(...found) - Math.min(...found) < 20, JSON.stringify(runs))
     ok('7g toast "Captura: <n> ms"', new RegExp(`Captura: ${Math.round(ms)} ms`).test(await toast()), await toast())
 
     // 7h. Som do sistema mudo (nada volta pela captura): o aviso.

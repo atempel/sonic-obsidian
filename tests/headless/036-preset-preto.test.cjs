@@ -61,8 +61,10 @@ const blackLogs = (page, name) => page.evaluate((n) => window.__logT.filter(([, 
     const logs = await blackLogs(page, BLACK)
     const secs = logs.length ? (logs[0][0] - t0) / 1000 : NaN
     const thumbs = await page.evaluate(() => window.__thumbs)
-    // 6 s do critério; o teto de 15 s do poll só cobre o runner do CI com a CPU 6× mais lenta.
-    ok('2 preto de verdade registra "black preset" (até 6 s; folga no CI lento)', got && logs.length === 1 && thumbs === 3 && (secs <= 6 || Number(process.env.SO_CPU_THROTTLE) > 1), `got=${got} logs=${logs.length} thumbs=${thumbs} em ${secs.toFixed(1)} s`)
+    // 6 s do critério; o teto de 15 s do poll só cobre o runner lento: o do CI (`CI=true`, onde a
+    // checagem chegou a 6,6 s — #178) ou a CPU limitada de propósito (`SO_CPU_THROTTLE`).
+    const slow = process.env.CI === 'true' || Number(process.env.SO_CPU_THROTTLE) > 1
+    ok('2 preto de verdade registra "black preset" (até 6 s; folga no CI lento)', got && logs.length === 1 && thumbs === 3 && (secs <= 6 || slow), `got=${got} logs=${logs.length} thumbs=${thumbs} em ${secs.toFixed(1)} s`)
     ok('2b sem erros na página', errs.length === 0, errs.join(' | '))
     await page.close()
   }
