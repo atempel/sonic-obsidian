@@ -194,6 +194,7 @@
   .conn .dot { margin: 0; }
   .inp { flex: 1; min-width: 0; height: 34px; padding: 0 10px; background: var(--bg-02); border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--text-1); }
   .inp:hover { border-color: var(--line-3); }
+  .inp-nome { flex: none; width: 260px; max-width: 100%; }
   .inp::placeholder { color: var(--text-3); opacity: 1; }
   .inp[aria-invalid="true"] { border-color: var(--warn); }
   .scform { width: 100%; }
@@ -327,8 +328,8 @@
 
   /* ── Estado ── */
   var S = {
-    abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
-    gain: 0, norm: false, updAuto: true, updSim: 'ok', rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, trManual: 'aleatorio', tManual: 1, trAuto: 'crossfade', tAuto: 2.7, expr: 0, carater: 'energia', memoria: 'curta', curva16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvaPreset: 'plana', beat: false, silencio: false, imported: 8,
+    idioma: 'auto', abrirEm: 'palco', winstart: false, telacheia: false, abrirPreset: 'ultimo', fav: String((D.presets.filter(function (p) { return p.fav; })[0] || D.presets[0]).id),
+    gain: 0, norm: false, updAuto: true, updSim: 'ok', rot: true, interval: 30, ordem: 'aleatoria', colecao: D.collections[0].id, trManual: 'aleatorio', tManual: 1, trAuto: 'crossfade', tAuto: 2.7, expr: 0, carater: 'energia', memoria: 'curta', curva16: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], curvaPreset: 'plana', beat: false, compassos: 8, adiantar: 70, nomeAutor: '', silencio: false, imported: 8,
     canvas: 'nativo', fpsmax: '60', mesh: '48', pixelRatio: 'auto', texRatio: '1', fxaa: true, extraImgs: false, titulo: true, nomePreset: 'sempre', avisos: 'todos', limpo: false, mcp: false, pausa: false, sc: '', clients: true, mcpTab: 'desktop', showTok: false, token: 'so_4f9c2a71e8b3d605', scopeRead: true, scopePlay: true, scopeEdit: true, scopeSee: false, scopeLib: false, fonte: 'sistema', mic: 'c920', file: '', pular: true, minfps: 30, mostrarfps: false,
     rackTop: true, rackPos: 'br', tela: '2', perfilAbrir: 'ultimo'
   };
@@ -336,6 +337,7 @@
     gain: function (v) { return v === 0 ? '0 dB' : (v > 0 ? '+' : '\u2212') + Math.abs(v) + ' dB'; },
     expr: function (v) { return v === 0 ? '0' : (v > 0 ? '+' : '\u2212') + Math.abs(v); },
     interval: function (v) { return v + ' s'; },
+    adiantar: function (v) { return v + ' ms'; },
     tAuto: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
     tManual: function (v) { return v.toFixed(1).replace('.', ',') + ' s'; },
     minfps: function (v) { return v + ' fps'; }
@@ -396,6 +398,8 @@
     memoria: { curta: 'Compara com os últimos ~4 s, como o motor.', longa: 'Compara com os últimos ~30 s: as viradas da música aparecem mais.', fixa: 'Congela a referência agora: partes altas ficam sempre mais fortes.', viva: 'Viva (em teste): compara com os últimos ~1,7 s, como o MilkDrop 2. Reage a cada batida.' }
   };
   var X_DEF = { carater: 'energia', memoria: 'curta' };
+  function idiomaHelp() { return S.idioma === 'auto' ? 'Agora: Português (Brasil), o idioma do Windows.' : 'Muda na hora, sem reiniciar.'; }
+  function paintIdioma() { var h = $('#idiomaHelp'); if (h) h.textContent = idiomaHelp(); }
   function exprHelp(k) { return (k === 'carater' && S.expr === 0) ? 'Sem efeito no nível 0.' : EXPR_HELP[k][S[k]] + (S[k] === X_DEF[k] ? ' Padrão.' : ''); }
   var collOpts = D.collections.map(function (c) { return [c.id, c.name]; });
 
@@ -420,6 +424,8 @@
     { act: 'Próximo preset', keys: ['→'] },
     { act: 'Tela cheia', keys: ['F', 'F11'] },
     { act: 'Rotação automática', keys: ['R'] },
+    { act: 'Segurar o visual', keys: ['Enter'] },
+    { act: 'Respiro', keys: ['Shift+Enter'] },
     { act: 'Esconder controles', keys: ['H'] },
     { act: 'Busca rápida', keys: ['/', 'Ctrl+K'] },
     { act: 'Biblioteca', keys: ['L'] },
@@ -428,6 +434,7 @@
     { act: 'Tipo da transição', keys: ['B', 'Shift+B'] },
     { act: 'Tempo da transição', keys: ['↑', '↓'] },
     { act: 'Troca com corte seco', keys: ['Shift+→', 'Shift+←', 'Shift+Espaço'] },
+    { act: 'Cancelar troca no beat', keys: ['Esc'], locked: true },
     { act: 'Expressividade', keys: ['+', '\u2212'] },
     { act: 'Expressividade neutra', keys: ['0'] },
     { act: 'Caráter da expressividade', keys: ['X'] },
@@ -453,13 +460,17 @@
   /* ── Seções ── */
   var SECTIONS = [
     { id: 'geral', name: 'Geral', icon: 'settings-2', desc: 'Como o Sonic Obsidian abre.', html: function () {
-      return grp('Ao iniciar',
+      return '<section class="grp" aria-label="Idioma">' +
+        row({ id: 'idioma', label: 'Idioma', help: '<span id="idiomaHelp">' + idiomaHelp() + '</span>', kw: 'idioma language english português portugues inglês ingles automático windows', ctl: sel('idioma', [['auto', 'Automático (do Windows)'], ['en', 'English'], ['pt-BR', 'Português (Brasil)']], S.idioma) }) + '</section>' +
+        grp('Ao iniciar',
         row({ id: 'abrirEm', group: 1, label: 'Abrir em', help: 'Tela mostrada quando o app inicia.', kw: 'Palco Rack', ctl: seg('abrirEm', [['palco', 'Palco'], ['rack', 'Rack']], S.abrirEm) }) +
         row({ id: 'winstart', label: 'Iniciar com o Windows', help: 'O app já abre tocando, sem nenhum clique.', ctl: sw('winstart', S.winstart) }) +
         row({ id: 'telacheia', label: 'Abrir em tela cheia', help: 'Mesmo efeito de F11 ao abrir.', ctl: sw('telacheia', S.telacheia) })) +
         grp('Preset inicial',
         row({ id: 'abrirPreset', label: 'Preset ao abrir', kw: 'Último usado Aleatório Um favorito', ctl: sel('abrirPreset', [['ultimo', 'Último usado'], ['aleatorio', 'Aleatório'], ['favorito', 'Um favorito']], S.abrirPreset) }) +
-        row({ id: 'fav', label: 'Favorito ao abrir', help: 'Usado quando o preset ao abrir é “Um favorito”.', ctl: sel('fav', favOpts, S.fav, S.abrirPreset !== 'favorito') }));
+        row({ id: 'fav', label: 'Favorito ao abrir', help: 'Usado quando o preset ao abrir é “Um favorito”.', ctl: sel('fav', favOpts, S.fav, S.abrirPreset !== 'favorito') })) +
+        grp('Meus presets',
+        row({ id: 'nomeAutor', label: 'Seu nome nos presets', help: 'Aparece como “por &lt;nome&gt;” nos presets que você cria.', kw: 'autor crédito nome estúdio meus presets', ctl: '<input class="inp inp-nome" type="text" id="nomeAutor" data-k="nomeAutor" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Como você quer ser creditado" value="' + esc(S.nomeAutor) + '">' }));
     } },
     { id: 'captura', name: 'Captura', icon: 'audio-lines', desc: 'De onde vem o som que o visual escuta.', html: function () {
       var srcOpts = [['sistema', 'Áudio do sistema (recomendado)'], ['mic', 'Microfone'], ['arquivo', 'Arquivo de áudio'], ['soundcloud', 'SoundCloud']].map(function (o) {
@@ -480,7 +491,8 @@
           row({ id: 'scConn', group: 1, label: 'Conexão com a API', help: 'Credenciais de app (OAuth 2.1, client credentials).', kw: 'soundcloud api credenciais', ctl: '<span class="conn"><span class="dot" aria-hidden="true"></span>Credenciais do app configuradas</span>' }) +
           '<p class="note" data-search="soundcloud limite diário 15 mil reproduções preview 30 s"><i data-lucide="info" class="ico" style="color:var(--text-3)"></i><span>A API limita cada app a <span class="num">15 mil</span> reproduções por dia. Faixas com acesso preview tocam só <span class="num">30 s</span>.</span></p>') +
         grp('Entrada',
-          row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) })) +
+          row({ id: 'device', label: 'Dispositivo de captura', help: 'Por enquanto o app ouve sempre a saída padrão do Windows.', phase: 1, ctl: sel('device', [['padrao', 'Saída padrão do Windows']], 'padrao', true) }) +
+          row({ id: 'adiantar', label: 'Adiantar o visual', help: 'Compensa o atraso entre o som e a imagem. Aumente se o visual parecer atrasado.', kw: 'latência atraso sincronia ms milissegundos adiantar', ctl: rng('adiantar', 0, 200, 10, S.adiantar) })) +
         grp('Nível',
           row({ id: 'norm', label: 'Normalizar áudio<span class="num auto" id="normAuto" hidden>auto +5 dB</span>', help: 'Desligado por padrão.', kw: 'normalizar volume automático igualar faixas ganho auto', ctl: sw('norm', S.norm) }) +
           row({ id: 'gain', label: 'Ganho padrão', help: '0 dB é o sinal como chega. Aplicado ao abrir; durante a música, use os Ajustes rápidos.', kw: 'dB decibel ajuste fino', ctl: rng('gain', -12, 12, 1, S.gain) }) +
@@ -490,6 +502,8 @@
       return grp('Rotação',
         row({ id: 'rot', label: 'Rotação automática', help: 'Troca de preset sozinha enquanto toca.', kw: 'R', ctl: sw('rot', S.rot) }) +
         row({ id: 'interval', label: 'Intervalo', help: 'Tempo até o próximo preset.', ctl: rng('interval', 5, 120, 5, S.interval) }) +
+        row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', kw: 'batida compasso', ctl: sw('beat', S.beat) }) +
+        row({ id: 'compassos', group: 1, label: 'Compassos', help: 'Quantos compassos entre uma troca e outra. Sem batida estável, vale o intervalo em segundos.', kw: 'trocar a cada compassos beat batida 4 8 16 32', ctl: seg('compassos', [[4, '4'], [8, '8'], [16, '16'], [32, '32']], S.compassos, !S.beat, 8) }) +
         row({ id: 'ordem', group: 1, label: 'Ordem', kw: 'Aleatória Coleção', ctl: seg('ordem', [['aleatoria', 'Aleatória'], ['colecao', 'Coleção']], S.ordem) }) +
         row({ id: 'colecao', label: 'Coleção', help: 'Usada quando a ordem é Coleção.', ctl: sel('colecao', collOpts, S.colecao, S.ordem !== 'colecao') })) +
         grp('Transições',
@@ -498,8 +512,7 @@
         row({ id: 'tManual', label: 'Tempo', kw: 'transição manual duração segundos blend', ctl: rng('tManual', 0.1, 10, 0.1, S.tManual) }) +
         '<h4 class="sub">Na troca automática</h4>' +
         row({ id: 'trAuto', label: 'Tipo', kw: 'transição automática Corte seco Crossfade Varredura Plasma Radial Aleatório blend', ctl: sel('trAuto', TROPTS, S.trAuto) }) +
-        row({ id: 'tAuto', label: 'Tempo', kw: 'transição automática duração segundos blend', ctl: rng('tAuto', 0.1, 10, 0.1, S.tAuto) }) +
-        row({ id: 'beat', label: 'Trocar no beat', help: 'Muda de preset quando detectar uma batida forte.', phase: 1, ctl: sw('beat', false, true) })) +
+        row({ id: 'tAuto', label: 'Tempo', kw: 'transição automática duração segundos blend', ctl: rng('tAuto', 0.1, 10, 0.1, S.tAuto) })) +
         grp('Expressividade',
         row({ id: 'expr', label: 'Nível', kw: 'expressividade reação intensidade', ctl: rng('expr', -3, 3, 1, S.expr, true) }) +
         row({ id: 'carater', group: 1, label: 'Caráter', help: exprHelp('carater'), kw: 'expressividade Contraste Energia Nervo', ctl: seg('carater', [['contraste', 'Contraste'], ['energia', 'Energia'], ['nervo', 'Nervo']], S.carater, false, X_DEF.carater) }) +
@@ -981,7 +994,7 @@
   /* ── Controles ── */
   function setDis(id, dis) { $$('[data-k="' + id + '"]').forEach(function (el) { el.disabled = !!dis; }); }
   function deps() {
-    setDis('interval', !S.rot); setDis('ordem', !S.rot);
+    setDis('interval', !S.rot); setDis('ordem', !S.rot); setDis('compassos', !S.beat);
     setDis('colecao', !S.rot || S.ordem !== 'colecao');
     setDis('fav', S.abrirPreset !== 'favorito');
     setDis('minfps', !S.pular);
@@ -1008,6 +1021,7 @@
     if (k === 'fonte') paintSource();
     if (k === 'mcp') paintMcp();
     if (k === 'norm') paintNorm();
+    if (k === 'idioma') paintIdioma();
     if (k === 'carater' || k === 'memoria') paintExpr();
     if (k === 'updSim') return;
     deps(); markSaved();
@@ -1226,7 +1240,7 @@
       var t = function (o) { return o && PF_TIPO_L[o.tipo] && pfNum(o.tempo, 0.1, 10) ? { tipo: o.tipo, tempo: o.tipo === 'corte' ? 1 : pfR1(o.tempo) } : null; };
       var m = t(v.manual), a = t(v.auto); return m && a ? { manual: m, auto: a } : null;
     }
-    if (g === 'rotacao') return pfBool(v.ligada) && pfNum(v.intervalo, 5, 120) && pfBool(v.noBeat) ? { ligada: v.ligada, intervalo: Math.round(v.intervalo / 5) * 5, noBeat: false } : null;
+    if (g === 'rotacao') return pfBool(v.ligada) && pfNum(v.intervalo, 5, 120) && pfBool(v.noBeat) ? { ligada: v.ligada, intervalo: Math.round(v.intervalo / 5) * 5, noBeat: v.noBeat, compassos: [4, 8, 16, 32].indexOf(v.compassos) > -1 ? v.compassos : 8 } : null;
     if (g === 'sinal') { if (!pfInt(v.ganho, -12, 12)) return null; var n = v.normalizar === true; return { ganho: n ? Math.max(-6, Math.min(6, v.ganho)) : v.ganho, normalizar: n }; }
     if (g === 'texto') return PF_NP_L[v.nomePreset] && pfBool(v.titulo) && PF_AV_L[v.avisos] ? { nomePreset: v.nomePreset, titulo: v.titulo, avisos: v.avisos } : null;
     return null;
@@ -1235,7 +1249,7 @@
     var raw = {
       expressividade: function () { return { nivel: S.expr, carater: S.carater, memoria: S.memoria, curva: S.curva16.slice() }; },
       transicoes: function () { return { manual: { tipo: S.trManual, tempo: S.tManual }, auto: { tipo: S.trAuto, tempo: S.tAuto } }; },
-      rotacao: function () { return { ligada: S.rot, intervalo: S.interval, noBeat: false }; },
+      rotacao: function () { return { ligada: S.rot, intervalo: S.interval, noBeat: S.beat, compassos: S.compassos }; },
       sinal: function () { return { ganho: S.gain, normalizar: S.norm }; },
       texto: function () { return { nomePreset: S.nomePreset, titulo: S.titulo, avisos: S.avisos }; }
     }[g]();
@@ -1254,7 +1268,7 @@
     } else if (g === 'transicoes') {
       pfSelect('trManual', v.manual.tipo); pfRange('tManual', v.manual.tempo); pfSelect('trAuto', v.auto.tipo); pfRange('tAuto', v.auto.tempo);
     } else if (g === 'rotacao') {
-      pfSwitch('rot', v.ligada); pfRange('interval', v.intervalo);
+      pfSwitch('rot', v.ligada); pfRange('interval', v.intervalo); pfSwitch('beat', v.noBeat); pfRadio('compassos', v.compassos || 8);
     } else if (g === 'sinal') {
       pfSwitch('norm', v.normalizar === true); pfRange('gain', v.ganho);
     } else if (g === 'texto') {
@@ -1266,7 +1280,7 @@
     return { id: id, name: name, builtIn: true, groups: ['expressividade', 'transicoes', 'rotacao'], values: {
       expressividade: { nivel: nivel, carater: car, memoria: mem, curva: PF_PRE[curva].slice() },
       transicoes: { manual: { tipo: man[0], tempo: man[1] }, auto: { tipo: aut[0], tempo: aut[1] } },
-      rotacao: { ligada: lig, intervalo: iv, noBeat: false } } };
+      rotacao: { ligada: lig, intervalo: iv, noBeat: false, compassos: 8 } } };
   }
   var PF = { n: 0, active: 'padrao', undo: null, list: [
     pfBuilt('padrao', 'Padrão', 0, 'energia', 'curta', 'plana', ['aleatorio', 1], ['crossfade', 2.7], true, 30),

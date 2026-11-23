@@ -153,13 +153,13 @@ Protótipo `1794281099-42d3`, página Palco integrado (`#beatSwitch`, `.bdot`, `
 - **Ajustes rápidos:** com "Trocar no beat" ligado, "Trocar a cada" lista 4/8/16/32 compassos, e uma nota diz o intervalo de reserva ("Sem batida estável, troca a cada 30 s. Enter segura o visual.").
 - **Configurações › Transição:** além do switch "Trocar no beat", uma linha "Compassos" com o mesmo seletor.
 - **M23:** um segundo pedido durante a espera substitui o primeiro (spec 024); no protótipo, repetir a mesma tecla cancela.
-**Status:** Aberta (aguarda a sessão de design).
+**Status:** Aceita (design atualizado na versão 1794680346-fb12, `v3-respostas-divergencias.md` › Rodada de 14/11). `Esc` cancela a espera.
 
 ### 2026-11-10 — Troca no beat, revisão 2 (spec 024): Respiro e adiantamento
 Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Respiro (`Shift+Enter`):** o visual fica sem o áudio. A faixa mostra a etiqueta "Respiro" (ícone `volume-x`, em violeta) abaixo do autor, e um toast confirma.
 - **Configurações › Transição:** a linha "Adiantar o visual" (0–200 ms, padrão 70) fica abaixo de "Trocar no beat".
-**Status:** Aberta (aguarda a sessão de design).
+**Status:** Aceita com correções (design atualizado na versão 1794680346-fb12). Ação no repo: (1) Respiro ao lado do indicador do Modo limpo, na linha do título (o título encurta com reticências), ícone `wind` e texto em `text-2`, 12 px, sem violeta e sem `volume-x` (também no painel `?`); toasts "Respiro: o visual segue sem o áudio." / "Respiro desligado."; (2) "Adiantar o visual" vai para Configurações › Captura, com a ajuda "Compensa o atraso entre o som e a imagem. Aumente se o visual parecer atrasado." Ver `queue/2026-11-23-design-fb12-respiro-adiantar.md`.
 
 ### 2026-11-10 — Estúdio P0 (spec 026), protótipo `1794281099-42d3`, página `Sonic Obsidian Estúdio.html`
 **No app:**
@@ -169,7 +169,7 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Nome do autor:** no primeiro salvamento, um balão abaixo de "Salvar na biblioteca" pergunta "Seu nome nos presets" (decisão do usuário). Depois, o campo fica em Configurações › Geral › Meus presets.
 - **Erros vêm do motor**, com bloco e linha. `bas_att` não é erro (avisos na 027). Um laço longo vira o erro "Laço sem fim ou longo demais" ou "Lento demais: N ms por quadro".
 - **Biblioteca:** rótulo "Meu preset", filtro "Meus" ao lado de "Importados", e no menu "…" os itens "Editar uma cópia no Estúdio" (ou "Editar no Estúdio", se for meu) e "Remover meu preset".
-**Status:** Aberta (aguarda a sessão de design).
+**Status:** Aceita (design atualizado na versão 1794680346-fb12; o P0 está em `Sonic Obsidian Estúdio.html` e a 027 em `Sonic Obsidian Estúdio completo (027).html`).
 
 ### 2026-11-11 — Expressividade: marcar o padrão e "Normalizar áudio" (spec 028, sem desenho)
 - **Pedido do usuário:** nos Ajustes rápidos › Expressividade, as opções padrão aparecem marcadas ("· padrão" em Energia e Curta; Nível 0), há um "Restaurar padrão" e, com Nível 0, o Caráter diz "sem efeito no nível 0". O toast de `X`/`Shift+X` diz "(padrão)".
