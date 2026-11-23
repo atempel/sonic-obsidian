@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `feat/manual-on-beat`
+**Fez:** #183 + spec 043: "Trocas manuais no beat" (`rotation.manualOnBeat`, padrão desligado) separado de "Trocar no beat", que passa a valer só para a rotação automática. Switch nos Ajustes rápidos e linha em Configurações › Visual › Transição (en/pt-BR); ponto de beat e "Adiantar o visual" com qualquer um dos dois. Teste novo `043-beat-manual` (13/13); `024-beat` (38/38, agora com as duas ligadas), 030, 011 e 020 passando. Divergência registrada em DIVERGENCIAS (2026-11-23).
+**Deixou em:** PR desta branch (`Closes #183`). Não verificado: atraso com música real no Windows (teste do bloco v0.11.0).
+
 ### 2026-11-23 — Claude Code (nuvem, rodada do ciclo automático) — branch `test/178-intermitentes`
 **Fez:** Passos 0–1 sem trabalho (nenhuma `in-progress`; blocos v0.9.0 #157 e v0.10.0 #164 sem comentário do usuário). Passo 2: o PR #177 (spec 040) seguiu vermelho na terceira execução (`036-preset-preto` 2, 6,6 s). Para consertar, reivindicou a #178 e escreveu a spec 041: `036` 2 trata `CI=true` como runner lento; `032` 7f aceita um clique perdido (o `MIN_FOUND` do app; causa: o desenho prende o thread por mais que o buffer de 0,68 s); `027` 6a só ganhou diagnóstico (não reproduziu em 5 execuções com a CPU 6× mais lenta). DECISIONS 2026-11-23 (`agent-decided`).
 **Deixou em:** PR #179 mergeado (verde na primeira execução; `Refs #178`, que volta a `backlog` aberta só pelo 027 6a). Branch do #177 atualizada com o `main` (conflito em SESSIONS/DECISIONS, mantidas as duas entradas); o `typecheck` novo do #177 falhou em outro intermitente (`027-estudio-extras` 4a, anotado na #178). Próxima rodada: diagnóstico/correção do 4a (#178) e então mergear o #177. Só testes; nada do app mudou.
