@@ -18,10 +18,11 @@ O desenho da interface vive num artefato do Claude Design (link e versão em [SY
 | `Sonic Obsidian Palco integrado.html` | Tela padrão: faixa de controle, busca rápida, Biblioteca em gaveta, modo Rack, fontes de áudio, IA conectada | 2 (Rack e MCP: 3+) |
 | `Sonic Obsidian Configurações.html` | 10 seções, salvamento automático, Renderização (parâmetros reais do Butterchurn), Integrações (MCP) | 2–3 |
 | `Sonic Obsidian Setup.html` | Primeira execução não-modal e diagnósticos (sem som, captura falhou, WebGL 2, duas telas) | 2 |
-| `Sonic Obsidian Estúdio.html` | Editor de presets `.milk` com prévia, erros por linha e versões | 3+ |
+| `Sonic Obsidian Estúdio.html` | Estúdio P0: camada sobre o Palco, só a aba Código (spec 026) | 3 (feito) |
+| `Sonic Obsidian Estúdio completo (027).html` | Estúdio com todas as abas, prévia, versões e Exportar `.milk`; referência de conteúdo da 027 (o layout de página foi substituído pela camada do P0) | 3 (027) |
 | `Sonic Obsidian Palco com vídeo.html` | Camada de vídeo no compositor, cenas na Biblioteca | Vídeo (a planejar) |
 | `Sonic Obsidian Modo performance.html` | VJ ao vivo: Preview/Program, crossfader, 20 pads, tap tempo | Vídeo (a planejar) |
 | `Sonic Obsidian Biblioteca clipes e cenas.html` | Detalhe do clipe (loop), criação de cena, cena no Estúdio | Vídeo (a planejar) |
-| `Sonic Obsidian Modos.html` | Modos de interface Simples · Completo · Rack (`docs/v3-modos.md`). Proposta, não decidida | A decidir |
+| `Sonic Obsidian Modos.html` | Modos de interface Simples · Completo · Rack (`docs/v3-modos.md`). Decidido (598c): Simples primeiro, Rack na Fase 5 | Simples: spec 039; Rack: 5 |
 | `Sonic Obsidian Micro Faixa.html`, `Micro Navegação.html` | Laboratórios de microinterações (M01–M23, `docs/v3-microinteracoes.md`): faixa, medidor, abas, gaveta, toast, Modo limpo, controles da janela. Tudo Proposto | 2 (a escolher) |
 | `Sonic Obsidian Propostas.html`, `Vídeo Propostas.html`, `A Palco`, `B Biblioteca`, `C Rack` | Exploração e decisões (contexto, não implementar) | — |
