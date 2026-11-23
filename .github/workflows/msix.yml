@@ -1,0 +1,43 @@
+name: msix
+
+# Pacote MSIX para a Microsoft Store (spec 044), SÓ SOB DEMANDA: disparo manual (Actions › msix ›
+# Run workflow, escolhendo a branch ou a tag) ou a label `build-msix` num PR. Gera o artifact
+# `sonic-obsidian-msix-<sha>` com o .msix sem assinatura (a Store assina depois da certificação).
+# A primeira submissão é manual no Partner Center; as seguintes podem sair pelo `store.yml`.
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event.action != 'labeled' }}
+
+jobs:
+  msix:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.action == 'labeled' && github.event.label.name == 'build-msix') ||
+      (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'build-msix'))
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run typecheck
+      - run: npm run dist:msix
+      - name: Conferir a identidade do pacote
+        id: check
+        shell: bash
+        run: bash scripts/check-msix.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sonic-obsidian-msix-${{ github.sha }}
+          path: ${{ steps.check.outputs.file }}
+          retention-days: 30
+          if-no-files-found: error

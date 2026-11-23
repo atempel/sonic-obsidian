@@ -384,6 +384,7 @@ export const en = {
   'update.restart': 'Restart and update',
   'update.openPage': 'Open release page',
   'update.later': 'Later',
+  'update.storeManaged': 'Updates come from the Microsoft Store.',
   'update.group': 'Updates',
   'update.installed': 'Installed version',
   'update.auto': 'Check for updates automatically',

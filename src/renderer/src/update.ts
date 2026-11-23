@@ -9,7 +9,7 @@ export type UpdateState = SoUpdateState
 const RELEASES_URL = 'https://github.com/atempel/sonic-obsidian/releases'
 export const releaseUrl = (version: string): string => `${RELEASES_URL}/tag/v${version}`
 
-let state: UpdateState = { phase: 'idle', version: null, percent: 0, lastCheckAt: null, portable: false, supported: false }
+let state: UpdateState = { phase: 'idle', version: null, percent: 0, lastCheckAt: null, portable: false, supported: false, store: false }
 /** Versão dispensada com "Depois" (só nesta abertura; uma versão mais nova volta a aparecer). */
 let dismissed: string | null = null
 const listeners = new Set<() => void>()

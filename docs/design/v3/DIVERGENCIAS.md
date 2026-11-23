@@ -14,6 +14,12 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-23 — Configurações › Sobre › Atualizações na versão da Microsoft Store (spec 044, versão `1794680346-fb12`)
+Protótipo: o grupo Atualizações (spec 029) tem a versão instalada, a chave "Buscar atualizações automaticamente", "Verificar agora" e a última verificação; não existe a versão da Store.
+Código: na versão da Microsoft Store (pacote MSIX) a Store atualiza o app, então o grupo mostra só a linha da versão instalada (com "O que mudou") e, embaixo, no estilo da linha da última verificação, "As atualizações vêm da Microsoft Store." (en "Updates come from the Microsoft Store."). A busca rápida não oferece "Verificar atualizações" nessa versão. Pedido à sessão de design: desenhar a variante da Store desse grupo (e, quando houver, o botão "Get it from Microsoft" na landing).
+PR/spec: #188 · docs/specs/044-microsoft-store-msix.md
+Status: Aberta (aguarda a sessão de design).
+
 ### 2026-11-08 — Atalhos e Ajustes rápidos · expressividade
 Protótipo (`1794165177-f126`): não existe controle de expressividade. O ganho é um slider nos Ajustes rápidos, sem tecla.
 Código (spec 015): `+`/`−`/`0` mudam a **Expressividade** (−3…+3), `X` o **Caráter** (Contraste / Energia / Nervo) e `Shift+X` a **Memória** (Curta / Longa / Fixa). O ganho fica só no slider, como no protótipo. Motivo: o motor normaliza os níveis em ~4 s e o ganho só tem efeito passageiro (DECISIONS).

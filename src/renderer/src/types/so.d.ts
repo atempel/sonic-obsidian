@@ -32,6 +32,8 @@ interface SoUpdateState {
   lastCheckAt: number | null
   portable: boolean
   supported: boolean
+  /** Versão da Microsoft Store (pacote MSIX): a Store atualiza (spec 044). */
+  store: boolean
 }
 
 interface Window {

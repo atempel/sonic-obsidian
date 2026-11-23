@@ -46,3 +46,20 @@ nsis:
   # sem seletor. Só os dois idiomas do app (o padrão do electron-builder embutia todos).
   installerLanguages: [en_US, pt_BR]
   displayLanguageSelector: false
+# Microsoft Store (spec 044): pacote MSIX pelo alvo `appx` do electron-builder (`npm run dist:msix`,
+# só no Windows: precisa do makeappx do Windows SDK). Sem certificado (CSC_LINK vazio), o pacote sai
+# sem assinatura, que é o que a Store pede: ela assina depois da certificação. Identidade igual à do
+# Partner Center (a Store recusa o pacote se um valor for diferente). `runFullTrust` entra sempre.
+# Imagens do pacote em build/appx/ (StoreLogo, Square44x44Logo, Square150x150Logo, Wide310x150Logo).
+appx:
+  identityName: AlexandreTempel.SonicObsidian
+  publisher: CN=FB52A5F4-E46E-48B7-90A9-D2F6FC05DB7B
+  publisherDisplayName: Alexandre Tempel
+  applicationId: SonicObsidian
+  displayName: Sonic Obsidian
+  backgroundColor: '#0B0B0F'
+  languages: [en-US, pt-BR]
+  # Windows 10 1809 é o mínimo para um pacote .msix (e o Electron atual já pede Windows 10).
+  minVersion: 10.0.17763.0
+  maxVersionTested: 10.0.26100.0
+  artifactName: SonicObsidian-Store-${arch}.msix

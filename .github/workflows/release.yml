@@ -32,6 +32,8 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      # Disparar o store.yml quando a release sai publicada (spec 044, etapa 2).
+      actions: write
     env:
       # Tag da release: a tag enviada, ou v<version> no disparo manual; vazio = ensaio.
       TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || (inputs.version != '' && format('v{0}', inputs.version) || '') }}
@@ -95,6 +97,15 @@ jobs:
             --notes-file .github/release-notes.md \
             release/SonicObsidian-Setup.exe release/SonicObsidian-win-x64.zip release/SHA256SUMS.txt \
             release/latest.yml release/SonicObsidian-Setup.exe.blockmap
+      # Microsoft Store (spec 044, etapa 2): release publicada direto (publicar=true) dispara o store.yml,
+      # porque release criada com o GITHUB_TOKEN não gera o evento `release`. Rascunho publicado à mão
+      # dispara o store.yml pelo próprio evento. O store.yml só roda com MSSTORE_ENABLED=true.
+      - name: Microsoft Store
+        if: env.TAG != '' && inputs.publicar && vars.MSSTORE_ENABLED == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run store.yml --ref main -f tag="$TAG"
       - name: Artifact do ensaio
         if: env.TAG == ''
         uses: actions/upload-artifact@v4
