@@ -754,3 +754,10 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** o `032-medir-captura` 7f passa a exigir dois dos três cliques achados (o `CLICK.MIN_FOUND` do app) com variação < 20 ms entre eles, em vez dos três. O `036-preset-preto` 2 trata `CI=true` como runner lento, como o comentário do teste já dizia. Spec 041.
 - **Por quê:** no runner do CI o desenho prende o thread da página por mais que o buffer de 0,68 s do analyser e um clique vira silêncio; o app foi feito para tolerar isso, e a spec 032 pede três medições estáveis, não três cliques.
 - **Descartado:** `retries` (escondem regressão); gravar o clique num `AudioWorklet` (mudança de app para um caso que só existe abaixo de ~2 fps).
+
+## 2026-11-23 — Auto-merge do GitHub para os PRs das rodadas (pedido do usuário)
+- **Decisão:** as rodadas ligam o auto-merge do GitHub (squash) ao abrir PR para o `main`; o GitHub mergeia quando o check obrigatório `typecheck` passa, sem esperar a próxima rodada (até 4 h). O typecheck + testes headless saem do `build-windows.yml` para um `ci.yml` que roda em todo PR e **sempre** reporta o `typecheck`: PR só de `docs/`, `queue/`, `site/` ou `.md` pula o job (pulado conta como aprovado), no lugar do antigo `paths-ignore` (o problema que a entrada de 2026-11-09 previa). O `ci.yml` não escuta `labeled`, para a label `build-windows` não criar um `typecheck` pulado no mesmo commit; se o diff falhar, o job roda.
+- **Do lado do usuário (interface do GitHub):** ligar "Allow auto-merge" em Settings › General e uma regra no `main` exigindo o check `typecheck` (sem ela o auto-merge mergearia na hora, antes do CI).
+- **Por quê:** PR verde esperava até 4 h pela rodada seguinte, e o modo automático da sessão às vezes nega o merge direto pela API.
+- **Descartado:** gatilho de rodada por evento do GitHub (as rodadas abrem e atualizam PRs: um gatilho de PR viraria loop; e só se configura pela interface); deixar o check opcional (o auto-merge não esperaria o CI).
+- **A verificar:** se o modo automático deixa a rodada ligar o auto-merge (ferramenta MCP `enable_pr_auto_merge`, já que não há REST e o GraphQL não funciona na nuvem).
