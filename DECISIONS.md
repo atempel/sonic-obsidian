@@ -743,3 +743,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** tudo reversível e de densidade, sem mudar o que o app faz; o design define o princípio e as listas por superfície, não os itens exatos.
 - **Descartado:** a pergunta "Como você vai usar?" no cartão de boas-vindas agora (com o Rack ainda na Fase 5 só haveria duas opções; entra com o Rack); um link "Todos os ajustes…" que só abrisse as Configurações (repetiria a engrenagem).
 - **Milestone:** v0.12.0, com a #109 e a #110.
+
+## 2026-11-23 — Teste do "Medir atraso da captura" aceita um clique perdido (rodada, `agent-decided`, #178)
+- **Decisão:** o `032-medir-captura` 7f passa a exigir dois dos três cliques achados (o `CLICK.MIN_FOUND` do app) com variação < 20 ms entre eles, em vez dos três. O `036-preset-preto` 2 trata `CI=true` como runner lento, como o comentário do teste já dizia. Spec 041.
+- **Por quê:** no runner do CI o desenho prende o thread da página por mais que o buffer de 0,68 s do analyser e um clique vira silêncio; o app foi feito para tolerar isso, e a spec 032 pede três medições estáveis, não três cliques.
+- **Descartado:** `retries` (escondem regressão); gravar o clique num `AudioWorklet` (mudança de app para um caso que só existe abaixo de ~2 fps).
