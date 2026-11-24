@@ -761,3 +761,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** PR verde esperava até 4 h pela rodada seguinte, e o modo automático da sessão às vezes nega o merge direto pela API.
 - **Descartado:** gatilho de rodada por evento do GitHub (as rodadas abrem e atualizam PRs: um gatilho de PR viraria loop; e só se configura pela interface); deixar o check opcional (o auto-merge não esperaria o CI).
 - **A verificar:** se o modo automático deixa a rodada ligar o auto-merge (ferramenta MCP `enable_pr_auto_merge`, já que não há REST e o GraphQL não funciona na nuvem).
+
+## 2026-11-24 — Queda do contexto WebGL: sem trava contra laço de recarregamento (rodada, `agent-decided`, #130)
+- **Decisão:** spec 045. O ouvinte de `webglcontextlost` passa do canvas da página (2D, nunca perde WebGL) para o `OffscreenCanvas` do motor (`viz.gl.canvas`); o recarregamento espera de fato 1,5 s, e o log numera as quedas da sessão (`sessionStorage`). Sem trava contra laço de recarregamento por enquanto.
+- **Por quê:** é o mesmo caminho que o segundo motor do Estúdio já usa (027, A19), e conferido no Chromium headless que o `OffscreenCanvas` dispara o evento. O contador basta para um laço aparecer no log de um bloco; uma trava exigiria uma tela nova (design) para dizer o que aconteceu. Reversível.
+- **Descartado:** recriar o motor no `webglcontextrestored` sem recarregar (refaria à mão o que o recarregamento já devolve dos ajustes salvos); trava de N quedas por minuto agora (sem caso visto e sem desenho para a tela).
+- **Milestone:** v0.12.0 (o v0.11.0 já passou de ~5 issues de app), como `bug`.
