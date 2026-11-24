@@ -155,7 +155,7 @@ export const COMMANDS: Command[] = [
   // Sem tecla no Palco: F é tela cheia (decisão do usuário; DIVERGENCIAS 2026-11-09).
   { id: 'favorite', label: 'shortcuts.cmd.favorite', keys: [], icon: 'star' },
   // Atualização automática (spec 029): sem tecla; nada muda no painel `?`.
-  { id: 'updateCheck', label: 'shortcuts.cmd.checkUpdates', keys: [], icon: 'refresh-cw' },
+  { id: 'updateCheck', label: 'shortcuts.cmd.checkUpdates', keys: [], icon: 'refresh-cw', when: () => !updateState().store },
   { id: 'updateInstall', label: 'shortcuts.cmd.installUpdate', keys: [], icon: 'rotate-cw', when: () => updateState().phase === 'ready' },
   // Feedback e bugs (spec 031): sem tecla; nada muda no painel `?`.
   { id: 'feedbackBug', label: 'feedback.bug', keys: [], icon: 'bug' },

@@ -978,14 +978,28 @@ function Atualizacoes({ core, run, version, link }: { core: Core; run: Run; vers
       )}
     </>
   )
+  const installed = (
+    <Row label={t('update.installed')} kw="atualização atualizações update updates versão version o que mudou what's new release">
+      <span class="upd-ver">
+        <span class="count num">{`Sonic Obsidian · ${version}`}</span>
+        {version && link(releaseUrl(version), t('update.whatsNew'))}
+      </span>
+    </Row>
+  )
+  // Versão da Microsoft Store (spec 044): a Store atualiza; sem chave, sem "Verificar agora".
+  if (u.store) {
+    return (
+      <Grp title={t('update.group')}>
+        {installed}
+        <p class="upd-last" id="st-upd-store">
+          {t('update.storeManaged')}
+        </p>
+      </Grp>
+    )
+  }
   return (
     <Grp title={t('update.group')}>
-      <Row label={t('update.installed')} kw="atualização atualizações update updates versão version o que mudou what's new release">
-        <span class="upd-ver">
-          <span class="count num">{`Sonic Obsidian · ${version}`}</span>
-          {version && link(releaseUrl(version), t('update.whatsNew'))}
-        </span>
-      </Row>
+      {installed}
       <Row id="st-upd-auto" label={t('update.auto')} help={t('update.autoHelp')} kw="atualização atualizações update updates automática automatic github rede network">
         <Sw id="st-upd-auto" label={t('update.auto')} checked={auto} onChange={(on) => run('settings.set', { updatesAuto: on })} />
       </Row>

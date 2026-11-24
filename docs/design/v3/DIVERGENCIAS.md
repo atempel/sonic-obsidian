@@ -14,6 +14,11 @@ Status: Aberta | Aceita (design atualizado na versão X) | Recusada (código vol
 
 ## Entradas
 
+### 2026-11-23 — Configurações › Sobre › Atualizações na versão da Microsoft Store (spec 044, versão `1794680346-fb12`)
+Protótipo: o grupo Atualizações (spec 029) tem a versão instalada, a chave "Buscar atualizações automaticamente", "Verificar agora" e a última verificação; não existe a versão da Store.
+Código: na versão da Microsoft Store (pacote MSIX) a Store atualiza o app, então o grupo mostra só a linha da versão instalada (com "O que mudou") e, embaixo, no estilo da linha da última verificação, "As atualizações vêm da Microsoft Store." (en "Updates come from the Microsoft Store."). A busca rápida não oferece "Verificar atualizações" nessa versão. Pedido à sessão de design: desenhar a variante da Store desse grupo (e, quando houver, o botão "Get it from Microsoft" na landing).
+PR/spec: #188 · docs/specs/044-microsoft-store-msix.md
+
 ### 2026-11-23 — Faixa presa sob o mouse e Ajustes rápidos fechando com clique fora (spec 042), página Palco integrado (versão `1794680346-fb12`)
 Protótipo: o auto-hide (`wake()`) esconde a faixa depois de 2,5 s sem mexer o mouse mesmo com o ponteiro parado em cima dela (só não esconde com foco dentro dela ou painel aberto). O clique fora fecha os Ajustes rápidos no `pointerdown`, em qualquer lugar.
 Código: (1) com o ponteiro sobre o `.strip-wrap` (faixa, plaquinha de atualização, painel de coleções) a faixa e o cursor não somem; ao sair, somem em 2,5 s; `H` continua escondendo na hora (pedido do usuário). (2) O clique fora fecha como no protótipo, mas **dentro da faixa** fecha no `click`: ao fechar, a faixa perde os 356 px reservados ao painel e se desloca, e com `pointerdown` o botão sairia de baixo do ponteiro e o clique se perderia. O painel de atalhos `?` também não fecha os Ajustes. Pedido à sessão de design: incluir o "ponteiro em cima segura a faixa" no M-catálogo/`v3-modelo-de-navegacao.md` (e no protótipo), e conferir o deslocamento da faixa ao fechar os Ajustes.
