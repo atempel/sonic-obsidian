@@ -138,7 +138,10 @@ async function mockLoopback(page) {
     // (CI a ~5 fps), um clique às vezes não aparece (#178). Os achados continuam dentro de 20 ms.
     const found = runs.filter(Number.isFinite)
     ok('7f pelo menos dois dos três cliques achados, com variação menor que 20 ms', found.length >= 2 && Math.max(...found) - Math.min(...found) < 20, JSON.stringify(runs))
-    ok('7g toast "Captura: <n> ms"', new RegExp(`Captura: ${Math.round(ms)} ms`).test(await toast()), await toast())
+    // O log traz o valor com uma casa (toFixed(1)) e o app arredonda o valor cheio: 41,46 → log 41.5 → app 41,
+    // enquanto Math.round(41.5) = 42. Vale o inteiro a no máximo 1 ms do log (#178).
+    const shown = Number(((await toast()).match(/Captura: (\d+) ms/) || [])[1])
+    ok('7g toast "Captura: <n> ms"', Number.isFinite(shown) && Math.abs(shown - ms) <= 1, await toast())
 
     // 7h. Som do sistema mudo (nada volta pela captura): o aviso.
     await page.evaluate(() => { window.__lbOff = true; window.__audio('silence') })
