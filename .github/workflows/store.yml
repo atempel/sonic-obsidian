@@ -1,0 +1,81 @@
+name: store
+
+# Publica o MSIX de uma release na Microsoft Store com o Microsoft Store Developer CLI (msstore),
+# spec 044, etapa 2. SÓ quando uma release é PUBLICADA (nunca em push nem em merge):
+# - release publicada à mão no GitHub (evento `release: published`), ou
+# - `release.yml` com `publicar=true`: ele dispara este workflow (release criada com o GITHUB_TOKEN
+#   não gera o evento `release`), ou
+# - disparo manual com a tag, para repetir uma publicação.
+# DESLIGADO até existir a variável de repositório MSSTORE_ENABLED=true e os quatro secrets
+# PARTNER_CENTER_TENANT_ID, PARTNER_CENTER_SELLER_ID, PARTNER_CENTER_CLIENT_ID e
+# PARTNER_CENTER_CLIENT_SECRET (passo a passo em docs/distribuicao/microsoft-store.md).
+# Pré-requisito da Microsoft: o app já publicado na Store por uma submissão manual no Partner Center.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da release publicada (ex.: v0.11.0)'
+        required: true
+
+concurrency:
+  group: store
+  cancel-in-progress: false
+
+jobs:
+  store:
+    # Pre-release não vai para a Store.
+    if: vars.MSSTORE_ENABLED == 'true' && !(github.event_name == 'release' && github.event.release.prerelease)
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    env:
+      TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+      STORE_ID: 9MV0B2P4T0G4
+    steps:
+      - name: A release existe, está publicada e não é pre-release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          info="$(gh release view "$TAG" -R "$GITHUB_REPOSITORY" --json isDraft,isPrerelease)"
+          echo "$info"
+          [ "$(echo "$info" | jq -r .isDraft)" = "false" ] || { echo "::error::$TAG é rascunho: publique a release antes"; exit 1; }
+          [ "$(echo "$info" | jq -r .isPrerelease)" = "false" ] || { echo "::error::$TAG é pre-release: não vai para a Store"; exit 1; }
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run dist:msix
+      - name: Conferir a identidade do pacote
+        id: check
+        shell: bash
+        run: bash scripts/check-msix.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sonic-obsidian-msix-${{ env.TAG }}
+          path: ${{ steps.check.outputs.file }}
+          retention-days: 90
+      # Action oficial do CLI (o repositório microsoft/setup-msstore-cli hoje serve o
+      # microsoft/microsoft-store-apppublisher; conferir a tag mais nova ao ligar).
+      - uses: microsoft/microsoft-store-apppublisher@v1.4
+      - name: Credenciais do Partner Center
+        shell: pwsh
+        run: >-
+          msstore reconfigure
+          --tenantId "${{ secrets.PARTNER_CENTER_TENANT_ID }}"
+          --sellerId "${{ secrets.PARTNER_CENTER_SELLER_ID }}"
+          --clientId "${{ secrets.PARTNER_CENTER_CLIENT_ID }}"
+          --clientSecret "${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}"
+      # Sem --noCommit: a submissão vai direto para a certificação. Para conferir antes no Partner
+      # Center, criar a variável MSSTORE_NO_COMMIT=true (fica em rascunho).
+      - name: Publicar na Store
+        shell: pwsh
+        run: |
+          $nc = if ("${{ vars.MSSTORE_NO_COMMIT }}" -eq "true") { "--noCommit" } else { "" }
+          msstore publish "${{ steps.check.outputs.file }}" -id $env:STORE_ID $nc

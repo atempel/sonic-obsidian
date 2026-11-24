@@ -16,6 +16,7 @@
     "sim:agc": "node tests/sim/agc-sim.cjs",
     "dist:win": "electron-vite build && electron-builder --win --dir --publish never",
     "dist:release": "electron-vite build && electron-builder --win --publish never",
+    "dist:msix": "electron-vite build && electron-builder --win appx --x64 --publish never",
     "site:vendor": "node scripts/site-vendor.mjs"
   },
   "dependencies": {

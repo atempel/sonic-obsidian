@@ -317,7 +317,7 @@ if (process.platform === 'win32') app.setAppUserModelId('dev.atempel.sonic-obsid
 
 app.whenReady().then(() => {
   mark('ready')
-  log('main', `started ${app.getVersion()} · Electron ${process.versions.electron} · log at ${logPath()}`)
+  log('main', `started ${app.getVersion()} · Electron ${process.versions.electron} · log at ${logPath()}${process.windowsStore ? ' · Microsoft Store package (MSIX)' : ''}`)
   logMetrics()
   // Memória a cada 5 min: mostra se algum processo (GPU, renderer) cresce sem parar.
   setInterval(logMetrics, 5 * 60 * 1000).unref()

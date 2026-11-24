@@ -386,6 +386,7 @@ export const ptBR: Messages = {
   'update.restart': 'Reiniciar e atualizar',
   'update.openPage': 'Abrir página da versão',
   'update.later': 'Depois',
+  'update.storeManaged': 'As atualizações vêm da Microsoft Store.',
   'update.group': 'Atualizações',
   'update.installed': 'Versão instalada',
   'update.auto': 'Buscar atualizações automaticamente',

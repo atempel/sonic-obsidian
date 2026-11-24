@@ -15,6 +15,9 @@ import { JsonStore } from './store'
  *   (ou se já havia uma versão baixada esperando); depois, de novo a cada 24 h com o app aberto.
  * - Com a chave desligada (`update:configure(false)`), nenhuma checagem automática sai.
  *   "Verificar agora" funciona sempre (foi a pessoa que pediu).
+ * - Versão da Microsoft Store (pacote MSIX, `process.windowsStore`, spec 044): a Store cuida das
+ *   atualizações. Nada é checado nem baixado do GitHub, nem por "Verificar agora"; o renderer
+ *   esconde a chave e o botão.
  * - Erros das checagens automáticas vão só para o log; o renderer só mostra erro de "Verificar agora".
  * - Rascunhos não aparecem para o atualizador (o GitHub só lista releases publicadas) e
  *   pre-releases não são oferecidas (`allowPrerelease: false`).
@@ -32,8 +35,10 @@ export interface UpdateState {
   lastCheckAt: number | null
   /** Zip portátil: avisa e abre a página, sem baixar. */
   portable: boolean
-  /** Falso fora do app empacotado no Windows (dev, testes). */
+  /** Falso fora do app empacotado no Windows (dev, testes) e na versão da Store. */
   supported: boolean
+  /** Versão da Microsoft Store (pacote MSIX): a Store atualiza; o app não checa o GitHub. */
+  store: boolean
 }
 
 const RELEASES_URL = 'https://github.com/atempel/sonic-obsidian/releases'
@@ -57,11 +62,13 @@ interface Deps {
   flush(): Promise<void>
 }
 
-const supported = app.isPackaged && process.platform === 'win32'
+/** Rodando como pacote MSIX/AppX (Microsoft Store, ou o pacote de teste instalado à mão). */
+const store = process.platform === 'win32' && !!process.windowsStore
+const supported = app.isPackaged && process.platform === 'win32' && !store
 const portable = supported && !existsSync(join(dirname(process.execPath), UNINSTALLER))
 
-const state: UpdateState = { phase: 'idle', version: null, percent: 0, lastCheckAt: null, portable, supported }
-const store = new JsonStore('updates')
+const state: UpdateState = { phase: 'idle', version: null, percent: 0, lastCheckAt: null, portable, supported, store }
+const updatesStore = new JsonStore('updates')
 let saved: Persisted = { lastCheckAt: null, pending: null }
 let auto = false
 let firstFrame = false
@@ -85,7 +92,7 @@ function set(patch: Partial<UpdateState>): void {
 
 function persist(patch: Partial<Persisted>): void {
   saved = { ...saved, ...patch }
-  void store.save(saved)
+  void updatesStore.save(saved)
 }
 
 /** `test-flags.json` (spec 012) também encurta o intervalo para o critério 8: `{"updateEveryMinutes": 5}`. */
@@ -105,7 +112,7 @@ async function readInterval(): Promise<void> {
 
 function load(): Promise<void> {
   loaded ??= (async () => {
-    const raw = (await store.load().catch(() => null)) as Partial<Persisted> | null
+    const raw = (await updatesStore.load().catch(() => null)) as Partial<Persisted> | null
     saved = {
       lastCheckAt: typeof raw?.lastCheckAt === 'number' && Number.isFinite(raw.lastCheckAt) ? raw.lastCheckAt : null,
       pending: typeof raw?.pending === 'string' && VERSION_RE.test(raw.pending) ? raw.pending : null
@@ -159,7 +166,7 @@ function updater(): Promise<AppUpdater> {
 async function check(manual: boolean): Promise<UpdatePhase> {
   await load()
   if (!supported) {
-    log('update', 'check skipped: not a packaged Windows build')
+    log('update', store ? 'check skipped: Microsoft Store build (the Store updates the app)' : 'check skipped: not a packaged Windows build')
     if (manual) set({ phase: 'error' })
     return manual ? 'error' : state.phase
   }
@@ -243,7 +250,7 @@ async function install(): Promise<boolean> {
 }
 
 /** Grava o updates.json pendente (no fechamento). */
-export const flushUpdater = (): Promise<void> => store.flush()
+export const flushUpdater = (): Promise<void> => updatesStore.flush()
 
 /** Chamado pela marca 'first frame' da abertura (startup.ts). */
 export function updaterFirstFrame(): void {
