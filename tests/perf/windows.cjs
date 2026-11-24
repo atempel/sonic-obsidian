@@ -14,7 +14,9 @@
 //   PERF_OUT          onde gravar o perf.json (padrão: perf.json na raiz)
 //   PERF_PREV         perf.json da execução anterior, para o resumo lado a lado (ausente = só os números)
 //   PERF_TEST_FLAGS   test-flags.json copiado para cada perfil temporário (spec 012; ex.: noWebgl2 → o passo falha)
-//   PERF_QUICK=1      versão curta para conferir o script (2 presets, 1 abertura, 20 s de memória)
+//   PERF_MEMORY_MINUTES  duração do passo de memória (padrão 5, máximo 60; spec 034). Uma amostra por minuto
+//                     em memory.series (heap JS após GC, working set e memória privada de cada processo)
+//   PERF_QUICK=1      versão curta para conferir o script (2 presets, 1 abertura, 20 s de memória, amostra a cada 10 s)
 //   GITHUB_STEP_SUMMARY  recebe o resumo em markdown
 const fs = require('fs'), path = require('path'), os = require('os')
 
@@ -22,7 +24,9 @@ const root = path.join(__dirname, '..', '..')
 const QUICK = process.env.PERF_QUICK === '1'
 const OPENS = QUICK ? 1 : 3
 const PRESET_SETTLE_MS = 1000, PRESET_SAMPLE_MS = QUICK ? 2000 : 5000
-const MEMORY_MS = QUICK ? 20_000 : 5 * 60_000, MEMORY_STEP_MS = 2000
+const MEMORY_MINUTES = Math.min(60, Math.max(1, Math.round(Number(process.env.PERF_MEMORY_MINUTES) || 5)))
+const MEMORY_MS = QUICK ? 20_000 : MEMORY_MINUTES * 60_000, MEMORY_STEP_MS = 2000
+const SERIES_EVERY_MS = QUICK ? 10_000 : 60_000
 const STARTUP_RE = /startup \(ms since process start\): (.*)$/
 // Sem GPU no runner: deixa o Chromium usar o desenho por software em vez de recusar o WebGL.
 const CHROMIUM_ARGS = ['--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
@@ -108,8 +112,16 @@ async function heapMb(page) {
 }
 
 async function processes(app) {
-  const list = await app.evaluate(({ app }) => app.getAppMetrics().map((m) => ({ type: m.type, name: m.name || '', mb: Math.round(m.memory.workingSetSize / 1024) })))
-  return { totalMb: list.reduce((s, p) => s + p.mb, 0), list }
+  // privateMb (spec 034): memória privada, só no Windows (null fora dele). O working set (mb) é aparado
+  // pelo Windows quando o processo fica ocioso; a privada é o que o processo reteve.
+  const list = await app.evaluate(({ app }) => app.getAppMetrics().map((m) => ({
+    type: m.type,
+    name: m.name || '',
+    mb: Math.round(m.memory.workingSetSize / 1024),
+    privateMb: typeof m.memory.privateBytes === 'number' && m.memory.privateBytes > 0 ? Math.round(m.memory.privateBytes / 1024) : null
+  })))
+  const priv = list.map((p) => p.privateMb).filter((v) => v != null)
+  return { totalMb: list.reduce((s, p) => s + p.mb, 0), totalPrivateMb: priv.length ? priv.reduce((s, v) => s + v, 0) : null, list }
 }
 
 // Toca um preset pela busca (Ctrl+K), clicando na linha com o nome exato, e confere que entrou.
@@ -164,22 +176,64 @@ async function measureRenderAndMemory() {
     }
     const render = { windowPx: '1280x720', sampleSeconds: PRESET_SAMPLE_MS / 1000, medianMs: round(median(presets.map((p) => p.medianMs))), p95Ms: round(median(presets.map((p) => p.p95Ms))), presets }
 
-    // Memória: trocas a cada 2 s pela lista inteira (→ anda em ordem alfabética e dá a volta).
+    // Memória: trocas a cada 2 s pela lista inteira (→ anda em ordem alfabética e dá a volta),
+    // com uma amostra por minuto na série (spec 034).
     await page.mouse.move(640, 360)
     const start = { heapMb: await heapMb(page), processes: await processes(app) }
     const t0 = Date.now(); let switches = 0
+    const series = []
+    const point = async () => {
+      const s = { minute: round((Date.now() - t0) / 60_000, 2), switches, heapMb: await heapMb(page), processes: await processes(app) }
+      series.push(s)
+      const tab = s.processes.list.find((p) => p.type === 'Tab')
+      console.log(`memória ${s.minute} min: heap ${s.heapMb} MB · Tab ${tab?.mb ?? '—'} MB (privada ${tab?.privateMb ?? '—'}) · ${switches} trocas`)
+    }
+    let nextSample = t0 + SERIES_EVERY_MS
     while (Date.now() - t0 < MEMORY_MS) {
       await page.keyboard.press('ArrowRight'); switches++
       await page.waitForTimeout(MEMORY_STEP_MS)
+      if (Date.now() >= nextSample) { await point(); nextSample += SERIES_EVERY_MS }
     }
     const end = { heapMb: await heapMb(page), processes: await processes(app) }
-    const memory = { seconds: Math.round((Date.now() - t0) / 1000), switches, start, end }
+    const memory = { seconds: Math.round((Date.now() - t0) / 1000), minutes: QUICK ? round(MEMORY_MS / 60_000, 2) : MEMORY_MINUTES, switches, start, end, series }
     console.log(`memória: heap ${start.heapMb} → ${end.heapMb} MB · processos ${start.processes.totalMb} → ${end.processes.totalMb} MB · ${switches} trocas`)
     if (errs.length) console.warn('erros na página:', errs.slice(0, 5).join(' | '))
     return { version, render, memory, pageErrors: errs.slice(0, 20) }
   } finally {
     await app.close().catch(() => {})
   }
+}
+
+// Spec 034: série por minuto do Tab (renderer) e da GPU. Regra de leitura: vazamento = memória privada
+// do Tab subindo mais de 30 MB entre o minuto 30 e o 60 (DECISIONS 2026-11-20).
+function seriesTable(memory, round) {
+  const series = memory.series || []
+  if (!series.length) return []
+  const proc = (s, type) => s.processes.list.find((p) => p.type === type)
+  const cell = (p) => (p ? `${p.privateMb ?? '—'} / ${p.mb}` : '—')
+  const lines = [
+    `### Memória por minuto (${memory.minutes} min, ${memory.switches} trocas)`,
+    'Privada / *working set*, em MB. Vazamento = privada do `Tab` subindo mais de 30 MB entre o minuto 30 e o 60 (spec 034).',
+    ''
+  ]
+  const at = (m) => series.reduce((best, s) => (Math.abs(s.minute - m) < Math.abs((best?.minute ?? Infinity) - m) ? s : best), null)
+  const a = at(30), b = at(60)
+  const pa = a && proc(a, 'Tab')?.privateMb, pb = b && proc(b, 'Tab')?.privateMb
+  if (memory.minutes >= 60 && pa != null && pb != null && a !== b) {
+    const d = pb - pa
+    lines.push(`**Tab, memória privada do minuto ${a.minute} ao ${b.minute}: ${d >= 0 ? '+' : ''}${round(d)} MB** → ${d > 30 ? '**vazamento** (acima de 30 MB)' : 'dentro do limite (aquecimento)'}.`, '')
+  }
+  lines.push(
+    '<details open><summary>Série (Tab e GPU)</summary>',
+    '',
+    '| Minuto | Trocas | Heap JS | Tab | GPU |',
+    '|---|---|---|---|---|',
+    ...series.map((s) => `| ${s.minute} | ${s.switches} | ${s.heapMb ?? '—'} | ${cell(proc(s, 'Tab'))} | ${cell(proc(s, 'GPU'))} |`),
+    '',
+    '</details>',
+    ''
+  )
+  return lines
 }
 
 function summary(cur, prev) {
@@ -202,6 +256,8 @@ function summary(cur, prev) {
     row(`**Memória: heap JS do renderer**, fim (${cur.memory.seconds} s, ${cur.memory.switches} trocas)`, cur.memory.end.heapMb, prev?.memory?.end?.heapMb, ' MB'),
     row('**Memória: todos os processos**, começo', cur.memory.start.processes.totalMb, prev?.memory?.start?.processes?.totalMb, ' MB'),
     row('**Memória: todos os processos**, fim', cur.memory.end.processes.totalMb, prev?.memory?.end?.processes?.totalMb, ' MB'),
+    row('**Memória privada: todos os processos**, começo', cur.memory.start.processes.totalPrivateMb, prev?.memory?.start?.processes?.totalPrivateMb, ' MB'),
+    row('**Memória privada: todos os processos**, fim', cur.memory.end.processes.totalPrivateMb, prev?.memory?.end?.processes?.totalPrivateMb, ' MB'),
     '',
     '<details><summary>Etapas da abertura (mediana, ms desde o processo)</summary>',
     '',
@@ -219,9 +275,10 @@ function summary(cur, prev) {
     '',
     '</details>',
     '',
+    ...seriesTable(cur.memory, round),
     '<details><summary>Memória por processo (MB, começo → fim)</summary>',
     '',
-    ...cur.memory.end.processes.list.map((p) => `- ${p.type}${p.name ? ` (${p.name})` : ''}: ${cur.memory.start.processes.list.find((q) => q.type === p.type && q.name === p.name)?.mb ?? '—'} → ${p.mb}`),
+    ...cur.memory.end.processes.list.map((p) => { const q = cur.memory.start.processes.list.find((x) => x.type === p.type && x.name === p.name); return `- ${p.type}${p.name ? ` (${p.name})` : ''}: ${q?.mb ?? '—'} → ${p.mb}${p.privateMb != null ? ` (privada ${q?.privateMb ?? '—'} → ${p.privateMb})` : ''}` }),
     '',
     '</details>'
   ]
@@ -234,7 +291,7 @@ function summary(cur, prev) {
   const startup = await measureStartup()
   const rm = await measureRenderAndMemory()
   const cur = {
-    schema: 1,
+    schema: 2, // 2 = memory.series e privateMb (spec 034); o 1 continua comparável no resumo
     version: rm.version,
     sha: process.env.GITHUB_SHA || '',
     date: new Date().toISOString(),

@@ -36,6 +36,7 @@ import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { FrameStats, syncLine, type SyncParts } from './sync'
+import { rendererMemLine } from './memory'
 import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 import { checkUpdates, configureUpdates, installUpdate, startUpdates, updateState } from './update'
@@ -186,6 +187,8 @@ async function start(): Promise<void> {
     const long = frameStats.takeLong()
     const f = (v: number): string => (Number.isFinite(v) ? v.toFixed(1) : '?')
     window.so.log(`[sync] ${syncLine(syncParts())} · last 5 min: frame p95 ${f(long.p95)} ms · longest ${f(long.max)} ms (${long.n} frames)`)
+    // Spec 034: o lado JS/DOM da memória (o main registra o processo inteiro na `[mem]`).
+    window.so.log(`[mem] ${rendererMemLine()}`)
   }, 5 * 60 * 1000)
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)

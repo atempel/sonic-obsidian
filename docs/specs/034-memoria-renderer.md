@@ -1,6 +1,6 @@
 # 034 — Memória do renderer numa sessão longa: medir antes de consertar
 
-**Fase:** Manutenção (estabilidade) · **Status:** pronta (`agent-decided`, rodada 2026-11-20) · **Issue:** [#98](https://github.com/atempel/sonic-obsidian/issues/98) · **Milestone:** v0.11.0 · **Personas:** Nostálgico do Winamp e DJ de Festa (deixam o app aberto horas seguidas)
+**Fase:** Manutenção (estabilidade) · **Status:** implementada (rodada 2026-11-24; falta a sessão de 1 h no Windows, no bloco v0.11.0) · **Issue:** [#98](https://github.com/atempel/sonic-obsidian/issues/98) · **Milestone:** v0.11.0 · **Personas:** Nostálgico do Winamp e DJ de Festa (deixam o app aberto horas seguidas)
 
 ## Problema
 No teste do bloco v0.6.0 (#91), o log `[mem]` mostrou o processo `Tab` (renderer) em 184 MB ao abrir → 247 → 293 → 297 → 300 MB em 15 min, com a GPU estável (158 → 164 MB). Parece assentar perto de 300 MB, mas uma sessão de 15 min não separa "aquecimento" de vazamento.
@@ -40,6 +40,12 @@ Regra de leitura (decidida na rodada, reversível): **vazamento** = memória pri
 3. `PERF_QUICK=1` na nuvem (comando do AGENTS.md) continua passando e grava ao menos uma amostra na série.
 4. **No Windows (testar no bloco):** deixar o app aberto 1 h tocando música, abrindo a Biblioteca e os Ajustes de vez em quando; no log (`Ctrl+Shift+L`), as linhas `[mem]` trazem `private` por processo e as do renderer trazem `heap=` e `nodes=`. Mandar o log: a rodada compara com a regra de leitura acima.
 5. `npm run typecheck` passa.
+
+## Notas da implementação
+- Listeners do DOM ficaram de fora da linha do renderer: o Chromium só os conta pelo DevTools (`getEventListeners`), não de forma barata na página.
+- A coleta forçada do `034-memoria` usa o CDP (`HeapProfiler.collectGarbage`, duas vezes), o mesmo do `perf:win`: o mesmo efeito do `--expose-gc` sem mexer no `launch` do harness.
+- Formato no log: `[mem] Tab=<working set>MB/private=<privada>MB` por processo (sem espaço dentro do campo de cada processo); `[renderer] [mem] heap=<MB> nodes=<n>`.
+- As 150 trocas levam ~6 min no Chromium da nuvem (cada preset compila no SwiftShader).
 
 ## Perguntas em aberto
 Nenhuma. Decidido pela rodada (reversível): limiar de 30 MB entre os minutos 30 e 60 para chamar de vazamento; 8 MB de heap e 5 % de nós no teste headless; série de até 60 min só no disparo manual (o job de rotina não fica mais lento). Ver DECISIONS 2026-11-20.
