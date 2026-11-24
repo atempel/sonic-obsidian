@@ -50,7 +50,9 @@ nsis:
 # só no Windows: precisa do makeappx do Windows SDK). Sem certificado (CSC_LINK vazio), o pacote sai
 # sem assinatura, que é o que a Store pede: ela assina depois da certificação. Identidade igual à do
 # Partner Center (a Store recusa o pacote se um valor for diferente). `runFullTrust` entra sempre.
-# Imagens do pacote em build/appx/ (StoreLogo, Square44x44Logo, Square150x150Logo, Wide310x150Logo).
+# Imagens do pacote em build/appx/, feitas do ícone do app (docs/brand/app-icon.svg), com as escalas e os
+# tamanhos (targetsize, inclusive altform-unplated, que o Windows 11 usa no Iniciar e na barra de tarefas);
+# com elas o electron-builder gera o resources.pri (makepri).
 appx:
   identityName: AlexandreTempel.SonicObsidian
   publisher: CN=FB52A5F4-E46E-48B7-90A9-D2F6FC05DB7B
