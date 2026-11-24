@@ -767,3 +767,9 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** a Store assina o pacote (sem SmartScreen) e cuida das atualizações; um segundo atualizador dentro do MSIX não funcionaria (o pacote é instalado e assinado pela Store) e arriscaria a certificação.
 - **Descartado:** atualizar o electron-builder para o alvo `msix` (beta, dependência nova a checar); detectar a Store pelo caminho `WindowsApps` (o `process.windowsStore` é a API documentada do Electron); publicar na Store a cada merge (a release só sai com o ok do usuário).
 - **A verificar no Windows:** a captura em loopback dentro do MSIX e a pasta de dados virtualizada (guia, passo 2). **Incerto na documentação da Microsoft:** se uma conta individual do Partner Center com conta Microsoft pessoal consegue criar o tenant do Entra ID que o `msstore` pede; sem isso, a alternativa é a submissão manual de cada versão com o `.msix` do `msix.yml`.
+
+## 2026-11-24 — Queda do contexto WebGL: sem trava contra laço de recarregamento (rodada, `agent-decided`, #130)
+- **Decisão:** spec 045. O ouvinte de `webglcontextlost` passa do canvas da página (2D, nunca perde WebGL) para o `OffscreenCanvas` do motor (`viz.gl.canvas`); o recarregamento espera de fato 1,5 s, e o log numera as quedas da sessão (`sessionStorage`). Sem trava contra laço de recarregamento por enquanto.
+- **Por quê:** é o mesmo caminho que o segundo motor do Estúdio já usa (027, A19), e conferido no Chromium headless que o `OffscreenCanvas` dispara o evento. O contador basta para um laço aparecer no log de um bloco; uma trava exigiria uma tela nova (design) para dizer o que aconteceu. Reversível.
+- **Descartado:** recriar o motor no `webglcontextrestored` sem recarregar (refaria à mão o que o recarregamento já devolve dos ajustes salvos); trava de N quedas por minuto agora (sem caso visto e sem desenho para a tela).
+- **Milestone:** v0.12.0 (o v0.11.0 já passou de ~5 issues de app), como `bug`.
