@@ -773,3 +773,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** é o mesmo caminho que o segundo motor do Estúdio já usa (027, A19), e conferido no Chromium headless que o `OffscreenCanvas` dispara o evento. O contador basta para um laço aparecer no log de um bloco; uma trava exigiria uma tela nova (design) para dizer o que aconteceu. Reversível.
 - **Descartado:** recriar o motor no `webglcontextrestored` sem recarregar (refaria à mão o que o recarregamento já devolve dos ajustes salvos); trava de N quedas por minuto agora (sem caso visto e sem desenho para a tela).
 - **Milestone:** v0.12.0 (o v0.11.0 já passou de ~5 issues de app), como `bug`.
+
+## 2026-11-24 — Perfis (spec 038, P0): detalhes decididos pela rodada (`agent-decided`)
+- **Decisão:** (1) quem já usava o app abre com o perfil ativo **Padrão** — se os ajustes dele diferem, a barra mostra "Padrão •" com Desfazer (nada é aplicado sozinho); (2) os toasts de perfil ("Perfil: Festa", restaurado, atualizado, salvo) são **importantes**, como no protótipo: passam por "Só importantes" e somem com "Nenhum"; (3) tempos no resumo e na confirmação sem casa decimal quando inteiros ("crossfade 5 s", como o protótipo); (4) a spec foi dividida como ela mesma permite: este PR entrega o P0 e já lê/aplica `profile.startup` ao abrir; a tela Configurações › Perfis (P1) fica para a próxima rodada, com a #110 aberta.
+- **Por quê:** reversíveis e pequenos; seguem o protótipo `#pf` (versão `1794680346-fb12`).
+- **Descartado:** começar com "Nenhum" ativo para quem atualiza (esconderia a barra útil); toasts comuns (sumiriam em "Só importantes", e trocar de perfil é uma ação grande).

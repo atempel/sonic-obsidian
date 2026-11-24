@@ -148,6 +148,8 @@ export interface Settings {
   language: LanguagePref
   /** Buscar atualizações automaticamente (spec 029): uma checagem por dia no GitHub. */
   updatesAuto: boolean
+  /** Perfis (spec 038): o ativo (`null` = nenhum) e o aplicado ao abrir (`last` = os ajustes como ficaram). */
+  profile: { active: string | null; startup: string }
 }
 
 export interface Collection {
@@ -195,7 +197,8 @@ export function defaultSettings(): Settings {
     authorName: null,
     perf: { skipSlow: true, minFps: 30 },
     language: 'auto',
-    updatesAuto: true
+    updatesAuto: true,
+    profile: { active: 'default', startup: 'last' }
   }
 }
 
@@ -322,7 +325,11 @@ export function sanitizeSettings(raw: unknown): Settings {
       minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5
     },
     language: oneOf(raw.language, LANGUAGE_PREFS, d.language),
-    updatesAuto: bool(raw.updatesAuto, d.updatesAuto)
+    updatesAuto: bool(raw.updatesAuto, d.updatesAuto),
+    profile: {
+      active: isObj(raw.profile) ? (typeof raw.profile.active === 'string' && raw.profile.active ? raw.profile.active : raw.profile.active === null ? null : d.profile.active) : d.profile.active,
+      startup: isObj(raw.profile) && typeof raw.profile.startup === 'string' && raw.profile.startup ? raw.profile.startup : d.profile.startup
+    }
   }
 }
 

@@ -37,6 +37,8 @@ import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { FrameStats, syncLine, type SyncParts } from './sync'
 import { rendererMemLine } from './memory'
+import { sanitizeProfiles } from './profiles'
+import { applyProfileAt } from './ui/ProfileBar'
 import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 import { checkUpdates, configureUpdates, installUpdate, startUpdates, updateState } from './update'
@@ -61,9 +63,10 @@ const COMPARE_MIN_FPS = 50
 async function start(): Promise<void> {
   // Tempos da abertura no log (passagem de performance): ver src/main/startup.ts.
   window.so.mark('renderer')
-  const [rawSettings, rawLibrary] = await Promise.all([
+  const [rawSettings, rawLibrary, rawProfiles] = await Promise.all([
     window.so.settings.load().catch(() => null),
-    window.so.library.load().catch(() => null)
+    window.so.library.load().catch(() => null),
+    (window.so.profiles?.load() ?? Promise.resolve(null)).catch(() => null)
   ])
   window.so.mark('settings read')
   const initialSettings = sanitizeSettings(rawSettings)
@@ -141,8 +144,17 @@ async function start(): Promise<void> {
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
+    saveProfiles: (profiles) => window.so.profiles?.save({ version: 1, profiles }) ?? Promise.resolve(),
     toggleFullScreen: () => window.so.window.toggleFullScreen()
-  })
+  }, sanitizeProfiles(rawProfiles))
+  // Perfil ao abrir (spec 038): aplicado antes do primeiro preset; `last` = os ajustes como ficaram.
+  {
+    const startup = core.state.settings.profile.startup
+    if (startup !== 'last') {
+      if (core.allProfiles.some((p) => p.id === startup)) core.run('profile.apply', { id: startup }, 'startup')
+      else core.state.settings.profile.startup = 'last'
+    }
+  }
   const settings = core.state.settings
   // Normalizar áudio (spec 028, P1): mede antes do ganho (o mesmo medidor do silêncio) e age no GainNode.
   const agc = new AutoGain()
@@ -947,6 +959,15 @@ async function start(): Promise<void> {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === ',') {
       e.preventDefault()
       toggleOverlay(core, 'settings')
+      return
+    }
+    // Alt+1…9 aplicam os nove primeiros perfis (spec 038), pelo `code` (qualquer layout), fora de campo de texto.
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
+      const el = e.target as HTMLElement | null
+      const typing = !!el && ((el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes((el as HTMLInputElement).type)) || el.tagName === 'TEXTAREA' || el.isContentEditable)
+      if (typing) return
+      e.preventDefault()
+      applyProfileAt(core, Number(e.code.slice(5)) - 1)
       return
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return

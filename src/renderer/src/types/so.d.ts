@@ -40,6 +40,8 @@ interface Window {
   so: {
     settings: SoStore
     library: SoStore
+    /** Spec 038; opcional no mock dos testes antigos. */
+    profiles?: SoStore
     window: { toggleFullScreen(): Promise<void>; minimize(): Promise<void>; close(): Promise<void> }
     system: {
       openSoundSettings(): Promise<void>

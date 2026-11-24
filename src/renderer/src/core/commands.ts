@@ -36,6 +36,17 @@ import {
   type Settings,
   type StartupPreset
 } from './state'
+import {
+  PROFILE_GROUPS,
+  builtInProfiles,
+  cleanProfileName,
+  nextDefaultProfileName,
+  profileName,
+  readValues,
+  sanitizeGroups,
+  uniqueProfileName,
+  type Profile
+} from '../profiles'
 
 /**
  * Núcleo de comandos (architecture §1). Teclado e UI (e o MCP, na Fase 4)
@@ -67,7 +78,7 @@ export interface CoreEvents extends Record<string, unknown> {
   autoGainTick: { db: number }
   captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
-  saved: { store: 'settings' | 'library' }
+  saved: { store: 'settings' | 'library' | 'profiles' }
   /** Checklist da captura (spec 012), a cada passo verificado. */
   captureChecks: { checks: CaptureCheck[] }
   /** Preset abaixo do mínimo de fps (spec 012, P2); `null` limpa o aviso. */
@@ -98,12 +109,16 @@ export interface AppState {
   breath: boolean
   /** Ganho automático em vigor (dB) com "Normalizar áudio" ligado; 0 desligado. Não é persistido. */
   autoGainDb: number
+  /** Perfis do usuário (spec 038), na ordem de criação; os do app vêm de `builtInProfiles()`. */
+  profiles: Profile[]
 }
 
 /** Efeitos fora do renderer (preload). */
 export interface CoreEffects {
   saveSettings(settings: Settings): Promise<void>
   saveLibrary(library: Library): Promise<void>
+  /** `profiles.json` (spec 038): só os perfis do usuário. */
+  saveProfiles(profiles: Profile[]): Promise<void>
   toggleFullScreen(): Promise<void>
 }
 
@@ -143,9 +158,10 @@ export class Core {
     private readonly presets: PresetLibrary,
     settings: Settings,
     library: Library,
-    private readonly effects: CoreEffects
+    private readonly effects: CoreEffects,
+    profiles: Profile[] = []
   ) {
-    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false, autoGainDb: 0 }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false, autoGainDb: 0, profiles }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -159,6 +175,19 @@ export class Core {
   }
 
   /** Intervalo em vigor: o da coleção quando a rotação segue uma coleção. */
+  /** Perfis na ordem do menu e do `Alt+1…9`: os do app, depois os do usuário (spec 038). */
+  get allProfiles(): Profile[] {
+    return [...this.builtIns, ...this.state.profiles]
+  }
+
+  /** O perfil ativo, ou `null` (nenhum, ou o ativo foi apagado). */
+  get activeProfile(): Profile | null {
+    const id = this.state.settings.profile.active
+    return this.allProfiles.find((p) => p.id === id) ?? null
+  }
+
+  private readonly builtIns = builtInProfiles()
+
   get rotationIntervalSeconds(): number {
     const rot = this.state.settings.rotation
     const col = rot.order === 'collection' ? this.collection(rot.collectionId) : undefined
@@ -357,6 +386,43 @@ export class Core {
       this.state.settings.render = next
       this.changedSettings(origin)
       return { ...next }
+    },
+
+    // ── perfis (spec 038) ───────────────────────────────────
+    /** `{ id }`: passa cada grupo do perfil pelos comandos de sempre; os outros grupos ficam. */
+    'profile.apply': (a, origin) => {
+      const p = this.allProfiles.find((x) => x.id === a.id) ?? fail(`perfil desconhecido: ${String(a.id)}`)
+      this.applyProfile(p, origin)
+      return { id: p.id, name: profileName(p) }
+    },
+    /** Desfazer: volta aos valores do perfil ativo. */
+    'profile.revert': (_a, origin) => {
+      const p = this.activeProfile ?? fail('nenhum perfil ativo')
+      this.applyProfile(p, origin)
+      return { id: p.id, name: profileName(p) }
+    },
+    /** `{ name?, groups }`: novo perfil do usuário com os valores de agora; vira o ativo. */
+    'profile.save': (a, origin) => {
+      const groups = sanitizeGroups(a.groups)
+      if (groups.length === 0 || !Array.isArray(a.groups) || a.groups.some((g) => !PROFILE_GROUPS.includes(g as never))) fail('groups: ao menos um de ' + PROFILE_GROUPS.join(', '))
+      if (a.name !== undefined && typeof a.name !== 'string') fail('name: texto')
+      const taken = this.allProfiles.map(profileName)
+      const clean = cleanProfileName((a.name as string | undefined) ?? '')
+      const name = clean ? uniqueProfileName(clean, taken) : nextDefaultProfileName(taken)
+      const p: Profile = { id: `p${Date.now().toString(36)}${this.state.profiles.length}`, name, builtIn: false, groups, values: readValues(this.state.settings, groups) }
+      this.state.profiles.push(p)
+      this.state.settings.profile.active = p.id
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: p.id, name }
+    },
+    /** Atualizar: grava os valores de agora no perfil ativo (só perfil do usuário). */
+    'profile.update': (_a, origin) => {
+      const p = this.activeProfile ?? fail('nenhum perfil ativo')
+      if (p.builtIn) fail('perfil do app não se atualiza')
+      p.values = readValues(this.state.settings, p.groups)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
     },
 
     // ── biblioteca ──────────────────────────────────────────
@@ -614,6 +680,32 @@ export class Core {
       .saveSettings(this.state.settings)
       .then(() => this.events.emit('saved', { store: 'settings' }))
       .catch((err: unknown) => console.error('[core] falha ao salvar settings', err))
+  }
+
+  private applyProfile(p: Profile, origin: Origin): void {
+    const v = p.values
+    const run = (name: string, args: Args): unknown => this.handlers[name]!(args, origin)
+    if (v.expression) run('expression.set', { ...v.expression })
+    if (v.blend) {
+      run('blend.set', { target: 'manual', ...v.blend.manual })
+      run('blend.set', { target: 'auto', ...v.blend.auto })
+    }
+    if (v.rotation) run('rotation.set', { ...v.rotation })
+    if (v.signal) {
+      run('audio.autoGain', { value: v.signal.autoGain })
+      run('signal.set', { gainDb: v.signal.gainDb })
+    }
+    if (v.text) run('overlayText.set', { ...v.text })
+    this.state.settings.profile.active = p.id
+    this.changedSettings(origin)
+  }
+
+  private changedProfiles(origin: Origin): void {
+    this.events.emit('stateChanged', { origin })
+    this.effects
+      .saveProfiles(this.state.profiles)
+      .then(() => this.events.emit('saved', { store: 'profiles' }))
+      .catch((err: unknown) => console.error('[core] falha ao salvar profiles', err))
   }
 
   private changedLibrary(origin: Origin): void {
