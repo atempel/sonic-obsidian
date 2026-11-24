@@ -25,7 +25,7 @@ import { mountOverlay, toggleOverlay } from './ui/Overlay'
 import { dismissFloat, mountWebglError } from './ui/Diagnostics'
 import { closeShortcuts, isShortcutsOpen, toggleShortcuts } from './ui/ShortcutsPanel'
 import { closeBugReport, isFeedbackOpen, openBugReport } from './ui/Feedback'
-import { copyDiagnostics, openIdeas, openQuestion } from './feedback'
+import { copyDiagnostics, openIdeas, openQuestion, setStoreOutputName } from './feedback'
 import { measureCapture, webClickPlayer } from './capture-latency'
 import { setActionRunner, type ActionId } from './ui/shortcuts'
 import { closeStudio, openStudio } from './ui/Studio'
@@ -238,6 +238,8 @@ async function start(): Promise<void> {
   let capturing = false
   // Flag de teste: a primeira tentativa falha como se o Windows recusasse; "Tentar de novo" é real.
   let simulateFail = testFlags.captureFail
+  /** Versão da Microsoft Store (spec 044): sem `enumerateDevices` (o MSIX pediria acesso à câmera). */
+  const storeBuild: Promise<boolean> = window.so.app.store?.().catch(() => false) ?? Promise.resolve(false)
   const PERMISSION_HELP = 'setup.check.exclusiveHelp'
   let checks: CaptureCheck[] = []
   const setCheck = (i: number, c: Partial<CaptureCheck>): void => {
@@ -274,11 +276,16 @@ async function start(): Promise<void> {
     ]
     core.events.emit('captureChecks', { checks })
     try {
-      // 1. Saída padrão: o Chromium lista a saída "default" do Windows.
-      const outputs = await navigator.mediaDevices.enumerateDevices().catch(() => [] as MediaDeviceInfo[])
-      const out = outputs.find((d) => d.kind === 'audiooutput' && d.deviceId === 'default') ?? outputs.find((d) => d.kind === 'audiooutput')
-      const outName = out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '') || ''
-      setCheck(0, out ? { state: 'ok', detail: outName ? { raw: outName } : 'setup.check.defaultOutput' } : { state: 'fail', detail: 'setup.check.noOutput' })
+      // 1. Saída padrão: o Chromium lista a saída "default" do Windows. Na versão da Microsoft Store
+      // (spec 044) a lista não é pedida: no MSIX, o Windows trata a varredura (que inclui as câmeras)
+      // como acesso à câmera e pergunta à pessoa. Lá o nome vem da captura, no passo 2.
+      let outName = ''
+      if (!(await storeBuild)) {
+        const outputs = await navigator.mediaDevices.enumerateDevices().catch(() => [] as MediaDeviceInfo[])
+        const out = outputs.find((d) => d.kind === 'audiooutput' && d.deviceId === 'default') ?? outputs.find((d) => d.kind === 'audiooutput')
+        outName = out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '') || ''
+        setCheck(0, out ? { state: 'ok', detail: outName ? { raw: outName } : 'setup.check.defaultOutput' } : { state: 'fail', detail: 'setup.check.noOutput' })
+      }
       // 2. Permissão (getDisplayMedia com loopback).
       let cap: Awaited<ReturnType<typeof captureSystemAudio>>
       try {
@@ -293,6 +300,8 @@ async function start(): Promise<void> {
         console.error('[capture] capture refused or unavailable', err)
         window.so.log(`capture refused: ${err instanceof Error ? `${err.name}: ${err.message}` : String(err)}`)
         setCheck(1, { state: 'fail', detail: 'setup.check.denied', help: PERMISSION_HELP })
+        // Store: sem a lista, a saída fica sem resposta até a captura funcionar.
+        if (checks[0]!.state === 'busy') setCheck(0, { state: 'pending', detail: 'setup.check.waiting' })
         setCheck(2, { state: 'pending', detail: 'setup.check.waiting' })
         setCheck(3, { state: 'pending', detail: 'setup.check.waiting' })
         state.audio = 'refused'
@@ -307,6 +316,7 @@ async function start(): Promise<void> {
       const ts = audioTrack.getSettings()
       // device vazio = a saída padrão (as Configurações dizem isso no idioma do app).
       captureInfo = { device: audioTrack.label || outName, sampleRate: ts.sampleRate ?? ctx.sampleRate }
+      if (await storeBuild) setStoreOutputName(captureInfo.device)
       const rate = Math.round(captureInfo.sampleRate / 100) / 10
       setCheck(2, { state: 'ok', detail: ts.channelCount ? { plural: 'setup.check.channels', n: ts.channelCount, params: { rate } } : { key: 'setup.check.rate', params: { rate } } })
       const updateTrack = (): void => {

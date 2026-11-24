@@ -53,6 +53,8 @@ function registerStores(): void {
   // URL fixa: o renderer não escolhe o que abrir.
   ipcMain.handle('system:openSoundSettings', () => shell.openExternal('ms-settings:sound'))
   ipcMain.handle('app:version', () => app.getVersion())
+  // Versão da Microsoft Store (pacote MSIX, spec 044): o renderer não lista dispositivos de mídia nela.
+  ipcMain.handle('app:store', () => process.platform === 'win32' && !!process.windowsStore)
   // Idioma do Windows (spec 030): o primeiro preferido; `pt-*` vira pt-BR, o resto en (o renderer só recebe os dois).
   ipcMain.handle('app:systemLanguage', () => systemLang())
   // Idioma ativo do app (resolvido no renderer): os diálogos nativos seguem ele (spec 030, P1).

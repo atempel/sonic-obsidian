@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/store-sem-camera`
+**Fez:** No teste do MSIX o Windows pediu acesso à câmera ao abrir: o `enumerateDevices` da checagem de captura (e do "Relatar um problema") varre também as câmeras, e no pacote o Windows trata isso como acesso à câmera. Só na versão da Store (`app:store` → `process.windowsStore`), o app não chama mais `enumerateDevices`: o nome da saída vem da trilha da captura (`setStoreOutputName`). Instalador e zip iguais. `044-store` ganhou a parte 3 (falha sem a correção, 16/16 com ela); 031, 011 e 142 passando.
+**Deixou em:** PR desta branch (Refs #188), label `build-msix`, sem auto-merge até o usuário testar o MSIX (pedido dele: medo de bug escondido).
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/msix-icones`
 **Fez:** O usuário instalou o MSIX (Modo de desenvolvedor + `Add-AppxPackage -Register`) e o ícone ficou só o losango sobre fundo transparente no Iniciar. `build/appx/` passa a ter o ícone completo do app (`docs/brand/app-icon.svg`) em escalas (scale-100/200/400) e tamanhos (targetsize 16–256, com `altform-unplated`); o electron-builder gera o `resources.pri`, que o `check-msix.sh` agora confere.
 Depois, no teste do usuário: o pacote registrado com `Expand-Archive` não abria (nomes com espaço vêm como `%20` dentro do `.msix`); o guia ganhou o passo que decodifica os nomes, e com ele o app abriu como MSIX e a captura iniciou. A pasta de dados é `%APPDATA%\sonic-obsidian` (corrigido no PRIVACY.md, nas páginas e no guia), e o log da versão da Store não diz mais "automatic checks on".
