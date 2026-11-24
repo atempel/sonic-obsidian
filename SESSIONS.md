@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-24 — Claude Code (nuvem, pedido do usuário) — branch `claude/nifty-gates-sagdcv`
+**Fez:** Ficha da Microsoft Store a partir de capturas reais. `scripts/store-capture/capture.cjs` (renderer compilado no Chromium do Playwright com o `window.so` dos testes e uma faixa sintetizada em `music.cjs`; modos `sweep`, `frames`, `screens`) e `compose.cjs` (6 imagens em HTML/CSS com os tokens da interface, en e pt-BR, 3840×2160 e 1920×1080; box art 1:1 e pôster 2:3 da marca atual; `preview.html`). Sweep de 86 presets para escolher 8 (`store/presets.json`). `store/listing/LISTING.md` com descrição, 20 recursos conferidos no código, legendas, palavras-chave. Fora por não existirem no app: Rack (phase 5), fontes de áudio (SoundCloud/arquivo/microfone) e o preset "Halo"; a imagem 5 usa os Ajustes rápidos.
+**Deixou em:** branch empurrada, sem PR. Pendente do usuário: link da política de privacidade (não achei a página da "tarefa anterior"; provisório `README#privacy`), revisão dos textos e das imagens. Capturas feitas com WebGL por software (~1 fps em 4K), não no Windows.
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `feat/manual-on-beat`
 **Fez:** #183 + spec 043: "Trocas manuais no beat" (`rotation.manualOnBeat`, padrão desligado) separado de "Trocar no beat", que passa a valer só para a rotação automática. Switch nos Ajustes rápidos e linha em Configurações › Visual › Transição (en/pt-BR); ponto de beat e "Adiantar o visual" com qualquer um dos dois. Teste novo `043-beat-manual` (13/13); `024-beat` (38/38, agora com as duas ligadas), 030, 011 e 020 passando. Divergência registrada em DIVERGENCIAS (2026-11-23).
 **Deixou em:** PR desta branch (`Closes #183`). Não verificado: atraso com música real no Windows (teste do bloco v0.11.0).

@@ -114,7 +114,7 @@ Um visualizador de música MilkDrop para Windows: centenas de presets clássicos
 3. Centenas de presets. Busque, favorite e monte coleções.
 4. Estúdio de presets: edite qualquer preset com prévia ao vivo.
 5. Toque sua música e o visual acompanha. Ajuste o nível e o quanto ele reage.
-6. Vinte anos de arte MilkDrop, com o crédito de cada autor.
+6. Vinte anos de MilkDrop, com crédito a cada autor.
 
 ### Palavras-chave (até 7)
 

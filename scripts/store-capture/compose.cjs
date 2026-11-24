@@ -43,7 +43,7 @@ h1 { margin: 0; font-weight: 600; letter-spacing: -0.025em; line-height: 1.02; t
 .window img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .head { position: absolute; left: 154px; right: 154px; top: 58px; display: flex; align-items: center; justify-content: space-between; gap: 40px; }
 .head h1 { font-size: 64px; }
-.head .lockup { font-size: 18px; gap: 12px; color: var(--text-2); }
+.head .lockup { font-size: 18px; gap: 12px; color: var(--text-2); flex-shrink: 0; white-space: nowrap; }
 .head .lockup svg { width: 28px; height: 28px; }
 `
 
@@ -72,22 +72,22 @@ const SLIDES = {
     <div style="position:absolute;left:120px;top:110px">${lockup()}</div>
     <div style="position:absolute;left:120px;bottom:130px;max-width:900px"><h1 style="font-size:104px">${esc(t.title)}</h1><div class="sub" style="font-size:34px">${esc(t.sub)}</div></div>`),
   '02-reactivity': (c, t) => {
-    const w = 520, hh = Math.round(w * 9 / 16), gap = 40, x0 = (1920 - 3 * w - 2 * gap) / 2
+    const w = 540, hh = Math.round(w * 9 / 16), gap = 40, x0 = (1920 - 3 * w - 2 * gap) / 2
     return page(`<img class="blurbg" src="${url(c.reactivity.frames[2])}">
       <div class="head"><h1>${esc(t.title)}</h1>${smallLockup()}</div>
       <div style="position:absolute;left:154px;top:150px;" class="sub">${esc(t.sub)}</div>
-      ${c.reactivity.frames.map((f, i) => `<div class="window" style="left:${x0 + i * (w + gap)}px;top:340px;width:${w}px;height:${hh}px"><img src="${url(f)}"></div>
-        <div class="mono" style="position:absolute;left:${x0 + i * (w + gap)}px;top:${340 + hh + 30}px;width:${w}px;display:flex;align-items:center;gap:14px"><span style="display:inline-block;width:${[18, 60, 110][i]}px;height:6px;border-radius:3px;background:${i ? '#C244FF' : '#3A3A50'}"></span>${esc(t.labels[i])}</div>`).join('')}
+      ${c.reactivity.frames.map((f, i) => `<div class="window" style="left:${x0 + i * (w + gap)}px;top:330px;width:${w}px;height:${hh}px"><img src="${url(f)}"></div>
+        <div class="mono" style="position:absolute;left:${x0 + i * (w + gap)}px;top:${330 + hh + 30}px;width:${w}px;display:flex;align-items:center;gap:14px"><span style="display:inline-block;width:${[18, 60, 110][i]}px;height:6px;border-radius:3px;background:${i ? '#C244FF' : '#3A3A50'}"></span>${esc(t.labels[i])}</div>`).join('')}
       <div class="mono" style="position:absolute;left:${x0}px;bottom:150px;color:#8585A3;text-transform:none;letter-spacing:.04em">${esc(c.reactivity.name)}</div>`)
   },
   '03-library': (c, t) => windowShot(c.library, c.bg, t.title),
   '04-studio': (c, t) => windowShot(c.studio, c.bg, t.title),
   '05-audio': (c, t) => windowShot(c.audio, c.bg, t.title),
   '06-variety': (c, t) => {
-    const w = 806, hh = Math.round(w * 9 / 16), gx = 28, gy = 28, x0 = (1920 - 2 * w - gx) / 2, y0 = 190
+    const w = 740, hh = Math.round(w * 9 / 16), gx = 24, gy = 24, x0 = (1920 - 2 * w - gx) / 2, y0 = 168
     return page(`<img class="blurbg" src="${url(c.variety[0].file)}">
-      <div class="head"><h1>${esc(t.title)}</h1>${smallLockup()}</div>
-      ${c.variety.map((v, i) => { const x = x0 + (i % 2) * (w + gx), y = y0 + Math.floor(i / 2) * (hh + gy + 40); return `<div class="window" style="left:${x}px;top:${y}px;width:${w}px;height:${hh}px"><img src="${url(v.file)}"></div><div class="mono" style="position:absolute;left:${x}px;top:${y + hh + 12}px;width:${w}px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none;letter-spacing:.02em;font-size:18px">${esc(v.name)}</div>` }).join('')}`)
+      <div class="head"><h1 style="font-size:56px">${esc(t.title)}</h1>${smallLockup()}</div>
+      ${c.variety.map((v, i) => { const x = x0 + (i % 2) * (w + gx), y = y0 + Math.floor(i / 2) * (hh + gy); return `<div class="window" style="left:${x}px;top:${y}px;width:${w}px;height:${hh}px"><img src="${url(v.file)}"><div class="mono" style="position:absolute;left:0;right:0;bottom:0;padding:40px 18px 14px;background:linear-gradient(0deg,rgba(8,8,9,.85),rgba(8,8,9,0));color:#EEEEF5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:none;letter-spacing:.02em;font-size:17px">${esc(v.name)}</div></div>` }).join('')}`)
   }
 }
 
