@@ -26,11 +26,20 @@ Localmente, no Windows com o Windows SDK: `npm run dist:msix` gera o pacote em `
 
 O pacote sem assinatura não instala por clique duplo. Há dois jeitos de instalar:
 
-**A. Sem certificado (mais simples):** ligue o Modo de desenvolvedor em Configurações do Windows › Sistema › Para desenvolvedores. Extraia o `.msix` numa pasta (ele é um zip; renomeie para `.zip` se preciso) e, no PowerShell, dentro dessa pasta:
+**A. Sem certificado (mais simples):** ligue o Modo de desenvolvedor em Configurações do Windows › Sistema › Para desenvolvedores. No PowerShell, na pasta do artifact baixado:
 
 ```powershell
-Add-AppxPackage -Register .\AppxManifest.xml
+Copy-Item .\SonicObsidian-Store-x64.msix .\pacote.zip
+Expand-Archive .\pacote.zip -DestinationPath .\pacote -Force
+# Dentro do .msix os nomes com espaço vêm codificados (Sonic%20Obsidian.exe); o Expand-Archive não decodifica.
+Get-ChildItem .\pacote -Recurse | Where-Object Name -match '%[0-9A-Fa-f]{2}' |
+  Sort-Object { $_.FullName.Length } -Descending |
+  Rename-Item -NewName { [uri]::UnescapeDataString($_.Name) }
+Test-Path ".\pacote\app\Sonic Obsidian.exe"   # tem que dar True
+Add-AppxPackage -Register .\pacote\AppxManifest.xml
 ```
+
+Sem o passo de decodificar, o pacote registra mas não abre (o manifesto aponta para `app\Sonic Obsidian.exe`, e na pasta o arquivo fica `Sonic%20Obsidian.exe`). Não apague a pasta `pacote` enquanto testar: nesse modo o app roda dela. Para tirar: `Get-AppxPackage *SonicObsidian* | Remove-AppxPackage`. Com o Windows SDK instalado, `makeappx unpack /p SonicObsidian-Store-x64.msix /d pacote` faz a extração já com os nomes certos.
 
 **B. Com um certificado de teste**, no PowerShell como administrador. O `Subject` tem que ser exatamente o Publisher do manifesto:
 
