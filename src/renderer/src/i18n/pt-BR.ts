@@ -129,6 +129,7 @@ export const ptBR: Messages = {
   'quick.clean': 'Modo limpo',
   'quick.creditNote': 'O crédito do autor continua na faixa de controle e na Biblioteca.',
   'quick.allSettings': 'Todas as configurações',
+  'quick.allSettingsTitle': 'Todas as configurações (Ctrl+,)',
 
   // ── Toasts ────────────────────────────────────────────────
   'toast.favAdded': 'Adicionado aos favoritos.',

@@ -129,6 +129,7 @@ export const en = {
   'quick.clean': 'Clean mode',
   'quick.creditNote': 'The author credit stays on the control strip and in the Library.',
   'quick.allSettings': 'All settings',
+  'quick.allSettingsTitle': 'All settings (Ctrl+,)',
 
   // ── Toasts ────────────────────────────────────────────────
   'toast.favAdded': 'Added to favorites.',
