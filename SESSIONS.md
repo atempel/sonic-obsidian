@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-24 — Claude Code (nuvem, rodada agendada) — branch `feat/034-memoria-renderer`
+**Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste; o PR #195 espera o teste do usuário no Windows por pedido dele, não mergeado; v0.11.0 ainda aberto). Passo 4: #98 (spec 034), só medição: `[mem]` com `/private=` por processo (Windows) e `[renderer] [mem] heap= nodes=` a cada 5 min (`src/renderer/src/memory.ts`); `perf:win` com `PERF_MEMORY_MINUTES` (até 60), `memory.series` por minuto e a série do `Tab`/GPU no resumo, com o veredito da regra de 30 MB; `memoria_min` no disparo manual do `build-windows`; teste `034-memoria` (150 trocas + painéis: heap 25,4 → 22,7 MB, nós 9372 → 9378; ~6 min na nuvem). `PERF_QUICK=1` na nuvem passa e grava a série.
+**Deixou em:** PR desta branch (Closes #98), com auto-merge. Disparado o `build-windows` com `memoria_min=60` na branch (run 45358044762, ~1,5 h): a próxima rodada lê o resumo/`perf-<sha>` e comenta a série no PR e na #98; privada do `Tab` +30 MB entre os minutos 30 e 60 → issue `bug` nova (P1). Testar no bloco v0.11.0: sessão de 1 h no Windows e mandar o log. O `034-memoria` soma ~6 min ao CI.
+
 ### 2026-11-24 — Claude Code (nuvem, rodada agendada) — branch `fix/097-normalizar-teto`
 **Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste, v0.11.0 ainda com issues abertas); passo 2: auto-merge ligado no PR #195 (MSIX sem câmera, `typecheck` rodando). Passo 4: #97 (spec 033): teto do Normalizar áudio de +12 para +18 dB (`AGC.maxDb`), referência −14 dBFS mantida; simulador com o caso −30 dBFS (chega a −14,3 em 30 s; com +12 parava em −18) e `028-agc-sim` cobrando o teto novo; spec 028 atualizada.
 **Deixou em:** PR desta branch (Closes #97), com auto-merge. Testar no bloco v0.11.0 (Windows: HUD/log). A #186 (Normalizar agressivo) segue `backlog` no mesmo milestone e pode rever janela/ataque/soltura e o critério "alta → baixa em 15 s"; o teto de +18 não depende disso.
