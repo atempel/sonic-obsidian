@@ -10,7 +10,7 @@ To draw the visuals, the app captures what your computer is playing (the system'
 
 ## What is stored on your computer
 
-The app keeps these files in its data folder (`%APPDATA%\Sonic Obsidian`; in the Microsoft Store edition, Windows may keep them in the app package's own data folder). They never leave your computer unless you copy them yourself:
+The app keeps these files in its data folder (`%APPDATA%\sonic-obsidian`; in the Microsoft Store edition, Windows may keep them in the app package's own data folder). They never leave your computer unless you copy them yourself:
 
 - `settings.json`: your settings (gain, rotation, transitions, language and so on);
 - `library.json`: favorites, collections, recently played presets and the measured frame rate of each preset;
@@ -67,7 +67,7 @@ Para desenhar o visual, o app captura o que o computador está tocando (a saída
 
 ## O que fica salvo no seu computador
 
-O app guarda estes arquivos na pasta de dados dele (`%APPDATA%\Sonic Obsidian`; na edição da Microsoft Store, o Windows pode guardá-los na pasta de dados do próprio pacote do app). Eles só saem do computador se você mesmo copiar:
+O app guarda estes arquivos na pasta de dados dele (`%APPDATA%\sonic-obsidian`; na edição da Microsoft Store, o Windows pode guardá-los na pasta de dados do próprio pacote do app). Eles só saem do computador se você mesmo copiar:
 
 - `settings.json`: suas configurações (ganho, rotação, transições, idioma etc.);
 - `library.json`: favoritos, coleções, presets tocados recentemente e a taxa de quadros medida de cada preset;

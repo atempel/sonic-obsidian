@@ -4,7 +4,7 @@ import { join } from 'node:path'
 
 /**
  * Log em arquivo para diagnosticar quedas no Windows (o app não tem console
- * visível): `%APPDATA%/Sonic Obsidian/logs/sonic-obsidian.log`, com rotação
+ * visível): `%APPDATA%/sonic-obsidian/logs/sonic-obsidian.log`, com rotação
  * simples em 1 MB (o anterior vira `.1.log`). Escrita síncrona e curta: só
  * eventos raros (abertura, falhas, memória a cada 5 min). Sempre em inglês (spec 030):
  * o texto vai para issues, seja qual for o idioma do app.

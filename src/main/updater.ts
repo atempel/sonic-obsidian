@@ -271,7 +271,7 @@ export function registerUpdater(d: Deps): void {
     const next = enabled === true
     if (next === auto) return
     auto = next
-    log('update', `automatic checks ${auto ? 'on' : 'off'}`)
+    log('update', store ? 'automatic checks: none (Microsoft Store build, the Store updates the app)' : `automatic checks ${auto ? 'on' : 'off'}`)
     schedule()
   })
   ipcMain.handle('update:check', () => check(true))
