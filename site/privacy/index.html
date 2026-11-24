@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Sonic Obsidian</title>
+<meta name="description" content="Sonic Obsidian has no account, no telemetry and no analytics. Audio is analyzed in memory and never saved or sent.">
+<meta name="theme-color" content="#080809">
+<link rel="canonical" href="https://atempel.github.io/sonic-obsidian/privacy/">
+<link rel="alternate" hreflang="en" href="https://atempel.github.io/sonic-obsidian/privacy/">
+<link rel="alternate" hreflang="pt-BR" href="https://atempel.github.io/sonic-obsidian/pt/privacidade/">
+<link rel="alternate" hreflang="x-default" href="https://atempel.github.io/sonic-obsidian/privacy/">
+<link rel="icon" href="../assets/brand/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/site.css">
+<style>
+.so-doc{max-width:760px;margin:0 auto;padding:48px 24px 96px;font-size:16px;line-height:1.7;color:#C9C9D8}
+.so-doc h1{font-size:40px;line-height:1.1;letter-spacing:-.02em;color:#EEEEF5;margin:40px 0 12px;font-weight:600}
+.so-doc h2{font-size:22px;color:#EEEEF5;margin:40px 0 8px;font-weight:600}
+.so-doc strong{color:#EEEEF5;font-weight:600}
+.so-doc code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;color:#EEEEF5;background:#14141B;border:1px solid #2A2A3A;border-radius:3px;padding:1px 5px}
+.so-doc ul{padding-left:22px} .so-doc li{margin:6px 0}
+.so-doc nav{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px}
+</style>
+</head>
+<body>
+<main class="so so-doc" style="font-family: 'Space Grotesk', sans-serif">
+<nav aria-label="Site"><a href="../">Back to Sonic Obsidian</a><a href="../pt/privacidade/" hreflang="pt-BR">Português</a></nav>
+<h1>Privacy Policy</h1>
+<p><strong>Sonic Obsidian</strong> · last updated November 23, 2026</p>
+<p>Sonic Obsidian is an open-source audio visualizer for Windows. It runs entirely on your computer. It has <strong>no account, no telemetry, no analytics and no ads</strong>, and the developer does not collect any personal data. This policy covers the app in every edition (Microsoft Store, installer and portable zip) and the project website at https://atempel.github.io/sonic-obsidian/. The page version is at https://atempel.github.io/sonic-obsidian/privacy/.</p>
+<h2>Audio</h2>
+<p>To draw the visuals, the app captures what your computer is playing (the system's audio output, through Windows "loopback" capture). The audio is analyzed in memory, a few milliseconds at a time, and is <strong>never recorded, saved or sent anywhere</strong>. The app does not use your microphone. Windows offers a screen-capture video track together with the audio; the app discards it immediately without reading it.</p>
+<h2>What is stored on your computer</h2>
+<p>The app keeps these files in its data folder (<code>%APPDATA%\Sonic Obsidian</code>; in the Microsoft Store edition, Windows may keep them in the app package's own data folder). They never leave your computer unless you copy them yourself:</p>
+<ul>
+<li><code>settings.json</code>: your settings (gain, rotation, transitions, language and so on);</li>
+<li><code>library.json</code>: favorites, collections, recently played presets and the measured frame rate of each preset;</li>
+<li><code>updates.json</code> (installer and zip only): when the last update check happened;</li>
+<li><code>presets/imported/</code> and <code>presets/mine/</code>: the <code>.milk</code> presets you import and the presets you create in the Studio, including the author name you type;</li>
+<li><code>logs/sonic-obsidian.log</code> (and <code>.1.log</code>): technical events used to diagnose problems, such as app and Electron versions, start-up times, crashes, graphics (WebGL) errors, memory use and preset names. The log may contain the path of this folder, which usually includes your Windows user name. It is limited to about 2 MB and is never sent by the app.</li>
+</ul>
+<p>Uninstalling the installer edition keeps this folder, so your settings survive a reinstall; delete it by hand if you want them gone.</p>
+<h2>Network connections</h2>
+<ul>
+<li><strong>Update check (installer and portable zip only).</strong> Once a day, and when you click <strong>Check now</strong>, the app asks GitHub whether a newer release exists. The installer then downloads it from GitHub. Like any web request, this reveals your IP address and the request to GitHub. You can turn the daily check off in <strong>Settings › About › Updates</strong>. The <strong>Microsoft Store edition never checks GitHub</strong>: Microsoft Store handles its updates.</li>
+<li><strong>Nothing else on its own.</strong> The part of the app that draws the visuals is not allowed to connect to any server (its content security policy only allows the app's own files).</li>
+<li><strong>Links you click</strong> (source code, release notes, credits, feedback forms) open in your web browser. From then on, the privacy policy of that website applies.</li>
+</ul>
+<h2>Feedback and diagnostics</h2>
+<ul>
+<li><strong>Report a problem</strong> opens a bug form on GitHub in your browser, pre-filled with the app version, Windows version, graphics card, audio output and current preset. You see each item before it is used and can remove any of them. Nothing is sent until you submit the form on GitHub, where it becomes public. You need a GitHub account to post.</li>
+<li><strong>Copy diagnostics</strong> copies the last 200 lines of the log to your clipboard, with your user folder replaced by <code>~</code>, so you can paste them where you choose. The app sends nothing.</li>
+</ul>
+<h2>Third parties</h2>
+<ul>
+<li><strong>GitHub</strong> hosts the source code, the releases, the update files, the feedback forms and the website. <a href="https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement">GitHub Privacy Statement</a>.</li>
+<li><strong>Microsoft Store</strong> distributes and updates the Store edition. <a href="https://privacy.microsoft.com/privacystatement">Microsoft Privacy Statement</a>.</li>
+<li><strong>SignPath Foundation</strong> may sign the release files before they are published. Signing happens before distribution and involves no data about you.</li>
+</ul>
+<h2>Website</h2>
+<p>The website is a static page on GitHub Pages; GitHub may log visits as described in its privacy statement. The page asks the GitHub API for the latest version number and download sizes. The live demo plays a bundled track; if you click <strong>Microphone</strong>, your browser asks for permission and the sound is analyzed only inside your browser, never sent. The site uses no cookies and no analytics.</p>
+<h2>Children</h2>
+<p>The app and the website collect no personal data from anyone, including children.</p>
+<h2>Changes</h2>
+<p>Changes to this policy are published in this file and on the website; the full history is in the <a href="https://github.com/atempel/sonic-obsidian/commits/main/PRIVACY.md">repository</a>.</p>
+<h2>Contact</h2>
+<p>Open an issue at https://github.com/atempel/sonic-obsidian/issues, or report a security problem privately as described in <a href="https://github.com/atempel/sonic-obsidian/blob/main/SECURITY.md">SECURITY.md</a>.</p>
+</main>
+</body>
+</html>

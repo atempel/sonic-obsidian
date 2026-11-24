@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `docs/signpath-privacidade`
+**Fez:** Distribuição, itens 1–4: frase da SignPath ("Free code signing provided by SignPath.io, certificate by SignPath Foundation", links about.signpath.io e signpath.org) + "Code signing policy" + política de privacidade na seção `#download` da landing (en e pt-BR) e no README (en e pt-BR); `CODE_SIGNING_POLICY.md` no modelo da SignPath Foundation (artefatos, papéis, privacidade); `PRIVACY.md` (en + pt-BR) conferido no código (CSP sem conexões externas, só a checagem de atualização no GitHub, dados locais, log, feedback) e as páginas `site/privacy/` e `site/pt/privacidade/` geradas por `scripts/site-privacy.py`; link "Privacy/Privacidade" no rodapé.
+**Deixou em:** PR desta branch, com auto-merge. Conferir depois do merge que o GitHub Pages publicou. O `CODE_SIGNING_POLICY.md` diz que os membros usam MFA no GitHub e no SignPath: o usuário confirma.
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `feat/msix-store`
 **Fez:** Distribuição pela Microsoft Store (#188, spec 044): alvo `appx` do electron-builder com a identidade do Partner Center (`.msix`, sem assinatura, imagens em `build/appx/`), `npm run dist:msix`, `scripts/check-msix.sh`, workflow sob demanda `msix.yml`; versão da Store detectada por `process.windowsStore` (sem atualização pelo GitHub; Sobre › Atualizações só com a versão e o texto da Store; busca sem "Verificar atualizações"); etapa 2: `store.yml` com o `msstore`, só com release publicada e desligado até `MSSTORE_ENABLED` + secrets; guia `docs/distribuicao/microsoft-store.md`. Teste novo `044-store` (10/10); 029, 030 e 020 passando. Issue #189 (SignPath, etapa 3) `blocked`, atribuída ao usuário. DIVERGENCIAS e DECISIONS.
 **Deixou em:** PR desta branch (`Closes #188`). Não verificado: o `.msix` de verdade (só no Windows; o primeiro `msix.yml` roda depois do merge), a captura em loopback dentro do MSIX e as credenciais do Partner Center (incerto para conta individual).
