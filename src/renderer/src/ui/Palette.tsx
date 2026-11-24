@@ -4,12 +4,22 @@ import { Highlight } from './Highlight'
 import { Icon } from './icons'
 import { TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './library-data'
 import { splitPresetName } from './preset-name'
-import { matchCommands, runAction, type Command } from './shortcuts'
+import { matchCommands, runAction } from './shortcuts'
+import { matchProfileCommands } from './ProfileBar'
+import type { IconName } from './icons'
 import { showToast } from './toast'
 import { fmtSeconds, t } from '../i18n'
 import { Kbd } from './Kbd'
 
 const MAX_RESULTS = 50
+
+interface PaletteCmd {
+  key: string
+  text: string
+  keys: string[]
+  icon: IconName
+  run: () => void
+}
 
 /**
  * Busca rápida (spec 010) — protótipo "Palco integrado" (`#palette`), versão 1794165177-f126.
@@ -38,7 +48,14 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
   const items = tab === 'collections' ? [] : listFor(core, presets, allSet, tab, q.trim()).slice(0, MAX_RESULTS)
   const cols = tab === 'collections' ? lib.collections.filter((c) => matches(c.name, q.trim())) : []
   // Comandos (spec 020): só na aba Todos e com texto, abaixo dos presets; Enter executa.
-  const cmds = tab === 'all' ? matchCommands(q) : []
+  // Perfis (spec 038): "Perfil: <nome>" e "Salvar como novo perfil…" entram no mesmo grupo.
+  const cmds: PaletteCmd[] =
+    tab === 'all'
+      ? [
+          ...matchCommands(q).map((c) => ({ key: c.id, text: t(c.label), keys: c.keys, icon: c.icon, run: () => runAction(c.id) })),
+          ...matchProfileCommands(core, q)
+        ]
+      : []
   const count = tab === 'collections' ? cols.length : items.length + cmds.length
   const counts: Record<Tab, number> = {
     all: presets.filter((n) => !core.isHidden(n)).length,
@@ -62,9 +79,9 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
     else showToast(t('toast.collectionEmpty'))
     close()
   }
-  const runCmd = (c: Command): void => {
+  const runCmd = (c: PaletteCmd): void => {
     close()
-    runAction(c.id)
+    c.run()
   }
   const fav = (name: string): void => {
     const r = core.run<boolean>('library.favorite', { name }, 'ui')
@@ -190,13 +207,13 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
           {cmds.map((c, j) => {
             const i = items.length + j
             return (
-              <div key={c.id} class={`prow cmd${i === active ? ' active' : ''}`} role="option" aria-selected={i === active} onMouseMove={() => i !== active && setActive(i)}>
+              <div key={c.key} class={`prow cmd${i === active ? ' active' : ''}`} role="option" aria-selected={i === active} onMouseMove={() => i !== active && setActive(i)}>
                 <button class="r-btn" tabIndex={-1} onClick={() => runCmd(c)}>
                   <span class="cmd-ico">
                     <Icon name={c.icon} />
                   </span>
                   <span class="r-title">
-                    <Highlight text={t(c.label)} q={q.trim()} />
+                    <Highlight text={c.text} q={q.trim()} />
                   </span>
                 </button>
                 <span class="r-hint">{t('palette.hintRun')}</span>

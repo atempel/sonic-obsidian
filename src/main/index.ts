@@ -16,9 +16,9 @@ import { JsonStore } from './store'
 const stores = new Map<string, JsonStore>()
 const flushStores = (): Promise<void> => Promise.all([...stores.values()].map((s) => s.flush())).then(() => undefined)
 
-/** settings.json e library.json (architecture §7): só o main toca o disco. */
+/** settings.json, library.json e profiles.json (architecture §7; spec 038): só o main toca o disco. */
 function registerStores(): void {
-  for (const name of ['settings', 'library']) stores.set(name, new JsonStore(name))
+  for (const name of ['settings', 'library', 'profiles']) stores.set(name, new JsonStore(name))
   const get = (name: unknown): JsonStore => {
     const store = typeof name === 'string' ? stores.get(name) : undefined
     if (!store) throw new Error(`unknown store: ${String(name)}`)

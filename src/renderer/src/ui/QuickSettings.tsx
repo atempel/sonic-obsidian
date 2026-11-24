@@ -24,6 +24,7 @@ import {
 } from '../core/state'
 import { Icon } from './icons'
 import { FeedbackButton } from './Feedback'
+import { ProfileBar } from './ProfileBar'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
 import { showToast } from './toast'
 
@@ -314,6 +315,8 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           </button>
         </div>
       </header>
+      {/* Perfis (spec 038): fixa abaixo do cabeçalho, fora da lista que rola. */}
+      <ProfileBar core={core} open={open} />
       <div class="body" ref={body}>
         <section>
           <h3>

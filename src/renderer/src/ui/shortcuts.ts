@@ -47,6 +47,10 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ]
   },
   {
+    name: 'shortcuts.group.profiles',
+    rows: [{ label: 'shortcuts.profileApply', keys: [['Alt', '1…9']] }]
+  },
+  {
     name: 'shortcuts.group.navigation',
     rows: [
       { label: 'shortcuts.search', keys: [['/'], ['Ctrl', 'K']] },
