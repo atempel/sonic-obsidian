@@ -55,8 +55,9 @@ jobs:
       # Desempenho no app empacotado (spec 025, P1): abertura, ms por quadro e memória, ao lado da
       # execução anterior. Só falha se o script quebrar (o app não abre, um preset não desenha); número pior, não.
       - name: Desempenho (spec 025)
-        # Spec 034: o passo de memória dura `memoria_min` (disparo manual; vazio/PR = 5) e o limite acompanha.
-        timeout-minutes: ${{ fromJSON(inputs.memoria_min || '5') + 20 }}
+        # Spec 034: o passo de memória dura `memoria_min` (disparo manual; vazio/PR = 5, máximo 60). O limite
+        # cobre os 60 min + ~20 do resto (expressão do Actions não soma); a duração normal não muda.
+        timeout-minutes: 85
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
