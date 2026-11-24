@@ -18,5 +18,7 @@ grep -q '<PublisherDisplayName>Alexandre Tempel</PublisherDisplayName>' "$m" || 
 grep -q 'Name="runFullTrust"' "$m" || { echo "::error::falta a capability runFullTrust"; exit 1; }
 version="$(node -p "require('./package.json').version").0"
 grep -q "Version=\"$version\"" "$m" || { echo "::error::a versão do pacote não é $version"; exit 1; }
-echo "ok: identidade, runFullTrust e versão $version"
+# Ícones em escalas/tamanhos (build/appx) só valem com o resources.pri dentro do pacote.
+if command -v unzip >/dev/null; then unzip -l "$file" | grep -q "resources.pri" || { echo "::error::falta o resources.pri (ícones em escalas)"; exit 1; }; fi
+echo "ok: identidade, runFullTrust, versão $version e resources.pri"
 if [ -n "${GITHUB_OUTPUT:-}" ]; then echo "file=$file" >> "$GITHUB_OUTPUT"; fi

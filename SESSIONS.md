@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/msix-icones`
+**Fez:** O usuário instalou o MSIX (Modo de desenvolvedor + `Add-AppxPackage -Register`) e o ícone ficou só o losango sobre fundo transparente no Iniciar. `build/appx/` passa a ter o ícone completo do app (`docs/brand/app-icon.svg`) em escalas (scale-100/200/400) e tamanhos (targetsize 16–256, com `altform-unplated`); o electron-builder gera o `resources.pri`, que o `check-msix.sh` agora confere.
+**Deixou em:** PR desta branch (Refs #188), com a label `build-msix`. Não verificado: o ícone no Windows (o usuário reinstala o pacote novo).
+
 ### 2026-11-24 — Claude Code (nuvem, conversa com o usuário depois da rodada) — branch `docs/sessao-2026-11-24-releases`
 **Fez:** O usuário relatou os testes dos blocos v0.9.0 e v0.10.0 no chat e mandou o log do Windows. v0.9.0: tudo ok; o botão de todas as configurações ao lado do feedback já é a #109 (v0.12.0). v0.10.0: o log confirma o atraso aplicado inteiro (`delay 500 ms · est 556 ms`) e o frame em 33,4 ms a 30 fps; só ter percebido em 500 ms vem do metrônomo a 120 BPM. "Medir atraso da captura" ficou sem teste e o usuário pediu para publicar assim mesmo. Releases v0.9.0 e v0.10.0 publicadas pelo workflow `release` nas `rc/…`; issues #157 e #164 e os milestones fechados, com o resumo do teste comentado. As `rc/…` não tinham commits fora do `main`.
 **Deixou em:** nenhum bloco esperando teste; a próxima rodada pode fechar o bloco v0.11.0 quando as issues dele acabarem e implementar a #130 (spec 045). Não verificado no Windows: "Medir atraso da captura".
