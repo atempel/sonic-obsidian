@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-24 — Claude Code (nuvem, rodada agendada) — branch `fix/097-normalizar-teto`
+**Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste, v0.11.0 ainda com issues abertas); passo 2: auto-merge ligado no PR #195 (MSIX sem câmera, `typecheck` rodando). Passo 4: #97 (spec 033): teto do Normalizar áudio de +12 para +18 dB (`AGC.maxDb`), referência −14 dBFS mantida; simulador com o caso −30 dBFS (chega a −14,3 em 30 s; com +12 parava em −18) e `028-agc-sim` cobrando o teto novo; spec 028 atualizada.
+**Deixou em:** PR desta branch (Closes #97), com auto-merge. Testar no bloco v0.11.0 (Windows: HUD/log). A #186 (Normalizar agressivo) segue `backlog` no mesmo milestone e pode rever janela/ataque/soltura e o critério "alta → baixa em 15 s"; o teto de +18 não depende disso.
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/msix-icones`
 **Fez:** O usuário instalou o MSIX (Modo de desenvolvedor + `Add-AppxPackage -Register`) e o ícone ficou só o losango sobre fundo transparente no Iniciar. `build/appx/` passa a ter o ícone completo do app (`docs/brand/app-icon.svg`) em escalas (scale-100/200/400) e tamanhos (targetsize 16–256, com `altform-unplated`); o electron-builder gera o `resources.pri`, que o `check-msix.sh` agora confere.
 Depois, no teste do usuário: o pacote registrado com `Expand-Archive` não abria (nomes com espaço vêm como `%20` dentro do `.msix`); o guia ganhou o passo que decodifica os nomes, e com ele o app abriu como MSIX e a captura iniciou. A pasta de dados é `%APPDATA%\sonic-obsidian` (corrigido no PRIVACY.md, nas páginas e no guia), e o log da versão da Store não diz mais "automatic checks on".

@@ -4,7 +4,8 @@
  * Ouve o nível médio (RMS) dos últimos ~10 s, medido ANTES de qualquer ganho, e
  * leva o volume que entra no visual até uma referência. Não comprime: dentro da
  * janela, o break e o drop continuam diferentes; só a diferença entre faixas some.
- * - baixar (ataque) em ~1 s; subir (soltura) em ~8 s; teto de +12 dB;
+ * - baixar (ataque) em ~1 s; subir (soltura) em ~8 s; teto de +18 dB (spec 033: o volume do
+ *   Windows costuma deixar o loopback em −24 a −33 dBFS) e piso de −12 dB;
  * - congela no silêncio e no Respiro (nem mede, nem mexe), para não "bombear".
  *
  * Sem DOM nem Web Audio: o main chama `step` a cada leitura do medidor (~10×/s)
@@ -20,7 +21,7 @@ export const AGC = {
   windowS: 10,
   attackS: 1,
   releaseS: 8,
-  maxDb: 12,
+  maxDb: 18,
   minDb: -12,
   /** Com o AGC ligado, o ganho manual vira ajuste fino de ±6 dB. */
   fineDb: 6,
