@@ -20,6 +20,8 @@ import {
   BEAT_BARS,
   BEAT_LEAD_MAX_MS,
   VISUAL_DELAY_MAX_MS,
+  UI_MODES,
+  type UiMode,
   type BeatBars,
   num,
   sanitizeRender,
@@ -387,6 +389,13 @@ export class Core {
       const active = applyLanguage(this.state.settings.language)
       this.changedSettings(origin)
       return { language: this.state.settings.language, active }
+    },
+    /** Modo de interface (spec 039): `{ mode: 'simple' | 'full' }`. Só muda quanto da casca aparece. */
+    'ui.setMode': (a, origin) => {
+      if (!UI_MODES.includes(a.mode as UiMode)) fail(`mode: ${UI_MODES.join(', ')}`)
+      this.state.settings.uiMode = a.mode as UiMode
+      this.changedSettings(origin)
+      return this.state.settings.uiMode
     },
     /** Desempenho por preset (spec 012): `{ skipSlow?, minFps? }`. */
     'perf.set': (a, origin) => {

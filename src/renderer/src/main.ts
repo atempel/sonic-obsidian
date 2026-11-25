@@ -425,6 +425,14 @@ async function start(): Promise<void> {
     updatesAuto = settings.updatesAuto
     configureUpdates(updatesAuto)
   })
+  // Modo de interface (spec 039): toast comum (respeita "Avisos") venha a troca de onde vier.
+  let uiModeNow = settings.uiMode
+  core.events.on('stateChanged', () => {
+    if (settings.uiMode === uiModeNow) return
+    uiModeNow = settings.uiMode
+    window.so.log(`ui: mode ${uiModeNow}`)
+    showToast(t(uiModeNow === 'simple' ? 'toast.modeSimple' : 'toast.modeFull'))
+  })
   // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
   // Só mede com a janela visível; o limite de fps vira teto do mínimo.
   let probe: { name: string; from: number; start: number; frames: number; last: number } | null = null
@@ -892,6 +900,8 @@ async function start(): Promise<void> {
     feedbackAsk: openQuestion,
     feedbackDiag: () => void copyDiagnostics(),
     // Sincronia (spec 032, P1): três cliques pela saída, medidos antes do "Atrasar o visual".
+    modeSimple: () => run('ui.setMode', { mode: 'simple' }, 'ui'),
+    modeFull: () => run('ui.setMode', { mode: 'full' }, 'ui'),
     captureMeasure: () => {
       idle.wake()
       if (measuring) return

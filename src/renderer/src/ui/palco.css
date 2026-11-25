@@ -33,6 +33,8 @@ body.idle .strip > .now, body.idle .strip > .strip-t, body.idle .strip > .tail {
 .strip { pointer-events: auto; position: relative; width: min(1120px, 100%); display: grid; grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
   padding: 10px; background: var(--bg-01); border: 1px solid var(--line-2); border-radius: var(--r-3); box-shadow: var(--shadow-pop); overflow: hidden; }
 body.idle .strip { pointer-events: none; }
+/* Modo Simples (spec 039, página Modos): faixa curta. */
+body[data-mode=simple] .strip { width: min(760px, 100%); }
 .rot-line { position: absolute; left: 0; top: 0; height: 2px; background: var(--text-3); width: 100%; transform: scaleX(0); transform-origin: left; } /* M03: scaleX, para poder esvaziar */
 .now { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .now-text { min-width: 0; flex: 1 1 auto; }

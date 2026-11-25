@@ -784,3 +784,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Por quê:** reversíveis e pequenos; o título certo no diálogo nativo e o `Alt+N` estável pesam mais que seguir o protótipo à risca. Afastamentos do desenho em `docs/design/v3/DIVERGENCIAS.md` (2026-11-25).
 - **Descartado:** reaproveitar `presets:exportFile` (título errado); inserir a cópia abaixo do original (mudaria o `Alt+N` dos perfis seguintes).
 
+
+## 2026-11-25 — Modo Simples (spec 039): detalhes decididos pela rodada (`agent-decided`)
+- **Decisão:** (1) com o visual segurado, a pílula "Segurado" continua na faixa do Simples (é estado, como o respiro e o modo limpo); a de rotação some; (2) no painel `?` do Simples, digitar no filtro procura em **todos** os atalhos (nenhum fica escondido de quem busca), e "Ver todos" vale até fechar; (3) a Biblioteca do Simples mantém a ordem das abas do Completo (Todos · Favoritos · Coleções); (4) o link no fim dos Ajustes reduzidos é "Todos os ajustes…" / "More settings…" (em inglês, para não confundir com o "All settings" do cabeçalho, que abre as Configurações); (5) a linha Interface leva a marca "Fase 5" do Rack ao lado do segmentado, como fazia a "Abrir em"; (6) ao trocar de modo, uma linha `ui: mode simple|full` no log.
+- **Por quê:** reversíveis e pequenos; seguem a página Modos (versão `1794680346-fb12`) onde ela fala, e a spec onde o desenho é omisso.
+- **Descartado:** esconder o "Segurado" no Simples (a pessoa não saberia por que a rotação parou); filtro só nos 10 essenciais (a busca acharia menos que a busca rápida).
