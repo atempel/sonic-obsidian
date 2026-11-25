@@ -1,6 +1,6 @@
 # 045 — Queda do contexto WebGL do motor principal detectada e recarregada
 
-**Fase:** 3 (robustez, ajuste da 012) · **Status:** pronta · **Issue:** [#130](https://github.com/atempel/sonic-obsidian/issues/130) · **Milestone:** v0.12.0 · **Personas:** — (nada muda na tela; só a recuperação e o log)
+**Fase:** 3 (robustez, ajuste da 012) · **Status:** implementada (critérios 1–4 no headless `045-contexto-webgl`; 5 no bloco) · **Issue:** [#130](https://github.com/atempel/sonic-obsidian/issues/130) · **Milestone:** v0.12.0 · **Personas:** — (nada muda na tela; só a recuperação e o log)
 
 ## Problema
 Achado na spec 027 (fatia 4). O Butterchurn 3 desenha num `OffscreenCanvas` interno (`this.internalCanvas.getContext("webgl2")` no construtor do `Visualizer`, `node_modules/butterchurn/dist/butterchurn.js`) e copia cada quadro para o canvas da página com um contexto **2D** (`outputGl = canvas.getContext('2d')`). O `src/renderer/src/main.ts` escuta `webglcontextlost` no canvas da página, que nunca tem contexto WebGL: depois de um reinício do driver de vídeo (TDR) ou de falta de memória na GPU, o app não registra a queda nem recarrega, e o visual congela no último quadro (ou fica preto) com a interface funcionando.
