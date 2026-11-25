@@ -215,21 +215,6 @@ function Geral({ core, run }: { core: Core; run: Run }) {
   return (
     <>
       <Grp>
-        {/* Interface (spec 039; página Modos): no topo da seção, no lugar da linha "Abrir em". O Rack chega na Fase 5. */}
-        <Row label={t('settings.general.interface')} help={t('settings.general.interfaceHelp')} phase={phase(5)} kw="modo mode simples simple completo full rack interface">
-          <Seg<UiMode | 'rack'>
-            name="uiMode"
-            label={t('settings.general.interface')}
-            value={s.uiMode}
-            options={[
-              ['simple', t('settings.general.mode.simple')],
-              ['full', t('settings.general.mode.full')],
-              ['rack', t('settings.general.mode.rack')]
-            ]}
-            disabledOptions={['rack']}
-            onChange={(mode) => mode !== 'rack' && run('ui.setMode', { mode })}
-          />
-        </Row>
         {/* Idioma (spec 030; design 1794607492-78f0, Configurações › Geral): no topo, vale na hora. */}
         <Row
           id="st-lang"
@@ -246,6 +231,21 @@ function Geral({ core, run }: { core: Core; run: Run }) {
               ['pt-BR', LANG_NAME['pt-BR']]
             ]}
             onChange={(language) => run('app.setLanguage', { language })}
+          />
+        </Row>
+        {/* Interface (spec 039; página Modos): logo abaixo do Idioma (que a spec 030 pôs no topo), no lugar da linha "Abrir em". O Rack chega na Fase 5. */}
+        <Row label={t('settings.general.interface')} help={t('settings.general.interfaceHelp')} phase={phase(5)} kw="modo mode simples simple completo full rack interface">
+          <Seg<UiMode | 'rack'>
+            name="uiMode"
+            label={t('settings.general.interface')}
+            value={s.uiMode}
+            options={[
+              ['simple', t('settings.general.mode.simple')],
+              ['full', t('settings.general.mode.full')],
+              ['rack', t('settings.general.mode.rack')]
+            ]}
+            disabledOptions={['rack']}
+            onChange={(mode) => mode !== 'rack' && run('ui.setMode', { mode })}
           />
         </Row>
       </Grp>
