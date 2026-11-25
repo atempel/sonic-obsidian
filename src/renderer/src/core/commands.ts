@@ -41,6 +41,7 @@ import {
   builtInProfiles,
   cleanProfileName,
   nextDefaultProfileName,
+  parseProfileFile,
   profileName,
   readValues,
   sanitizeGroups,
@@ -187,6 +188,23 @@ export class Core {
   }
 
   private readonly builtIns = builtInProfiles()
+  /** O último perfil apagado, para o Desfazer da nota (spec 038, P1). */
+  private lastDeleted: { profile: Profile; index: number; active: boolean; startup: boolean } | null = null
+
+  private newProfileId(): string {
+    const taken = new Set(this.allProfiles.map((p) => p.id))
+    for (let i = 0; ; i++) {
+      const id = `p${Date.now().toString(36)}${i}`
+      if (!taken.has(id)) return id
+    }
+  }
+
+  /** Um perfil do usuário pelo id (os do app não se renomeiam nem se apagam). */
+  private userProfile(id: unknown): Profile {
+    const p = this.allProfiles.find((x) => x.id === id) ?? fail(`perfil desconhecido: ${String(id)}`)
+    if (p.builtIn) fail('perfil do app não se renomeia nem se apaga')
+    return p
+  }
 
   get rotationIntervalSeconds(): number {
     const rot = this.state.settings.rotation
@@ -409,7 +427,7 @@ export class Core {
       const taken = this.allProfiles.map(profileName)
       const clean = cleanProfileName((a.name as string | undefined) ?? '')
       const name = clean ? uniqueProfileName(clean, taken) : nextDefaultProfileName(taken)
-      const p: Profile = { id: `p${Date.now().toString(36)}${this.state.profiles.length}`, name, builtIn: false, groups, values: readValues(this.state.settings, groups) }
+      const p: Profile = { id: this.newProfileId(), name, builtIn: false, groups, values: readValues(this.state.settings, groups) }
       this.state.profiles.push(p)
       this.state.settings.profile.active = p.id
       this.changedProfiles(origin)
@@ -423,6 +441,67 @@ export class Core {
       p.values = readValues(this.state.settings, p.groups)
       this.changedProfiles(origin)
       return { id: p.id, name: p.name }
+    },
+    // Configurações › Perfis (spec 038, P1).
+    /** `{ id, name }`: só perfil do usuário; vazio ou igual não muda nada; nome de outro ganha " (2)". */
+    'profile.rename': (a, origin) => {
+      const p = this.userProfile(a.id)
+      const clean = cleanProfileName(str(a.name, 'name'))
+      if (!clean || clean === p.name) return { id: p.id, name: p.name, changed: false }
+      p.name = uniqueProfileName(clean, this.allProfiles.filter((x) => x !== p).map(profileName))
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name, changed: true }
+    },
+    /** `{ id }`: cópia como perfil do usuário, "<nome> (cópia)", no fim da lista. Não muda o ativo. */
+    'profile.duplicate': (a, origin) => {
+      const src = this.allProfiles.find((x) => x.id === a.id) ?? fail(`perfil desconhecido: ${String(a.id)}`)
+      const base = cleanProfileName(t('profile.copyName', { name: profileName(src) }))
+      const p: Profile = { id: this.newProfileId(), name: uniqueProfileName(base, this.allProfiles.map(profileName)), builtIn: false, groups: [...src.groups], values: JSON.parse(JSON.stringify(src.values)) as Profile['values'] }
+      this.state.profiles.push(p)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** `{ id }`: apaga um perfil do usuário (o ativo vira nenhum; "Perfil ao abrir" volta a Último usado). Desfazer: `profile.undoDelete`. */
+    'profile.delete': (a, origin) => {
+      const p = this.userProfile(a.id)
+      const index = this.state.profiles.indexOf(p)
+      const pf = this.state.settings.profile
+      this.lastDeleted = { profile: p, index, active: pf.active === p.id, startup: pf.startup === p.id }
+      this.state.profiles.splice(index, 1)
+      if (pf.active === p.id) pf.active = null
+      if (pf.startup === p.id) pf.startup = 'last'
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** Desfaz o último `profile.delete`: volta ao mesmo lugar, ativo e ao abrir como estavam. */
+    'profile.undoDelete': (_a, origin) => {
+      const d = this.lastDeleted ?? fail('nada para desfazer')
+      this.lastDeleted = null
+      if (this.state.profiles.some((x) => x.id === d.profile.id)) fail('perfil já existe')
+      this.state.profiles.splice(Math.min(d.index, this.state.profiles.length), 0, d.profile)
+      const pf = this.state.settings.profile
+      if (d.active) pf.active = d.profile.id
+      if (d.startup) pf.startup = d.profile.id
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: d.profile.id, name: d.profile.name }
+    },
+    /** `{ data }`: o JSON de um arquivo exportado (já lido). Fora do formato → erro `[not-profile]` e nada muda. */
+    'profile.import': (a, origin) => {
+      const parsed = parseProfileFile(a.data) ?? fail('[not-profile] not a Sonic Obsidian profile')
+      const p: Profile = { id: this.newProfileId(), name: uniqueProfileName(parsed.name, this.allProfiles.map(profileName)), builtIn: false, groups: parsed.groups, values: parsed.values }
+      this.state.profiles.push(p)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** `{ value }`: "Perfil ao abrir" — `last` (os ajustes como ficaram) ou o id de um perfil. */
+    'profile.startup': (a, origin) => {
+      const v = str(a.value, 'value')
+      if (v !== 'last' && !this.allProfiles.some((x) => x.id === v)) fail(`perfil desconhecido: ${v}`)
+      this.state.settings.profile.startup = v
+      this.changedSettings(origin)
+      return v
     },
 
     // ── biblioteca ──────────────────────────────────────────

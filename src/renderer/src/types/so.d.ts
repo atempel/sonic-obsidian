@@ -41,7 +41,11 @@ interface Window {
     settings: SoStore
     library: SoStore
     /** Spec 038; opcional no mock dos testes antigos. */
-    profiles?: SoStore
+    profiles?: SoStore & {
+      /** Configurações › Perfis (038, P1); opcionais no mock dos testes antigos. */
+      exportFile?(name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }>
+      importFile?(): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }>
+    }
     window: { toggleFullScreen(): Promise<void>; minimize(): Promise<void>; close(): Promise<void> }
     system: {
       openSoundSettings(): Promise<void>

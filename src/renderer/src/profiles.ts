@@ -324,3 +324,59 @@ export function profileDiffs(p: Profile, s: Settings): ProfileDiff[] {
 
 export const groupLabel = (g: ProfileGroup): string =>
   g === 'expression' ? t('quick.expression') : g === 'blend' ? t('quick.transitions') : g === 'rotation' ? t('quick.rotation') : g === 'signal' ? t('quick.signal') : t('quick.text')
+
+// ── Exportar e importar (spec 038, P1) ────────────────────────
+/** Limite do arquivo importado (o main também confere). */
+export const PROFILE_FILE_MAX = 64 * 1024
+
+export interface ProfileFileData {
+  app: 'sonic-obsidian'
+  version: 1
+  profile: { name: string; groups: ProfileGroup[]; values: ProfileValues }
+}
+
+/** O JSON exportado: `{ app, version, profile: { name, groups, values } }` (perfis do app com o nome no idioma do app). */
+export function profileFileData(p: Profile): ProfileFileData {
+  const values: ProfileValues = {}
+  for (const g of p.groups) (values as Record<ProfileGroup, unknown>)[g] = sanitizeGroup(g, p.values[g])
+  return { app: 'sonic-obsidian', version: 1, profile: { name: profileName(p), groups: [...p.groups], values } }
+}
+
+/** "Festa à noite!" → "festa-a-noite" (sem acento; vazio → "perfil"/"profile"). */
+export function profileSlug(name: string): string {
+  const s = name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+    .replace(/-+$/, '')
+  return s || t('profile.file.slug')
+}
+
+/**
+ * Lê um arquivo exportado. Estrutura errada (outro app, outra versão, sem nome, grupo
+ * desconhecido ou repetido, valor de grupo fora da lista ou que não é objeto) → `null`.
+ * Campo inválido dentro de um grupo → o valor do Padrão (a mesma sanitização do `profiles.json`).
+ */
+export function parseProfileFile(raw: unknown): ProfileFileData['profile'] | null {
+  if (!isObj(raw) || raw.app !== 'sonic-obsidian' || raw.version !== 1 || !isObj(raw.profile)) return null
+  const pr = raw.profile
+  const name = typeof pr.name === 'string' ? cleanProfileName(pr.name) : ''
+  if (!name || !Array.isArray(pr.groups) || pr.groups.length === 0 || !isObj(pr.values)) return null
+  const listed: ProfileGroup[] = []
+  for (const g of pr.groups) {
+    if (!PROFILE_GROUPS.includes(g as ProfileGroup) || listed.includes(g as ProfileGroup)) return null
+    listed.push(g as ProfileGroup)
+  }
+  const rawValues = pr.values
+  if (Object.keys(rawValues).some((k) => !listed.includes(k as ProfileGroup))) return null
+  const groups = PROFILE_GROUPS.filter((g) => listed.includes(g))
+  const values: ProfileValues = {}
+  for (const g of groups) {
+    if (!isObj(rawValues[g])) return null
+    ;(values as Record<ProfileGroup, unknown>)[g] = sanitizeGroup(g, rawValues[g])
+  }
+  return { name, groups, values }
+}

@@ -228,3 +228,11 @@ Sem desenho no protótipo `1794281099-42d3`. **No app:**
 - **Zonas atrás do EQ nos cortes do motor:** `bass` até 320 Hz, `mid` até 2,8 kHz, `treb` daí em diante (o doc fala em 250 Hz e 4 kHz; medido no Butterchurn 3 no spike `spike/040/`). O motor ignora o que passa de 11 kHz; as barras de 12,5k e 20k Hz agem pelo `treb` (ver a spec).
 - **`Home`** com o EQ em foco volta a banda a 0 dB (o doc só define setas e duplo clique).
 **Status:** Aberta (aguarda a sessão de design).
+
+### 2026-11-25 — Configurações › Perfis (spec 038, P1), página Configurações (versão `1794680346-fb12`)
+**No app:**
+- **Duplicar põe a cópia no fim da lista** (o protótipo a insere logo abaixo do original): a lista segue a ordem de criação do `profiles.json`, e o `Alt+N` dos perfis existentes não muda.
+- **Renomear, duplicar, exportar e importar avisam só na nota da seção** (`role="status"`); o toast fica para "Aplicar" ("Perfil: Festa"), como na barra dos Ajustes rápidos. O protótipo também mostra um toast para cada ação.
+- **Renomear para um nome que outro perfil já usa** ganha " (2)", como o Salvar e o Importar; o protótipo aceita nomes repetidos ali.
+- **Curva por frequência** não aparece no resumo nem no arquivo (fora do escopo até a #112, como na barra).
+**Status:** Aberta (aguarda a sessão de design).
