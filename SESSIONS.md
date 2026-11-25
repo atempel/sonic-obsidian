@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-25 — Claude Code (nuvem, rodada agendada) — branch `docs/046-normalizar-por-faixa`
+**Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste nem `needs-decision` respondida, nenhum PR aberto, nada `ready`; o v0.11.0 tem só a #186). Passo 5: planejou a #186 (`prioridade`, pedido do usuário para a versão da Store) → spec 046: Normalizar por faixa (janela 45 s, 4 s / 10 s, estouro +4 dB em 3 s, pausa de 1,5 s recomeça a janela). Números escolhidos rodando variações do `AutoGain` sobre a faixa sintética do simulador (fora do repo); DECISIONS 2026-11-25.
+**Deixou em:** PR desta branch (Refs #186), só docs, com auto-merge; #186 `ready` + `agent-decided` no v0.11.0. Próxima rodada: implementar a #186 (spec 046 P0 e o P1 do `028-normalizar`); depois fechar o bloco v0.11.0. Não verificado: nada no Windows (só simulador).
+
 ### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/store-sem-camera`
 **Fez:** No teste do MSIX o Windows pediu acesso à câmera ao abrir: o `enumerateDevices` da checagem de captura (e do "Relatar um problema") varre também as câmeras, e no pacote o Windows trata isso como acesso à câmera. Só na versão da Store (`app:store` → `process.windowsStore`), o app não chama mais `enumerateDevices`: o nome da saída vem da trilha da captura (`setStoreOutputName`). Instalador e zip iguais. `044-store` ganhou a parte 3 (falha sem a correção, 16/16 com ela); 031, 011 e 142 passando.
 **Deixou em:** PR desta branch (Refs #188), label `build-msix`, sem auto-merge até o usuário testar o MSIX (pedido dele: medo de bug escondido).
