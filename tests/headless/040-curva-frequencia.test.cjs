@@ -258,7 +258,8 @@ async function openQuick(page) {
     const big = await H.poll(page, () => { const c = document.querySelector('#st-eqPlot canvas'); return !!c && c.getBoundingClientRect().height === 160 }, { timeout: 5000 })
     ok('9a Configurações › Visual: EQ de 160 px com a escala', big)
     const labels = await page.$$eval('#st-eqPlot ~ .eq-freq span', (es) => es.map((e) => e.textContent))
-    ok('9b rótulos de frequência embaixo (vírgula em pt-BR)', labels.includes('31,5') && labels.includes('1,25k') || labels.includes('20k'), JSON.stringify(labels))
+    // Com espaço (≥ 34 px por banda) vão os 16 rótulos; sem, um sim, um não (o runner do CI tem a janela mais estreita).
+    ok('9b rótulos de frequência embaixo (vírgula em pt-BR; 16 ou 8)', labels.includes('12,5k') && (labels.length === 16 || (labels.length === 8 && labels[0] === '20')), JSON.stringify(labels))
     ok('9c "Restaurar plana" habilitado com o Sorriso', !(await page.$eval('#st-eqReset', (e) => e.disabled)))
     await page.click('#st-eqReset')
     ok('9d "Restaurar plana" volta à Plana e desabilita', await H.poll(page, () => window.__saves.at(-1)?.expression?.curvePreset === 'flat' && document.getElementById('st-eqReset').disabled, { timeout: 3000 }))
