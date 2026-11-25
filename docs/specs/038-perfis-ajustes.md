@@ -1,6 +1,6 @@
 # 038 — Perfis de ajustes (salvar e aplicar combinações, `Alt+1…9`)
 
-**Fase:** 2 (interface) · **Status:** P0 implementado (PR da branch `feat/perfis-ajustes`, 2026-11-24); P1 (Configurações › Perfis) pendente · **Issue:** [#110](https://github.com/atempel/sonic-obsidian/issues/110) · **Milestone:** v0.12.0 · **Personas:** DJ de Festa (troca de clima no meio da noite com uma tecla), Nostálgico do Winamp (quer "o jeito calmo" sem lembrar seis controles), Criador de presets (o perfil "Estudar presets" para olhar um visual sem rotação)
+**Fase:** 2 (interface) · **Status:** P0 implementado (PR #199, 2026-11-24); P1 implementado (PR da branch `feat/perfis-configuracoes`, 2026-11-25) — falta o teste no Windows (bloco v0.12.0) · **Issue:** [#110](https://github.com/atempel/sonic-obsidian/issues/110) · **Milestone:** v0.12.0 · **Personas:** DJ de Festa (troca de clima no meio da noite com uma tecla), Nostálgico do Winamp (quer "o jeito calmo" sem lembrar seis controles), Criador de presets (o perfil "Estudar presets" para olhar um visual sem rotação)
 
 ## Problema
 Mudar o clima do visual hoje pede mexer em até seis controles dos Ajustes rápidos (Expressividade, Caráter, Memória, duas transições, rotação). Quem alterna entre "festa" e "fundo calmo" refaz tudo à mão toda vez. O usuário aprovou na sessão de design de 10/11/2026 salvar essas combinações como **Perfis** (não "presets", que já são as visualizações; não "Cenas", que guardam um preset específico).

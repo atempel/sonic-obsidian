@@ -19,7 +19,10 @@ const en = {
   'export.jsonFilter': 'Butterchurn 3 preset',
   'export.frameTitle': 'Capture frame',
   'export.frameSuffix': '-frame',
-  'export.frameFilter': 'PNG image'
+  'export.frameFilter': 'PNG image',
+  'profiles.exportTitle': 'Export profile',
+  'profiles.importTitle': 'Import profile',
+  'profiles.filter': 'Sonic Obsidian profile'
 } as const
 
 type Key = keyof typeof en
@@ -34,7 +37,10 @@ const ptBR: Record<Key, string> = {
   'export.jsonFilter': 'Preset do Butterchurn 3',
   'export.frameTitle': 'Capturar quadro',
   'export.frameSuffix': '-quadro',
-  'export.frameFilter': 'Imagem PNG'
+  'export.frameFilter': 'Imagem PNG',
+  'profiles.exportTitle': 'Exportar perfil',
+  'profiles.importTitle': 'Importar perfil',
+  'profiles.filter': 'Perfil do Sonic Obsidian'
 }
 
 /** `pt-*` → pt-BR; o resto → en (a mesma regra do renderer). */
