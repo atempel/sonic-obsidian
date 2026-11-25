@@ -153,7 +153,8 @@ async function openPage(b, settings) {
 async function openQuick(page) {
   if (!(await page.evaluate(has, 'sheet-open'))) await page.keyboard.press(',')
   await H.poll(page, has, { timeout: 10000, arg: 'sheet-open' })
-  await page.locator('#eqPlot').scrollIntoViewIfNeeded()
+  // No meio do painel: no pé da tela a faixa de controle fica por cima (um clique ali fecha os Ajustes).
+  await page.evaluate(() => document.getElementById('eqPlot').scrollIntoView({ block: 'center' }))
 }
 
 ;(async () => {
@@ -184,7 +185,9 @@ async function openQuick(page) {
     ok('4d Memória Curta e curva fora do plano: aparece a linha da Fixa', await H.poll(page, () => /Com a memória Fixa, a curva age por inteiro/.test(document.getElementById('eqWarn')?.textContent || ''), { timeout: 3000 }))
 
     // Clicar numa barra: Personalizada + balão "<banda> · <valor> dB".
+    await openQuick(page)
     const box = await page.locator('#eqPlot canvas').boundingBox()
+    ok('5· o EQ inteiro fora da faixa de controle', box.y + box.height < (await page.evaluate(() => document.querySelector('.strip-wrap').getBoundingClientRect().top)), JSON.stringify(box))
     const slot = box.width / 16
     const bandX = (i) => box.x + (i + 0.5) * slot
     const dbY = (v) => box.y + 8 + ((12 - v) / 24) * (box.height - 16)
@@ -208,6 +211,7 @@ async function openQuick(page) {
     await page.mouse.move(bandX(12), dbY(6), { steps: 1 }); await page.mouse.up()
     const s5f = (await lastSave(page)).curve16
     ok('5f arrasto de 1,25k (−6) a 5k (+6): as barras do meio seguem a reta', JSON.stringify(s5f.slice(9, 13)) === '[-6,-2,2,6]', JSON.stringify(s5f.slice(9, 13)))
+    ok('5· os Ajustes continuam abertos depois dos cliques no EQ', await page.evaluate(has, 'sheet-open'))
     await page.click('#eqCurve button[data-v="smile"]')
     ok('5g só uma predefinição tira a "Personalizada": Sorriso', await H.poll(page, () => document.querySelector('#eqCurve [aria-checked="true"]')?.firstChild?.textContent === 'Sorriso', { timeout: 3000 }) && JSON.stringify((await lastSave(page)).curve16) === JSON.stringify(P.smile))
 
