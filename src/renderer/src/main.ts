@@ -129,11 +129,25 @@ async function start(): Promise<void> {
 
   // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
   // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
-  canvas.addEventListener('webglcontextlost', (e) => {
-    e.preventDefault()
-    window.so.log('WebGL context lost; reloading in 1.5 s')
-    setTimeout(() => location.reload())
-  })
+  // O Butterchurn 3 desenha num OffscreenCanvas interno; o canvas da página só tem contexto 2D,
+  // então a queda sai de `viz.gl.canvas` (spec 045). O número da queda sobrevive ao reload.
+  const engineCanvas = viz.gl?.canvas
+  if (engineCanvas) {
+    engineCanvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault()
+      let n = 1
+      try {
+        n = (Number(sessionStorage.getItem('so.contextLost')) || 0) + 1
+        sessionStorage.setItem('so.contextLost', String(n))
+      } catch {
+        /* sem sessionStorage: conta como a primeira */
+      }
+      window.so.log(`WebGL context lost (#${n} this session); reloading in 1.5 s`)
+      setTimeout(() => location.reload(), 1500)
+    })
+  } else {
+    window.so.log('WebGL context loss not watched (engine has no gl)')
+  }
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
