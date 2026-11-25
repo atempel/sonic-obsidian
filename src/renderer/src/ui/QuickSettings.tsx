@@ -289,7 +289,14 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
       document.removeEventListener('click', onClick, true)
     }
   }, [open])
+  // Modo Simples (spec 039): Sinal (só o ganho), Rotação (duas linhas) e Texto; "Mais ajustes…"
+  // mostra as cinco seções no próprio painel até ele fechar.
+  const [showAll, setShowAll] = useState(false)
+  useEffect(() => {
+    if (!open) setShowAll(false)
+  }, [open])
   const { settings } = core.state
+  const reduced = settings.uiMode === 'simple' && !showAll
   const run = (name: string, args: Record<string, unknown>): void => void core.run(name, args, 'ui')
   const rot = settings.rotation
   const intervals = ROTATION_STEPS_S.includes(rot.intervalSeconds) ? ROTATION_STEPS_S : [...ROTATION_STEPS_S, rot.intervalSeconds].sort((a, b) => a - b)
@@ -316,24 +323,27 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
         </div>
       </header>
       {/* Perfis (spec 038): fixa abaixo do cabeçalho, fora da lista que rola. */}
-      <ProfileBar core={core} open={open} />
+      {!reduced && <ProfileBar core={core} open={open} />}
       <div class="body" ref={body}>
         <section>
           <h3>
             <Icon name="audio-lines" />
             <span>{t('quick.signal')}</span>
           </h3>
-          <Switch id="autoGain" label={t('quick.normalize')} checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
-            {settings.autoGain && <AutoGainReadout core={core} />}
-          </Switch>
+          {!reduced && (
+            <Switch id="autoGain" label={t('quick.normalize')} checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
+              {settings.autoGain && <AutoGainReadout core={core} />}
+            </Switch>
+          )}
           {settings.autoGain ? (
             <Slider id="gain" label={t('quick.fineAdjust')} value={settings.gainDb} min={-FINE_GAIN_DB} max={FINE_GAIN_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           ) : (
             <Slider id="gain" label={t('quick.gain')} value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           )}
-          {settings.autoGain && <p class="note hint">{t('quick.normalizeNote')}</p>}
+          {settings.autoGain && !reduced && <p class="note hint">{t('quick.normalizeNote')}</p>}
         </section>
 
+        {!reduced && (
         <section>
           <div class="sec-head">
             <h3>
@@ -393,6 +403,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           </p>
           {!expressionAvailable && <p class="note">{t('quick.unavailable')}</p>}
         </section>
+        )}
 
         <section>
           <h3>
@@ -406,11 +417,16 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             <Select<number> id="interval" label={t('quick.switchEvery')} value={rot.intervalSeconds} options={intervals.map((s) => [s, `${fmtNum(s)} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
           )}
           {rot.order === 'collection' && <p class="note">{rot.onBeat ? t('quick.collectionBars') : t('quick.collectionInterval')}</p>}
-          <Switch id="beatSwitch" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
-          {rot.onBeat && <p class="note hint">{t('quick.onBeatNote', { s: fmtSeconds(core.rotationIntervalSeconds) })}</p>}
-          <Switch id="manualBeatSwitch" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
+          {!reduced && (
+            <>
+              <Switch id="beatSwitch" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+              {rot.onBeat && <p class="note hint">{t('quick.onBeatNote', { s: fmtSeconds(core.rotationIntervalSeconds) })}</p>}
+              <Switch id="manualBeatSwitch" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
+            </>
+          )}
         </section>
 
+        {!reduced && (
         <section>
           <h3>
             <Icon name="blend" />
@@ -419,6 +435,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           <BlendControl core={core} target="manual" label={t('quick.blendManual')} available={blendTypesAvailable} />
           <BlendControl core={core} target="auto" label={t('quick.blendAuto')} available={blendTypesAvailable} />
         </section>
+        )}
 
         <section>
           <h3>
@@ -453,6 +470,20 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           </Switch>
           <p class="note">{t('quick.creditNote')}</p>
         </section>
+        {reduced && (
+          <button
+            type="button"
+            class="btn btn-ghost more-settings"
+            id="quickMore"
+            onClick={() => {
+              setShowAll(true)
+              // O botão some: o foco vai para o primeiro controle da lista completa.
+              requestAnimationFrame(() => document.getElementById('autoGain')?.focus())
+            }}
+          >
+            {t('quick.more')}
+          </button>
+        )}
       </div>
     </aside>
   )

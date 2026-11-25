@@ -97,6 +97,9 @@ export interface RenderSettings {
   extraImages: boolean
 }
 export type FpsLimit = 'monitor' | number
+/** Modos de interface (spec 039): quanto da casca aparece. O Rack fica para a Fase 5. */
+export const UI_MODES = ['simple', 'full'] as const
+export type UiMode = (typeof UI_MODES)[number]
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings' | 'studio'
 
 export interface Settings {
@@ -150,6 +153,8 @@ export interface Settings {
   updatesAuto: boolean
   /** Perfis (spec 038): o ativo (`null` = nenhum) e o aplicado ao abrir (`last` = os ajustes como ficaram). */
   profile: { active: string | null; startup: string }
+  /** Modo de interface (spec 039): `full` = o app de sempre; `simple` = faixa, Ajustes, Biblioteca e `?` reduzidos. */
+  uiMode: UiMode
 }
 
 export interface Collection {
@@ -198,7 +203,8 @@ export function defaultSettings(): Settings {
     perf: { skipSlow: true, minFps: 30 },
     language: 'auto',
     updatesAuto: true,
-    profile: { active: 'default', startup: 'last' }
+    profile: { active: 'default', startup: 'last' },
+    uiMode: 'full'
   }
 }
 
@@ -329,7 +335,8 @@ export function sanitizeSettings(raw: unknown): Settings {
     profile: {
       active: isObj(raw.profile) ? (typeof raw.profile.active === 'string' && raw.profile.active ? raw.profile.active : raw.profile.active === null ? null : d.profile.active) : d.profile.active,
       startup: isObj(raw.profile) && typeof raw.profile.startup === 'string' && raw.profile.startup ? raw.profile.startup : d.profile.startup
-    }
+    },
+    uiMode: oneOf(raw.uiMode, UI_MODES, d.uiMode)
   }
 }
 

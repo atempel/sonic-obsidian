@@ -149,6 +149,9 @@ body.kbd-open #ui .scrim.k { z-index: 44; opacity: 1; pointer-events: auto; tran
 .k-g { break-inside: avoid; margin: 0 0 18px; }
 .k-g h3 { margin: 0 0 6px; font-size: 12px; font-weight: 500; color: var(--text-2); }
 .k-g.k-now h3 { color: var(--violet); }
+/* Modo Simples (spec 039): os 10 essenciais numa coluna e "Ver todos" embaixo. */
+.k-body.short { columns: 1; }
+.k-all { margin: 0 0 12px -15px; }
 .k-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 30px; }
 .k-keys { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 4px; flex: none; max-width: 62%; }
 .k-row > span:first-child { min-width: 0; }

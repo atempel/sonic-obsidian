@@ -22,6 +22,7 @@ import {
   type PresetNameMode,
   type StartupPreset,
   type ToastMode,
+  type UiMode,
   blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
@@ -145,12 +146,12 @@ function Sel<T extends string | number>({ id, value, options, disabled, onChange
   )
 }
 
-function Seg<T extends string | number>({ name, value, options, disabled, label, onChange }: { name: string; value: T; options: [T, string][]; disabled?: boolean; label: string; onChange: (v: T) => void }) {
+function Seg<T extends string | number>({ name, value, options, disabled, disabledOptions, label, onChange }: { name: string; value: T; options: [T, string][]; disabled?: boolean; disabledOptions?: T[]; label: string; onChange: (v: T) => void }) {
   return (
     <div class="seg" role="radiogroup" aria-label={label}>
       {options.map(([v, text]) => (
         <label key={String(v)}>
-          <input type="radio" name={name} checked={v === value} disabled={disabled} onChange={() => onChange(v)} />
+          <input type="radio" name={name} checked={v === value} disabled={disabled || disabledOptions?.includes(v)} onChange={() => onChange(v)} />
           <span class={typeof v === 'number' ? 'num' : undefined}>{text}</span>
         </label>
       ))}
@@ -232,21 +233,23 @@ function Geral({ core, run }: { core: Core; run: Run }) {
             onChange={(language) => run('app.setLanguage', { language })}
           />
         </Row>
-      </Grp>
-      <Grp title={t('settings.general.onStart')}>
-        <Row label={t('settings.general.openIn')} help={t('settings.general.openInHelp')} phase={phase(5)} kw="rack palco stage">
-          <Seg
-            name="openIn"
-            label={t('settings.general.openIn')}
-            value="palco"
+        {/* Interface (spec 039; página Modos): logo abaixo do Idioma (que a spec 030 pôs no topo), no lugar da linha "Abrir em". O Rack chega na Fase 5. */}
+        <Row label={t('settings.general.interface')} help={t('settings.general.interfaceHelp')} phase={phase(5)} kw="modo mode simples simple completo full rack interface">
+          <Seg<UiMode | 'rack'>
+            name="uiMode"
+            label={t('settings.general.interface')}
+            value={s.uiMode}
             options={[
-              ['palco', t('settings.general.openStage')],
-              ['rack', t('settings.general.openRack')]
+              ['simple', t('settings.general.mode.simple')],
+              ['full', t('settings.general.mode.full')],
+              ['rack', t('settings.general.mode.rack')]
             ]}
-            disabled
-            onChange={() => {}}
+            disabledOptions={['rack']}
+            onChange={(mode) => mode !== 'rack' && run('ui.setMode', { mode })}
           />
         </Row>
+      </Grp>
+      <Grp title={t('settings.general.onStart')}>
         <Row label={t('settings.general.boot')} help={t('settings.general.bootHelp')} phase={phase(5)} kw="boot startup inicializar">
           <Sw id="st-boot" label={t('settings.general.boot')} checked={false} disabled />
         </Row>
