@@ -6,6 +6,22 @@ const H = require('./harness.cjs')
 const R = H.createResults('044-store')
 const ok = R.ok
 
+// Lista de dispositivos simulada (conta as chamadas) e o nome da saída na trilha da captura.
+const mockDevices = (store) => {
+  window.so.app.store = async () => store
+  window.__enum = 0
+  navigator.mediaDevices.enumerateDevices = async () => {
+    window.__enum++
+    return [{ kind: 'audiooutput', deviceId: 'default', label: 'Padrão - Alto-falantes (Lista)' }, { kind: 'videoinput', deviceId: 'cam', label: 'Webcam' }]
+  }
+  const gdm = navigator.mediaDevices.getDisplayMedia
+  navigator.mediaDevices.getDisplayMedia = async (c) => {
+    const st = await gdm(c)
+    for (const t of st.getAudioTracks()) Object.defineProperty(t, 'label', { value: 'Alto-falantes (Captura)' })
+    return st
+  }
+}
+
 const mockUpdate = (store) => {
   const st = { phase: 'idle', version: null, percent: 0, lastCheckAt: null, portable: false, supported: !store, store }
   const calls = (window.__updCalls = [])
@@ -26,6 +42,7 @@ async function open(b, port, store) {
   await H.mockSo(page, { settings: { welcomeSeen: true, rotation: { enabled: false } } })
   await page.addInitScript(mockUpdate, store)
   await H.mockAudio(page)
+  await page.addInitScript(mockDevices, store)
   await page.goto(`http://localhost:${port}/`)
   await page.waitForSelector('.now-title[title]:not([title=""])', { timeout: 30000 })
   return { page, errs }
@@ -81,6 +98,31 @@ const about = async (page) => {
     ok('2b chave e "Verificar agora" no instalador, sem o texto da Store', a2.auto && a2.checkBtn && !a2.store, JSON.stringify(a2))
     ok('2c sem erros na página', errs.length === 0, errs.join(' | '))
     await page.close()
+
+    // 3. Lista de dispositivos: a versão da Store não chama enumerateDevices (no MSIX, a varredura inclui as
+    //    câmeras e o Windows pede acesso à câmera); o nome da saída vem da trilha da captura.
+    for (const store of [true, false]) {
+      ;({ page, errs } = await open(b, 5259, store))
+      await H.poll(page, () => window.__logs.some((l) => l.startsWith('[sync] capture started')), { timeout: 15000 })
+      await page.mouse.move(700, 400)
+      await page.keyboard.press(',')
+      await H.poll(page, () => getComputedStyle(document.querySelector('.sheet')).transform === 'none', { timeout: 10000 })
+      await page.$eval('#fbBtn', (e) => e.click())
+      await H.poll(page, () => !document.querySelector('#fbMenu').hidden, { timeout: 5000 })
+      await page.$eval('#fbMenu [data-fb="bug"]', (e) => e.click())
+      await H.poll(page, () => { const v = document.querySelector('.fb-list li[data-key="audio"] .fb-v')?.textContent; return !!v && v !== '…' }, { timeout: 8000 })
+      const audio = await page.$eval('.fb-list li[data-key="audio"] .fb-v', (e) => e.textContent)
+      const n = await page.evaluate(() => window.__enum)
+      if (store) {
+        ok('3a Store: nenhuma chamada a enumerateDevices (abertura e Relatar um problema)', n === 0, String(n))
+        ok('3b Store: a saída no relatório vem da captura', audio === 'Alto-falantes (Captura)', audio)
+      } else {
+        ok('3c instalador: a lista continua sendo usada, como antes', n >= 2, String(n))
+        ok('3d instalador: a saída no relatório vem da lista, como antes', audio === 'Alto-falantes (Lista)', audio)
+      }
+      ok(`3e sem erros na página (${store ? 'Store' : 'instalador'})`, errs.length === 0, errs.join(' | '))
+      await page.close()
+    }
   } finally {
     await b.close(); srv.close()
   }

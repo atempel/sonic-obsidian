@@ -64,8 +64,9 @@ Use o pacote assinado com o certificado de teste só no seu PC. Para a Store vai
 2. **Captura do áudio do sistema (loopback):** com música tocando, o visual reage e o medidor da faixa se mexe. O MSIX roda como app desktop de confiança total (`runFullTrust`), e a captura do Electron não usa o microfone, então nenhuma permissão extra deveria ser pedida. **Isto não foi verificado num PC: é o ponto principal do teste.** Se não reagir, olhe o log e o checklist de "Testar captura".
 3. **Log:** `Ctrl+Shift+L` abre a pasta do log. A primeira linha da abertura deve terminar com `· Microsoft Store package (MSIX)`. No MSIX, o Windows guarda os arquivos novos da pasta de dados (`%APPDATA%\sonic-obsidian`) numa cópia privada do pacote (`%LOCALAPPDATA%\Packages\AlexandreTempel.SonicObsidian_<id>\LocalCache\Roaming\sonic-obsidian`); o log mostra o caminho normal mesmo assim. Anote em qual pasta o log abriu.
 4. **Configurações e biblioteca:** se o instalador `.exe` também estiver instalado, os dois podem começar com os mesmos favoritos (o Windows lê os arquivos que já existiam), mas o que você mudar em um não aparece no outro.
-5. **Atualizações:** Configurações › Sobre › Atualizações mostra só a versão e "As atualizações vêm da Microsoft Store.", sem a chave e sem "Verificar agora". A busca rápida (`/`) não tem "Verificar atualizações". O log não tem linhas `[update]` de checagem.
-6. **Desinstalar** pelo Windows (Configurações › Aplicativos) remove o app.
+5. **Câmera:** o app não pode pedir acesso à câmera. Para testar de novo depois de já ter negado uma vez, reinstale o pacote (a permissão fica guardada por pacote) ou veja Configurações do Windows › Privacidade › Câmera.
+6. **Atualizações:** Configurações › Sobre › Atualizações mostra só a versão e "As atualizações vêm da Microsoft Store.", sem a chave e sem "Verificar agora". A busca rápida (`/`) não tem "Verificar atualizações". O log não tem linhas `[update]` de checagem.
+7. **Desinstalar** pelo Windows (Configurações › Aplicativos) remove o app.
 
 ## 3. Primeira submissão (manual, no Partner Center)
 

@@ -57,7 +57,7 @@ interface Window {
       gpuInfo(): Promise<{ driver: string; ids: string }>
       testFlags(): Promise<{ captureFail: boolean; noWebgl2: boolean; compareMinFps?: number }>
     }
-    app: { version(): Promise<string>; systemLanguage?(): Promise<'en' | 'pt-BR'>; setLanguage?(lang: 'en' | 'pt-BR'): void }
+    app: { version(): Promise<string>; store?(): Promise<boolean>; systemLanguage?(): Promise<'en' | 'pt-BR'>; setLanguage?(lang: 'en' | 'pt-BR'): void }
     presets: {
       convertMilk(text: string): Promise<{ preset: Record<string, unknown>; ms: number }>
       listImported(): Promise<{ name: string; preset: Record<string, unknown> }[]>

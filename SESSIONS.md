@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-23 — Claude Code (nuvem, pedido do usuário) — branch `fix/store-sem-camera`
+**Fez:** No teste do MSIX o Windows pediu acesso à câmera ao abrir: o `enumerateDevices` da checagem de captura (e do "Relatar um problema") varre também as câmeras, e no pacote o Windows trata isso como acesso à câmera. Só na versão da Store (`app:store` → `process.windowsStore`), o app não chama mais `enumerateDevices`: o nome da saída vem da trilha da captura (`setStoreOutputName`). Instalador e zip iguais. `044-store` ganhou a parte 3 (falha sem a correção, 16/16 com ela); 031, 011 e 142 passando.
+**Deixou em:** PR desta branch (Refs #188), label `build-msix`, sem auto-merge até o usuário testar o MSIX (pedido dele: medo de bug escondido).
+
 ### 2026-11-25 — Claude Code (nuvem, rodada agendada) — branch `fix/045-contexto-webgl`
 **Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste; o PR #195 segue esperando o teste do usuário no Windows, atribuído a ele; v0.11.0 só com a #186 em `backlog`). Passo 4: #130 (spec 045): o ouvinte de `webglcontextlost` saiu do canvas da página (só 2D no Butterchurn 3) para `viz.gl.canvas` (OffscreenCanvas do motor); recarga depois de 1,5 s de fato; número da queda na sessão no log (`sessionStorage`); aviso `not watched` se o motor não expõe `gl`. Teste novo `045-contexto-webgl` 10/10 (também com `SO_CPU_THROTTLE=6`; sem a correção falham 4); `027-estudio-comparar` 28/28.
 **Deixou em:** PR desta branch (Closes #130), com auto-merge. Testar no bloco v0.12.0: TDR no Windows (critério 5). Não verificado: TDR de verdade (só no Windows). Próxima rodada: v0.12.0 sem issues `ready` → fechar o bloco quando o v0.11.0 sair (a #186 ainda em `backlog`) ou planejar a #186.

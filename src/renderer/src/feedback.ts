@@ -40,8 +40,18 @@ export function gpuName(): string {
   }
 }
 
+/**
+ * Versão da Microsoft Store (spec 044): sem `enumerateDevices`, que no MSIX faz o Windows pedir
+ * acesso à câmera (o Chromium varre também as câmeras). O nome vem da captura (main.ts).
+ */
+let storeOutput: string | null = null
+export function setStoreOutputName(name: string): void {
+  storeOutput = name
+}
+
 /** Saída de áudio padrão, como no passo 1 da checagem de captura (sem o prefixo "Padrão - "). */
 export async function defaultOutputName(): Promise<string> {
+  if (storeOutput !== null) return storeOutput
   const outputs = await navigator.mediaDevices?.enumerateDevices().catch(() => [] as MediaDeviceInfo[]) ?? []
   const out = outputs.find((d) => d.kind === 'audiooutput' && d.deviceId === 'default') ?? outputs.find((d) => d.kind === 'audiooutput')
   return out?.label.replace(/^(Padrão|Default)\s*-\s*/i, '').trim() ?? ''
