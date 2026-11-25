@@ -246,9 +246,11 @@ Thank you. License texts for these dependencies are in [THIRD_PARTY_NOTICES.md](
 
 [MIT](LICENSE) © 2026 Alexandre Tempel. Butterchurn and the presets keep their own licenses and credits — see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+The MIT License covers the code, not the brand: Sonic Obsidian™ and The Core logo are trademarks of Alexandre Tempel (registration filed with INPI, Brazil). Forks are welcome under a different name and logo — see [TRADEMARKS.md](TRADEMARKS.md).
+
 Want to help? Read [CONTRIBUTING.md](CONTRIBUTING.md). Found a security issue? See [SECURITY.md](SECURITY.md).
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
-  <sub>Made with ♥ in Brazil by <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
+  <sub>Made with ♥ in Brazil by <a href="https://github.com/atempel">Alexandre Tempel</a><br>Sonic Obsidian™ · <a href="TRADEMARKS.md">Trademark policy</a></sub>
 </p>

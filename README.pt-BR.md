@@ -246,9 +246,11 @@ Obrigado. Os textos de licença dessas dependências estão em [THIRD_PARTY_NOTI
 
 [MIT](LICENSE) © 2026 Alexandre Tempel. O Butterchurn e os presets mantêm suas próprias licenças e créditos — veja [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+A licença MIT vale para o código, não para a marca: Sonic Obsidian™ e o logo The Core são marcas de Alexandre Tempel (pedido de registro depositado no INPI). Forks são bem-vindos com outro nome e outro logo — veja o [TRADEMARKS.md](TRADEMARKS.md#política-de-marca-português-brasil).
+
 Quer ajudar? Leia o [CONTRIBUTING.md](CONTRIBUTING.md) (em inglês). Achou um problema de segurança? Veja o [SECURITY.md](SECURITY.md).
 
 <p align="center">
   <img src="docs/brand/shell.svg" width="18" alt=""><br>
-  <sub>Feito com ♥ no Brasil por <a href="https://github.com/atempel">Alexandre Tempel</a></sub>
+  <sub>Feito com ♥ no Brasil por <a href="https://github.com/atempel">Alexandre Tempel</a><br>Sonic Obsidian™ · <a href="TRADEMARKS.md#política-de-marca-português-brasil">Política de marca</a></sub>
 </p>
