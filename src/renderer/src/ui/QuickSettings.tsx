@@ -25,6 +25,8 @@ import {
 import { Icon } from './icons'
 import { FeedbackButton } from './Feedback'
 import { ProfileBar } from './ProfileBar'
+import { CurveEq, CurveFixedHint, CurveSegmented } from './FreqCurve'
+import { isFlat } from '../freq-curve'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
 import { showToast } from './toast'
 
@@ -304,7 +306,9 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
   const text = settings.overlayText
   const [, curveHint] = splitLabel(expressionCurveLabel(expr.curve))
   const [, memoryHint] = splitLabel(expressionAdaptationLabel(expr.adaptation))
-  const exprIsDefault = expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation
+  // O padrão inclui a curva plana (protótipo `xIsDef`, spec 040).
+  const exprIsDefault =
+    expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation && expr.curvePreset === 'flat' && isFlat(expr.curve16)
 
   return (
     <aside class="sheet" ref={ref} tabIndex={-1} aria-label={t('quick.title')} aria-hidden={!open} inert={!open}>
@@ -357,7 +361,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
               title={t('quick.restoreDefault')}
               disabled={exprIsDefault}
               onClick={() => {
-                run('expression.set', { ...EXPRESSION_DEFAULT })
+                run('expression.set', { ...EXPRESSION_DEFAULT, curvePreset: 'flat' })
                 showToast(t('toast.exprDefault'))
                 // O botão desabilita: o foco vai para o Nível em vez de se perder.
                 document.getElementById('expr')?.focus()
@@ -401,6 +405,15 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           <p class="note seg-desc" id="exprMemoryDesc" aria-live="polite">
             {withDefaultDesc(expr.adaptation === 'live' ? t('quick.memoryLiveDesc') : memoryHint, expr.adaptation === EXPRESSION_DEFAULT.adaptation)}
           </p>
+          {/* Curva por frequência (spec 040), depois de Nível, Caráter e Memória. */}
+          <div class="field eq-field">
+            <div class="field-top">
+              <span id="eqCurveLbl">{t('curve.title')}</span>
+            </div>
+            <CurveSegmented core={core} id="eqCurve" />
+            <CurveEq core={core} id="eq" height={96} labels="sparse" active={open && expressionAvailable} />
+            <CurveFixedHint core={core} id="eqWarn" />
+          </div>
           {!expressionAvailable && <p class="note">{t('quick.unavailable')}</p>}
         </section>
         )}

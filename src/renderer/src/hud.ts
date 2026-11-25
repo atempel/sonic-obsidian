@@ -9,6 +9,8 @@ export interface HudState {
   level: number
   /** Spike 015: nível, curva, adaptação e bass antes → depois. */
   expression?: string
+  /** Spec 040: curva por frequência e a razão por zona aplicada (`curve smile r 1.12 0.95 1.30`). */
+  curve?: string
   /** Memória JS do renderer (MB), para ver crescimento em sessões longas. */
   heapMb?: number
   /** Spec 024: BPM, confiança, compassos e custo da detecção. */
@@ -39,6 +41,7 @@ export class Hud {
       `${s.preset}\n` +
       `${s.presetCount} presets · rotation ${s.rotation} · gain ${s.gainDb > 0 ? '+' : ''}${s.gainDb.toFixed(1)} dB\n` +
       `${s.expression ?? 'expressiveness unavailable'}\n` +
+      (s.curve ? `${s.curve}\n` : '') +
       `${s.beat ?? 'beat: waiting'}\n` +
       (s.sync ? `${s.sync}\n` : '') +
       (s.studio ? `${s.studio}\n` : '') +

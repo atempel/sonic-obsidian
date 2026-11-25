@@ -6,12 +6,16 @@ import { TABS, listFor, matches, presetsWord, thumbStyle, type Tab } from './lib
 import { splitPresetName } from './preset-name'
 import { matchCommands, runAction } from './shortcuts'
 import { matchProfileCommands } from './ProfileBar'
+import { matchCurveCommands } from './FreqCurve'
+import { curveLive } from '../curve-live'
 import type { IconName } from './icons'
 import { showToast } from './toast'
 import { fmtSeconds, t } from '../i18n'
 import { Kbd } from './Kbd'
 
 const MAX_RESULTS = 50
+/** A curva só existe com a Expressividade no motor (spec 040). */
+const curveAvailable = (): boolean => curveLive.probe !== null
 
 interface PaletteCmd {
   key: string
@@ -53,7 +57,8 @@ export function Palette({ core, presets }: { core: Core; presets: readonly strin
     tab === 'all'
       ? [
           ...matchCommands(q).map((c) => ({ key: c.id, text: t(c.label), keys: c.keys, icon: c.icon, run: () => runAction(c.id) })),
-          ...matchProfileCommands(core, q)
+          ...matchProfileCommands(core, q),
+          ...matchCurveCommands(core, q, curveAvailable())
         ]
       : []
   const count = tab === 'collections' ? cols.length : items.length + cmds.length

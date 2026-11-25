@@ -19,6 +19,7 @@ import {
   PRESET_NAME_MODES,
   TOAST_MODES,
   blendTypeLabel,
+  curvePresetLabel,
   defaultSettings,
   expressionAdaptationLabel,
   expressionCurveLabel,
@@ -30,6 +31,7 @@ import {
   type Settings,
   type ToastMode
 } from './core/state'
+import { CURVE_PRESET_VALUES, sanitizeCurveState, type CurvePreset } from './freq-curve'
 
 /** Grupos na ordem fixa (menu, formulário, resumo). */
 export const PROFILE_GROUPS = ['expression', 'blend', 'rotation', 'signal', 'text'] as const
@@ -41,7 +43,8 @@ export const PROFILE_NAME_MAX = 40
 export const PROFILE_KEYS = 9
 
 export interface ProfileValues {
-  expression?: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
+  /** Com a curva por frequência (spec 040); perfil salvo antes dela abre com a curva plana. */
+  expression?: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation; curve16: number[]; curvePreset: CurvePreset }
   blend?: { manual: BlendRule; auto: BlendRule }
   rotation?: { enabled: boolean; intervalSeconds: number; onBeat: boolean }
   signal?: { gainDb: number; autoGain: boolean }
@@ -67,7 +70,13 @@ type GroupValue<G extends ProfileGroup> = NonNullable<ProfileValues[G]>
 /** Os valores de um grupo como estão agora nos ajustes (cópia). */
 export function readGroup<G extends ProfileGroup>(s: Settings, g: G): GroupValue<G> {
   const out: { [K in ProfileGroup]: () => GroupValue<K> } = {
-    expression: () => ({ level: s.expression.level, curve: s.expression.curve, adaptation: s.expression.adaptation }),
+    expression: () => ({
+      level: s.expression.level,
+      curve: s.expression.curve,
+      adaptation: s.expression.adaptation,
+      curve16: [...s.expression.curve16],
+      curvePreset: s.expression.curvePreset
+    }),
     blend: () => ({ manual: { ...s.blend.manual }, auto: { ...s.blend.auto } }),
     rotation: () => ({ enabled: s.rotation.enabled, intervalSeconds: s.rotation.intervalSeconds, onBeat: s.rotation.onBeat }),
     signal: () => ({ gainDb: s.gainDb, autoGain: s.autoGain }),
@@ -99,7 +108,8 @@ export function sanitizeGroup<G extends ProfileGroup>(g: G, raw: unknown): Group
     expression: () => ({
       level: Math.round(num(r.level, EXPRESSION_MIN, EXPRESSION_MAX, d.expression!.level)),
       curve: oneOf(r.curve, EXPRESSION_CURVES, d.expression!.curve),
-      adaptation: oneOf(r.adaptation, EXPRESSION_ADAPTATIONS, d.expression!.adaptation)
+      adaptation: oneOf(r.adaptation, EXPRESSION_ADAPTATIONS, d.expression!.adaptation),
+      ...sanitizeCurveState(r.curve16, r.curvePreset)
     }),
     blend: () => ({ manual: rule(r.manual, d.blend!.manual), auto: rule(r.auto, d.blend!.auto) }),
     rotation: () => ({
@@ -162,6 +172,9 @@ const built = (
   rotation: GroupValue<'rotation'>
 ): Profile => ({ id, name: id, builtIn: true, groups: [...BUILTIN_GROUPS], values: { expression, blend, rotation } })
 
+/** Curva de uma predefinição (Festa = Graves, protótipo `pfBuilt`; os outros, Plana). */
+const curveOf = (id: Exclude<CurvePreset, 'custom'>): { curve16: number[]; curvePreset: CurvePreset } => ({ curve16: [...CURVE_PRESET_VALUES[id]], curvePreset: id })
+
 /** Os quatro perfis do app (spec 038). Padrão = `defaultSettings()` (DECISIONS 2026-11-22). */
 export function builtInProfiles(): Profile[] {
   const d = defaultSettings()
@@ -169,19 +182,19 @@ export function builtInProfiles(): Profile[] {
     built('default', readGroup(d, 'expression'), readGroup(d, 'blend'), readGroup(d, 'rotation')),
     built(
       'calm',
-      { level: -2, curve: 'a', adaptation: 'slow' },
+      { level: -2, curve: 'a', adaptation: 'slow', ...curveOf('flat') },
       { manual: { type: 'crossfade', seconds: 5 }, auto: { type: 'crossfade', seconds: 5 } },
       { enabled: true, intervalSeconds: 60, onBeat: false }
     ),
     built(
       'party',
-      { level: 2, curve: 'c', adaptation: 'locked' },
+      { level: 2, curve: 'c', adaptation: 'locked', ...curveOf('lows') },
       { manual: { type: 'cut', seconds: 1 }, auto: { type: 'radial', seconds: 1 } },
       { enabled: true, intervalSeconds: 15, onBeat: false }
     ),
     built(
       'study',
-      { level: 0, curve: 'b', adaptation: 'normal' },
+      { level: 0, curve: 'b', adaptation: 'normal', ...curveOf('flat') },
       { manual: { type: 'crossfade', seconds: 1 }, auto: { type: 'crossfade', seconds: 1 } },
       { enabled: false, intervalSeconds: 30, onBeat: false }
     )
@@ -257,11 +270,15 @@ const presetNameText = (m: PresetNameMode): string =>
   m === 'always' ? t('quick.presetName.always') : m === 'manual' ? t('quick.presetName.manual') : t('quick.presetName.never')
 const toastsText = (m: ToastMode): string => (m === 'all' ? t('quick.toasts.all') : m === 'important' ? t('quick.toasts.important') : t('quick.toasts.none'))
 
-/** Uma linha: "+2 · Nervo · Fixa · corte seco · 15 s". */
+/** Uma linha: "+2 · Nervo · Fixa · Graves · corte seco · 15 s". */
 export function profileSummary(p: Profile): string {
   const a: string[] = []
   const v = p.values
-  if (v.expression) a.push(sign(v.expression.level), curveName(v.expression.curve), memoryName(v.expression.adaptation))
+  if (v.expression) {
+    a.push(sign(v.expression.level), curveName(v.expression.curve), memoryName(v.expression.adaptation))
+    // Curva por frequência (spec 040): só quando sai da plana.
+    if (v.expression.curvePreset !== 'flat') a.push(curvePresetLabel(v.expression.curvePreset))
+  }
   if (v.blend) {
     const m = v.blend.manual
     a.push(m.type === 'cut' ? t('profile.sum.cut') : `${blendTypeLabel(m.type).toLocaleLowerCase()} ${secs(m.seconds)}`)
@@ -295,6 +312,8 @@ export function profileDiffs(p: Profile, s: Settings): ProfileDiff[] {
       add(t('quick.expression'), sign(a.level), sign(b.level))
       add(t('quick.character'), curveName(a.curve), curveName(b.curve))
       add(t('quick.memory'), memoryName(a.adaptation), memoryName(b.adaptation))
+      // Curva (spec 040): o nome da predefinição; mesma predefinição com valores diferentes → "Personalizada" já cobre.
+      if (a.curve16.join() !== b.curve16.join() || a.curvePreset !== b.curvePreset) add(t('curve.title'), curvePresetLabel(a.curvePreset), curvePresetLabel(b.curvePreset))
     } else if (g === 'blend') {
       const a = sanitizeGroup('blend', saved)
       const b = now as GroupValue<'blend'>
