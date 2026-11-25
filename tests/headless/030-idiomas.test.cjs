@@ -13,7 +13,7 @@ const code = []
 ;(function walk(d) { for (const f of fs.readdirSync(d)) { const p = path.join(d, f); if (fs.statSync(p).isDirectory()) { if (f !== 'i18n') walk(p) } else if (/\.tsx?$/.test(f)) code.push(fs.readFileSync(p, 'utf8')) } })(src)
 const all = code.join('\n')
 // Chaves montadas no código (`blend.type.${type}`) e plurais (`tn('base', n)`).
-const dynamic = ['blend.type.', 'expression.curve.', 'expression.memory.']
+const dynamic = ['blend.type.', 'expression.curve.', 'expression.memory.', 'curve.preset.']
 const unused = Object.keys(en).filter(k => {
   if (dynamic.some(p => k.startsWith(p))) return false
   const base = k.replace(/\.(one|other)$/, '')

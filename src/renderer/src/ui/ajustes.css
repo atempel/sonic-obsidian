@@ -139,3 +139,24 @@ select.sel { height: 30px; padding: 0 8px; background: var(--bg-03); border: 1px
 .pf-diff li:last-child { border-bottom: 0; }
 .pf-diff .num { flex: none; max-width: 62%; text-align: right; font-size: 12px; color: var(--cyan); }
 @media (prefers-reduced-motion: reduce) { .pf-menu { animation: none; } .pf-chev, .cbx .box .ico { transition: none; } }
+
+/* ── Curva por frequência (spec 040; protótipo "Palco integrado" `.eq-*`, versão fb12) ── */
+.sheet .seg.seg-eq { display: grid; grid-template-columns: repeat(6, 1fr); }
+.sheet .seg-eq button { grid-column: span 2; padding: 0 4px; }
+.sheet .seg-eq button:nth-child(n+4) { grid-column: span 3; }
+.sheet .seg-eq.has-custom button:nth-child(n+4) { grid-column: span 2; }
+.eq-plot { position: relative; margin-top: 10px; border-radius: var(--r-1); touch-action: none; cursor: crosshair; }
+.eq-plot canvas { display: block; width: 100%; height: 96px; background: var(--bg-00); border-radius: var(--r-1); }
+.eq-plot:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+.eq-bub { position: absolute; left: 0; top: 0; z-index: 2; padding: 3px 8px; white-space: nowrap; font-size: 12px; color: var(--text-1); background: var(--bg-03); border: 1px solid var(--line-3); border-radius: var(--r-2); box-shadow: var(--shadow-pop);
+  pointer-events: none; opacity: 0; transform: translate(-50%, -100%); transition: opacity var(--t-fast) var(--ease-out); }
+.eq-bub.on { opacity: 1; }
+.eq-bub.dn { transform: translate(-50%, 0); }
+.eq-bub b { color: var(--cyan); font-weight: 500; }
+.eq-freq { position: relative; height: 18px; margin-top: 4px; font-family: var(--font-num); font-size: 12px; line-height: 18px; color: var(--text-3); }
+.eq-freq span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.eq-warn { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 12px; line-height: 1.35; color: var(--text-2); }
+.eq-warn .btn { flex: none; height: 26px; padding: 0 10px; font-size: 12px; }
+.eq-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.sheet .field.eq-field { margin-bottom: 0; }
+@media (prefers-reduced-motion: reduce) { .eq-bub { transition: none; } }

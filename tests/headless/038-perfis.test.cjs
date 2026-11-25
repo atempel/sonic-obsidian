@@ -78,7 +78,7 @@ async function openQuick(page) {
     ok('1c manual Corte seco (sem tempo), automática Radial 1 s', s1.manualType === 'cut' && s1.manualS === null && s1.autoType === 'radial' && s1.autoS === '1', JSON.stringify([s1.manualType, s1.manualS, s1.autoType, s1.autoS]))
     ok('1d rotação ligada a 15 s', s1.rot === true && s1.interval === '15', JSON.stringify([s1.rot, s1.interval]))
     ok('1e ganho e texto sobre o visual não mudam', s1.gain === '3' && s1.presetName === 'never' && s1.toasts === 'all', JSON.stringify([s1.gain, s1.presetName, s1.toasts]))
-    ok('1f barra: "Festa", sem ponto, resumo de uma linha', s1.name === 'Festa' && !s1.dot && s1.sum === '+2 · Nervo · Fixa · corte seco · 15 s', JSON.stringify([s1.name, s1.dot, s1.sum]))
+    ok('1f barra: "Festa", sem ponto, resumo de uma linha', s1.name === 'Festa' && !s1.dot && s1.sum === '+2 · Nervo · Fixa · Graves · corte seco · 15 s', JSON.stringify([s1.name, s1.dot, s1.sum]))
     ok('1g HUD: a Expressividade chegou ao motor', await H.poll(page, () => /expressiveness \+2 · character c · memory locked/.test(document.querySelector('#hud').textContent), { timeout: 10000 }))
 
     // ── 2. Modificado, Desfazer, grupo fora do perfil ──
@@ -235,7 +235,7 @@ async function openQuick(page) {
       sum: r.querySelector('.pfs-sum').textContent, key: r.querySelector('.pfs-k')?.textContent || ''
     })))
     const r8 = await rows()
-    ok('8a lista: quatro do app ("do app") e o do usuário, com resumo e Alt+N; o ativo "Em uso · modificado" (o ganho de agora não é o +2 dB dele)', JSON.stringify(r8.map((r) => [r.name, r.tag, r.key])) === JSON.stringify([['Padrão', 'do app', 'Alt1'], ['Calmo', 'do app', 'Alt2'], ['Festa', 'do app', 'Alt3'], ['Estudar presets', 'do app', 'Alt4'], ['Meu', '', 'Alt5']]) && r8[4].use === 'Em uso · modificado' && r8.slice(0, 4).every((r) => r.use === '') && r8[4].sum === '+1 · Energia · Curta · +2 dB' && r8[2].sum === '+2 · Nervo · Fixa · corte seco · 15 s', JSON.stringify(r8))
+    ok('8a lista: quatro do app ("do app") e o do usuário, com resumo e Alt+N; o ativo "Em uso · modificado" (o ganho de agora não é o +2 dB dele)', JSON.stringify(r8.map((r) => [r.name, r.tag, r.key])) === JSON.stringify([['Padrão', 'do app', 'Alt1'], ['Calmo', 'do app', 'Alt2'], ['Festa', 'do app', 'Alt3'], ['Estudar presets', 'do app', 'Alt4'], ['Meu', '', 'Alt5']]) && r8[4].use === 'Em uso · modificado' && r8.slice(0, 4).every((r) => r.use === '') && r8[4].sum === '+1 · Energia · Curta · +2 dB' && r8[2].sum === '+2 · Nervo · Fixa · Graves · corte seco · 15 s', JSON.stringify(r8))
     const openMore = async (id) => {
       await p3.click(`[data-pmore="${id}"]`)
       await H.poll(p3, () => !!document.activeElement?.closest('#pfMenuS'), { timeout: 3000 })

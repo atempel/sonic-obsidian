@@ -1,5 +1,6 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
+import { CURVE_BANDS, CURVE_DB_MAX, CURVE_DB_MIN, CURVE_PRESET_IDS, CURVE_PRESET_VALUES, clampDb, type CurvePreset } from '../freq-curve'
 import { LANGUAGE_PREFS, applyLanguage, t, type LanguagePref, type MessageKey, type Msg } from '../i18n'
 import {
   cleanAuthor,
@@ -322,7 +323,7 @@ export class Core {
       this.changedSettings(origin)
       return { ...rule }
     },
-    /** Expressividade (spike 015): `{ level?, curve?, adaptation? }`. */
+    /** Expressividade (spike 015): `{ level?, curve?, adaptation?, curve16?, curvePreset? }` (curva: spec 040). */
     'expression.set': (a, origin) => {
       const e = this.state.settings.expression
       const level = optNum(a.level, 'level', EXPRESSION_MIN, EXPRESSION_MAX)
@@ -335,8 +336,22 @@ export class Core {
         if (!EXPRESSION_ADAPTATIONS.includes(a.adaptation as ExpressionAdaptation)) fail(`adaptation: ${EXPRESSION_ADAPTATIONS.join(', ')}`)
         e.adaptation = a.adaptation as ExpressionAdaptation
       }
+      // Curva por frequência (spec 040): a predefinição aplica os valores dela; a lista vira Personalizada.
+      if (a.curvePreset !== undefined) {
+        if (!CURVE_PRESET_IDS.includes(a.curvePreset as CurvePreset)) fail(`curvePreset: ${CURVE_PRESET_IDS.join(', ')}`)
+        const id = a.curvePreset as CurvePreset
+        if (id !== 'custom') e.curve16 = [...CURVE_PRESET_VALUES[id]]
+        e.curvePreset = id
+      }
+      if (a.curve16 !== undefined) {
+        const c = a.curve16
+        if (!Array.isArray(c) || c.length !== CURVE_BANDS.length || !c.every((v) => typeof v === 'number' && Number.isFinite(v)))
+          fail(`curve16: ${CURVE_BANDS.length} numbers (${CURVE_DB_MIN}…${CURVE_DB_MAX} dB)`)
+        e.curve16 = (c as number[]).map(clampDb)
+        if (a.curvePreset === undefined) e.curvePreset = 'custom'
+      }
       this.changedSettings(origin)
-      return { ...e }
+      return { ...e, curve16: [...e.curve16] }
     },
     /** Texto sobre o visual (spec 014): `{ presetName?, trackTitle?, toasts?, clean? }`. */
     'overlayText.set': (a, origin) => {

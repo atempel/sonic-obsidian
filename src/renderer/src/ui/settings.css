@@ -173,3 +173,12 @@ body.settings-open .settings .win { opacity: 1; transform: translate(-50%, -50%)
 .settings .menu.pfs-menu button:disabled { color: var(--text-3); cursor: not-allowed; background: none; }
 .settings .menu.pfs-menu button:disabled .ico { color: var(--text-3); }
 .settings #pfNote .btn { margin-left: 4px; vertical-align: baseline; }
+
+/* ── Curva por frequência (spec 040, P1; protótipo "Configurações" `.eq-*`, versão fb12) ── */
+.settings .eq-box { display: grid; gap: 10px; min-width: 0; }
+.settings .eq-box > .help { margin: 0; }
+.settings .eq-plot { margin-top: 0; }
+.settings .eq-plot canvas { height: 160px; }
+.settings .eq-freq { margin-top: -6px; }
+.settings .eq-warn { justify-content: flex-start; flex-wrap: wrap; gap: 8px 12px; margin-top: 0; font-size: 13px; }
+.settings .eq-reset { margin-left: auto; }

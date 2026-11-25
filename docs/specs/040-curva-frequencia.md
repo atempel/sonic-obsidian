@@ -1,6 +1,6 @@
 # 040 — Curva por frequência (EQ de 16 bandas na Expressividade)
 
-**Fase:** 3 (reação ao áudio) · **Status:** pronta · **Issue:** [#112](https://github.com/atempel/sonic-obsidian/issues/112) · **Milestone:** v0.12.0 · **Personas:** DJ de Festa (quer o visual batendo no bumbo e não na linha de baixo), Nostálgico do Winamp (fala "graves/agudos", reconhece um EQ na hora), Criador de presets (quer ver um preset reagir a uma faixa estreita)
+**Fase:** 3 (reação ao áudio) · **Status:** implementada (P0 + P1; teste no Windows no bloco v0.12.0) · **Issue:** [#112](https://github.com/atempel/sonic-obsidian/issues/112) · **Milestone:** v0.12.0 · **Personas:** DJ de Festa (quer o visual batendo no bumbo e não na linha de baixo), Nostálgico do Winamp (fala "graves/agudos", reconhece um EQ na hora), Criador de presets (quer ver um preset reagir a uma faixa estreita)
 
 ## Problema
 O preset só recebe três números, `bass`, `mid` e `treb`, e o app não tem como dizer *a quais frequências* o visual reage: o Nível diz quanto, o Caráter diz como, a Memória diz contra o quê. O usuário aprovou na sessão de design de 10/11/2026 uma **curva por frequência**: um EQ gráfico de 16 bandas que não mexe no som, só no quanto cada faixa mexe o visual, sem nomes de instrumento (`docs/design/v3/docs/v3-reatividade.md`). O design pedia um spike antes da spec; o resultado está abaixo.

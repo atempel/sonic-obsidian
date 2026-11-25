@@ -37,6 +37,8 @@ import { useSlideIndicator } from './slide-indicator'
 import { Kbd } from './Kbd'
 import { useUpdateState } from './UpdateNotice'
 import { applyProfile } from './ProfileBar'
+import { CurveEq, CurveFixedHint, applyCurvePreset, curvePresetLabel } from './FreqCurve'
+import { CURVE_PRESETS, CURVE_PRESET_IDS, isFlat, type CurvePreset } from '../freq-curve'
 import { PROFILE_KEYS, PROFILE_NAME_MAX, isProfileModified, profileFileData, profileName, profileSlug, profileSummary, type Profile } from '../profiles'
 import { checkUpdates, installUpdate, openReleasePage, releaseUrl } from '../update'
 
@@ -417,9 +419,10 @@ function BlendRow({ core, run, target, label, help, available }: { core: Core; r
   )
 }
 
-function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
+function Visual({ bridge, run, shown }: { bridge: PalcoBridge; run: Run; shown: boolean }) {
   const { core } = bridge
   const s = core.state.settings
+  const ex = s.expression
   const rot = s.rotation
   const cols = core.state.library.collections
   const text = s.overlayText
@@ -472,6 +475,44 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         <Row id="st-bars" label={t('settings.visual.bars')} help={t('settings.visual.barsHelp')} kw="compassos bars">
           <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
+      </Grp>
+      {/* Curva por frequência (spec 040, P1): o EQ grande, com escala em dB e "Restaurar plana". */}
+      <Grp title={t('quick.expression')}>
+        <div class="row stack" data-search={`${t('curve.title')} ${t('curve.settingsHelp')} ${CURVE_PRESET_IDS.map(curvePresetLabel).join(' ')} ${t('curve.restoreFlat')} ${t('curve.useFixed')} eq equalizer equalizador hz db bass mid treb`}>
+          <div class="txt">
+            <span class="lbl" id="st-eqCurveLbl">
+              {t('curve.title')}
+            </span>
+            <p class="help">{t('curve.settingsHelp')}</p>
+          </div>
+          <div class="ctl">
+            <Seg<CurvePreset>
+              name="st-eqCurve"
+              label={t('curve.title')}
+              value={ex.curvePreset}
+              options={(ex.curvePreset === 'custom' ? CURVE_PRESET_IDS : CURVE_PRESETS).map((p) => [p, curvePresetLabel(p)])}
+              onChange={(p) => p !== 'custom' && applyCurvePreset(core, p)}
+            />
+            <button
+              class="btn sm eq-reset"
+              type="button"
+              id="st-eqReset"
+              disabled={isFlat(ex.curve16)}
+              onClick={() => {
+                applyCurvePreset(core, 'flat', false)
+                document.getElementById('st-eqPlot')?.focus()
+              }}
+            >
+              <Icon name="rotate-ccw" />
+              {t('curve.restoreFlat')}
+            </button>
+          </div>
+          <div class="eq-box">
+            <p class="help">{t('curve.dragHelp')}</p>
+            <CurveEq core={core} id="st-eq" height={160} gutter={36} barW={4} labels="full" active={shown && bridge.expressionAvailable} />
+            <CurveFixedHint core={core} id="st-eqWarn" />
+          </div>
+        </div>
       </Grp>
       <Grp title={t('quick.text')}>
         <Row id="st-name" label={t('quick.presetName')} help={t('settings.visual.presetNameHelp')} kw="assinatura crédito credit name">
@@ -1518,7 +1559,7 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
                   <p class="lead">{t(s.lead)}</p>
                   {s.id === 'geral' && <Geral core={core} run={run} />}
                   {s.id === 'captura' && <Captura bridge={bridge} run={run} />}
-                  {s.id === 'visual' && <Visual bridge={bridge} run={run} />}
+                  {s.id === 'visual' && <Visual bridge={bridge} run={run} shown={open && !empty && current.id === 'visual'} />}
                   {s.id === 'perfis' && <Perfis core={core} />}
                   {s.id === 'render' && <Render core={core} run={run} />}
                   {s.id === 'desempenho' && <Desempenho core={core} run={run} />}

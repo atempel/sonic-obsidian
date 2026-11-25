@@ -16,6 +16,8 @@ import {
 } from './core/state'
 import { fixPointSize, hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
+import { curveLive } from './curve-live'
+import { isFlat } from './freq-curve'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { importMilks, shaderError, type MilkInput } from './importer'
@@ -158,15 +160,22 @@ async function start(): Promise<void> {
   const settings = core.state.settings
   // Normalizar áudio (spec 028, P1): mede antes do ganho (o mesmo medidor do silêncio) e age no GainNode.
   const agc = new AutoGain()
+  // Curva por frequência (spec 040): analisador próprio no mesmo nó que alimenta o motor.
+  const curveTap = ctx.createAnalyser()
+  curveTap.fftSize = 4096
+  curveTap.smoothingTimeConstant = 0
+  gain.connect(curveTap)
   // Spec 028: a Memória só semeia com som; no repouso do silêncio, os presets recebem zero.
   const exprProbe = hookExpression(
     viz.visualizer,
     () => settings.expression,
-    () => ({ quiet: silence.quiet, resting: silence.resting, breath: core.state.breath })
+    () => ({ quiet: silence.quiet, resting: silence.resting, breath: core.state.breath }),
+    { analyser: curveTap, wantSpectrum: () => curveLive.want > 0 }
   )
+  curveLive.probe = exprProbe
   {
     const ex = settings.expression
-    window.so.log(`expressiveness loaded: level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation}${exprProbe ? '' : ' (unavailable in the engine)'} · normalize audio ${settings.autoGain ? 'on' : 'off'}`)
+    window.so.log(`expressiveness loaded: level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation} · curve ${ex.curvePreset}${ex.curvePreset === 'custom' ? ` [${ex.curve16.join(' ')}]` : ''}${exprProbe ? '' : ' (unavailable in the engine)'} · normalize audio ${settings.autoGain ? 'on' : 'off'}`)
   }
   // A cada 5 min (como a memória no main): bass médio e desvio com som, para "reagindo pouco" virar número.
   if (exprProbe)
@@ -1296,6 +1305,8 @@ async function start(): Promise<void> {
         state.expression =
           `expressiveness ${exprLevel()} · character ${ex.curve} · memory ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
           `imm ${f(p.imm)} · engine avg ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · peak ${db(prePeakDb)} dBFS (before gain) · gain in effect ${dbSigned(gainInEffectDb())} dB (${settings.autoGain ? `manual ${dbSigned(manualDb(settings.gainDb, true))} + auto ${dbSigned(agc.gainDb)}, measured level ${db(agc.levelDb)} dBFS` : 'manual'})`
+        // Spec 040: a razão por zona aplicada no último quadro (HUD em inglês).
+        state.curve = isFlat(ex.curve16) ? `curve ${ex.curvePreset}` : `curve ${ex.curvePreset} r ${p.ratios[0]!.toFixed(2)} ${p.ratios[1]!.toFixed(2)} ${p.ratios[2]!.toFixed(2)}`
       }
       const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} beats (${rotation.barsRemaining()} bars left)` : ''
       state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`
