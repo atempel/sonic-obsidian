@@ -1,5 +1,6 @@
 import type { PresetLibrary } from '../presets'
 import { Emitter } from './events'
+import { CURVE_BANDS, CURVE_DB_MAX, CURVE_DB_MIN, CURVE_PRESET_IDS, CURVE_PRESET_VALUES, clampDb, type CurvePreset } from '../freq-curve'
 import { LANGUAGE_PREFS, applyLanguage, t, type LanguagePref, type MessageKey, type Msg } from '../i18n'
 import {
   cleanAuthor,
@@ -20,6 +21,8 @@ import {
   BEAT_BARS,
   BEAT_LEAD_MAX_MS,
   VISUAL_DELAY_MAX_MS,
+  UI_MODES,
+  type UiMode,
   type BeatBars,
   num,
   sanitizeRender,
@@ -36,6 +39,18 @@ import {
   type Settings,
   type StartupPreset
 } from './state'
+import {
+  PROFILE_GROUPS,
+  builtInProfiles,
+  cleanProfileName,
+  nextDefaultProfileName,
+  parseProfileFile,
+  profileName,
+  readValues,
+  sanitizeGroups,
+  uniqueProfileName,
+  type Profile
+} from '../profiles'
 
 /**
  * Núcleo de comandos (architecture §1). Teclado e UI (e o MCP, na Fase 4)
@@ -67,7 +82,7 @@ export interface CoreEvents extends Record<string, unknown> {
   autoGainTick: { db: number }
   captureChanged: { state: CaptureState }
   /** Gravação em disco concluída. */
-  saved: { store: 'settings' | 'library' }
+  saved: { store: 'settings' | 'library' | 'profiles' }
   /** Checklist da captura (spec 012), a cada passo verificado. */
   captureChecks: { checks: CaptureCheck[] }
   /** Preset abaixo do mínimo de fps (spec 012, P2); `null` limpa o aviso. */
@@ -98,12 +113,16 @@ export interface AppState {
   breath: boolean
   /** Ganho automático em vigor (dB) com "Normalizar áudio" ligado; 0 desligado. Não é persistido. */
   autoGainDb: number
+  /** Perfis do usuário (spec 038), na ordem de criação; os do app vêm de `builtInProfiles()`. */
+  profiles: Profile[]
 }
 
 /** Efeitos fora do renderer (preload). */
 export interface CoreEffects {
   saveSettings(settings: Settings): Promise<void>
   saveLibrary(library: Library): Promise<void>
+  /** `profiles.json` (spec 038): só os perfis do usuário. */
+  saveProfiles(profiles: Profile[]): Promise<void>
   toggleFullScreen(): Promise<void>
 }
 
@@ -143,9 +162,10 @@ export class Core {
     private readonly presets: PresetLibrary,
     settings: Settings,
     library: Library,
-    private readonly effects: CoreEffects
+    private readonly effects: CoreEffects,
+    profiles: Profile[] = []
   ) {
-    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false, autoGainDb: 0 }
+    this.state = { settings, library, current: '', overlay: null, capture: 'pending', held: false, breath: false, autoGainDb: 0, profiles }
     presets.isSkipped = (name) => this.isHidden(name)
   }
 
@@ -159,6 +179,36 @@ export class Core {
   }
 
   /** Intervalo em vigor: o da coleção quando a rotação segue uma coleção. */
+  /** Perfis na ordem do menu e do `Alt+1…9`: os do app, depois os do usuário (spec 038). */
+  get allProfiles(): Profile[] {
+    return [...this.builtIns, ...this.state.profiles]
+  }
+
+  /** O perfil ativo, ou `null` (nenhum, ou o ativo foi apagado). */
+  get activeProfile(): Profile | null {
+    const id = this.state.settings.profile.active
+    return this.allProfiles.find((p) => p.id === id) ?? null
+  }
+
+  private readonly builtIns = builtInProfiles()
+  /** O último perfil apagado, para o Desfazer da nota (spec 038, P1). */
+  private lastDeleted: { profile: Profile; index: number; active: boolean; startup: boolean } | null = null
+
+  private newProfileId(): string {
+    const taken = new Set(this.allProfiles.map((p) => p.id))
+    for (let i = 0; ; i++) {
+      const id = `p${Date.now().toString(36)}${i}`
+      if (!taken.has(id)) return id
+    }
+  }
+
+  /** Um perfil do usuário pelo id (os do app não se renomeiam nem se apagam). */
+  private userProfile(id: unknown): Profile {
+    const p = this.allProfiles.find((x) => x.id === id) ?? fail(`perfil desconhecido: ${String(id)}`)
+    if (p.builtIn) fail('perfil do app não se renomeia nem se apaga')
+    return p
+  }
+
   get rotationIntervalSeconds(): number {
     const rot = this.state.settings.rotation
     const col = rot.order === 'collection' ? this.collection(rot.collectionId) : undefined
@@ -273,7 +323,7 @@ export class Core {
       this.changedSettings(origin)
       return { ...rule }
     },
-    /** Expressividade (spike 015): `{ level?, curve?, adaptation? }`. */
+    /** Expressividade (spike 015): `{ level?, curve?, adaptation?, curve16?, curvePreset? }` (curva: spec 040). */
     'expression.set': (a, origin) => {
       const e = this.state.settings.expression
       const level = optNum(a.level, 'level', EXPRESSION_MIN, EXPRESSION_MAX)
@@ -286,8 +336,22 @@ export class Core {
         if (!EXPRESSION_ADAPTATIONS.includes(a.adaptation as ExpressionAdaptation)) fail(`adaptation: ${EXPRESSION_ADAPTATIONS.join(', ')}`)
         e.adaptation = a.adaptation as ExpressionAdaptation
       }
+      // Curva por frequência (spec 040): a predefinição aplica os valores dela; a lista vira Personalizada.
+      if (a.curvePreset !== undefined) {
+        if (!CURVE_PRESET_IDS.includes(a.curvePreset as CurvePreset)) fail(`curvePreset: ${CURVE_PRESET_IDS.join(', ')}`)
+        const id = a.curvePreset as CurvePreset
+        if (id !== 'custom') e.curve16 = [...CURVE_PRESET_VALUES[id]]
+        e.curvePreset = id
+      }
+      if (a.curve16 !== undefined) {
+        const c = a.curve16
+        if (!Array.isArray(c) || c.length !== CURVE_BANDS.length || !c.every((v) => typeof v === 'number' && Number.isFinite(v)))
+          fail(`curve16: ${CURVE_BANDS.length} numbers (${CURVE_DB_MIN}…${CURVE_DB_MAX} dB)`)
+        e.curve16 = (c as number[]).map(clampDb)
+        if (a.curvePreset === undefined) e.curvePreset = 'custom'
+      }
       this.changedSettings(origin)
-      return { ...e }
+      return { ...e, curve16: [...e.curve16] }
     },
     /** Texto sobre o visual (spec 014): `{ presetName?, trackTitle?, toasts?, clean? }`. */
     'overlayText.set': (a, origin) => {
@@ -341,6 +405,13 @@ export class Core {
       this.changedSettings(origin)
       return { language: this.state.settings.language, active }
     },
+    /** Modo de interface (spec 039): `{ mode: 'simple' | 'full' }`. Só muda quanto da casca aparece. */
+    'ui.setMode': (a, origin) => {
+      if (!UI_MODES.includes(a.mode as UiMode)) fail(`mode: ${UI_MODES.join(', ')}`)
+      this.state.settings.uiMode = a.mode as UiMode
+      this.changedSettings(origin)
+      return this.state.settings.uiMode
+    },
     /** Desempenho por preset (spec 012): `{ skipSlow?, minFps? }`. */
     'perf.set': (a, origin) => {
       const p = this.state.settings.perf
@@ -357,6 +428,104 @@ export class Core {
       this.state.settings.render = next
       this.changedSettings(origin)
       return { ...next }
+    },
+
+    // ── perfis (spec 038) ───────────────────────────────────
+    /** `{ id }`: passa cada grupo do perfil pelos comandos de sempre; os outros grupos ficam. */
+    'profile.apply': (a, origin) => {
+      const p = this.allProfiles.find((x) => x.id === a.id) ?? fail(`perfil desconhecido: ${String(a.id)}`)
+      this.applyProfile(p, origin)
+      return { id: p.id, name: profileName(p) }
+    },
+    /** Desfazer: volta aos valores do perfil ativo. */
+    'profile.revert': (_a, origin) => {
+      const p = this.activeProfile ?? fail('nenhum perfil ativo')
+      this.applyProfile(p, origin)
+      return { id: p.id, name: profileName(p) }
+    },
+    /** `{ name?, groups }`: novo perfil do usuário com os valores de agora; vira o ativo. */
+    'profile.save': (a, origin) => {
+      const groups = sanitizeGroups(a.groups)
+      if (groups.length === 0 || !Array.isArray(a.groups) || a.groups.some((g) => !PROFILE_GROUPS.includes(g as never))) fail('groups: ao menos um de ' + PROFILE_GROUPS.join(', '))
+      if (a.name !== undefined && typeof a.name !== 'string') fail('name: texto')
+      const taken = this.allProfiles.map(profileName)
+      const clean = cleanProfileName((a.name as string | undefined) ?? '')
+      const name = clean ? uniqueProfileName(clean, taken) : nextDefaultProfileName(taken)
+      const p: Profile = { id: this.newProfileId(), name, builtIn: false, groups, values: readValues(this.state.settings, groups) }
+      this.state.profiles.push(p)
+      this.state.settings.profile.active = p.id
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: p.id, name }
+    },
+    /** Atualizar: grava os valores de agora no perfil ativo (só perfil do usuário). */
+    'profile.update': (_a, origin) => {
+      const p = this.activeProfile ?? fail('nenhum perfil ativo')
+      if (p.builtIn) fail('perfil do app não se atualiza')
+      p.values = readValues(this.state.settings, p.groups)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
+    },
+    // Configurações › Perfis (spec 038, P1).
+    /** `{ id, name }`: só perfil do usuário; vazio ou igual não muda nada; nome de outro ganha " (2)". */
+    'profile.rename': (a, origin) => {
+      const p = this.userProfile(a.id)
+      const clean = cleanProfileName(str(a.name, 'name'))
+      if (!clean || clean === p.name) return { id: p.id, name: p.name, changed: false }
+      p.name = uniqueProfileName(clean, this.allProfiles.filter((x) => x !== p).map(profileName))
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name, changed: true }
+    },
+    /** `{ id }`: cópia como perfil do usuário, "<nome> (cópia)", no fim da lista. Não muda o ativo. */
+    'profile.duplicate': (a, origin) => {
+      const src = this.allProfiles.find((x) => x.id === a.id) ?? fail(`perfil desconhecido: ${String(a.id)}`)
+      const base = cleanProfileName(t('profile.copyName', { name: profileName(src) }))
+      const p: Profile = { id: this.newProfileId(), name: uniqueProfileName(base, this.allProfiles.map(profileName)), builtIn: false, groups: [...src.groups], values: JSON.parse(JSON.stringify(src.values)) as Profile['values'] }
+      this.state.profiles.push(p)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** `{ id }`: apaga um perfil do usuário (o ativo vira nenhum; "Perfil ao abrir" volta a Último usado). Desfazer: `profile.undoDelete`. */
+    'profile.delete': (a, origin) => {
+      const p = this.userProfile(a.id)
+      const index = this.state.profiles.indexOf(p)
+      const pf = this.state.settings.profile
+      this.lastDeleted = { profile: p, index, active: pf.active === p.id, startup: pf.startup === p.id }
+      this.state.profiles.splice(index, 1)
+      if (pf.active === p.id) pf.active = null
+      if (pf.startup === p.id) pf.startup = 'last'
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** Desfaz o último `profile.delete`: volta ao mesmo lugar, ativo e ao abrir como estavam. */
+    'profile.undoDelete': (_a, origin) => {
+      const d = this.lastDeleted ?? fail('nada para desfazer')
+      this.lastDeleted = null
+      if (this.state.profiles.some((x) => x.id === d.profile.id)) fail('perfil já existe')
+      this.state.profiles.splice(Math.min(d.index, this.state.profiles.length), 0, d.profile)
+      const pf = this.state.settings.profile
+      if (d.active) pf.active = d.profile.id
+      if (d.startup) pf.startup = d.profile.id
+      this.changedProfiles(origin)
+      this.changedSettings(origin)
+      return { id: d.profile.id, name: d.profile.name }
+    },
+    /** `{ data }`: o JSON de um arquivo exportado (já lido). Fora do formato → erro `[not-profile]` e nada muda. */
+    'profile.import': (a, origin) => {
+      const parsed = parseProfileFile(a.data) ?? fail('[not-profile] not a Sonic Obsidian profile')
+      const p: Profile = { id: this.newProfileId(), name: uniqueProfileName(parsed.name, this.allProfiles.map(profileName)), builtIn: false, groups: parsed.groups, values: parsed.values }
+      this.state.profiles.push(p)
+      this.changedProfiles(origin)
+      return { id: p.id, name: p.name }
+    },
+    /** `{ value }`: "Perfil ao abrir" — `last` (os ajustes como ficaram) ou o id de um perfil. */
+    'profile.startup': (a, origin) => {
+      const v = str(a.value, 'value')
+      if (v !== 'last' && !this.allProfiles.some((x) => x.id === v)) fail(`perfil desconhecido: ${v}`)
+      this.state.settings.profile.startup = v
+      this.changedSettings(origin)
+      return v
     },
 
     // ── biblioteca ──────────────────────────────────────────
@@ -614,6 +783,32 @@ export class Core {
       .saveSettings(this.state.settings)
       .then(() => this.events.emit('saved', { store: 'settings' }))
       .catch((err: unknown) => console.error('[core] falha ao salvar settings', err))
+  }
+
+  private applyProfile(p: Profile, origin: Origin): void {
+    const v = p.values
+    const run = (name: string, args: Args): unknown => this.handlers[name]!(args, origin)
+    if (v.expression) run('expression.set', { ...v.expression })
+    if (v.blend) {
+      run('blend.set', { target: 'manual', ...v.blend.manual })
+      run('blend.set', { target: 'auto', ...v.blend.auto })
+    }
+    if (v.rotation) run('rotation.set', { ...v.rotation })
+    if (v.signal) {
+      run('audio.autoGain', { value: v.signal.autoGain })
+      run('signal.set', { gainDb: v.signal.gainDb })
+    }
+    if (v.text) run('overlayText.set', { ...v.text })
+    this.state.settings.profile.active = p.id
+    this.changedSettings(origin)
+  }
+
+  private changedProfiles(origin: Origin): void {
+    this.events.emit('stateChanged', { origin })
+    this.effects
+      .saveProfiles(this.state.profiles)
+      .then(() => this.events.emit('saved', { store: 'profiles' }))
+      .catch((err: unknown) => console.error('[core] falha ao salvar profiles', err))
   }
 
   private changedLibrary(origin: Origin): void {

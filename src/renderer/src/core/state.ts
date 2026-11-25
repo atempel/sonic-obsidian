@@ -5,6 +5,7 @@
  * campo inválido volta ao padrão.
  */
 import { AGC } from '../agc'
+import { flatCurve, sanitizeCurveState, type CurvePreset } from '../freq-curve'
 import { LANGUAGE_PREFS, t, type LanguagePref } from '../i18n'
 
 /** Intervalos da lista dos Ajustes rápidos (spec 011); as Configurações aceitam 5–120 s. */
@@ -48,6 +49,18 @@ export const EXPRESSION_DEFAULT: { level: number; curve: ExpressionCurve; adapta
 /** "Nome — explicação" do Caráter e da Memória, no idioma do app (spec 030). */
 export const expressionCurveLabel = (c: ExpressionCurve): string => t(`expression.curve.${c}`)
 export const expressionAdaptationLabel = (a: ExpressionAdaptation): string => t(`expression.memory.${a}`)
+/** Nome da predefinição da curva por frequência (spec 040) no idioma do app. */
+export const curvePresetLabel = (p: CurvePreset): string => t(`curve.preset.${p}`)
+/** Expressividade salva: Nível, Caráter, Memória e a curva por frequência (spec 040). */
+export interface ExpressionSettings {
+  level: number
+  curve: ExpressionCurve
+  adaptation: ExpressionAdaptation
+  /** Curva por frequência: 16 bandas em dB (inteiros, −12…+12), de 20 Hz a 20 kHz. */
+  curve16: number[]
+  /** Predefinição da curva; `custom` depois de uma edição à mão, até escolher outra. */
+  curvePreset: CurvePreset
+}
 
 /** Texto sobre o visual (spec 014). */
 export const PRESET_NAME_MODES = ['always', 'manual', 'never'] as const
@@ -97,6 +110,9 @@ export interface RenderSettings {
   extraImages: boolean
 }
 export type FpsLimit = 'monitor' | number
+/** Modos de interface (spec 039): quanto da casca aparece. O Rack fica para a Fase 5. */
+export const UI_MODES = ['simple', 'full'] as const
+export type UiMode = (typeof UI_MODES)[number]
 export type OverlayName = 'library' | 'search' | 'quick' | 'settings' | 'studio'
 
 export interface Settings {
@@ -125,7 +141,7 @@ export interface Settings {
   }
   /** Troca manual (teclado, faixa, Biblioteca, busca) e automática (rotação, coleção). */
   blend: { manual: BlendRule; auto: BlendRule }
-  expression: { level: number; curve: ExpressionCurve; adaptation: ExpressionAdaptation }
+  expression: ExpressionSettings
   overlayText: OverlayText
   fpsLimit: FpsLimit
   startupPreset: StartupPreset
@@ -148,6 +164,10 @@ export interface Settings {
   language: LanguagePref
   /** Buscar atualizações automaticamente (spec 029): uma checagem por dia no GitHub. */
   updatesAuto: boolean
+  /** Perfis (spec 038): o ativo (`null` = nenhum) e o aplicado ao abrir (`last` = os ajustes como ficaram). */
+  profile: { active: string | null; startup: string }
+  /** Modo de interface (spec 039): `full` = o app de sempre; `simple` = faixa, Ajustes, Biblioteca e `?` reduzidos. */
+  uiMode: UiMode
 }
 
 export interface Collection {
@@ -181,7 +201,7 @@ export function defaultSettings(): Settings {
     visualDelayMs: 0,
     rotation: { enabled: true, intervalSeconds: 30, order: 'random', collectionId: null, onBeat: false, manualOnBeat: false, bars: 4, beatLeadMs: BEAT_LEAD_DEFAULT_MS },
     blend: { manual: { type: 'random', seconds: 1 }, auto: { type: 'random', seconds: 2.7 } },
-    expression: { ...EXPRESSION_DEFAULT },
+    expression: { ...EXPRESSION_DEFAULT, curve16: flatCurve(), curvePreset: 'flat' },
     overlayText: { presetName: 'always', trackTitle: true, toasts: 'all', clean: false },
     fpsLimit: 60,
     startupPreset: 'last',
@@ -195,7 +215,9 @@ export function defaultSettings(): Settings {
     authorName: null,
     perf: { skipSlow: true, minFps: 30 },
     language: 'auto',
-    updatesAuto: true
+    updatesAuto: true,
+    profile: { active: 'default', startup: 'last' },
+    uiMode: 'full'
   }
 }
 
@@ -299,7 +321,9 @@ export function sanitizeSettings(raw: unknown): Settings {
     expression: {
       level: Math.round(num(expr.level, EXPRESSION_MIN, EXPRESSION_MAX, d.expression.level)),
       curve: oneOf(expr.curve, EXPRESSION_CURVES, d.expression.curve),
-      adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation)
+      adaptation: oneOf(expr.adaptation, EXPRESSION_ADAPTATIONS, d.expression.adaptation),
+      // Spec 040: lista ruim → plana; a predefinição salva vale mesmo se a curva não bater (Personalizada fica).
+      ...sanitizeCurveState(expr.curve16, expr.curvePreset)
     },
     overlayText: {
       presetName: oneOf(text.presetName, PRESET_NAME_MODES, d.overlayText.presetName),
@@ -322,7 +346,12 @@ export function sanitizeSettings(raw: unknown): Settings {
       minFps: Math.round(num(isObj(raw.perf) ? raw.perf.minFps : undefined, 15, 60, d.perf.minFps) / 5) * 5
     },
     language: oneOf(raw.language, LANGUAGE_PREFS, d.language),
-    updatesAuto: bool(raw.updatesAuto, d.updatesAuto)
+    updatesAuto: bool(raw.updatesAuto, d.updatesAuto),
+    profile: {
+      active: isObj(raw.profile) ? (typeof raw.profile.active === 'string' && raw.profile.active ? raw.profile.active : raw.profile.active === null ? null : d.profile.active) : d.profile.active,
+      startup: isObj(raw.profile) && typeof raw.profile.startup === 'string' && raw.profile.startup ? raw.profile.startup : d.profile.startup
+    },
+    uiMode: oneOf(raw.uiMode, UI_MODES, d.uiMode)
   }
 }
 

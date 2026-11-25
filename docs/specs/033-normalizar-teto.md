@@ -1,6 +1,6 @@
 # 033 — Normalizar áudio: teto para o volume baixo do Windows
 
-**Fase:** 5 — Extras (reatividade) · **Status:** pronta (`agent-decided`, rodada 2026-11-20) · **Issue:** [#97](https://github.com/atempel/sonic-obsidian/issues/97) · **Milestone:** v0.11.0 · **Personas:** Nostálgico do Winamp (volume do Windows baixo, caixa alta), DJ de Festa (nível do sistema varia com a mesa)
+**Fase:** 5 — Extras (reatividade) · **Status:** implementada (rodada 2026-11-24; teste no Windows no bloco v0.11.0) — decidida pela rodada 2026-11-20 (`agent-decided`) · **Issue:** [#97](https://github.com/atempel/sonic-obsidian/issues/97) · **Milestone:** v0.11.0 · **Personas:** Nostálgico do Winamp (volume do Windows baixo, caixa alta), DJ de Festa (nível do sistema varia com a mesa)
 
 ## Problema
 No teste do bloco v0.6.0 (#91), com "Normalizar áudio" ligado (spec 028 P1), o log mostrou o ganho automático em +10,0 / +11,9 / +11,3 / +12,0 dB com o nível medido de −23,7 a −32,9 dBFS. A referência é −14 dBFS e o teto é +12 dB: com o volume do sistema do usuário, o AGC passa quase todo o tempo no teto e não tem margem para igualar uma faixa mais baixa (critério 7 da 028). O usuário achou o resultado bom, então é ajuste, não bug.

@@ -1,5 +1,6 @@
 import type { Visualizer } from 'butterchurn'
 import type { ExpressionAdaptation, ExpressionCurve } from './core/state'
+import { buildWeights, dbToMagInPlace, engineZones, isFlat, scaleEngineBins, zoneRatios, type CurveWeights, type EngineZones } from './freq-curve'
 
 /**
  * Expressividade (spec 015, corrigida na 028): ajusta bass/mid/treb (e os `_att`)
@@ -26,6 +27,12 @@ import type { ExpressionAdaptation, ExpressionCurve } from './core/state'
  * Spec 028 (P1) — **Memória Viva** (`live`, teste A/B): a média própria segue `imm`
  * com constante de ~1,7 s (a janela curta do MilkDrop 2), em vez dos ~4 s do motor.
  * Semeia em 0,25 s de som e de novo ao voltar do silêncio/Respiro, como a Longa.
+ *
+ * Spec 040 — **Curva por frequência**: antes do `updateAudioLevels` do motor, as raias do
+ * `freqArray` dele (`renderer.audio.freqArray`, refeito a cada `sampleAudio()` e só lido ali)
+ * são multiplicadas, zona por zona, pela razão que o analisador próprio mede (`freq-curve.ts`).
+ * O motor então calcula `imm`/`avg`/`longAvg`/`val`/`att` já com a curva, e a Memória acima vê o
+ * `imm` pesado. Curva plana: nada é lido nem mudado (o motor intacto).
  */
 interface AudioLevelsInternals {
   updateAudioLevels(fps: number, frame: number): void
@@ -35,6 +42,15 @@ interface AudioLevelsInternals {
   att: Float32Array
   /** Média de ~4 s do motor (não existe em versões antigas). */
   longAvg?: Float32Array
+  /** Raias de cada zona (`[start, stop)`) no `freqArray` do motor. */
+  starts?: number[]
+  stops?: number[]
+}
+
+/** `renderer.audio` do Butterchurn (`AudioProcessor`). */
+interface EngineAudio {
+  freqArray?: Float32Array
+  audioContext?: BaseAudioContext
 }
 
 export interface ExpressionParams {
@@ -42,6 +58,18 @@ export interface ExpressionParams {
   level: number
   curve: ExpressionCurve
   adaptation: ExpressionAdaptation
+  /** Curva por frequência (spec 040): 16 bandas em dB. */
+  curve16: readonly number[]
+}
+
+/**
+ * O analisador próprio da curva (spec 040): FFT 4096, `smoothingTimeConstant = 0`, ligado ao
+ * mesmo nó que alimenta o motor. `wantSpectrum()` = a interface quer o espectro ao vivo (o EQ
+ * aberto): lê o analisador mesmo com a curva plana, sem mexer no motor.
+ */
+export interface CurveTap {
+  analyser: AnalyserNode
+  wantSpectrum?: () => boolean
 }
 
 /** Estado do áudio fora do motor: o medidor de silêncio e o Respiro. */
@@ -89,6 +117,12 @@ export interface ExpressionProbe {
   n: number
   sum: number
   sumSq: number
+  /** Spec 040: razão por zona aplicada no último quadro (1, 1, 1 com a curva plana). */
+  ratios: Float32Array
+  /** Spec 040: magnitudes lineares do analisador próprio no último quadro lido (vazio sem analisador). */
+  spectrum: Float32Array<ArrayBuffer>
+  /** Largura de uma raia de `spectrum` (Hz). */
+  spectrumBinHz: number
 }
 
 /** Limita a saída; NaN/infinito viram 1 (neutro): Math.min/max deixam NaN passar. */
@@ -102,9 +136,10 @@ const QUIET_ENV: ExpressionEnv = { quiet: false, resting: false, breath: false }
 export function hookExpression(
   visualizer: Visualizer,
   params: () => ExpressionParams,
-  env: () => ExpressionEnv = () => QUIET_ENV
+  env: () => ExpressionEnv = () => QUIET_ENV,
+  tap?: CurveTap
 ): ExpressionProbe | null {
-  const renderer = (visualizer as unknown as { renderer?: { audioLevels?: Partial<AudioLevelsInternals> } }).renderer
+  const renderer = (visualizer as unknown as { renderer?: { audioLevels?: Partial<AudioLevelsInternals>; audio?: EngineAudio } }).renderer
   const al = renderer?.audioLevels
   if (
     !al ||
@@ -129,7 +164,52 @@ export function hookExpression(
     squelch: 1,
     n: 0,
     sum: 0,
-    sumSq: 0
+    sumSq: 0,
+    ratios: new Float32Array([1, 1, 1]),
+    spectrum: new Float32Array(tap ? tap.analyser.frequencyBinCount : 0),
+    spectrumBinHz: tap ? tap.analyser.context.sampleRate / tap.analyser.fftSize : 0
+  }
+  // ── Curva por frequência (spec 040) ─────────────────────────
+  const audio = renderer?.audio
+  const zones: EngineZones | null =
+    tap && audio && typeof audio === 'object'
+      ? {
+          ...engineZones(audio.audioContext?.sampleRate ?? tap.analyser.context.sampleRate),
+          // As zonas que o motor usa de fato, se ele as expõe.
+          ...(Array.isArray(levels.starts) && Array.isArray(levels.stops) && levels.starts.length === 3 && levels.stops.length === 3
+            ? { starts: [...levels.starts], stops: [...levels.stops] }
+            : {})
+        }
+      : null
+  if (tap && !zones) console.warn('[expr] Butterchurn audio not found: frequency curve unavailable')
+  let weights: CurveWeights | null = null
+  let weightsKey = ''
+  let lastScaled: Float32Array | null = null
+  const applyCurve = (curve16: readonly number[]): void => {
+    if (!tap || !zones || !audio) return
+    const flat = isFlat(curve16)
+    if (flat && !tap.wantSpectrum?.()) {
+      probe.ratios.fill(1)
+      return
+    }
+    tap.analyser.getFloatFrequencyData(probe.spectrum)
+    dbToMagInPlace(probe.spectrum)
+    if (flat) {
+      probe.ratios.fill(1)
+      return
+    }
+    const key = curve16.join(',')
+    if (!weights || key !== weightsKey) {
+      weights = buildWeights(curve16, zones, probe.spectrumBinHz, probe.spectrum.length)
+      weightsKey = key
+    }
+    zoneRatios(probe.spectrum, weights, probe.ratios)
+    const freq = audio.freqArray
+    // O mesmo `freqArray` não é pesado duas vezes (o motor faz um novo a cada `sampleAudio()`).
+    if (freq instanceof Float32Array && freq !== lastScaled) {
+      scaleEngineBins(freq, zones, probe.ratios)
+      lastScaled = freq
+    }
   }
   // Média própria (Memória Longa/Fixa) e a janela de som que a semeia.
   const memAvg = new Float32Array(3)
@@ -147,8 +227,9 @@ export function hookExpression(
   }
 
   levels.updateAudioLevels = (fps: number, frame: number) => {
-    original(fps, frame)
     const p = params()
+    applyCurve(p.curve16)
+    original(fps, frame)
     const e = env()
     const dt = 1 / effFps(fps)
     const immSum = levels.imm[0]! + levels.imm[1]! + levels.imm[2]!

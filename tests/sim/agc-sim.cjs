@@ -73,8 +73,10 @@ function cases() {
   const si = run([{ part: 'full', s: 15, db: -20 }, { part: 'silence', s: 60 }]).out
   const gs = si.filter((o) => o.part === 'silence').map((o) => o.gain)
   r.silenceDrift = Math.max(...gs) - Math.min(...gs)
-  // Faixa muito baixa: o teto de +12 dB segura.
+  // Faixa muito baixa: o teto (+18 dB, spec 033) segura.
   r.ceiling = Math.max(...run([{ part: 'full', s: 60, db: -40 }]).out.map((o) => o.gain))
+  // Volume do Windows baixo (log do bloco v0.6.0): faixa a −30 dBFS, nível que chega ao motor em 30 s.
+  r.low30In = -30 + at(run([{ part: 'full', s: 30, db: -30 }]).out, 30).gain
   // Dentro da faixa, o ganho não segue o bumbo: oscilação depois de assentar.
   const st = run([{ part: 'full', s: 40, db: -14 }]).out.filter((o) => o.t > 20).map((o) => o.gain)
   r.ripple = Math.max(...st) - Math.min(...st)

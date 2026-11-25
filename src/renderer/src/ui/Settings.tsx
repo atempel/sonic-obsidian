@@ -22,6 +22,7 @@ import {
   type PresetNameMode,
   type StartupPreset,
   type ToastMode,
+  type UiMode,
   blendTypeLabel
 } from '../core/state'
 import { Icon, type IconName } from './icons'
@@ -35,6 +36,10 @@ import { failReason, importSummary } from '../importer'
 import { useSlideIndicator } from './slide-indicator'
 import { Kbd } from './Kbd'
 import { useUpdateState } from './UpdateNotice'
+import { applyProfile } from './ProfileBar'
+import { CurveEq, CurveFixedHint, applyCurvePreset, curvePresetLabel } from './FreqCurve'
+import { CURVE_PRESETS, CURVE_PRESET_IDS, isFlat, type CurvePreset } from '../freq-curve'
+import { PROFILE_KEYS, PROFILE_NAME_MAX, isProfileModified, profileFileData, profileName, profileSlug, profileSummary, type Profile } from '../profiles'
 import { checkUpdates, installUpdate, openReleasePage, releaseUrl } from '../update'
 
 /**
@@ -44,12 +49,13 @@ import { checkUpdates, installUpdate, openReleasePage, releaseUrl } from '../upd
  * Tudo por comandos do Core: é o mesmo estado dos Ajustes rápidos e das teclas.
  */
 
-type SectionId = 'geral' | 'captura' | 'visual' | 'render' | 'desempenho' | 'biblioteca' | 'atalhos' | 'sobre'
+type SectionId = 'geral' | 'captura' | 'visual' | 'perfis' | 'render' | 'desempenho' | 'biblioteca' | 'atalhos' | 'sobre'
 // Rótulos por chave (spec 030): o texto sai de `t()` na hora de desenhar, então a troca de idioma vale na hora.
 const SECTIONS: { id: SectionId; label: MessageKey; icon: IconName; lead: MessageKey }[] = [
   { id: 'geral', label: 'settings.section.geral', icon: 'settings-2', lead: 'settings.section.geralLead' },
   { id: 'captura', label: 'settings.section.captura', icon: 'audio-lines', lead: 'settings.section.capturaLead' },
   { id: 'visual', label: 'settings.section.visual', icon: 'sparkles', lead: 'settings.section.visualLead' },
+  { id: 'perfis', label: 'settings.section.perfis', icon: 'bookmark', lead: 'settings.section.perfisLead' },
   { id: 'render', label: 'settings.section.render', icon: 'cpu', lead: 'settings.section.renderLead' },
   { id: 'desempenho', label: 'settings.section.desempenho', icon: 'gauge', lead: 'settings.section.desempenhoLead' },
   { id: 'biblioteca', label: 'settings.section.biblioteca', icon: 'library', lead: 'settings.section.bibliotecaLead' },
@@ -142,12 +148,12 @@ function Sel<T extends string | number>({ id, value, options, disabled, onChange
   )
 }
 
-function Seg<T extends string | number>({ name, value, options, disabled, label, onChange }: { name: string; value: T; options: [T, string][]; disabled?: boolean; label: string; onChange: (v: T) => void }) {
+function Seg<T extends string | number>({ name, value, options, disabled, disabledOptions, label, onChange }: { name: string; value: T; options: [T, string][]; disabled?: boolean; disabledOptions?: T[]; label: string; onChange: (v: T) => void }) {
   return (
     <div class="seg" role="radiogroup" aria-label={label}>
       {options.map(([v, text]) => (
         <label key={String(v)}>
-          <input type="radio" name={name} checked={v === value} disabled={disabled} onChange={() => onChange(v)} />
+          <input type="radio" name={name} checked={v === value} disabled={disabled || disabledOptions?.includes(v)} onChange={() => onChange(v)} />
           <span class={typeof v === 'number' ? 'num' : undefined}>{text}</span>
         </label>
       ))}
@@ -229,21 +235,23 @@ function Geral({ core, run }: { core: Core; run: Run }) {
             onChange={(language) => run('app.setLanguage', { language })}
           />
         </Row>
-      </Grp>
-      <Grp title={t('settings.general.onStart')}>
-        <Row label={t('settings.general.openIn')} help={t('settings.general.openInHelp')} phase={phase(5)} kw="rack palco stage">
-          <Seg
-            name="openIn"
-            label={t('settings.general.openIn')}
-            value="palco"
+        {/* Interface (spec 039; página Modos): logo abaixo do Idioma (que a spec 030 pôs no topo), no lugar da linha "Abrir em". O Rack chega na Fase 5. */}
+        <Row label={t('settings.general.interface')} help={t('settings.general.interfaceHelp')} phase={phase(5)} kw="modo mode simples simple completo full rack interface">
+          <Seg<UiMode | 'rack'>
+            name="uiMode"
+            label={t('settings.general.interface')}
+            value={s.uiMode}
             options={[
-              ['palco', t('settings.general.openStage')],
-              ['rack', t('settings.general.openRack')]
+              ['simple', t('settings.general.mode.simple')],
+              ['full', t('settings.general.mode.full')],
+              ['rack', t('settings.general.mode.rack')]
             ]}
-            disabled
-            onChange={() => {}}
+            disabledOptions={['rack']}
+            onChange={(mode) => mode !== 'rack' && run('ui.setMode', { mode })}
           />
         </Row>
+      </Grp>
+      <Grp title={t('settings.general.onStart')}>
         <Row label={t('settings.general.boot')} help={t('settings.general.bootHelp')} phase={phase(5)} kw="boot startup inicializar">
           <Sw id="st-boot" label={t('settings.general.boot')} checked={false} disabled />
         </Row>
@@ -411,9 +419,10 @@ function BlendRow({ core, run, target, label, help, available }: { core: Core; r
   )
 }
 
-function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
+function Visual({ bridge, run, shown }: { bridge: PalcoBridge; run: Run; shown: boolean }) {
   const { core } = bridge
   const s = core.state.settings
+  const ex = s.expression
   const rot = s.rotation
   const cols = core.state.library.collections
   const text = s.overlayText
@@ -466,6 +475,44 @@ function Visual({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         <Row id="st-bars" label={t('settings.visual.bars')} help={t('settings.visual.barsHelp')} kw="compassos bars">
           <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />
         </Row>
+      </Grp>
+      {/* Curva por frequência (spec 040, P1): o EQ grande, com escala em dB e "Restaurar plana". */}
+      <Grp title={t('quick.expression')}>
+        <div class="row stack" data-search={`${t('curve.title')} ${t('curve.settingsHelp')} ${CURVE_PRESET_IDS.map(curvePresetLabel).join(' ')} ${t('curve.restoreFlat')} ${t('curve.useFixed')} eq equalizer equalizador hz db bass mid treb`}>
+          <div class="txt">
+            <span class="lbl" id="st-eqCurveLbl">
+              {t('curve.title')}
+            </span>
+            <p class="help">{t('curve.settingsHelp')}</p>
+          </div>
+          <div class="ctl">
+            <Seg<CurvePreset>
+              name="st-eqCurve"
+              label={t('curve.title')}
+              value={ex.curvePreset}
+              options={(ex.curvePreset === 'custom' ? CURVE_PRESET_IDS : CURVE_PRESETS).map((p) => [p, curvePresetLabel(p)])}
+              onChange={(p) => p !== 'custom' && applyCurvePreset(core, p)}
+            />
+            <button
+              class="btn sm eq-reset"
+              type="button"
+              id="st-eqReset"
+              disabled={isFlat(ex.curve16)}
+              onClick={() => {
+                applyCurvePreset(core, 'flat', false)
+                document.getElementById('st-eqPlot')?.focus()
+              }}
+            >
+              <Icon name="rotate-ccw" />
+              {t('curve.restoreFlat')}
+            </button>
+          </div>
+          <div class="eq-box">
+            <p class="help">{t('curve.dragHelp')}</p>
+            <CurveEq core={core} id="st-eq" height={160} gutter={36} barW={4} labels="full" active={shown && bridge.expressionAvailable} />
+            <CurveFixedHint core={core} id="st-eqWarn" />
+          </div>
+        </div>
       </Grp>
       <Grp title={t('quick.text')}>
         <Row id="st-name" label={t('quick.presetName')} help={t('settings.visual.presetNameHelp')} kw="assinatura crédito credit name">
@@ -752,6 +799,318 @@ function Biblioteca({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
             {io.text}
           </p>
         )}
+      </Grp>
+    </>
+  )
+}
+
+// ── Perfis (spec 038, P1) ─────────────────────────────────────
+/** Protótipo "Configurações", seção `perfis` (espelho 1794680346-fb12). */
+type PfNote = { ok: boolean; text: string; undo?: boolean } | null
+
+function Perfis({ core }: { core: Core }) {
+  const all = core.allProfiles
+  const active = core.activeProfile
+  const [menu, setMenu] = useState<string | null>(null)
+  const [renaming, setRenaming] = useState<string | null>(null)
+  const [note, setNote] = useState<PfNote>(null)
+  const list = useRef<HTMLDivElement>(null)
+  const menuEl = useRef<HTMLDivElement>(null)
+  const renIn = useRef<HTMLInputElement>(null)
+  // Foco a devolver depois de desenhar de novo (o "…" de um perfil).
+  const focusNext = useRef<string | null>(null)
+
+  useLayoutEffect(() => {
+    const el = menuEl.current
+    if (!menu || !el) return
+    // Sem espaço embaixo (fim da área que rola), o menu abre para cima.
+    const box = el.closest('.content')?.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    if (box && r.bottom > box.bottom - 8 && r.top - r.height - 40 > box.top) el.classList.add('up')
+    el.querySelector<HTMLElement>('button:not(:disabled)')?.focus()
+  }, [menu])
+  useLayoutEffect(() => {
+    if (renaming) {
+      renIn.current?.focus()
+      renIn.current?.select()
+    }
+  }, [renaming])
+  useLayoutEffect(() => {
+    const id = focusNext.current
+    if (!id) return
+    focusNext.current = null
+    ;(list.current?.querySelector<HTMLElement>(`[data-pmore="${id}"]`) ?? list.current?.querySelector<HTMLElement>('[data-pmore]'))?.focus()
+  })
+  // Clique fora fecha o menu.
+  useEffect(() => {
+    if (!menu) return
+    const down = (e: PointerEvent): void => {
+      const el = e.target as Element
+      if (!menuEl.current?.contains(el) && !el.closest?.(`[data-pmore="${menu}"]`)) setMenu(null)
+    }
+    document.addEventListener('pointerdown', down, true)
+    return () => document.removeEventListener('pointerdown', down, true)
+  }, [menu])
+
+  const keyOf = (p: Profile): number => {
+    const i = all.indexOf(p)
+    return i >= 0 && i < PROFILE_KEYS ? i + 1 : 0
+  }
+  const refocus = (id: string): void => {
+    focusNext.current = id
+  }
+  const closeMenu = (back: boolean): void => {
+    const id = menu
+    setMenu(null)
+    if (back && id) list.current?.querySelector<HTMLElement>(`[data-pmore="${id}"]`)?.focus()
+  }
+
+  const exportProfile = async (p: Profile): Promise<void> => {
+    const api = window.so.profiles?.exportFile
+    if (!api) return
+    const file = t('profile.file.name', { slug: profileSlug(profileName(p)) })
+    try {
+      const res = await api(file, JSON.stringify(profileFileData(p), null, 2))
+      if (res.ok) setNote({ ok: true, text: t('settings.profiles.exported', { name: profileName(p), file: res.name ?? `${file}.json` }) })
+      else if (!res.canceled) setNote({ ok: false, text: t('settings.profiles.saveFailed') })
+    } catch {
+      setNote({ ok: false, text: t('settings.profiles.saveFailed') })
+    }
+  }
+  const importProfile = async (): Promise<void> => {
+    const api = window.so.profiles?.importFile
+    if (!api) return
+    let res: Awaited<ReturnType<NonNullable<typeof api>>>
+    try {
+      res = await api()
+    } catch {
+      setNote({ ok: false, text: t('settings.profiles.notProfile') })
+      return
+    }
+    if (res.canceled) return
+    if (!res.ok || res.text === undefined) {
+      setNote({ ok: false, text: res.error === 'too-big' ? t('settings.profiles.tooBig') : t('settings.profiles.notProfile') })
+      return
+    }
+    let data: unknown = null
+    try {
+      data = JSON.parse(res.text)
+    } catch {
+      data = null
+    }
+    const r = core.run<{ id: string; name: string }>('profile.import', { data }, 'ui')
+    if (r.ok) {
+      refocus(r.value.id)
+      setNote({ ok: true, text: t('settings.profiles.imported', { name: r.value.name }) })
+    } else setNote({ ok: false, text: t('settings.profiles.notProfile') })
+  }
+
+  const act = (a: string, p: Profile): void => {
+    setMenu(null)
+    if (a === 'apply') {
+      applyProfile(core, p.id)
+      refocus(p.id)
+      setNote(null)
+    } else if (a === 'rename') {
+      setRenaming(p.id)
+    } else if (a === 'dup') {
+      const r = core.run<{ id: string; name: string }>('profile.duplicate', { id: p.id }, 'ui')
+      if (r.ok) {
+        refocus(r.value.id)
+        setNote({ ok: true, text: t('settings.profiles.duplicated', { name: r.value.name }) })
+      }
+    } else if (a === 'export') {
+      refocus(p.id)
+      void exportProfile(p)
+    } else if (a === 'del') {
+      const r = core.run<{ name: string }>('profile.delete', { id: p.id }, 'ui')
+      if (r.ok) {
+        refocus('')
+        setNote({ ok: true, text: t('settings.profiles.deleted', { name: r.value.name }), undo: true })
+      }
+    }
+  }
+  const undoDelete = (): void => {
+    const r = core.run<{ id: string; name: string }>('profile.undoDelete', {}, 'ui')
+    if (!r.ok) return
+    refocus(r.value.id)
+    setNote({ ok: true, text: t('settings.profiles.restored', { name: r.value.name }) })
+  }
+  // Enter e a saída do campo chegam os dois: o ref garante uma confirmação só.
+  const renId = useRef<string | null>(null)
+  renId.current = renaming
+  const endRename = (commit: boolean): void => {
+    const id = renId.current
+    if (!id) return
+    renId.current = null
+    const value = renIn.current?.value ?? ''
+    setRenaming(null)
+    refocus(id)
+    if (!commit || !value.trim()) return
+    const r = core.run<{ name: string; changed: boolean }>('profile.rename', { id, name: value }, 'ui')
+    if (r.ok && r.value.changed) setNote({ ok: true, text: t('settings.profiles.renamed', { name: r.value.name }) })
+  }
+
+  const onMenuKey = (e: KeyboardEvent): void => {
+    const items = [...(menuEl.current?.querySelectorAll<HTMLElement>('button:not(:disabled)') ?? [])]
+    const i = items.indexOf(document.activeElement as HTMLElement)
+    const go = (j: number): void => {
+      e.preventDefault()
+      items[(j + items.length) % items.length]?.focus()
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      closeMenu(true)
+    } else if (e.key === 'ArrowDown') go(i + 1)
+    else if (e.key === 'ArrowUp') go(i - 1)
+    else if (e.key === 'Home') go(0)
+    else if (e.key === 'End') go(items.length - 1)
+    else if (e.key === 'Tab') setMenu(null)
+    else return
+    // Esc fecha só o menu, não as Configurações.
+    e.stopPropagation()
+  }
+  const onRenKey = (e: KeyboardEvent): void => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      endRename(true)
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      endRename(false)
+    } else return
+    e.stopPropagation()
+  }
+
+  const startup = core.state.settings.profile.startup
+  return (
+    <>
+      <Grp title={t('settings.profiles.yours')}>
+        <p class="pfs-lead">{t('settings.profiles.lead')}</p>
+        <div class="pfs-list" id="pfList" ref={list}>
+          {all.map((p) => {
+            const name = profileName(p)
+            const sum = profileSummary(p)
+            const n = keyOf(p)
+            const isActive = p.id === active?.id
+            return (
+              <div class="row pfrow" key={p.id} data-pid={p.id} data-search={`${t('profile.label')} ${name} ${p.builtIn ? t('profile.builtinTag') : ''} ${sum}`}>
+                <div class="txt">
+                  <div class="pfs-n">
+                    {renaming === p.id ? (
+                      <input
+                        class="pfs-ren"
+                        id="pfRenIn"
+                        ref={renIn}
+                        type="text"
+                        maxLength={PROFILE_NAME_MAX}
+                        defaultValue={p.name}
+                        aria-label={t('settings.profiles.renameLabel', { name })}
+                        autocomplete="off"
+                        spellcheck={false}
+                        onKeyDown={onRenKey}
+                        onBlur={() => endRename(true)}
+                      />
+                    ) : (
+                      <span class="lbl">{name}</span>
+                    )}
+                    {p.builtIn && <span class="pfs-tag">{t('profile.builtinTag')}</span>}
+                    {isActive && (
+                      <span class="pfs-use">
+                        <Icon name="check" small />
+                        {isProfileModified(p, core.state.settings) ? (
+                          <>
+                            {t('settings.profiles.inUseModified')}
+                            <span class="pfs-dot" aria-hidden="true" />
+                          </>
+                        ) : (
+                          t('settings.profiles.inUse')
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  <p class="pfs-sum num">{sum}</p>
+                </div>
+                <div class="ctl pfs-ctl">
+                  {n > 0 && (
+                    <span class="pfs-k" aria-hidden="true">
+                      <Kbd k="Alt" />
+                      <Kbd k={String(n)} />
+                    </span>
+                  )}
+                  <button
+                    class="ibtn"
+                    type="button"
+                    data-pmore={p.id}
+                    aria-haspopup="menu"
+                    aria-expanded={menu === p.id}
+                    aria-label={t('settings.profiles.more', { name })}
+                    title={t('settings.profiles.moreTitle')}
+                    onClick={() => setMenu(menu === p.id ? null : p.id)}
+                  >
+                    <Icon name="ellipsis" />
+                  </button>
+                  {menu === p.id && (
+                    <div class="menu pfs-menu" id="pfMenuS" role="menu" aria-label={t('settings.profiles.menu', { name })} ref={menuEl} onKeyDown={onMenuKey}>
+                      <button type="button" role="menuitem" data-pact="apply" onClick={() => act('apply', p)}>
+                        <Icon name="check" small />
+                        <span class="grow">{t('settings.profiles.apply')}</span>
+                      </button>
+                      <button type="button" role="menuitem" data-pact="rename" disabled={p.builtIn} title={p.builtIn ? t('settings.profiles.builtinNoRename') : undefined} onClick={() => act('rename', p)}>
+                        <Icon name="pencil" small />
+                        <span class="grow">{t('settings.profiles.rename')}</span>
+                      </button>
+                      <button type="button" role="menuitem" data-pact="dup" onClick={() => act('dup', p)}>
+                        <Icon name="copy" small />
+                        <span class="grow">{t('settings.profiles.duplicate')}</span>
+                      </button>
+                      <button type="button" role="menuitem" data-pact="export" disabled={!window.so.profiles?.exportFile} onClick={() => act('export', p)}>
+                        <Icon name="download" small />
+                        <span class="grow">{t('settings.profiles.export')}</span>
+                      </button>
+                      <hr />
+                      <button type="button" role="menuitem" data-pact="del" disabled={p.builtIn} title={p.builtIn ? t('settings.profiles.builtinNoDelete') : undefined} onClick={() => act('del', p)}>
+                        <Icon name="trash-2" small />
+                        <span class="grow">{t('settings.profiles.delete')}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <Row label={t('settings.profiles.import')} help={t('settings.profiles.importHelp')} kw="perfil importar json arquivo profile import file">
+          <button class="btn sm" type="button" id="pfImpBtn" disabled={!window.so.profiles?.importFile} onClick={() => void importProfile()}>
+            <Icon name="upload" small />
+            {t('settings.profiles.importBtn')}
+          </button>
+        </Row>
+        {note && (
+          <p class={note.ok ? 'note ok' : 'note'} id="pfNote" role="status">
+            <Icon name={note.ok ? 'check' : 'circle-alert'} small />
+            <span>
+              {note.text}
+              {note.undo && (
+                <>
+                  {' '}
+                  <button class="btn btn-ghost sm" type="button" id="pfUndoDel" onClick={undoDelete}>
+                    {t('profile.undo')}
+                  </button>
+                </>
+              )}
+            </span>
+          </p>
+        )}
+      </Grp>
+      <Grp title={t('settings.profiles.onStart')}>
+        <Row id="perfilAbrir" label={t('settings.profiles.startup')} help={t('settings.profiles.startupHelp')} kw="perfil ao iniciar último usado profile startup last used">
+          <Sel<string>
+            id="perfilAbrir"
+            value={startup}
+            options={[['last', t('settings.profiles.lastUsed')], ...all.map((p): [string, string] => [p.id, profileName(p)])]}
+            onChange={(v) => void core.run('profile.startup', { value: v }, 'ui')}
+          />
+        </Row>
       </Grp>
     </>
   )
@@ -1200,7 +1559,8 @@ export function Settings({ bridge }: { bridge: PalcoBridge }) {
                   <p class="lead">{t(s.lead)}</p>
                   {s.id === 'geral' && <Geral core={core} run={run} />}
                   {s.id === 'captura' && <Captura bridge={bridge} run={run} />}
-                  {s.id === 'visual' && <Visual bridge={bridge} run={run} />}
+                  {s.id === 'visual' && <Visual bridge={bridge} run={run} shown={open && !empty && current.id === 'visual'} />}
+                  {s.id === 'perfis' && <Perfis core={core} />}
                   {s.id === 'render' && <Render core={core} run={run} />}
                   {s.id === 'desempenho' && <Desempenho core={core} run={run} />}
                   {s.id === 'biblioteca' && <Biblioteca bridge={bridge} run={run} />}

@@ -33,10 +33,17 @@ export function log(source: string, message: string): void {
   }
 }
 
-/** Memória por processo (MB): o processo da GPU crescendo sem parar indica vazamento. */
+/**
+ * Memória por processo (MB): o processo da GPU crescendo sem parar indica vazamento.
+ * Spec 034: o *working set* sobe e desce com a pressão do sistema; a memória privada
+ * (`privateBytes`, só no Windows) é o que o processo reteve. Fora do Windows, omitida.
+ */
+export function memPart(m: { type: string; name?: string; memory: { workingSetSize: number; privateBytes?: number } }): string {
+  const mb = (kb: number): number => Math.round(kb / 1024)
+  const priv = typeof m.memory.privateBytes === 'number' && m.memory.privateBytes > 0 ? `/private=${mb(m.memory.privateBytes)}MB` : ''
+  return `${m.type}${m.name ? `(${m.name})` : ''}=${mb(m.memory.workingSetSize)}MB${priv}`
+}
+
 export function logMetrics(): void {
-  const parts = app
-    .getAppMetrics()
-    .map((m) => `${m.type}${m.name ? `(${m.name})` : ''}=${Math.round(m.memory.workingSetSize / 1024)}MB`)
-  log('mem', parts.join(' '))
+  log('mem', app.getAppMetrics().map(memPart).join(' '))
 }

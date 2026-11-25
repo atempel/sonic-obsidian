@@ -5,7 +5,7 @@ import { contextBridge, ipcRenderer } from 'electron'
  * nunca o ipcRenderer cru. O tipo correspondente está em
  * src/renderer/src/types/so.d.ts.
  */
-const store = (name: 'settings' | 'library') => ({
+const store = (name: 'settings' | 'library' | 'profiles') => ({
   load: (): Promise<unknown> => ipcRenderer.invoke('store:load', name),
   save: (data: unknown): Promise<void> => ipcRenderer.invoke('store:save', name, data)
 })
@@ -41,6 +41,12 @@ interface UpdateState {
 contextBridge.exposeInMainWorld('so', {
   settings: store('settings'),
   library: store('library'),
+  /** Perfis de ajustes do usuário (spec 038); exportar/importar um perfil pelo diálogo nativo (P1). */
+  profiles: {
+    ...store('profiles'),
+    exportFile: (name: string, text: string): Promise<{ ok: boolean; canceled?: boolean; name?: string }> => ipcRenderer.invoke('profiles:export', String(name), String(text)),
+    importFile: (): Promise<{ ok: boolean; canceled?: boolean; name?: string; text?: string; error?: string }> => ipcRenderer.invoke('profiles:import')
+  },
   window: {
     toggleFullScreen: (): Promise<void> => ipcRenderer.invoke('window:toggleFullScreen'),
     minimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),

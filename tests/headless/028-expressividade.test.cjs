@@ -5,13 +5,16 @@
 const path = require('path'), fs = require('fs'), Module = require('module')
 const ts = require('typescript')
 
-function loadExpression() {
-  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'renderer', 'src', 'expression.ts'), 'utf8')
+// Transpila um .ts do renderer; os imports relativos (`./freq-curve`, spec 040) são transpilados também.
+function loadTs(name) {
+  const src = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'renderer', 'src', `${name}.ts`), 'utf8')
   const js = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText
-  const m = new Module('expression.js')
-  m._compile(js, 'expression.js')
+  const m = new Module(`${name}.js`)
+  m.require = (id) => (id.startsWith('./') ? loadTs(id.slice(2)) : require(id))
+  m._compile(js, `${name}.js`)
   return m.exports
 }
+const loadExpression = () => loadTs('expression')
 const { hookExpression } = loadExpression()
 const origWarn = console.warn
 

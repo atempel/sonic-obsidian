@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { Core } from '../core/commands'
 import { Icon } from './icons'
 import { includesText, t } from '../i18n'
-import { NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, rowText, type Keys } from './shortcuts'
+import { ESSENTIALS, NOW_LIBRARY, NOW_STAGE, SHORTCUT_GROUPS, rowText, type Keys } from './shortcuts'
 import { Kbd } from './Kbd'
 
 /**
@@ -75,6 +75,8 @@ export function KeyCaps({ keys }: { keys: Keys }) {
 export function ShortcutsPanel({ core }: { core: Core }) {
   const [, setV] = useState(0)
   const [q, setQ] = useState('')
+  // Modo Simples (spec 039): a lista curta, até "Ver todos" (vale até fechar).
+  const [showAll, setShowAll] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const panel = useRef<HTMLDivElement>(null)
 
@@ -95,6 +97,7 @@ export function ShortcutsPanel({ core }: { core: Core }) {
   useLayoutEffect(() => {
     if (!open) return
     setQ('')
+    setShowAll(false)
     input.current?.focus()
   }, [open])
 
@@ -102,7 +105,9 @@ export function ShortcutsPanel({ core }: { core: Core }) {
 
   const f = q.trim()
   const now = core.state.overlay === 'library' ? NOW_LIBRARY : NOW_STAGE
-  const groups = [now, ...SHORTCUT_GROUPS]
+  // No Simples, o filtro procura em todos: nenhum atalho fica escondido de quem busca.
+  const short = core.state.settings.uiMode === 'simple' && !showAll && !f
+  const groups = (short ? [ESSENTIALS] : [now, ...SHORTCUT_GROUPS])
     .map((g) => ({ ...g, rows: g.rows.filter((r) => !f || includesText(rowText(r), f)) }))
     .filter((g) => g.rows.length > 0)
 
@@ -150,7 +155,7 @@ export function ShortcutsPanel({ core }: { core: Core }) {
             <Icon name="x" />
           </button>
         </div>
-        <div class="k-body">
+        <div class={short ? 'k-body short' : 'k-body'}>
           {groups.map((g) => (
             <section key={g.name} class={g.now ? 'k-g k-now' : 'k-g'}>
               <h3>{t(g.name)}</h3>
@@ -163,6 +168,18 @@ export function ShortcutsPanel({ core }: { core: Core }) {
             </section>
           ))}
           {groups.length === 0 && <p class="k-empty">{t('shortcuts.empty', { q: q.trim() })}</p>}
+          {short && (
+            <button
+              type="button"
+              class="btn btn-ghost k-all"
+              onClick={() => {
+                setShowAll(true)
+                input.current?.focus()
+              }}
+            >
+              {t('shortcuts.showAll')}
+            </button>
+          )}
         </div>
         <div class="k-foot">
           <a

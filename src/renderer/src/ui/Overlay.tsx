@@ -12,6 +12,7 @@ import { render } from 'preact'
 import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks'
 import type { CaptureCheck, Core, WaitKey } from '../core/commands'
 import type { ImportResult, MilkInput } from '../importer'
+import { applyUiMode } from './mode'
 import { Icon } from './icons'
 import { CollectButton } from './CollectPop'
 import { DropZone } from './DropZone'
@@ -231,6 +232,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
   const anyBeat = onBeat || settings.rotation.manualOnBeat
   const fav = core.isFavorite(current)
   const fullscreen = bridge.isFullScreen()
+  const simple = settings.uiMode === 'simple'
 
   // Progresso da rotação: DOM direto, ~4×/s basta para m:ss e a linha.
   useEffect(() => {
@@ -307,6 +309,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
       <div class="strip" role="toolbar" aria-label={t('strip.toolbar')}>
         <i class="rot-line" ref={line} />
         <div class="now">
+          {!simple && (
           <button
             class="ibtn"
             aria-label={t('strip.openLibrary')}
@@ -316,6 +319,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           >
             <Icon name="library" />
           </button>
+          )}
           <div class="now-text">
             <div class="now-row">
               <div class="now-title" title={current} ref={titleEl} />
@@ -351,7 +355,7 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               <span class="core" aria-hidden="true" />
             </span>
           </button>
-          <CollectButton core={core} />
+          {!simple && <CollectButton core={core} />}
         </div>
         <div class="strip-t">
           <button
@@ -390,7 +394,9 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           >
             <Icon name="skip-forward" />
           </button>
-          <span class="sep" aria-hidden="true" />
+          {/* Simples (spec 039): sem a pílula de rotação; o "Segurado" continua, porque é estado. */}
+          {(!simple || held) && <span class="sep" aria-hidden="true" />}
+          {(!simple || held) && (
           <button
             class={held ? 'rot held' : 'rot'}
             aria-pressed={rotOn}
@@ -402,12 +408,17 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
             <span class="num" ref={time} hidden={held} />
             {anyBeat && locked && !held && <span class="bdot" ref={bdot} role="img" aria-label={t('strip.beatLocked')} title={t('strip.beatLocked')} />}
           </button>
+          )}
         </div>
         <div class="tail">
-          <div class="level">
-            <Meter core={core} />
-            {settings.showFps && <span class="fps num" ref={fpsEl} title={t('strip.fpsTitle')} />}
-          </div>
+          {!simple && (
+            <div class="level">
+              <Meter core={core} />
+              {settings.showFps && <span class="fps num" ref={fpsEl} title={t('strip.fpsTitle')} />}
+            </div>
+          )}
+          {!simple && (
+          <>
           <button class="ibtn" aria-label={t('strip.search')} title={t('strip.searchTitle')} onClick={() => toggleOverlay(core, 'search')}>
             <Icon name="search" />
           </button>
@@ -424,6 +435,8 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           >
             <Icon name="sliders-horizontal" />
           </button>
+          </>
+          )}
           <button
             class="ibtn"
             aria-label={t(fullscreen ? 'strip.exitFullscreen' : 'strip.fullscreen')}
@@ -432,6 +445,12 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
           >
             <Icon name={fullscreen ? 'minimize' : 'maximize'} />
           </button>
+          {/* Simples: o medidor vai para o fim, depois da tela cheia (página Modos). */}
+          {simple && (
+            <div class="level">
+              <Meter core={core} />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -576,6 +595,9 @@ export function Overlay({ bridge }: { bridge: PalcoBridge }) {
   const clean = core.state.settings.overlayText.clean
   // M19: o texto sobre o visual some em 400 ms com o Modo limpo.
   useLayoutEffect(() => void document.body.classList.toggle('clean', clean), [clean])
+  // Modo de interface (spec 039): `body[data-mode]` para o CSS, e o valor para quem está fora do Preact.
+  const mode = core.state.settings.uiMode
+  useLayoutEffect(() => applyUiMode(mode), [mode])
   useLayoutEffect(() => {
     // Fechar devolve o foco ao visual (as teclas globais voltam a valer).
     if (overlay === null && document.activeElement instanceof HTMLElement && document.activeElement.closest('.lib, .palette, .menu, .sheet, .settings')) {

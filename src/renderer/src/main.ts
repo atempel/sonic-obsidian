@@ -16,6 +16,8 @@ import {
 } from './core/state'
 import { fixPointSize, hookShaderCleanup } from './engine-fixes'
 import { hookExpression } from './expression'
+import { curveLive } from './curve-live'
+import { isFlat } from './freq-curve'
 import { Hud, type HudState } from './hud'
 import { PresetLibrary } from './presets'
 import { importMilks, shaderError, type MilkInput } from './importer'
@@ -36,6 +38,9 @@ import type { Preset } from 'butterchurn'
 import { setToastPolicy, showToast } from './ui/toast'
 import { PresetVisualizer } from './visualizer'
 import { FrameStats, syncLine, type SyncParts } from './sync'
+import { rendererMemLine } from './memory'
+import { sanitizeProfiles } from './profiles'
+import { applyProfileAt } from './ui/ProfileBar'
 import { applyLanguage, fmtSeconds, langFromTag, setSystemLang, t } from './i18n'
 import { isFullScreen, setupWindowChrome } from './window'
 import { checkUpdates, configureUpdates, installUpdate, startUpdates, updateState } from './update'
@@ -60,9 +65,10 @@ const COMPARE_MIN_FPS = 50
 async function start(): Promise<void> {
   // Tempos da abertura no log (passagem de performance): ver src/main/startup.ts.
   window.so.mark('renderer')
-  const [rawSettings, rawLibrary] = await Promise.all([
+  const [rawSettings, rawLibrary, rawProfiles] = await Promise.all([
     window.so.settings.load().catch(() => null),
-    window.so.library.load().catch(() => null)
+    window.so.library.load().catch(() => null),
+    (window.so.profiles?.load() ?? Promise.resolve(null)).catch(() => null)
   ])
   window.so.mark('settings read')
   const initialSettings = sanitizeSettings(rawSettings)
@@ -123,11 +129,25 @@ async function start(): Promise<void> {
 
   // Driver de vídeo reiniciado (TDR) ou GPU sem memória: o contexto WebGL cai.
   // Registra e recarrega a página (os ajustes já estão salvos) em vez de travar.
-  canvas.addEventListener('webglcontextlost', (e) => {
-    e.preventDefault()
-    window.so.log('WebGL context lost; reloading in 1.5 s')
-    setTimeout(() => location.reload())
-  })
+  // O Butterchurn 3 desenha num OffscreenCanvas interno; o canvas da página só tem contexto 2D,
+  // então a queda sai de `viz.gl.canvas` (spec 045). O número da queda sobrevive ao reload.
+  const engineCanvas = viz.gl?.canvas
+  if (engineCanvas) {
+    engineCanvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault()
+      let n = 1
+      try {
+        n = (Number(sessionStorage.getItem('so.contextLost')) || 0) + 1
+        sessionStorage.setItem('so.contextLost', String(n))
+      } catch {
+        /* sem sessionStorage: conta como a primeira */
+      }
+      window.so.log(`WebGL context lost (#${n} this session); reloading in 1.5 s`)
+      setTimeout(() => location.reload(), 1500)
+    })
+  } else {
+    window.so.log('WebGL context loss not watched (engine has no gl)')
+  }
 
   // ── Núcleo de comandos (spec 008) ─────────────────────────
   const library = new PresetLibrary()
@@ -140,20 +160,36 @@ async function start(): Promise<void> {
   const core = new Core(library, initialSettings, sanitizeLibrary(rawLibrary), {
     saveSettings: (s) => window.so.settings.save(s),
     saveLibrary: (l) => window.so.library.save(l),
+    saveProfiles: (profiles) => window.so.profiles?.save({ version: 1, profiles }) ?? Promise.resolve(),
     toggleFullScreen: () => window.so.window.toggleFullScreen()
-  })
+  }, sanitizeProfiles(rawProfiles))
+  // Perfil ao abrir (spec 038): aplicado antes do primeiro preset; `last` = os ajustes como ficaram.
+  {
+    const startup = core.state.settings.profile.startup
+    if (startup !== 'last') {
+      if (core.allProfiles.some((p) => p.id === startup)) core.run('profile.apply', { id: startup }, 'startup')
+      else core.state.settings.profile.startup = 'last'
+    }
+  }
   const settings = core.state.settings
   // Normalizar áudio (spec 028, P1): mede antes do ganho (o mesmo medidor do silêncio) e age no GainNode.
   const agc = new AutoGain()
+  // Curva por frequência (spec 040): analisador próprio no mesmo nó que alimenta o motor.
+  const curveTap = ctx.createAnalyser()
+  curveTap.fftSize = 4096
+  curveTap.smoothingTimeConstant = 0
+  gain.connect(curveTap)
   // Spec 028: a Memória só semeia com som; no repouso do silêncio, os presets recebem zero.
   const exprProbe = hookExpression(
     viz.visualizer,
     () => settings.expression,
-    () => ({ quiet: silence.quiet, resting: silence.resting, breath: core.state.breath })
+    () => ({ quiet: silence.quiet, resting: silence.resting, breath: core.state.breath }),
+    { analyser: curveTap, wantSpectrum: () => curveLive.want > 0 }
   )
+  curveLive.probe = exprProbe
   {
     const ex = settings.expression
-    window.so.log(`expressiveness loaded: level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation}${exprProbe ? '' : ' (unavailable in the engine)'} · normalize audio ${settings.autoGain ? 'on' : 'off'}`)
+    window.so.log(`expressiveness loaded: level ${ex.level} · character ${ex.curve} · memory ${ex.adaptation} · curve ${ex.curvePreset}${ex.curvePreset === 'custom' ? ` [${ex.curve16.join(' ')}]` : ''}${exprProbe ? '' : ' (unavailable in the engine)'} · normalize audio ${settings.autoGain ? 'on' : 'off'}`)
   }
   // A cada 5 min (como a memória no main): bass médio e desvio com som, para "reagindo pouco" virar número.
   if (exprProbe)
@@ -186,6 +222,8 @@ async function start(): Promise<void> {
     const long = frameStats.takeLong()
     const f = (v: number): string => (Number.isFinite(v) ? v.toFixed(1) : '?')
     window.so.log(`[sync] ${syncLine(syncParts())} · last 5 min: frame p95 ${f(long.p95)} ms · longest ${f(long.max)} ms (${long.n} frames)`)
+    // Spec 034: o lado JS/DOM da memória (o main registra o processo inteiro na `[mem]`).
+    window.so.log(`[mem] ${rendererMemLine()}`)
   }, 5 * 60 * 1000)
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)
@@ -419,6 +457,14 @@ async function start(): Promise<void> {
     if (settings.updatesAuto === updatesAuto) return
     updatesAuto = settings.updatesAuto
     configureUpdates(updatesAuto)
+  })
+  // Modo de interface (spec 039): toast comum (respeita "Avisos") venha a troca de onde vier.
+  let uiModeNow = settings.uiMode
+  core.events.on('stateChanged', () => {
+    if (settings.uiMode === uiModeNow) return
+    uiModeNow = settings.uiMode
+    window.so.log(`ui: mode ${uiModeNow}`)
+    showToast(t(uiModeNow === 'simple' ? 'toast.modeSimple' : 'toast.modeFull'))
   })
   // Desempenho por preset (spec 012, P2): fps médio de 5 s, 1 s depois do fim do blend.
   // Só mede com a janela visível; o limite de fps vira teto do mínimo.
@@ -887,6 +933,8 @@ async function start(): Promise<void> {
     feedbackAsk: openQuestion,
     feedbackDiag: () => void copyDiagnostics(),
     // Sincronia (spec 032, P1): três cliques pela saída, medidos antes do "Atrasar o visual".
+    modeSimple: () => run('ui.setMode', { mode: 'simple' }, 'ui'),
+    modeFull: () => run('ui.setMode', { mode: 'full' }, 'ui'),
     captureMeasure: () => {
       idle.wake()
       if (measuring) return
@@ -954,6 +1002,15 @@ async function start(): Promise<void> {
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === ',') {
       e.preventDefault()
       toggleOverlay(core, 'settings')
+      return
+    }
+    // Alt+1…9 aplicam os nove primeiros perfis (spec 038), pelo `code` (qualquer layout), fora de campo de texto.
+    if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && /^Digit[1-9]$/.test(e.code)) {
+      const el = e.target as HTMLElement | null
+      const typing = !!el && ((el.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes((el as HTMLInputElement).type)) || el.tagName === 'TEXTAREA' || el.isContentEditable)
+      if (typing) return
+      e.preventDefault()
+      applyProfileAt(core, Number(e.code.slice(5)) - 1)
       return
     }
     if (e.ctrlKey || e.altKey || e.metaKey) return
@@ -1272,6 +1329,8 @@ async function start(): Promise<void> {
         state.expression =
           `expressiveness ${exprLevel()} · character ${ex.curve} · memory ${ex.adaptation} · bass ${f(p.bassIn)} → ${f(p.bassOut)}${squelch}\n` +
           `imm ${f(p.imm)} · engine avg ${f(p.engineLongAvg)}${mem} · RMS ${db(preRmsDb)} dBFS · peak ${db(prePeakDb)} dBFS (before gain) · gain in effect ${dbSigned(gainInEffectDb())} dB (${settings.autoGain ? `manual ${dbSigned(manualDb(settings.gainDb, true))} + auto ${dbSigned(agc.gainDb)}, measured level ${db(agc.levelDb)} dBFS` : 'manual'})`
+        // Spec 040: a razão por zona aplicada no último quadro (HUD em inglês).
+        state.curve = isFlat(ex.curve16) ? `curve ${ex.curvePreset}` : `curve ${ex.curvePreset} r ${p.ratios[0]!.toFixed(2)} ${p.ratios[1]!.toFixed(2)} ${p.ratios[2]!.toFixed(2)}`
       }
       const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} beats (${rotation.barsRemaining()} bars left)` : ''
       state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`

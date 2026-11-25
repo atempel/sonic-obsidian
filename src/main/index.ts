@@ -16,9 +16,9 @@ import { JsonStore } from './store'
 const stores = new Map<string, JsonStore>()
 const flushStores = (): Promise<void> => Promise.all([...stores.values()].map((s) => s.flush())).then(() => undefined)
 
-/** settings.json e library.json (architecture §7): só o main toca o disco. */
+/** settings.json, library.json e profiles.json (architecture §7; spec 038): só o main toca o disco. */
 function registerStores(): void {
-  for (const name of ['settings', 'library']) stores.set(name, new JsonStore(name))
+  for (const name of ['settings', 'library', 'profiles']) stores.set(name, new JsonStore(name))
   const get = (name: unknown): JsonStore => {
     const store = typeof name === 'string' ? stores.get(name) : undefined
     if (!store) throw new Error(`unknown store: ${String(name)}`)
@@ -69,6 +69,7 @@ function registerStores(): void {
     return undefined
   })
   registerCollectionFiles()
+  registerProfileFiles()
   registerUpdater({ flush: flushStores })
   // Diagnóstico (spec 012): texto curto para a área de transferência, GPU e flags de teste.
   ipcMain.handle('system:copyText', (_e, text: unknown) => {
@@ -210,6 +211,40 @@ function registerCollectionFiles(): void {
     try {
       const buf = await readFile(path)
       if (buf.length > 2_000_000) return { ok: false, name: basename(path), error: 'read' }
+      return { ok: true, name: basename(path), text: buf.toString('utf8') }
+    } catch {
+      return { ok: false, name: basename(path), error: 'read' }
+    }
+  })
+}
+
+/**
+ * Exportar e importar um perfil (spec 038, P1): como as coleções, o caminho vem só do diálogo
+ * nativo e o renderer manda/recebe o texto JSON. O renderer confere o formato; aqui, o tamanho
+ * (até 64 KB na leitura e na escrita).
+ */
+const PROFILE_FILE_MAX = 64 * 1024
+function registerProfileFiles(): void {
+  const filters = (): { name: string; extensions: string[] }[] => [{ name: mt('profiles.filter'), extensions: ['json'] }]
+  ipcMain.handle('profiles:export', async (e, name: unknown, text: unknown) => {
+    if (typeof text !== 'string' || text.length > PROFILE_FILE_MAX) throw new Error('[too-big] profile larger than 64 KB')
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = { title: mt('profiles.exportTitle'), defaultPath: `${exportBase(name)}.json`, filters: filters() }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return { ok: false, canceled: true }
+    await writeFile(res.filePath, text, 'utf8')
+    log('main', `profiles: exported (${text.length} chars)`)
+    return { ok: true, name: basename(res.filePath) }
+  })
+  ipcMain.handle('profiles:import', async (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts = { title: mt('profiles.importTitle'), properties: ['openFile' as const], filters: filters() }
+    const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    const path = res.filePaths[0]
+    if (res.canceled || !path) return { ok: false, canceled: true }
+    try {
+      const buf = await readFile(path)
+      if (buf.length > PROFILE_FILE_MAX) return { ok: false, name: basename(path), error: 'too-big' }
       return { ok: true, name: basename(path), text: buf.toString('utf8') }
     } catch {
       return { ok: false, name: basename(path), error: 'read' }

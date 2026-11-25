@@ -155,3 +155,30 @@ body.settings-open .settings .win { opacity: 1; transform: translate(-50%, -50%)
 .settings .prog i { display: block; height: 100%; width: 0; background: var(--violet); }
 .settings .upd-last { margin: 12px 0 0; font-size: 13px; color: var(--text-3); }
 @media (prefers-reduced-motion: reduce) { .settings .spin-ico .ico { animation: none; } }
+
+/* Perfis (spec 038, P1): protótipo "Configurações", seção `perfis` (1794680346-fb12). */
+.settings .pfs-lead { margin: 4px 0 0; color: var(--text-2); font-size: 13px; }
+.settings .pfrow .pfs-n { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; min-width: 0; }
+.settings .pfs-tag { font-size: 12px; color: var(--text-3); }
+.settings .pfs-use { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
+.settings .pfs-use .ico { width: 14px; height: 14px; color: var(--violet); }
+.settings .pfs-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--violet); }
+.settings .pfs-sum { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--text-2); overflow-wrap: anywhere; }
+.settings .pfs-ren { width: 100%; max-width: 280px; height: 30px; flex: none; padding: 0 10px; background: var(--bg-01); border: 1px solid var(--line-3); border-radius: var(--r-2); color: var(--text-1); font: inherit; font-size: 14px; }
+.settings .pfs-ren:focus-visible { outline: 2px solid var(--violet); outline-offset: 1px; }
+.settings .pfs-ctl { position: relative; }
+.settings .pfs-k { display: inline-flex; gap: 2px; }
+.settings .menu.pfs-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 200px; }
+.settings .menu.pfs-menu.up { top: auto; bottom: calc(100% + 4px); }
+.settings .menu.pfs-menu button:disabled { color: var(--text-3); cursor: not-allowed; background: none; }
+.settings .menu.pfs-menu button:disabled .ico { color: var(--text-3); }
+.settings #pfNote .btn { margin-left: 4px; vertical-align: baseline; }
+
+/* ── Curva por frequência (spec 040, P1; protótipo "Configurações" `.eq-*`, versão fb12) ── */
+.settings .eq-box { display: grid; gap: 10px; min-width: 0; }
+.settings .eq-box > .help { margin: 0; }
+.settings .eq-plot { margin-top: 0; }
+.settings .eq-plot canvas { height: 160px; }
+.settings .eq-freq { margin-top: -6px; }
+.settings .eq-warn { justify-content: flex-start; flex-wrap: wrap; gap: 8px 12px; margin-top: 0; font-size: 13px; }
+.settings .eq-reset { margin-left: auto; }

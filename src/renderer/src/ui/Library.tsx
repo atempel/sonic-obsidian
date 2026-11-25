@@ -39,9 +39,16 @@ export interface ImportsApi {
 export function Library({ core, presets, imports }: { core: Core; presets: readonly string[]; imports: ImportsApi }) {
   const open = core.state.overlay === 'library'
   const [q, setQ] = useState('')
-  const [tab, setTab] = useState<Tab>('all')
-  const [impOnly, setImpOnly] = useState(false)
-  const [mineOnly, setMineOnly] = useState(false)
+  const [savedTab, setTab] = useState<Tab>('all')
+  const [impFilter, setImpOnly] = useState(false)
+  const [mineFilter, setMineOnly] = useState(false)
+  // Modo Simples (spec 039): Favoritos e Todos, Coleções só quando existe uma; sem Recentes,
+  // filtros nem "Novo preset". A aba guardada que não aparece abre em Todos.
+  const simple = core.state.settings.uiMode === 'simple'
+  const tabs = simple ? TABS.filter((x) => x.id === 'all' || x.id === 'favorites' || (x.id === 'collections' && core.state.library.collections.length > 0)) : TABS
+  const tab: Tab = tabs.some((x) => x.id === savedTab) ? savedTab : 'all'
+  const impOnly = impFilter && !simple
+  const mineOnly = mineFilter && !simple
   const [detail, setDetail] = useState<string | null>(null)
   const [recents, setRecents] = useState<string[]>([])
   const [menu, setMenu] = useState<MenuState | null>(null)
@@ -49,7 +56,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   const panel = useRef<HTMLElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
   // M10: o sublinhado desliza entre as abas.
-  useSlideIndicator(tabsRef, '[role=tab][aria-selected=true]', 'x', [tab, open])
+  useSlideIndicator(tabsRef, '[role=tab][aria-selected=true]', 'x', [tab, open, tabs.length])
   const allSet = useMemo(() => new Set(presets), [presets])
   const lib = core.state.library
   const query = q.trim()
@@ -100,16 +107,16 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
   }
 
   const onTabKey = (e: KeyboardEvent): void => {
-    const i = TABS.findIndex((x) => x.id === tab)
+    const i = tabs.findIndex((x) => x.id === tab)
     let next = -1
-    if (e.key === 'ArrowRight') next = (i + 1) % TABS.length
-    else if (e.key === 'ArrowLeft') next = (i + TABS.length - 1) % TABS.length
+    if (e.key === 'ArrowRight') next = (i + 1) % tabs.length
+    else if (e.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length
     else if (e.key === 'Home') next = 0
-    else if (e.key === 'End') next = TABS.length - 1
+    else if (e.key === 'End') next = tabs.length - 1
     if (next < 0) return
     e.preventDefault()
     e.stopPropagation()
-    selectTab(TABS[next]!.id)
+    selectTab(tabs[next]!.id)
     window.setTimeout(() => panel.current?.querySelector<HTMLElement>('[role=tab][aria-selected=true]')?.focus(), 0)
   }
 
@@ -133,7 +140,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
         : listFor(core, presets, allSet, tab === 'collections' ? 'all' : tab, query).filter((n) => !(tab === 'all' && impOnly) || imports.is(n))
             .filter((n) => !(tab === 'all' && mineOnly) || imports.isMine(n))
     const chips =
-      tab === 'all' && !detail ? (
+      tab === 'all' && !detail && !simple ? (
         <div class="chips">
           <button aria-pressed={impOnly} onClick={() => setImpOnly(!impOnly)}>
             {t('library.filterImported')}
@@ -198,10 +205,12 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
             {t('library.title')}
           </div>
           <div class="lib-tools">
-            <button type="button" class="btn lib-new" title={t('library.newTitle')} onClick={() => imports.create()}>
-              <Icon name="plus" small />
-              {t('library.new')}
-            </button>
+            {!simple && (
+              <button type="button" class="btn lib-new" title={t('library.newTitle')} onClick={() => imports.create()}>
+                <Icon name="plus" small />
+                {t('library.new')}
+              </button>
+            )}
             <button class="ibtn" aria-label={t('library.close')} title={t('library.closeTitle')} onClick={close}>
               <Icon name="x" />
             </button>
@@ -232,7 +241,7 @@ export function Library({ core, presets, imports }: { core: Core; presets: reado
           )}
         </div>
         <div class="ltabs" ref={tabsRef} role="tablist" aria-label={t('library.sections')} onKeyDown={onTabKey}>
-          {TABS.map((x) => (
+          {tabs.map((x) => (
             <button key={x.id} role="tab" aria-selected={tab === x.id} tabIndex={tab === x.id ? 0 : -1} onClick={() => selectTab(x.id)}>
               {t(x.label)}
               {x.id !== 'collections' && <span class="num">{counts[x.id]}</span>}

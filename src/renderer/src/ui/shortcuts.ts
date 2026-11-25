@@ -6,6 +6,7 @@
 import { updateState } from '../update'
 import { includesText, t, type MessageKey } from '../i18n'
 import type { IconName } from './icons'
+import { uiMode } from './mode'
 
 /**
  * Alternativas de uma ação; cada alternativa é uma sequência de teclas (um `kbd` por tecla).
@@ -15,6 +16,8 @@ export type Keys = string[][]
 export interface ShortcutRow {
   label: MessageKey
   keys: Keys
+  /** Posição na lista curta do painel `?` no modo Simples (spec 039, os 10 atalhos essenciais). */
+  essential?: number
 }
 export interface ShortcutGroup {
   name: MessageKey
@@ -26,14 +29,14 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     name: 'shortcuts.group.playback',
     rows: [
-      { label: 'shortcuts.random', keys: [['Space']] },
-      { label: 'shortcuts.previous', keys: [['←']] },
-      { label: 'shortcuts.next', keys: [['→']] },
+      { label: 'shortcuts.random', keys: [['Space']], essential: 1 },
+      { label: 'shortcuts.previous', keys: [['←']], essential: 2 },
+      { label: 'shortcuts.next', keys: [['→']], essential: 3 },
       { label: 'shortcuts.hardCut', keys: [['Shift', '←'], ['Shift', '→'], ['Shift', 'Space']] },
       { label: 'shortcuts.blendType', keys: [['B'], ['Shift', 'B']] },
       { label: 'shortcuts.blendTime', keys: [['↑'], ['↓']] },
-      { label: 'shortcuts.rotation', keys: [['R']] },
-      { label: 'shortcuts.hold', keys: [['Enter']] },
+      { label: 'shortcuts.rotation', keys: [['R']], essential: 4 },
+      { label: 'shortcuts.hold', keys: [['Enter']], essential: 5 },
       { label: 'shortcuts.breath', keys: [['Shift', 'Enter']] }
     ]
   },
@@ -47,11 +50,15 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ]
   },
   {
+    name: 'shortcuts.group.profiles',
+    rows: [{ label: 'shortcuts.profileApply', keys: [['Alt', '1…9']] }]
+  },
+  {
     name: 'shortcuts.group.navigation',
     rows: [
-      { label: 'shortcuts.search', keys: [['/'], ['Ctrl', 'K']] },
-      { label: 'shortcuts.library', keys: [['L']] },
-      { label: 'shortcuts.quick', keys: [[',']] },
+      { label: 'shortcuts.search', keys: [['/'], ['Ctrl', 'K']], essential: 8 },
+      { label: 'shortcuts.library', keys: [['L']], essential: 7 },
+      { label: 'shortcuts.quick', keys: [[',']], essential: 9 },
       { label: 'shortcuts.settings', keys: [['Ctrl', ',']] },
       { label: 'shortcuts.studio', keys: [['E']] }
     ]
@@ -59,14 +66,14 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     name: 'shortcuts.group.text',
     rows: [
-      { label: 'shortcuts.hide', keys: [['H']] },
+      { label: 'shortcuts.hide', keys: [['H']], essential: 6 },
       { label: 'shortcuts.clean', keys: [['T']] }
     ]
   },
   {
     name: 'shortcuts.group.window',
     rows: [
-      { label: 'shortcuts.fullscreen', keys: [['F'], ['F11']] },
+      { label: 'shortcuts.fullscreen', keys: [['F'], ['F11']], essential: 10 },
       { label: 'shortcuts.quit', keys: [['Ctrl', 'W']] },
       { label: 'shortcuts.closePanel', keys: [['Esc']] },
       { label: 'shortcuts.show', keys: [['?']] }
@@ -80,6 +87,14 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ]
   }
 ]
+
+/** Os 10 atalhos essenciais (spec 039), na ordem da marcação `essential`: lidos da lista acima, nada copiado. */
+export const ESSENTIALS: ShortcutGroup = {
+  name: 'shortcuts.group.essentials',
+  rows: SHORTCUT_GROUPS.flatMap((g) => g.rows)
+    .filter((r) => r.essential !== undefined)
+    .sort((a, b) => a.essential! - b.essential!)
+}
 
 /** Grupo "Agora" do painel: o lugar onde se está (protótipo `0fd0`, `ctxGroup`). */
 export const NOW_STAGE: ShortcutGroup = {
@@ -126,6 +141,8 @@ export type ActionId =
   | 'feedbackAsk'
   | 'feedbackDiag'
   | 'captureMeasure'
+  | 'modeSimple'
+  | 'modeFull'
 
 export interface Command {
   id: ActionId
@@ -163,7 +180,10 @@ export const COMMANDS: Command[] = [
   { id: 'feedbackAsk', label: 'feedback.ask', keys: [], icon: 'circle-help' },
   { id: 'feedbackDiag', label: 'feedback.diag', keys: [], icon: 'clipboard-copy' },
   // Sincronia (spec 032, P1): sem tecla; nada muda no painel `?`.
-  { id: 'captureMeasure', label: 'shortcuts.cmd.measureCapture', keys: [], icon: 'clock' }
+  { id: 'captureMeasure', label: 'shortcuts.cmd.measureCapture', keys: [], icon: 'clock' },
+  // Modos de interface (spec 039): sem tecla; só aparece o modo que não está ativo.
+  { id: 'modeSimple', label: 'shortcuts.cmd.modeSimple', keys: [], icon: 'minimize-2', when: () => uiMode() !== 'simple' },
+  { id: 'modeFull', label: 'shortcuts.cmd.modeFull', keys: [], icon: 'maximize-2', when: () => uiMode() !== 'full' }
 ]
 
 /** Nome da tecla no idioma do app (`Space` / `Espaço`); as outras saem como estão. */

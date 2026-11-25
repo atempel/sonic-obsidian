@@ -67,7 +67,7 @@ Como funciona, para quem usa: o app ouve o nível médio dos últimos ~10 s e so
 - **Onde:** um `GainNode` antes do motor, depois do medidor de silêncio e da detecção de batida (que seguem medindo antes de qualquer ganho).
 - **Como:**
   - mede RMS numa janela de ~10 s e mira uma referência (a definir no Windows, perto do nível de uma faixa atual masterizada);
-  - ataque de ~1 s para baixar, soltura de ~8 s para subir, e teto de +12 dB;
+  - ataque de ~1 s para baixar, soltura de ~8 s para subir, e teto de +18 dB (era +12; spec 033);
   - congela no silêncio e no Respiro, para não "bombear" em breaks.
   - Não comprime: não achata a dinâmica dentro da faixa, porque o contraste do drop é o que move o visual.
 - **Manual:** o ganho dos Ajustes rápidos vira **ajuste fino** de −6 a +6 dB sobre o AGC; desligado o AGC, volta a ser o ganho de hoje.

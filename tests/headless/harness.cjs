@@ -34,14 +34,22 @@ async function launch() {
 // window.so simulado. `settings` e `library` são objetos serializáveis; `logs` (padrão true) guarda
 // window.__logs / window.__logT. window.__saves recebe cada library.save (ou, com saveSettings, cada settings.save).
 // `systemLanguage` = o idioma do Windows simulado (spec 030); pt-BR por padrão, porque os testes antigos conferem textos em português.
+// `profiles` = o profiles.json simulado (spec 038); window.__profiles guarda o último profiles.save;
+// window.__pfExports / window.__pfImport simulam o exportar/importar um perfil (P1).
 // `testFlags` = o test-flags.json simulado (spec 012: captureFail, noWebgl2). window.__copied recebe cada system.copyText.
-async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = true, saveSettings = false, systemLanguage = 'pt-BR', testFlags = {} } = {}) {
+async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = true, saveSettings = false, systemLanguage = 'pt-BR', testFlags = {}, profiles = null } = {}) {
   const lib = library || { version: 1, favorites: [], hidden: [], hiddenPerf: [], recents: [], presetFps: {}, collections: [] }
-  await page.addInitScript(({ settings, lib, logs, saveSettings, systemLanguage, testFlags }) => {
-    window.__saves = []; window.__logs = []; window.__logT = []; window.__copied = []; window.__mainLang = []
+  await page.addInitScript(({ settings, lib, logs, saveSettings, systemLanguage, testFlags, profiles }) => {
+    window.__profiles = profiles; window.__pfExports = []; window.__pfImport = null; window.__saves = []; window.__logs = []; window.__logT = []; window.__copied = []; window.__mainLang = []
     window.so = {
       settings: { load: async () => settings, save: async (d) => { if (saveSettings) window.__saves.push(JSON.parse(JSON.stringify(d))) } },
       library: { load: async () => lib, save: async (d) => { if (!saveSettings) window.__saves.push(JSON.parse(JSON.stringify(d))) } },
+      profiles: {
+        load: async () => window.__profiles, save: async (d) => { window.__profiles = JSON.parse(JSON.stringify(d)) },
+        // Configurações › Perfis (038, P1): window.__pfExports recebe cada exportação; window.__pfImport é o que o diálogo "abre".
+        exportFile: async (name, text) => { window.__pfExports.push({ name, text }); return { ok: true, name: `${name}.json` } },
+        importFile: async () => window.__pfImport || { ok: false, canceled: true }
+      },
       window: { toggleFullScreen: async () => {}, minimize: async () => {}, close: async () => {} },
       system: { openSoundSettings: async () => {}, openNotices: async () => '', openLink: async () => {}, copyText: async (t) => { window.__copied.push(t) }, gpuInfo: async () => ({ driver: 'x', ids: 'x' }), testFlags: async () => ({ captureFail: false, noWebgl2: false, ...testFlags }) },
       app: { version: async () => '0.5.0', systemLanguage: async () => systemLanguage, setLanguage: (l) => { window.__mainLang.push(l) } },
@@ -49,7 +57,7 @@ async function mockSo(page, { settings = { welcomeSeen: true }, library, logs = 
       collections: { export: async () => ({ ok: true }), import: async () => ({ ok: false, canceled: true }) },
       log: (m) => { if (logs) { window.__logs.push(m); window.__logT.push([performance.now(), m]) } console.log('[so.log]', m) }, mark: () => {}, showLog: async () => {}
     }
-  }, { settings, lib, logs, saveSettings, systemLanguage, testFlags })
+  }, { settings, lib, logs, saveSettings, systemLanguage, testFlags, profiles })
 }
 
 // getDisplayMedia simulado: bumbo sintético em `bpm` (buffer em loop: tempo exato).

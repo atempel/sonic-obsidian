@@ -1,6 +1,6 @@
 # 037 — Ajustes rápidos: rolagem volta ao topo, ícones nas seções, configurações no cabeçalho
 
-**Fase:** 2 (interface) · **Status:** pronta · **Issue:** [#109](https://github.com/atempel/sonic-obsidian/issues/109) · **Milestone:** v0.12.0 · **Personas:** Nostálgico do Winamp (abre o painel com a música tocando e quer achar a seção de olho), DJ de Festa (abre e fecha o painel várias vezes numa noite)
+**Fase:** 2 (interface) · **Status:** implementada (testar no bloco v0.12.0) · **Issue:** [#109](https://github.com/atempel/sonic-obsidian/issues/109) · **Milestone:** v0.12.0 · **Personas:** Nostálgico do Winamp (abre o painel com a música tocando e quer achar a seção de olho), DJ de Festa (abre e fecha o painel várias vezes numa noite)
 
 ## Problema
 Três arestas nos Ajustes rápidos (`src/renderer/src/ui/QuickSettings.tsx`), decididas pelo usuário na sessão de design de 10/11/2026:

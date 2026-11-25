@@ -24,8 +24,10 @@ import {
 } from '../core/state'
 import { Icon } from './icons'
 import { FeedbackButton } from './Feedback'
+import { ProfileBar } from './ProfileBar'
+import { CurveEq, CurveFixedHint, CurveSegmented } from './FreqCurve'
+import { isFlat } from '../freq-curve'
 import { fmtFixed, fmtNum, fmtSeconds, t, tn } from '../i18n'
-import { Kbd } from './Kbd'
 import { showToast } from './toast'
 
 /**
@@ -237,6 +239,9 @@ export interface QuickSettingsProps {
   expressionAvailable: boolean
 }
 
+/** Depois da animação de saída do painel (180 ms em `ajustes.css`). */
+const SHEET_SCROLL_RESET_MS = 200
+
 export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }: QuickSettingsProps) {
   const open = core.state.overlay === 'quick'
   const ref = useRef<HTMLElement>(null)
@@ -244,6 +249,19 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
     document.body.classList.toggle('sheet-open', open)
     // Abrir leva o foco ao painel (Tab percorre os controles); fechar o devolve ao visual (Overlay).
     if (open) ref.current?.focus({ preventScroll: true })
+  }, [open])
+  // Rolagem (spec 037; `setSheet` do protótipo): abre sempre no topo e, ao fechar, volta ao topo
+  // depois da saída (180 ms), sem salto visível. A Biblioteca guarda a posição; aqui não.
+  const body = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (open) {
+      if (body.current) body.current.scrollTop = 0
+      return
+    }
+    const timer = setTimeout(() => {
+      if (body.current) body.current.scrollTop = 0
+    }, SHEET_SCROLL_RESET_MS)
+    return () => clearTimeout(timer)
   }, [open])
   // Clique fora fecha (protótipo "Palco integrado", versão 1794680346-fb12; spec 042). Ficam de
   // fora o botão da faixa (ele mesmo alterna), o menu e o diálogo de Feedback abertos daqui e o
@@ -273,7 +291,14 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
       document.removeEventListener('click', onClick, true)
     }
   }, [open])
+  // Modo Simples (spec 039): Sinal (só o ganho), Rotação (duas linhas) e Texto; "Mais ajustes…"
+  // mostra as cinco seções no próprio painel até ele fechar.
+  const [showAll, setShowAll] = useState(false)
+  useEffect(() => {
+    if (!open) setShowAll(false)
+  }, [open])
   const { settings } = core.state
+  const reduced = settings.uiMode === 'simple' && !showAll
   const run = (name: string, args: Record<string, unknown>): void => void core.run(name, args, 'ui')
   const rot = settings.rotation
   const intervals = ROTATION_STEPS_S.includes(rot.intervalSeconds) ? ROTATION_STEPS_S : [...ROTATION_STEPS_S, rot.intervalSeconds].sort((a, b) => a - b)
@@ -281,7 +306,9 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
   const text = settings.overlayText
   const [, curveHint] = splitLabel(expressionCurveLabel(expr.curve))
   const [, memoryHint] = splitLabel(expressionAdaptationLabel(expr.adaptation))
-  const exprIsDefault = expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation
+  // O padrão inclui a curva plana (protótipo `xIsDef`, spec 040).
+  const exprIsDefault =
+    expr.level === EXPRESSION_DEFAULT.level && expr.curve === EXPRESSION_DEFAULT.curve && expr.adaptation === EXPRESSION_DEFAULT.adaptation && expr.curvePreset === 'flat' && isFlat(expr.curve16)
 
   return (
     <aside class="sheet" ref={ref} tabIndex={-1} aria-label={t('quick.title')} aria-hidden={!open} inert={!open}>
@@ -290,28 +317,43 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
         <div class="hbtns">
           {/* Feedback e bugs (spec 031): ao lado do fechar, como `#fbBtn` no protótipo. */}
           <FeedbackButton core={core} visible={open} />
+          {/* Todas as configurações no cabeçalho, entre Feedback e Fechar (spec 037; `#sheetSettings`). */}
+          <button class="ibtn" id="sheetSettings" aria-label={t('quick.allSettings')} title={t('quick.allSettingsTitle')} onClick={() => core.run('ui.open', { overlay: 'settings' }, 'ui')}>
+            <Icon name="settings" />
+          </button>
           <button class="ibtn" aria-label={t('quick.close')} title={t('quick.closeTitle')} onClick={() => core.run('ui.close', {}, 'ui')}>
             <Icon name="x" />
           </button>
         </div>
       </header>
-      <div class="body">
+      {/* Perfis (spec 038): fixa abaixo do cabeçalho, fora da lista que rola. */}
+      {!reduced && <ProfileBar core={core} open={open} />}
+      <div class="body" ref={body}>
         <section>
-          <h3>{t('quick.signal')}</h3>
-          <Switch id="autoGain" label={t('quick.normalize')} checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
-            {settings.autoGain && <AutoGainReadout core={core} />}
-          </Switch>
+          <h3>
+            <Icon name="audio-lines" />
+            <span>{t('quick.signal')}</span>
+          </h3>
+          {!reduced && (
+            <Switch id="autoGain" label={t('quick.normalize')} checked={settings.autoGain} onChange={(value) => run('audio.autoGain', { value })}>
+              {settings.autoGain && <AutoGainReadout core={core} />}
+            </Switch>
+          )}
           {settings.autoGain ? (
             <Slider id="gain" label={t('quick.fineAdjust')} value={settings.gainDb} min={-FINE_GAIN_DB} max={FINE_GAIN_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           ) : (
             <Slider id="gain" label={t('quick.gain')} value={settings.gainDb} min={GAIN_MIN_DB} max={GAIN_MAX_DB} step={1} text={dbText(settings.gainDb)} onInput={(gainDb) => run('signal.set', { gainDb })} />
           )}
-          {settings.autoGain && <p class="note hint">{t('quick.normalizeNote')}</p>}
+          {settings.autoGain && !reduced && <p class="note hint">{t('quick.normalizeNote')}</p>}
         </section>
 
+        {!reduced && (
         <section>
           <div class="sec-head">
-            <h3>{t('quick.expression')}</h3>
+            <h3>
+            <Icon name="activity" />
+            <span>{t('quick.expression')}</span>
+          </h3>
             <button
               type="button"
               class="btn btn-ghost"
@@ -319,7 +361,7 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
               title={t('quick.restoreDefault')}
               disabled={exprIsDefault}
               onClick={() => {
-                run('expression.set', { ...EXPRESSION_DEFAULT })
+                run('expression.set', { ...EXPRESSION_DEFAULT, curvePreset: 'flat' })
                 showToast(t('toast.exprDefault'))
                 // O botão desabilita: o foco vai para o Nível em vez de se perder.
                 document.getElementById('expr')?.focus()
@@ -363,11 +405,24 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           <p class="note seg-desc" id="exprMemoryDesc" aria-live="polite">
             {withDefaultDesc(expr.adaptation === 'live' ? t('quick.memoryLiveDesc') : memoryHint, expr.adaptation === EXPRESSION_DEFAULT.adaptation)}
           </p>
+          {/* Curva por frequência (spec 040), depois de Nível, Caráter e Memória. */}
+          <div class="field eq-field">
+            <div class="field-top">
+              <span id="eqCurveLbl">{t('curve.title')}</span>
+            </div>
+            <CurveSegmented core={core} id="eqCurve" />
+            <CurveEq core={core} id="eq" height={96} labels="sparse" active={open && expressionAvailable} />
+            <CurveFixedHint core={core} id="eqWarn" />
+          </div>
           {!expressionAvailable && <p class="note">{t('quick.unavailable')}</p>}
         </section>
+        )}
 
         <section>
-          <h3>{t('quick.rotation')}</h3>
+          <h3>
+            <Icon name="repeat" />
+            <span>{t('quick.rotation')}</span>
+          </h3>
           <Switch id="rotSwitch" label={t('quick.autoRotation')} checked={rot.enabled} onChange={(enabled) => run('rotation.set', { enabled })} />
           {rot.onBeat ? (
             <Select<BeatBars> id="interval" label={t('quick.switchEvery')} value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} onChange={(bars) => run('rotation.set', { bars })} />
@@ -375,19 +430,31 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
             <Select<number> id="interval" label={t('quick.switchEvery')} value={rot.intervalSeconds} options={intervals.map((s) => [s, `${fmtNum(s)} s`])} onChange={(intervalSeconds) => run('rotation.set', { intervalSeconds })} />
           )}
           {rot.order === 'collection' && <p class="note">{rot.onBeat ? t('quick.collectionBars') : t('quick.collectionInterval')}</p>}
-          <Switch id="beatSwitch" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
-          {rot.onBeat && <p class="note hint">{t('quick.onBeatNote', { s: fmtSeconds(core.rotationIntervalSeconds) })}</p>}
-          <Switch id="manualBeatSwitch" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
+          {!reduced && (
+            <>
+              <Switch id="beatSwitch" label={t('quick.onBeat')} checked={rot.onBeat} onChange={(onBeat) => run('rotation.set', { onBeat })} />
+              {rot.onBeat && <p class="note hint">{t('quick.onBeatNote', { s: fmtSeconds(core.rotationIntervalSeconds) })}</p>}
+              <Switch id="manualBeatSwitch" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
+            </>
+          )}
         </section>
 
+        {!reduced && (
         <section>
-          <h3>{t('quick.transitions')}</h3>
+          <h3>
+            <Icon name="blend" />
+            <span>{t('quick.transitions')}</span>
+          </h3>
           <BlendControl core={core} target="manual" label={t('quick.blendManual')} available={blendTypesAvailable} />
           <BlendControl core={core} target="auto" label={t('quick.blendAuto')} available={blendTypesAvailable} />
         </section>
+        )}
 
         <section>
-          <h3>{t('quick.text')}</h3>
+          <h3>
+            <Icon name="type" />
+            <span>{t('quick.text')}</span>
+          </h3>
           <Select<PresetNameMode>
             id="otPreset"
             label={t('quick.presetName')}
@@ -416,16 +483,20 @@ export function QuickSettings({ core, blendTypesAvailable, expressionAvailable }
           </Switch>
           <p class="note">{t('quick.creditNote')}</p>
         </section>
-
-        <section>
-          <button class="btn sheet-link" onClick={() => core.run('ui.open', { overlay: 'settings' }, 'ui')}>
-            <span>
-              <Icon name="settings" />
-              {t('quick.allSettings')}
-            </span>
-            <Kbd k="Ctrl+," />
+        {reduced && (
+          <button
+            type="button"
+            class="btn btn-ghost more-settings"
+            id="quickMore"
+            onClick={() => {
+              setShowAll(true)
+              // O botão some: o foco vai para o primeiro controle da lista completa.
+              requestAnimationFrame(() => document.getElementById('autoGain')?.focus())
+            }}
+          >
+            {t('quick.more')}
           </button>
-        </section>
+        )}
       </div>
     </aside>
   )

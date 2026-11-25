@@ -1,6 +1,6 @@
 # 039 — Modo Simples (modos de interface: Simples · Completo)
 
-**Fase:** 2 (interface) · **Status:** pronta · **Issue:** [#111](https://github.com/atempel/sonic-obsidian/issues/111) · **Milestone:** v0.12.0 · **Personas:** Anfitrião de Ambiente (deixa tocando numa festa ou na TV, não quer configurar nada), Nostálgico do Winamp (quer a tela limpa e poucos botões)
+**Fase:** 2 (interface) · **Status:** implementada (PR da rodada de 2026-11-25; Windows: testar no bloco v0.12.0) · **Issue:** [#111](https://github.com/atempel/sonic-obsidian/issues/111) · **Milestone:** v0.12.0 · **Personas:** Anfitrião de Ambiente (deixa tocando numa festa ou na TV, não quer configurar nada), Nostálgico do Winamp (quer a tela limpa e poucos botões)
 
 ## Problema
 A faixa de controle, os Ajustes rápidos, a Biblioteca e o painel `?` mostram tudo o que o app sabe fazer. Para quem só deixa o visual tocando, isso é ruído. O usuário decidiu em 10/11/2026 (sessão de design) que haverá modos de interface; o Simples vem primeiro e o Rack fica para a Fase 5.
