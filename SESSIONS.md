@@ -3,6 +3,10 @@
 Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado deixou. Uma entrada por sessão (a skill `encerrar-sessao` adiciona). É handoff, não histórico de produto: o *porquê* fica em DECISIONS.md.
 
 ## Entradas
+### 2026-11-26 — Claude Code (nuvem, rodada agendada) — branch `docs/048-ajustes-fb12`
+**Fez:** Passos 0–4 sem trabalho (bloco v0.11.0 sem comentário do usuário; nenhum PR aberto; nada `ready`/`backlog`). Passo 5: o stub `queue/2026-11-23-design-fb12-respiro-adiantar.md` (o pendente mais concreto e sem issue; os mais antigos são de direção/PRD) virou a issue #213 e a spec 048: Respiro na linha do título com `wind` (sem violeta/`volume-x`), "Adiantar o visual" em Configurações › Captura com a ajuda nova, `Esc` cancela a espera da troca no beat. Design checado: artefato em `1794680346-fb12`, igual ao espelho. Três detalhes decididos (`agent-decided`, DECISIONS).
+**Deixou em:** PR desta branch (só docs) com auto-merge; #213 `ready` no milestone v0.12.0. Próxima rodada: implementar a #213 (ou responder ao bloco v0.11.0 se o usuário comentar).
+
 
 ### 2026-11-26 — Claude Code (nuvem, rodada agendada) — branch `feat/047-beat-bandas`
 **Fez:** Passos 0–3 sem trabalho (bloco v0.11.0 esperando o teste do usuário, sem comentário dele; nenhum PR aberto). Passo 4: implementou a #185 (spec 047 P0) em `src/renderer/src/beat.ts`: onsets em três bandas (grave, médio-grave 150–400 Hz e agudo 2–8 kHz, com passa-altas em cascata), função de batida com o grave pesando mais quando vem com ataque no agudo, fase em duas hipóteses (bumbo + alternância da caixa por banda), troca de meia batida travada só com vantagem por ~2 s, trava com metade das análises quando a batida é clara. HUD (`kick`, `snare`, `phase on/off` + margem) e log (fase e margem na linha da trava; linha própria na troca de meia batida). Teste novo `047-beat-bandas` (critérios 1–4, 28/28); `024-beat-sim` 23/23, `024-beat` 39/39 (com a checagem do HUD da 047), `043-beat-manual` 13/13. Simulador: todos os casos `hard` acertam (inclusive hip-hop 90, rock 150 e breakbeat 172, que nem eram critério). Custo igual ao de antes (~0,12 ms/quadro no Node).

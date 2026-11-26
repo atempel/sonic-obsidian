@@ -1,5 +1,5 @@
 # Design fb12: Respiro, "Adiantar o visual" em Captura e `Esc` na espera do beat
-Status: Pending
+Status: Ingested (spec 048, #213)
 Fonte: docs/design/v3/ (versão `1794680346-fb12`): `docs/v3-respostas-divergencias.md` › "Rodada de 14/11/2026", páginas `Palco integrado` e `Configurações`; DIVERGENCIAS 2026-11-10 (024, revisão 2)
 Resumo: a sessão de design aceitou o que a 024 e a 026 fizeram sem desenho, com três ajustes que o app ainda não tem:
 1. **Respiro (`Shift+Enter`):** sai a etiqueta violeta com `volume-x` abaixo do autor. Fica ao lado do indicador do Modo limpo, na linha do título (o título encurta com reticências), ícone `wind`, "Respiro" em `text-2`, 12 px. Mesmo ícone no painel `?` (`shortcuts.ts`). Toasts: "Respiro: o visual segue sem o áudio." / "Respiro desligado." (en a escrever). Motivo: violeta é marca/seleção; `volume-x` é o ícone do "sem som".
