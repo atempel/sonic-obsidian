@@ -70,12 +70,14 @@ const ROOT = path.join(__dirname, '..', '..')
   ok('2c volta para o preset em edição com a transição das trocas manuais (padrão: aleatória, 1 s)', /studio: test swap back \(random, 1 s\)/.test(await hudStudio(page)), await hudStudio(page))
   ok('2d não mexe no preset atual nem no histórico (o Palco segue no de origem)', (await page.$eval('.now-title', e => e.getAttribute('title'))) === src)
   ok('2e log em inglês', (await page.evaluate(() => window.__logs)).some(l => l.startsWith('studio: test swap via ')))
-  await page.waitForTimeout(5200)
-  ok('2f a assinatura some sozinha', !(await page.$eval('.st-card', e => e.classList.contains('show'))))
+  ok('2f a assinatura some sozinha', await H.poll(page, () => !document.querySelector('.st-card')?.classList.contains('show'), { timeout: 12000 }))
   await page.screenshot({ path: path.join(ROOT, 'test-results', '027-estudio-extras.png') }).catch(() => {})
 
   // 3. Capturar quadro: PNG do canvas, com o nome do preset
-  await page.click('.st-cap')
+  // Clique pelo DOM: com a página ocupada no CI, o page.click ficava em "performing click action" até o tempo
+  // esgotar (#178). O critério é o que o botão faz, não o alcance do ponteiro.
+  const capClick = () => page.$eval('.st-cap', e => e.click())
+  await capClick()
   await H.poll(page, () => window.__frames.length >= 1, { timeout: 8000 })
   const f1 = (await page.evaluate(() => window.__frames))[0] || {}
   const cv = await page.$eval('#canvas', c => [c.width, c.height])
@@ -83,13 +85,13 @@ const ROOT = path.join(__dirname, '..', '..')
   await H.poll(page, () => /Quadro capturado/.test(document.querySelector('.gtoast')?.textContent ?? ''), { timeout: 3000 })
   ok('3b toast "Quadro capturado como …" e log', /^Quadro capturado como .*-quadro\.png\.$/.test(await toastText(page)) && (await page.evaluate(() => window.__logs)).includes('studio: frame captured'), await toastText(page))
   await page.evaluate(() => { window.__frameMode = 'cancel' })
-  await page.click('.st-cap')
+  await capClick()
   await H.poll(page, () => window.__frames.length >= 2, { timeout: 8000 })
   await page.waitForTimeout(300)
   const capLogs = (await page.evaluate(() => window.__logs)).filter(l => l.startsWith('studio: frame capture'))
   ok('3c diálogo cancelado: nada registrado nem avisado', capLogs.length === 1 && capLogs[0] === 'studio: frame captured', capLogs.join(' | '))
   await page.evaluate(() => { window.__frameMode = 'fail' })
-  await page.click('.st-cap')
+  await capClick()
   await H.poll(page, () => window.__frames.length >= 3, { timeout: 8000 })
   await page.waitForTimeout(300)
   ok('3d falha: "Não foi possível capturar o quadro. Tente de novo." e log em inglês', /Não foi possível capturar o quadro\. Tente de novo\./.test(await toastText(page)) &&
@@ -100,9 +102,13 @@ const ROOT = path.join(__dirname, '..', '..')
   await page.keyboard.press('Control+2')
   await page.fill('#studio-tp-eq .ed-ta >> nth=1', 'zoom = = 1;')
   await H.poll(page, () => /erro/.test(document.querySelector('.cstat')?.textContent ?? ''), { timeout: 10000 })
+  // O HUD ainda traz o "test swap back" da troca do passo 2: espera o log da troca nova ("via") e só então
+  // a volta, senão a leitura pega o HUD no meio da troca ("via …") e falha (#178).
+  const vias = await page.evaluate(() => window.__logs.filter(l => l.startsWith('studio: test swap via ')).length)
   await page.click('.st-swap')
+  await H.poll(page, (n) => window.__logs.filter(l => l.startsWith('studio: test swap via ')).length > n, { timeout: 10000, arg: vias })
   await H.poll(page, () => /studio: test swap back/.test(document.getElementById('hud').textContent), { timeout: 15000 })
-  ok('4a com erro: a troca volta (para a última versão válida) e o erro continua em Problemas', /erro/.test(await page.$eval('.cstat', e => e.textContent)) && /test swap back/.test(await hudStudio(page)))
+  ok('4a com erro: a troca volta (para a última versão válida) e o erro continua em Problemas', /erro/.test(await page.$eval('.cstat', e => e.textContent)) && /test swap back/.test(await hudStudio(page)), `${await page.$eval('.cstat', e => e.textContent).catch(() => '?')} · ${await hudStudio(page)}`)
   await page.close()
 
   // 5. Corte seco nas trocas manuais: a volta também é seca; sair logo depois cancela a volta

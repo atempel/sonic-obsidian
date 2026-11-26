@@ -219,7 +219,8 @@ async function checkSetup(b, lang) {
   await H.mockSo(p, { systemLanguage: lang, settings: {}, testFlags: { captureFail: true } }); await H.mockAudio(p)
   await p.goto('http://localhost:5230/')
   await p.waitForSelector('.float.panel.in', { timeout: 30000, state: 'attached' })
-  await p.waitForSelector('.float.card.in', { timeout: 15000, state: 'attached' })
+  // 30 s, como o painel: no CI o cartão chegou a passar de 15 s com a página ocupada (#178).
+  await p.waitForSelector('.float.card.in', { timeout: 30000, state: 'attached' })
   await p.waitForTimeout(300)
   const welcome = await p.textContent('#wTitle')
   const capture = await p.textContent('#dTitle')
