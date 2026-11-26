@@ -1,4 +1,4 @@
-// Simulador offline da detecção de batida (spec 024): roda `src/renderer/src/beat.ts` em Node com
+// Simulador offline da detecção de batida (specs 024 e 047): roda `src/renderer/src/beat.ts` em Node com
 // músicas sintéticas (house, techno, hip-hop, breakbeat, ambiente, silêncio) e mede tempo até
 // travar, erro de BPM, erro de fase das batidas e tempo travado. Não substitui o teste com música
 // real no Windows; serve para calibrar `BEAT` e pegar regressões. Uso: `node tests/sim/beat-sim.cjs`.
@@ -101,8 +101,9 @@ function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap,
   const tap = { fftSize: fft, getFloatTimeDomainData(buf) { const end = Math.floor(cur * SR); for (let i = 0; i < fft; i++) { const j = end - fft + i; buf[i] = j >= 0 && j < a.x.length ? a.x[j] : 0 } } }
   const ctx = { sampleRate: SR, get currentTime() { return cur } }
   const states = []
-  const bt = new BeatTracker(tap, ctx, (locked, b) => states.push({ t: cur, locked, bpm: b }))
-  const diag = { crest: [], comb: [], acf: [], attack: [] }
+  let shifts = 0
+  const bt = new BeatTracker(tap, ctx, (locked, b) => states.push({ t: cur, locked, bpm: b }), () => shifts++)
+  const diag = { crest: [], comb: [], acf: [], attack: [], margin: [] }
   const ticks = []; let lockedTime = 0, firstLock = null, bpms = []
   for (let t = 0; t < sec; ) {
     const dt = (1 / fps) * (1 + jitter * rnd())
@@ -111,7 +112,7 @@ function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap,
     if (rms >= 0.0005) quietSince = null; else if (quietSince === null) quietSince = t
     const n = bt.update(t * 1000, quietSince !== null && t - quietSince >= 3)
     if (n > 0) ticks.push(cur - latencyMs / 1000)
-    if (t > 6 && rnd() > 0.9) { diag.crest.push(bt.crest); diag.comb.push(bt.comb); diag.acf.push(bt.acfPeak); diag.attack.push(bt.attack) }
+    if (t > 6 && rnd() > 0.9) { diag.crest.push(bt.crest); diag.comb.push(bt.comb); diag.acf.push(bt.acfPeak); diag.attack.push(bt.attack); if (bt.locked) diag.margin.push(bt.margin) }
     if (bt.locked) { lockedTime += dt; if (firstLock === null) firstLock = t; if (t > sec / 2) bpms.push(bt.bpm) }
   }
   // Erro de fase: para cada tique depois da trava, distância até a batida verdadeira mais próxima.
@@ -130,6 +131,8 @@ function run({ kind, bpm, sec = 40, fps = 60, jitter = 0.2, latencyMs = 0, swap,
     loseS: swap ? ((states.find((st) => !st.locked && st.t >= swap.at)?.t ?? NaN) - swap.at).toFixed(1) : '',
     changeS: swap && swap.bpm ? ((states.find((st) => st.locked && st.t >= swap.at && Math.abs(st.bpm / swap.bpm - 1) < 0.03)?.t ?? NaN) - swap.at).toFixed(1) : '',
     endBpm: bt.bpm.toFixed(1),
+    // Spec 047: fase em vigor no fim, margem mediana travado, trocas de meia batida e custo médio por quadro.
+    phase: bt.phase, margin: med(diag.margin).toFixed(2), shifts, costMs: bt.costMs.toFixed(3),
     crest: med(diag.crest).toFixed(1), comb: med(diag.comb).toFixed(1), acf: med(diag.acf).toFixed(2), attack: med(diag.attack).toFixed(2)
   }
 }
