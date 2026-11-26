@@ -1,6 +1,6 @@
 # 046 — Normalizar áudio por faixa, não por trecho
 
-**Fase:** 5 — Extras (reatividade) · **Status:** pronta (rodada 2026-11-25; números decididos pela rodada, `agent-decided`) · **Issue:** [#186](https://github.com/atempel/sonic-obsidian/issues/186) · **Milestone:** v0.11.0 (vai na versão da Microsoft Store, pedido do usuário) · **Personas:** Nostálgico do Winamp (faixas com break longo), DJ de Festa (break × drop é o show), Anfitrião de Ambiente · **Revê:** [028](028-reatividade-ganho-automatico.md) P1 e [033](033-normalizar-teto.md)
+**Fase:** 5 — Extras (reatividade) · **Status:** implementada (rodada 2026-11-26; teste no Windows no bloco v0.11.0) — números decididos pela rodada 2026-11-25 (`agent-decided`) · **Issue:** [#186](https://github.com/atempel/sonic-obsidian/issues/186) · **Milestone:** v0.11.0 (vai na versão da Microsoft Store, pedido do usuário) · **Personas:** Nostálgico do Winamp (faixas com break longo), DJ de Festa (break × drop é o show), Anfitrião de Ambiente · **Revê:** [028](028-reatividade-ganho-automatico.md) P1 e [033](033-normalizar-teto.md)
 
 ## Problema
 Relato do usuário (2026-11-23): com "Normalizar áudio" ligado, o visual perde o contraste dentro da música — o break não fica quieto e o drop não "explode". O ganho automático reage rápido demais.

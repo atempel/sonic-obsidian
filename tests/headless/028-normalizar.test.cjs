@@ -55,8 +55,10 @@ const ok = R.ok
     ok('o bumbo simulado move o ganho automático (≠ 0)', Number.isFinite(auto) && Math.abs(auto) >= 0.1, `${auto} · ${hudAuto}`)
 
     // Silêncio congela: o ganho não anda em 4 s sem som.
+    // Espera o HUD mostrar o silêncio (RMS −∞) em vez de um tempo fixo: num runner lento a leitura
+    // anterior ainda era de antes do silêncio, com o ganho andando (CI do PR #182; spec 046 P1).
     await page.evaluate(() => window.__audio('silence'))
-    await page.waitForTimeout(800)
+    await H.poll(page, () => /RMS −∞ dBFS/.test(document.querySelector('#hud').textContent), { timeout: 10000 })
     const read = () => page.$eval('#hud', (e) => Number(((e.textContent.match(/auto ([+\-]?[\d.]+)/) || [])[1])))
     const s0 = await read(); await page.waitForTimeout(4000); const s1 = await read()
     ok('silêncio: o ganho automático congela', Math.abs(s1 - s0) < 0.15, `${s0} → ${s1}`)
