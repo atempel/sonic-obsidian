@@ -70,8 +70,9 @@ async function open(b, port, rotation) {
     await page.mouse.move(640, 400)
     const r2 = await pressNext(page)
     // Espera a batida (tracejado) em vez de trocar na hora. Logo depois de fechar os Ajustes, um quadro longo no
-    // runner lento pode fazer a troca perder uma batida e sair na seguinte (813 ms a 35 fps no CI): até 2 batidas.
-    ok('1f agora → espera a batida, com tracejado', r2.wait >= 0 && r2.wait <= 2 * BEAT_S * 1000 + 1000 / fps + 80 && r2.dashed, `${JSON.stringify(r2)} a ${fps} fps`)
+    // runner lento pode fazer a troca perder uma batida e sair na seguinte (813 ms a 35 fps no CI): até 2 batidas,
+    // com folga de 2 quadros + 120 ms (609 ms contra 606 no CI, #178).
+    ok('1f agora → espera a batida, com tracejado', r2.wait >= 0 && r2.wait <= 2 * BEAT_S * 1000 + 2 * 1000 / fps + 120 && r2.dashed, `${JSON.stringify(r2)} a ${fps} fps`)
     ok('1g sem erros na página', errs.length === 0, errs.join(' | '))
     await page.close()
 

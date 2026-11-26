@@ -140,8 +140,8 @@ const ok = R.ok
 
     // "Depois": some até a próxima abertura; a mesma versão não volta, uma mais nova volta.
     await press('.upd button:has-text("Depois")')
-    await page.waitForTimeout(400)
-    ok('"Depois" esconde', (await hidden()))
+    // Diagnóstico (#178: falhou uma vez no CI com a plaquinha visível): se o ponteiro alcançou o botão e o estado.
+    ok('"Depois" esconde', (await hidden()), await page.evaluate((hit) => { const el = document.querySelector('.strip-wrap > .upd'); return `alcance=${hit} upd=${el ? el.className + ' ' + getComputedStyle(el).visibility : 'ausente'} body=${document.body.className}` }, hits.at(-1)))
     await page.evaluate(() => window.__upd.emit({ phase: 'ready', version: '0.6.1' }))
     await page.mouse.move(600, 500); await page.waitForTimeout(300)
     ok('a mesma versão não volta nesta abertura', (await hidden()))
