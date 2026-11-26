@@ -19,7 +19,7 @@ Risco: mais ganho também sobe o ruído de fundo. O silêncio já congela o AGC 
 **P0**
 - `AGC.maxDb` = 18 em `src/renderer/src/agc.ts` (comentário do cabeçalho junto).
 - Simulador (`tests/sim/agc-sim.cjs`) e `028-agc-sim`: o caso "faixa muito baixa" passa a checar o teto de +18; novo caso: faixa a −30 dBFS chega a ≤ 2 dB da referência em 30 s (hoje para em −18).
-- O break de 8 s continua sem subir o ganho mais de 3 dB, e a troca alta → baixa continua corrigindo mais da metade em 15 s.
+- O break de 8 s continua sem subir o ganho mais de 3 dB, e a troca alta → baixa continua corrigindo mais da metade em 15 s. *(Revisto pela [spec 046](046-normalizar-por-faixa.md): a troca alta → baixa passa a valer com a pausa entre as faixas — ≤ 3 dB em 15 s; sem pausa, ≤ 1,5 dB em 60 s.)*
 - Spec 028 e `docs/` que citam "+12 dB" do AGC passam a dizer +18 (o ganho manual de ±12 e o ajuste fino de ±6 não mudam).
 
 ## Fora de escopo

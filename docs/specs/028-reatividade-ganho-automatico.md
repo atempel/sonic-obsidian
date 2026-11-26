@@ -63,11 +63,11 @@ Cada passo tem critério próprio e pode ser entregue separado.
   - Respiro e volta.
 
 **P1 — Normalizar áudio (ganho automático, AGC; nome do usuário, desligado por padrão)**
-Como funciona, para quem usa: o app ouve o nível médio dos últimos ~10 s e sobe ou desce o volume que entra no visual (o som das caixas não muda) até um nível de referência. É a mesma ideia do "normalizar volume" do Spotify, só que medida ao vivo. Uma faixa dos anos 90 mais baixa ganha alguns dB, e uma faixa atual alta perde alguns. A mudança é lenta, de segundos, para não apagar a diferença entre o break e o drop dentro da música. O ganho manual continua, como ajuste fino em cima.
+Como funciona, para quem usa: o app ouve o nível médio dos últimos ~45 s (era ~10 s; [spec 046](046-normalizar-por-faixa.md)) e sobe ou desce o volume que entra no visual (o som das caixas não muda) até um nível de referência. É a mesma ideia do "normalizar volume" do Spotify, só que medida ao vivo. Uma faixa dos anos 90 mais baixa ganha alguns dB, e uma faixa atual alta perde alguns. A mudança é lenta, de segundos, para não apagar a diferença entre o break e o drop dentro da música. O ganho manual continua, como ajuste fino em cima.
 - **Onde:** um `GainNode` antes do motor, depois do medidor de silêncio e da detecção de batida (que seguem medindo antes de qualquer ganho).
 - **Como:**
-  - mede RMS numa janela de ~10 s e mira uma referência (a definir no Windows, perto do nível de uma faixa atual masterizada);
-  - ataque de ~1 s para baixar, soltura de ~8 s para subir, e teto de +18 dB (era +12; spec 033);
+  - mede RMS numa janela de ~45 s (era ~10 s; revisto pela [spec 046](046-normalizar-por-faixa.md), que também acrescenta o estouro e o recomeço na troca de faixa) e mira uma referência (a definir no Windows, perto do nível de uma faixa atual masterizada);
+  - ataque de ~4 s para baixar, soltura de ~10 s para subir (eram ~1 s / ~8 s; spec 046), e teto de +18 dB (era +12; spec 033);
   - congela no silêncio e no Respiro, para não "bombear" em breaks.
   - Não comprime: não achata a dinâmica dentro da faixa, porque o contraste do drop é o que move o visual.
 - **Manual:** o ganho dos Ajustes rápidos vira **ajuste fino** de −6 a +6 dB sobre o AGC; desligado o AGC, volta a ser o ganho de hoje.

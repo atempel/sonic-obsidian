@@ -4,6 +4,10 @@ Log append-only de quem mexeu no workspace, em que ferramenta, e em que estado d
 
 ## Entradas
 
+### 2026-11-26 — Claude Code (nuvem, rodada agendada) — branch `fix/186-normalizar-por-faixa`
+**Fez:** Passos 0–3 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste, nenhum PR aberto; o v0.11.0 ainda tinha a #186). Passo 4: implementou a #186 (spec 046). `AutoGain` por faixa: janela 45 s, ataque 4 s, soltura 10 s; estouro (+4 dB em 3 s, já com o ganho) baixa em 0,7 s e recomeça a janela pelo trecho curto; silêncio de ≥ 1,5 s recomeça a janela na volta do som; `step(rms, dt, { quiet, breath })` — o Respiro só congela. Simulador com os casos novos (break 16 s guarda 91 %, 32 s 69 %; −20/−8 a 1,5 dB em 15 s; troca com pausa a 2,6 dB em 15 s e 0,5 dB em 30 s; sem pausa 1,0 dB em 60 s); `028-agc-sim` 14/14. P1: o `028-normalizar` espera o HUD mostrar `RMS −∞` em vez de 800 ms fixos (16/16, também com `SO_CPU_THROTTLE=6`). Specs 028 e 033 apontam para a 046.
+**Deixou em:** PR desta branch (Closes #186), auto-merge. Com o merge, o v0.11.0 fica sem issues abertas: a próxima rodada fecha o bloco (versão 0.11.0, `rc/v0.11.0`, issue "Testar bloco"). Não verificado: nada no Windows (break × drop com música real, troca de faixa, Respiro — "Testar no bloco" do PR).
+
 ### 2026-11-25 — Claude Code (nuvem, rodada agendada) — branch `docs/046-normalizar-por-faixa`
 **Fez:** Passos 0–4 sem trabalho (nenhuma reivindicação expirada, nenhum bloco em teste nem `needs-decision` respondida, nenhum PR aberto, nada `ready`; o v0.11.0 tem só a #186). Passo 5: planejou a #186 (`prioridade`, pedido do usuário para a versão da Store) → spec 046: Normalizar por faixa (janela 45 s, 4 s / 10 s, estouro +4 dB em 3 s, pausa de 1,5 s recomeça a janela). Números escolhidos rodando variações do `AutoGain` sobre a faixa sintética do simulador (fora do repo); DECISIONS 2026-11-25.
 **Deixou em:** PR desta branch (Refs #186), só docs, com auto-merge; #186 `ready` + `agent-decided` no v0.11.0. Próxima rodada: implementar a #186 (spec 046 P0 e o P1 do `028-normalizar`); depois fechar o bloco v0.11.0. Não verificado: nada no Windows (só simulador).

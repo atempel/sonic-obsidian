@@ -1241,8 +1241,9 @@ async function start(): Promise<void> {
       silence.update(rms, now)
       document.body.classList.toggle('silent', silence.resting)
       if (settings.autoGain) {
-        // Congela no silêncio (já abaixo do limiar, sem esperar a carência) e no Respiro.
-        agc.step(rms, sinceCheck, silence.quiet || core.state.breath)
+        // Congela no silêncio (já abaixo do limiar, sem esperar a carência) e no Respiro; só o silêncio
+        // conta para recomeçar a janela na troca de faixa (spec 046).
+        agc.step(rms, sinceCheck, { quiet: silence.quiet, breath: core.state.breath })
         applyGain()
         if (Math.abs(agc.gainDb - core.state.autoGainDb) >= 0.1) {
           core.state.autoGainDb = agc.gainDb
