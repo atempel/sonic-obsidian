@@ -1,6 +1,6 @@
 # 047 — Beat na batida principal: multibanda e fase pelo bumbo/caixa
 
-**Fase:** 3 · **Status:** Pronta · **Issue:** [#185](https://github.com/atempel/sonic-obsidian/issues/185) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [024](024-troca-no-beat-segurar.md) (revisão 3), [043](043-trocas-manuais-no-beat.md)
+**Fase:** 3 · **Status:** Implementada (P0) — critérios 1–4 no CI; 5–9 no teste do bloco · **Issue:** [#185](https://github.com/atempel/sonic-obsidian/issues/185) · **Personas:** DJ de Festa, Streamer de Set, VJ de Clube ([personas](../research/mercado/personas.md)) · **Depende de:** [024](024-troca-no-beat-segurar.md) (revisão 3), [043](043-trocas-manuais-no-beat.md)
 
 ## Problema
 O usuário relata (#185, 2026-11-23; stub `queue/2026-11-10-beat-batida-principal.md`) que a detecção da 024:

@@ -228,14 +228,21 @@ async function start(): Promise<void> {
   // Avisos e Modo limpo decidem quais toasts aparecem (spec 014).
   setToastPolicy(() => settings.overlayText)
   // ── Batida (spec 024): só mudanças de estado vão para o log, nunca cada batida ──
-  const beat = new BeatTracker(beatTap, ctx, (locked, bpm) => {
-    window.so.log(locked ? `beat: locked at ${bpm.toFixed(0)} BPM` : 'beat: lost, back to seconds')
-    if (!locked) {
-      rotation.beatLost()
-      flushPending()
-    }
-    core.events.emit('beatState', { locked, bpm })
-  })
+  // Spec 047: fase escolhida e margem sobre a meia batida na linha da trava e na troca de fase.
+  const signed = (v: number): string => `${v >= 0 ? '+' : ''}${v.toFixed(2)}`
+  const beat = new BeatTracker(
+    beatTap,
+    ctx,
+    (locked, bpm) => {
+      window.so.log(locked ? `beat: locked at ${bpm.toFixed(0)} BPM · phase ${beat.phase} · margin ${signed(beat.margin)}` : 'beat: lost, back to seconds')
+      if (!locked) {
+        rotation.beatLost()
+        flushPending()
+      }
+      core.events.emit('beatState', { locked, bpm })
+    },
+    (margin) => window.so.log(`beat: phase moved half a beat · margin ${signed(margin)}`)
+  )
   const rotation = new AutoRotation(
     performance.now(),
     () => ({
@@ -1334,7 +1341,9 @@ async function start(): Promise<void> {
         state.curve = isFlat(ex.curve16) ? `curve ${ex.curvePreset}` : `curve ${ex.curvePreset} r ${p.ratios[0]!.toFixed(2)} ${p.ratios[1]!.toFixed(2)} ${p.ratios[2]!.toFixed(2)}`
       }
       const bs = rotation.barsMode ? ` · ${rotation.beatsSinceRestart} beats (${rotation.barsRemaining()} bars left)` : ''
-      state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`
+      // Spec 047: força do bumbo e da caixa nas batidas, fase escolhida e margem sobre a meia batida.
+      const bands = ` · kick ${beat.kick.toFixed(1)} · snare ${beat.snare.toFixed(1)} · phase ${beat.phase} ${signed(beat.margin)}`
+      state.beat = `beat ${beat.locked ? 'locked' : 'searching'} · ${(beat.locked ? beat.bpm : beat.estimate).toFixed(1)} BPM · confidence ${beat.confidence.toFixed(2)}${bands}${bs} · detection ${(beatCost / Math.max(1, beatFrames)).toFixed(3)} ms/frame`
       beatCost = 0
       beatFrames = 0
       state.sync = syncLine(syncParts())

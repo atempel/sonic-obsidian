@@ -43,11 +43,13 @@ const BPM = 124, BEAT_S = 60 / BPM
   // O headless roda a ~5 fps: cada quadro processa ~12× mais áudio que a 60 fps. Normaliza para 60 fps.
   const h7 = await hud(); const cost = Number(/detection ([\d.]+) ms/.exec(h7)?.[1]); const fps = Number(/^(\d+) fps/.exec(h7)?.[1]) || 60
   ok('7a custo da detecção < 0,5 ms por quadro (normalizado a 60 fps)', cost * fps / 60 < 0.5, `${cost} ms a ${fps} fps → ${(cost * fps / 60).toFixed(3)} ms a 60 fps`)
+  // Spec 047: a linha do beat traz a força das bandas e a fase escolhida com a margem.
+  ok('047 HUD: kick, snare e phase on/off com margem', /kick [\d.]+ · snare [\d.]+ · phase (on|off) [+-]\d\.\d\d/.test(h7), h7.split('\n').find(l => l.startsWith('beat')))
   ok('2a ponto de beat visível', await page.isVisible('.strip .bdot'))
   // Travada a batida, os compassos valem a partir da troca seguinte (spec 024).
   const tb = Date.now(); while (Date.now() - tb < 35000 && !/\d c$/.test((await rotText()).trim())) await page.waitForTimeout(250)
   ok('2b depois da troca seguinte, a faixa mostra compassos ("N c")', /\d c$/.test((await rotText()).trim()), `${await rotText()} em ${Date.now() - tb} ms`)
-  ok('log: "beat: locked at … BPM"', (await page.evaluate(() => window.__logs)).some(l => /^beat: locked at 12[2-6] BPM$/.test(l)), JSON.stringify(await page.evaluate(() => window.__logs.filter(l => l.startsWith('beat')))))
+  ok('log: "beat: locked at … BPM"', (await page.evaluate(() => window.__logs)).some(l => /^beat: locked at 12[2-6] BPM · phase (on|off) · margin [+-]\d\.\d\d$/.test(l)), JSON.stringify(await page.evaluate(() => window.__logs.filter(l => l.startsWith('beat')))))
 
   // 1c/2. Trocas automáticas em 4 compassos = 16 batidas ≈ 7,74 s, na batida.
   await page.evaluate(() => { window.__changes = [] })
