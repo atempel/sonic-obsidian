@@ -40,6 +40,28 @@ function track(kind, bpm, sec) {
       if (bar === 1 || bar === 3) add(t, snare, 0.3)
       if (bar === 1) add(t + P * 0.75, kick, 0.3)
       for (let k = 0; k < 2; k++) add(t + (k * P) / 2 + (k ? swing * P : 0), hat, 0.05)
+    } else if (kind === 'offbass') {
+      // Trance/psy: bumbo no tempo e um baixo de ataque seco no contratempo, com chimbal aberto junto.
+      add(t, kick, 0.4)
+      if (bar === 1 || bar === 3) add(t, snare, 0.25)
+      add(t + P / 2, (u) => 0.8 * Math.sin(2 * Math.PI * 55 * u) * Math.min(1, u * 400) * Math.exp(-u * 8), 0.25)
+      add(t + P / 2, ohat, 0.2)
+    } else if (kind === 'cymbal') {
+      // Bumbo fraco e um prato longo e alto no contratempo.
+      add(t, (u) => 0.5 * kick(u), 0.4)
+      if (bar === 1 || bar === 3) add(t, snare, 0.25)
+      add(t + P / 2, (u) => 0.6 * rnd() * Math.exp(-u * 4), 0.5)
+    } else if (kind === 'rock') {
+      // Bumbo em 1 e 3 (e no "e" do 3), caixa forte em 2 e 4, chimbal/ride em colcheias.
+      if (bar === 0 || bar === 2) add(t, kick, 0.4)
+      if (bar === 2) add(t + P / 2, kick, 0.4)
+      if (bar === 1 || bar === 3) add(t, (u) => 2 * snare(u), 0.3)
+      for (let k = 0; k < 2; k++) add(t + (k * P) / 2, (u) => 0.25 * rnd() * Math.exp(-u * 6), 0.3)
+    } else if (kind === 'bassline') {
+      // Baixo em semicolcheias com notas que mudam, mais alto que um bumbo fraco.
+      add(t, (u) => 0.4 * kick(u), 0.4)
+      if (bar === 1 || bar === 3) add(t, snare, 0.25)
+      for (let k = 0; k < 4; k++) add(t + (k * P) / 4, (u) => 0.6 * Math.sin(2 * Math.PI * [41, 55, 49, 62][(b + k) % 4] * u) * Math.min(1, u * 300) * Math.exp(-u * 5), P / 4)
     } else if (kind === 'breaks') {
       const pat = [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0] // kick em 16 avos, por compasso de 2 batidas
       for (let k = 0; k < 8; k++) if (pat[(b % 2) * 8 + k]) add(t + (k * P) / 8, kick, 0.3)
@@ -120,5 +142,13 @@ const cases = [
   { kind: 'house', bpm: 124, swap: { kind: 'silence', bpm: 0, at: 20 } }, { kind: 'house', bpm: 124, breakdown: { at: 15, len: 8 } },
   { kind: 'house', bpm: 124, sec: 50, swap: { kind: 'techno', bpm: 140, at: 20 } }
 ]
-if (require.main === module) console.table(cases.map((c) => run(c)))
-module.exports = { run, track, BeatTracker, BEAT, SR }
+// Casos difíceis (#185, spec 047): onde a detecção da 024 erra o andamento ou trava no contratempo.
+const hard = [
+  { kind: 'offbass', bpm: 138 }, { kind: 'cymbal', bpm: 128 }, { kind: 'rock', bpm: 110 }, { kind: 'rock', bpm: 150 },
+  { kind: 'bassline', bpm: 124 }, { kind: 'bassline', bpm: 100 }, { kind: 'hiphop', bpm: 90 }, { kind: 'breaks', bpm: 172 }
+]
+if (require.main === module) {
+  console.table(cases.map((c) => run(c)))
+  console.table(hard.map((c) => run(c)))
+}
+module.exports = { run, track, BeatTracker, BEAT, SR, cases, hard }
