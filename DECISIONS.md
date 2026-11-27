@@ -830,3 +830,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** fechar o bloco v0.12.0 só com o detector de beat (#185, spec 047) e os ajustes do design fb12 (#213, spec 048), abaixo das ~5 issues de app da skill `rodada`.
 - **Por quê:** não há nada `ready` nem `backlog` para encher o milestone (a única ideia aberta, #216, espera decisão do usuário), e o detector de beat é uma mudança grande que só se valida com música real no Windows; esperar deixaria o bloco parado sem ganho. Com dois blocos em teste, as rodadas seguintes só planejam ou corrigem bugs.
 - **Descartado:** segurar o v0.12.0 até a #216 virar `ready` (depende do usuário e do desenho); juntar o v0.12.0 ao bloco v0.11.0 já em teste (o build do v0.11.0 está congelado em `rc/v0.11.0`).
+
+## 2026-11-27 — `electron`/`vite`: ⚠️ retirado, versões mantidas (#220, `agent-decided`)
+- **Decisão:** a recheca vencida (pedida para depois de 19/11) passou: `electron@45.2.3` e `vite@8.3.6` têm mais de 14 dias, sem `deprecated` e sem aviso no `npm audit`. Continuam fixadas nessas versões.
+- **Por quê:** a regra só pedia esperar os 14 dias. Subir o Electron muda o Chromium do app e só se valida no Windows, então vira tarefa própria, não manutenção de registro.
+- **Descartado:** subir agora para `electron` 45.3.x/`vite` 8.3.8 (sem aviso que peça; mexeria no app no meio de dois blocos em teste). `minimatch` segue aceito: o `electron-builder` 26.18.1 ainda traz o `@electron/universal` 2.
