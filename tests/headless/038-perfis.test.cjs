@@ -243,6 +243,12 @@ async function openQuick(page) {
     const menuItems = () => p3.evaluate(() => [...document.querySelectorAll('#pfMenuS button')].map((x) => `${x.dataset.pact}:${x.disabled ? 'off' : 'on'}`).join())
     await openMore('party')
     ok('8b perfil do app: menu sem Renomear nem Apagar', (await menuItems()) === 'apply:on,rename:off,dup:on,export:on,del:off', await menuItems())
+    ok('8b2 menu "…" por cima das linhas de baixo e sem esmaecer (regra do Estúdio vazando)', await H.poll(p3, () => {
+      const m = document.querySelector('#pfMenuS'); const r = m.getBoundingClientRect()
+      const pts = [[r.right - 12, r.top + r.height * 0.3], [r.right - 12, r.top + r.height * 0.6], [r.right - 12, r.bottom - 8]]
+      let el = m; let op = 1; while (el) { op *= Number(getComputedStyle(el).opacity); el = el.parentElement }
+      return op === 1 && pts.every(([x, y]) => m.contains(document.elementFromPoint(x, y)))
+    }, { timeout: 3000 }))
     ok('8c Apagar desativado com title', (await p3.getAttribute('#pfMenuS [data-pact="del"]', 'title')) === 'Perfis do app não podem ser apagados')
     await p3.keyboard.press('Escape')
     ok('8d Esc fecha só o menu e devolve o foco ao "…"', await H.poll(p3, () => !document.querySelector('#pfMenuS') && document.activeElement?.dataset.pmore === 'party' && document.body.classList.contains('settings-open'), { timeout: 3000 }))

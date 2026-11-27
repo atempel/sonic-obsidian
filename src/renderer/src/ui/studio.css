@@ -124,7 +124,8 @@ body.studio-open .winctl { display: none !important; }
 .mine-tag { border-color: var(--violet-line); color: var(--text-1); }
 
 /* Ondas e Formas (027, fatia 2) — protótipo `Estúdio completo (027).html`, slots em sanfona. */
-.ctl:has(:disabled) { opacity: 0.45; }
+/* Só no Estúdio: sem o `.studio`, a regra apagava controles das Configurações (Interface com o Rack desativado) e prendia o menu "…" dos Perfis atrás das linhas de baixo. */
+.studio .ctl:has(:disabled) { opacity: 0.45; }
 .slots { display: flex; flex-direction: column; gap: 8px; }
 .slot { border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--bg-02); }
 .slot-h { display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; }
