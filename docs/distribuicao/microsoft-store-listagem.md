@@ -1,6 +1,6 @@
 # Microsoft Store — o que preencher no envio
 
-Respostas prontas para a submissão no Partner Center (primeira versão: 0.11.0). Complementa o [guia da Store](microsoft-store.md). As seções seguem a ordem da página **Submission** do Partner Center. Nas listagens, os limites de caracteres são da Microsoft; os textos abaixo já cabem neles.
+Respostas prontas para a submissão no Partner Center (primeira versão: 0.11.0, enviada para a certificação em 2026-11-27). Os textos e as imagens da ficha que foram de fato usados vieram do material `store/listing/` feito numa sessão à parte (descrição, recursos, legendas, palavras-chave); este arquivo cobre os demais campos. Complementa o [guia da Store](microsoft-store.md). As seções seguem a ordem da página **Submission** do Partner Center. Nas listagens, os limites de caracteres são da Microsoft; os textos abaixo já cabem neles.
 
 ## 1. Pricing and availability
 
