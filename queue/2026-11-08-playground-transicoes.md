@@ -1,5 +1,5 @@
 # Playground ao vivo: transições escolhidas pelo usuário e controle durante a música
-Status: Pending (transições do motor viraram a spec 013 / #31; efeitos próprios e o posicionamento "playground" no PRD seguem pendentes)
+Status: Pending
 Fonte: conversa com o usuário (2026-11-08), depois de testar as specs 008/009 no Windows
 Resumo: "A coisa mais divertida do app é ficar controlando: aumentar e diminuir o ganho, trocar de preset na mesma música quando ela muda." O usuário quer que a troca manual também possa ter crossfade e efeitos de mesclagem, **personalizável**: escolher entre corte seco e transição, e entre tipos de transição. Quer explorar o app como um playground de áudio com vídeo.
 Fatos técnicos levantados:
@@ -9,3 +9,6 @@ Destino provável:
 - Spec 011: deixar "Blend quando você troca" com presets rápidos (Corte seco / Curto / Longo) além do slider.
 - Spec nova "Transições" (planejar-feature): seletor de tipo (Corte seco, Crossfade, Aleatório, os 3 padrões do Butterchurn), talvez por origem (tecla, rotação, coleção); atalho para alternar ao vivo; spike curto do patch no `blendPattern.js`.
 - PRD: revisar o posicionamento — "playground ao vivo" aproxima a Fase 2 da frente de vídeo/VJ ([queue/2026-11-08-video-vj.md](2026-11-08-video-vj.md)) e do beat/BPM (Fase 5). Discutir com o usuário antes de reordenar fases.
+
+## Nota (2026-11-27)
+- Fica para **depois dos experimentos** (plano de experimentos, DECISIONS 2026-11-27). As rodadas não planejam este item até lá. As transições do motor já viraram a spec 013 / #31; aqui sobram efeitos próprios e o posicionamento "playground".

@@ -9,3 +9,6 @@ Destino provável: PRD (nova história, Fase 5 ou própria) → spec da fonte ar
 - O protótipo `1794178325-0fd0` já tem o player mínimo: `#srcMenu` (Sistema / Microfone / Arquivo… / SoundCloud…), `#trackRow` (▶/⏸, título, posição, tempo, "Voltar ao áudio do sistema") e o título grande ao começar a faixa (`launchSongTitleAnim`). Não tem linha do tempo nem marcadores; a performance precisa de desenho novo.
 - Técnico (docs/architecture.md §4): `<audio src=blob:>` → `MediaElementSource`, que sai em `ctx.destination`; o loopback fica parado enquanto o arquivo toca.
 - Perguntas que ficaram em aberto quando o player foi discutido: o que acontece no fim da faixa (voltar ao sistema ou pausar); vários arquivos (fila ou só o primeiro).
+
+## Nota (2026-11-27)
+- Fica para **depois dos experimentos** (plano de experimentos, DECISIONS 2026-11-27). As rodadas não planejam este item até lá. 

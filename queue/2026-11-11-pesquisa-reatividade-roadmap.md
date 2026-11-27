@@ -16,3 +16,6 @@ Decisões pendentes do usuário (seção 6 da pesquisa):
 - MIDI/OSC antes ou depois do Estúdio P1;
 - dependências GPL/AGPL de beat/onset.
 Destino provável: specs da Fase 3/4 depois da 028; decisão de fork em DECISIONS quando um item a exigir
+
+## Nota (2026-11-27)
+- Velocidade (C1) já é a spec 049 / #216, que passa para a frente 2 do plano de experimentos (fork do áudio, junto com o passo fixo). Curva de 16 bandas (A7) = spec 040; AGC (A3) = spec 046. Intensity, build/break/drop, limiar MD3, matiz e MIDI ficam para depois da frente 2 (DECISIONS 2026-11-27).
