@@ -43,7 +43,7 @@ const closeAll = async (page) => {
     await page.keyboard.press('Control+Comma')
     await page.waitForSelector('input[name=uiMode]', { state: 'attached', timeout: 5000 })
     const radios = await page.$$eval('input[name=uiMode]', (es) => es.map((e) => [e.nextElementSibling.textContent, e.checked, e.disabled]))
-    ok('1c linha Interface: Simples · Completo · Rack, Completo marcado, Rack desabilitado (Fase 5)', JSON.stringify(radios) === JSON.stringify([['Simples', false, false], ['Completo', true, false], ['Rack', false, true]]) && /Fase 5/.test(await page.evaluate(() => document.querySelector('input[name=uiMode]').closest('.row').textContent)), JSON.stringify(radios))
+    ok('1c linha Interface: Simples · Completo · Rack, Completo marcado, Rack desabilitado (Fase 5), segmentado sem esmaecer', JSON.stringify(radios) === JSON.stringify([['Simples', false, false], ['Completo', true, false], ['Rack', false, true]]) && /Fase 5/.test(await page.evaluate(() => document.querySelector('input[name=uiMode]').closest('.row').textContent)) && (await page.evaluate(() => getComputedStyle(document.querySelector('input[name=uiMode]').closest('.ctl')).opacity)) === '1', JSON.stringify(radios))
     ok('1d a linha "Abrir em" saiu', !(await page.evaluate(() => document.body.innerText.includes('Tela mostrada quando o app inicia'))))
     await page.check('input[name=uiMode] >> nth=0')
     ok('1e settings.json grava uiMode: "simple"', await H.poll(page, () => window.__saves.at(-1)?.uiMode === 'simple', { timeout: 3000 }))
