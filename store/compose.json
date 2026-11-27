@@ -1,0 +1,85 @@
+{
+  "nota": "Caminhos relativos a store/. crop = [x, y, largura] em px da janela de 1920×1080 (recorte 16:9 da captura, só ampliado).",
+  "cover": "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-peak-2.png",
+  "bg": "raw/3840x2160/presets/flexi-swing-out-on-the-spiral-calm-1.png",
+  "reactivity": {
+    "name": "ORB - Solar Radiation",
+    "frames": [
+      "raw/3840x2160/presets/orb-solar-radiation-calm-1.png",
+      "raw/3840x2160/presets/orb-solar-radiation-peak-1.png",
+      "raw/3840x2160/presets/orb-solar-radiation-peak-2.png"
+    ]
+  },
+  "variety": [
+    {
+      "file": "raw/3840x2160/presets/martin-sparky-caleidoscope-peak-1.png",
+      "name": "martin - sparky caleidoscope"
+    },
+    {
+      "file": "raw/3840x2160/presets/rocke-answer-42-new-mix-1-mash0000-slash-and-char-p-jungle-peak-1.png",
+      "name": "Rocke - Answer.42 (New Mix 1) - mash0000 - slash and char p. jungle"
+    },
+    {
+      "file": "raw/3840x2160/presets/flexi-stahlregen-jelly-showoff-parade-peak-1.png",
+      "name": "Flexi + stahlregen - jelly showoff parade"
+    },
+    {
+      "file": "raw/3840x2160/presets/geiss-3-layers-tunnel-mix-peak-1.png",
+      "name": "Geiss - 3 layers (Tunnel Mix)"
+    }
+  ],
+  "byLang": {
+    "en": {
+      "library": {
+        "file": "raw/3840x2160/screens/en/biblioteca.png",
+        "crop": [
+          0,
+          0,
+          1100
+        ]
+      },
+      "studio": {
+        "file": "raw/3840x2160/screens/en/estudio.png",
+        "crop": [
+          0,
+          0,
+          1920
+        ]
+      },
+      "audio": {
+        "file": "raw/3840x2160/screens/en/ajustes-rapidos.png",
+        "crop": [
+          820,
+          0,
+          1100
+        ]
+      }
+    },
+    "pt-BR": {
+      "library": {
+        "file": "raw/3840x2160/screens/pt-BR/biblioteca.png",
+        "crop": [
+          0,
+          0,
+          1100
+        ]
+      },
+      "studio": {
+        "file": "raw/3840x2160/screens/pt-BR/estudio.png",
+        "crop": [
+          0,
+          0,
+          1920
+        ]
+      },
+      "audio": {
+        "file": "raw/3840x2160/screens/pt-BR/ajustes-rapidos.png",
+        "crop": [
+          820,
+          0,
+          1100
+        ]
+      }
+    }
+  }
+}
