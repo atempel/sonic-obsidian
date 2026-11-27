@@ -825,3 +825,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** (1) com uma troca manual esperando a batida, `Esc` cancela a espera **antes** de fechar painel ou sair da tela cheia; (2) o painel `?` ganha a linha "Cancelar a troca no beat" no `Esc`; (3) sem toast ao cancelar.
 - **Por quê:** o design (`fb12`, rodada de 14/11) diz só que `Esc` cancela a espera, não a ordem. A espera dura no máximo ~1,5 batida, então `Esc` nesse intervalo é desistência da troca; o `?` é a lista única de atalhos; o tracejado sumindo já é o retorno e não há texto desenhado para um toast. Reversível.
 - **Descartado:** `Esc` fechar o painel primeiro e só cancelar a espera no segundo toque (a troca sairia antes do segundo toque); toast "Troca cancelada" (texto sem desenho).
+
+## 2026-11-27 — Bloco v0.12.0 fechado com duas issues (rodada, `agent-decided`)
+- **Decisão:** fechar o bloco v0.12.0 só com o detector de beat (#185, spec 047) e os ajustes do design fb12 (#213, spec 048), abaixo das ~5 issues de app da skill `rodada`.
+- **Por quê:** não há nada `ready` nem `backlog` para encher o milestone (a única ideia aberta, #216, espera decisão do usuário), e o detector de beat é uma mudança grande que só se valida com música real no Windows; esperar deixaria o bloco parado sem ganho. Com dois blocos em teste, as rodadas seguintes só planejam ou corrigem bugs.
+- **Descartado:** segurar o v0.12.0 até a #216 virar `ready` (depende do usuário e do desenho); juntar o v0.12.0 ao bloco v0.11.0 já em teste (o build do v0.11.0 está congelado em `rc/v0.11.0`).
