@@ -3,7 +3,7 @@
 **Fase:** Distribuição · **Status:** implementada (etapa 2 desligada até as credenciais) · **Issue:** [#188](https://github.com/atempel/sonic-obsidian/issues/188) · **Guia:** [docs/distribuicao/microsoft-store.md](../distribuicao/microsoft-store.md) · **Design:** Configurações, versão `1794680346-fb12` (a variante da Store diverge: DIVERGENCIAS 2026-11-23)
 
 ## Problema (pedido do usuário, 2026-11-23)
-O app vai ser distribuído por dois canais no Windows: a **Microsoft Store** (MSIX, assinado pela Store, sem aviso do SmartScreen; download principal no lançamento) e as **releases do GitHub** (instalador e zip, assinados depois pela SignPath Foundation, #189). Na Store, quem atualiza o app é a Store: o atualizador pelo GitHub (spec 029) tem que ficar desligado nessa versão.
+O app vai ser distribuído por dois canais no Windows: a **Microsoft Store** (MSIX, assinado pela Store, sem aviso do SmartScreen; download principal no lançamento) e as **releases do GitHub** (instalador e zip, sem assinatura de código: a SignPath Foundation recusou o projeto, #189). Na Store, quem atualiza o app é a Store: o atualizador pelo GitHub (spec 029) tem que ficar desligado nessa versão.
 
 ## Proposta
 - **Pacote:** alvo `appx` do electron-builder 26.18 (o alvo `msix` só existe em versões mais novas, em beta; trocar a dependência fica fora), com saída `SonicObsidian-Store-x64.msix`, `minVersion` 10.0.17763.0 (Windows 10 1809, o mínimo para `.msix`), idiomas en-US e pt-BR e a identidade do Partner Center: `AlexandreTempel.SonicObsidian`, `CN=FB52A5F4-E46E-48B7-90A9-D2F6FC05DB7B`, `Alexandre Tempel` (Store ID `9MV0B2P4T0G4`). `runFullTrust` entra sempre (app desktop). Sem certificado, o electron-builder não assina; a Store assina depois da certificação. Imagens em `build/appx/`, feitas do símbolo da marca. `npm run dist:msix` (só no Windows).
@@ -14,7 +14,7 @@ O app vai ser distribuído por dois canais no Windows: a **Microsoft Store** (MS
 - Trocar o electron-builder para usar o alvo `msix` (beta).
 - Migrar configurações entre o instalador `.exe` e a versão da Store (o Windows virtualiza a pasta de dados do MSIX; ver o guia).
 - Botão da Store na landing antes de o app estar publicado.
-- Assinatura SignPath (#189).
+- Assinatura de código das releases do GitHub (a SignPath recusou, #189; DECISIONS 2026-11-27).
 
 ## Critérios de aceite
 1. O `msix.yml` gera um `.msix` cuja identidade é igual à do Partner Center (o `check-msix.sh` falha se não for).

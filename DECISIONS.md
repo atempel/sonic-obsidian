@@ -835,3 +835,8 @@ Validado pelo usuário no Windows com o build do CI (`sonic-obsidian-win-2545cbb
 - **Decisão:** a recheca vencida (pedida para depois de 19/11) passou: `electron@45.2.3` e `vite@8.3.6` têm mais de 14 dias, sem `deprecated` e sem aviso no `npm audit`. Continuam fixadas nessas versões.
 - **Por quê:** a regra só pedia esperar os 14 dias. Subir o Electron muda o Chromium do app e só se valida no Windows, então vira tarefa própria, não manutenção de registro.
 - **Descartado:** subir agora para `electron` 45.3.x/`vite` 8.3.8 (sem aviso que peça; mexeria no app no meio de dois blocos em teste). `minimatch` segue aceito: o `electron-builder` 26.18.1 ainda traz o `@electron/universal` 2.
+
+## 2026-11-27 — Sem assinatura de código nas releases do GitHub (SignPath recusou)
+- **Decisão:** a SignPath Foundation recusou o projeto. Saem do repositório e do site todas as menções à SignPath: `CODE_SIGNING_POLICY.md` apagado (a pedido do usuário), créditos e links nos READMEs e no rodapé da landing, a SignPath como prestador no `PRIVACY.md` (e páginas geradas). A #189 fecha como "não planejada".
+- **Consequência:** instalador e zip do GitHub seguem sem assinatura (o aviso do SmartScreen continua explicado no README e na landing); a versão da Microsoft Store é assinada pela Microsoft e passa a ser o canal sem aviso.
+- **Descartado:** manter uma política de assinatura sem a SignPath (não há assinatura a descrever).

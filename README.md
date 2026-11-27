@@ -47,7 +47,7 @@ Under the hood it runs [Butterchurn](https://github.com/jberg/butterchurn), a We
 >
 > **Download (Windows 10/11, x64):** [installer](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (per user, no admin rights) · [portable zip](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [all releases](https://github.com/atempel/sonic-obsidian/releases). The app is not code-signed: if SmartScreen warns, click **More info → Run anyway**.
 >
-> Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). · [Code signing policy](CODE_SIGNING_POLICY.md) · [Privacy policy](PRIVACY.md)
+> [Privacy policy](PRIVACY.md)
 
 <p align="center">
   <img alt="The Stage: the visual fills the window, with the control strip at the bottom" src="docs/media/app-palco.jpg" width="900">
@@ -139,7 +139,7 @@ Every preset is someone's work. The preset name carries its authors, and the app
 
 ## Privacy
 
-Full text: [PRIVACY.md](PRIVACY.md) (also at https://atempel.github.io/sonic-obsidian/privacy/). How releases are signed: [Code signing policy](CODE_SIGNING_POLICY.md).
+Full text: [PRIVACY.md](PRIVACY.md) (also at https://atempel.github.io/sonic-obsidian/privacy/).
 
 - **Audio is analyzed in memory and never saved or uploaded.** The app has no account and no telemetry. The only network call it makes on its own is a daily check on GitHub for new versions (from 0.7.0); you can turn it off in Settings › About › Updates.
 - It visualizes what your system is playing. Content protected by DRM is out of scope, and the app does not try to work around it.
