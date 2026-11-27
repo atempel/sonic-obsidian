@@ -47,7 +47,7 @@ Por baixo, roda o [Butterchurn](https://github.com/jberg/butterchurn), uma imple
 >
 > **Download (Windows 10/11, x64):** [instalador](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-Setup.exe) (por usuário, sem pedir admin) · [zip portátil](https://github.com/atempel/sonic-obsidian/releases/latest/download/SonicObsidian-win-x64.zip) · [todas as versões](https://github.com/atempel/sonic-obsidian/releases). O app não tem assinatura de código: se o SmartScreen avisar, clique em **Mais informações → Executar assim mesmo**.
 >
-> Assinatura de código gratuita fornecida pela [SignPath.io](https://about.signpath.io), certificado da [SignPath Foundation](https://signpath.org) (*Free code signing provided by SignPath.io, certificate by SignPath Foundation*). · [Política de assinatura de código (Code signing policy)](CODE_SIGNING_POLICY.md) · [Política de privacidade](PRIVACY.md#política-de-privacidade-português-brasil)
+> [Política de privacidade](PRIVACY.md#política-de-privacidade-português-brasil)
 
 <p align="center">
   <img alt="O Palco: o visual ocupa a janela, com a faixa de controle na parte de baixo" src="docs/media/app-palco.jpg" width="900">
@@ -139,7 +139,7 @@ Todo preset é obra de alguém. O nome do preset leva o crédito dos autores, e 
 
 ## Privacidade
 
-Texto completo: [PRIVACY.md](PRIVACY.md#política-de-privacidade-português-brasil) (também em https://atempel.github.io/sonic-obsidian/pt/privacidade/). Como as releases são assinadas: [Política de assinatura de código](CODE_SIGNING_POLICY.md).
+Texto completo: [PRIVACY.md](PRIVACY.md#política-de-privacidade-português-brasil) (também em https://atempel.github.io/sonic-obsidian/pt/privacidade/).
 
 - **O áudio é analisado em memória e nunca é salvo nem enviado.** O app não tem conta nem telemetria. A única chamada de rede que ele faz por conta própria é uma checagem diária no GitHub por versões novas (a partir da 0.7.0); dá para desligar em Configurações › Sobre › Atualizações.
 - Ele visualiza o áudio que você escolhe tocar. Conteúdo protegido por DRM está fora do escopo, e o app não tenta contornar a proteção.

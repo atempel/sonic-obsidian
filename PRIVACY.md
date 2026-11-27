@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Sonic Obsidian** · last updated November 23, 2026 · [Português (Brasil)](#política-de-privacidade-português-brasil)
+**Sonic Obsidian** · last updated November 27, 2026 · [Português (Brasil)](#política-de-privacidade-português-brasil)
 
 Sonic Obsidian is an open-source audio visualizer for Windows. It runs entirely on your computer. It has **no account, no telemetry, no analytics and no ads**, and the developer does not collect any personal data. This policy covers the app in every edition (Microsoft Store, installer and portable zip) and the project website at https://atempel.github.io/sonic-obsidian/. The page version is at https://atempel.github.io/sonic-obsidian/privacy/.
 
@@ -35,7 +35,6 @@ Uninstalling the installer edition keeps this folder, so your settings survive a
 
 - **GitHub** hosts the source code, the releases, the update files, the feedback forms and the website. [GitHub Privacy Statement](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
 - **Microsoft Store** distributes and updates the Store edition. [Microsoft Privacy Statement](https://privacy.microsoft.com/privacystatement).
-- **SignPath Foundation** may sign the release files before they are published. Signing happens before distribution and involves no data about you.
 
 ## Website
 
@@ -57,7 +56,7 @@ Open an issue at https://github.com/atempel/sonic-obsidian/issues, or report a s
 
 # Política de privacidade (Português, Brasil)
 
-**Sonic Obsidian** · atualizada em 23 de novembro de 2026 · [English](#privacy-policy)
+**Sonic Obsidian** · atualizada em 27 de novembro de 2026 · [English](#privacy-policy)
 
 O Sonic Obsidian é um visualizador de áudio de código aberto para Windows. Ele roda inteiro no seu computador. **Não tem conta, telemetria, estatísticas de uso nem anúncios**, e o desenvolvedor não coleta nenhum dado pessoal. Esta política vale para o app em todas as edições (Microsoft Store, instalador e zip portátil) e para o site do projeto, https://atempel.github.io/sonic-obsidian/. A versão em página fica em https://atempel.github.io/sonic-obsidian/pt/privacidade/.
 
@@ -92,7 +91,6 @@ Desinstalar a edição do instalador mantém esta pasta, para as configurações
 
 - **GitHub** hospeda o código-fonte, as releases, os arquivos de atualização, os formulários de feedback e o site. [Declaração de privacidade do GitHub](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
 - **Microsoft Store** distribui e atualiza a edição da Store. [Política de privacidade da Microsoft](https://privacy.microsoft.com/pt-br/privacystatement).
-- **SignPath Foundation** pode assinar os arquivos das releases antes de publicados. A assinatura acontece antes da distribuição e não envolve nenhum dado seu.
 
 ## Site
 
