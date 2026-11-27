@@ -50,11 +50,11 @@ Checagem do spike 006, feita em pasta isolada: 12 pacotes no total, licenças MI
 |---|---|---|---|---|---|---|---|
 | `butterchurn@2.6.7` | prod | 2019-03-12 | MIT | 2 | não | não | Mantenedor único (jberg); estável há anos |
 | `butterchurn-presets@2.4.7` | prod | 2018-06-09 | MIT | 3 | não | não | Traz `babel-runtime` 6 e `lodash` (e `core-js` 2, com install script) |
-| `electron@45.2.3` | dev | 2026-11-04 | MIT | 3 | não | não | ⚠️ **Fora da regra de 14 dias** (4 dias na checagem) — decidir com o usuário |
+| `electron@45.2.3` | dev | 2026-11-04 | MIT | 3 | não | não | ~~⚠️ Fora da regra de 14 dias~~ — ok na recheca de 2026-11-27 (23 dias, sem aviso) |
 | `electron-builder@26.18.0` | dev | 2026-10-20 | MIT | 10 | não | sim (SLSA v1) | Origem dos 6 *moderate* (`minimatch`); o fix do audit é downgrade de major, não avaliado |
 | `electron-vite@6.0.0` | dev | 2026-10-14 | MIT | 6 | não | não | Mantenedor único |
 | `typescript@6.0.3` | dev | 2026-04-16 | Apache-2.0 | 0 | não | não | — |
-| `vite@8.3.6` | dev | 2026-11-05 | MIT | 5 | não | sim (SLSA v1) | ⚠️ **Fora da regra de 14 dias** (3 dias na checagem) — decidir com o usuário |
+| `vite@8.3.6` | dev | 2026-11-05 | MIT | 5 | não | sim (SLSA v1) | ~~⚠️ Fora da regra de 14 dias~~ — ok na recheca de 2026-11-27 (22 dias, sem aviso) |
 | `@types/node@26.6.6` | dev | 2026-10-28 | MIT | 1 | não | não | Só tipos |
 
 Pacotes com `hasInstallScript` no lockfile: `core-js@2.6.12` (via `butterchurn-presets`), `electron-winstaller@5.4.0` (via `electron-builder`) e `fsevents@2.3.3` (só macOS, opcional).
@@ -66,5 +66,10 @@ Observações da checagem de 2026-11-08:
 ### Decisões da passagem de manutenção (2026-11-09)
 - **`electron@45.2.3` e `vite@8.3.6`: mantidos.** Continuam sendo as versões mais recentes (`npm view`), e voltar uma versão traz mais risco que esperar. Completam 14 dias em 2026-11-18 e 2026-11-19; na primeira sessão depois disso, refazer a checagem e tirar o ⚠️ (ou trocar de versão, se surgir aviso).
 - **`minimatch` (6 *moderate*): aceito.** O pacote entra só no empacotamento (`electron-builder` → `@electron/universal`), não no app que roda. A correção do `npm audit fix --force` rebaixa o `electron-builder` de versão principal. Rever quando o `electron-builder` publicar uma versão com o `minimatch` corrigido.
+
 | 2026-11-10 | `playwright@1.63.0` | só no CI (`npm install --no-save` no job `typecheck`; não está no `package.json`) | 2026-09-04 | Apache-2.0 | 1 (`playwright-core`) | não (o Chromium vem de `npx playwright install`) | sim (SLSA v1) | — (não entra no app) | **ok, aprovado pelo usuário em 2026-11-10** (spec 025). Mesma versão do ambiente da nuvem. |
 | 2026-11-10 | `eel-wasm@0.0.16` | prod | 2025-07-13 | MIT | 0 | não (só scripts de desenvolvimento) | não | 0 em produção | **ok.** Já vinha como dependência do `butterchurn@3.0.0-beta.5`, na mesma versão; passa a ser declarada porque o Worker do Estúdio (spec 026) o importa direto. Nada novo entra no `node_modules`. A 0.0.17 existe, mas fica fora para não divergir do motor. |
+
+### Recheca (2026-11-27, #220)
+- **`electron@45.2.3` e `vite@8.3.6`: ok, ⚠️ retirado.** Publicadas há 23 e 22 dias; `npm view` sem `deprecated`; o `npm audit` não aponta nada nelas. Continuam fixadas: já existem versões novas (`electron` 45.3.2 a 45.5.0, `vite` 8.3.7, 8.3.8 e 8.4.0), mas nenhum aviso pede a troca, e subir o Electron muda o Chromium do app (só se valida no Windows). Subir de versão fica para uma tarefa própria, com a checagem desta página.
+- **`minimatch` (6 *moderate*): continua aceito.** O `electron-builder` 26.18.1 (`v26`) ainda traz `@electron/universal@2.0.3`, com o `minimatch` vulnerável; o `npm audit fix` continua propondo o rebaixamento para o 24.13.3. Rever quando sair um 26.x com o `@electron/universal` 3.
