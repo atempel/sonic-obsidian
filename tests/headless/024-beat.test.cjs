@@ -109,14 +109,35 @@ const BPM = 124, BEAT_S = 60 / BPM
   await page.keyboard.press('Enter'); await page.waitForTimeout(300)
   // Respiro (Shift+Enter): o visual perde o áudio; a batida continua travada (a detecção vem antes do ganho).
   await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(1500)
-  ok('9a Respiro: etiqueta na faixa e toast', await page.isVisible('.breath-tag') && (await page.evaluate(() => document.body.innerText)).includes('Respiro'))
+  ok('9a Respiro: indicador na faixa e toast novo', await page.isVisible('.breath-ind') && (await page.evaluate(() => document.body.innerText)).includes('Respiro: o visual segue sem o áudio.'))
+  // Spec 048 (design fb12): na linha do título, ícone wind, text-2, sem violeta nem volume-x; título longo com reticências.
+  const ind = await page.evaluate(() => {
+    const el = document.querySelector('.breath-ind'); const row = el?.closest('.now-row'); const title = row?.querySelector('.now-title')
+    const css = (e) => getComputedStyle(e)
+    const tmp = document.createElement('i'); tmp.style.color = 'var(--violet)'; document.body.appendChild(tmp); const violet = css(tmp).color; tmp.remove()
+    const tmp2 = document.createElement('i'); tmp2.style.color = 'var(--text-2)'; document.body.appendChild(tmp2); const text2 = css(tmp2).color; tmp2.remove()
+    // Só o texto da camada visível muda (os nós do TextStack ficam), e volta logo depois de medir.
+    const layer = [...title.children].find((c) => css(c).opacity !== '0') || title.children[0]
+    const was = layer.textContent
+    layer.textContent = 'Um título bem comprido '.repeat(12)
+    const r = row.getBoundingClientRect(), ri = el.getBoundingClientRect()
+    const ellipsis = css(layer).textOverflow, cut = layer.scrollWidth > layer.clientWidth
+    layer.textContent = was
+    return { inRow: !!row, icon: el.querySelector('svg')?.dataset.icon, color: css(el).color, violet, text2, size: css(el).fontSize,
+      noVolX: !document.querySelector('.now-text [data-icon="volume-x"]'), ellipsis, cut, inside: ri.right <= r.right + 0.5 && ri.width > 0,
+      afterClean: !!row.querySelector('.clean-ico + .breath-ind'), oldTag: !!document.querySelector('.breath-tag') }
+  })
+  ok('9e Respiro na linha do título, depois do ícone do Modo limpo', ind.inRow && ind.afterClean && !ind.oldTag, JSON.stringify(ind))
+  ok('9f ícone wind, text-2 em 12 px, nada violeta nem volume-x', ind.icon === 'wind' && ind.color === ind.text2 && ind.color !== ind.violet && ind.size === '12px' && ind.noVolX, JSON.stringify(ind))
+  ok('9g título longo com reticências não empurra o indicador para fora', ind.ellipsis === 'ellipsis' && ind.cut && ind.inside, JSON.stringify(ind))
   const lvl = await page.evaluate(() => [...document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip')].length)
   ok('9b Respiro: medidor da faixa vazio (o visual não recebe áudio)', lvl === 0, `${lvl} segmentos acesos`)
   ok('9c Respiro: a batida continua travada', await page.isVisible('.strip .bdot'))
   await page.keyboard.press('Shift+Enter')
   // Até 2,5 s: com poucos quadros por segundo no headless, o medidor pode levar mais que 800 ms para acender.
-  const back = await page.waitForFunction(() => !document.querySelector('.breath-tag') && document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip').length > 0, null, { timeout: 2500 }).then(() => true, () => false)
+  const back = await page.waitForFunction(() => !document.querySelector('.breath-ind') && document.querySelectorAll('.meter i.on, .meter i.hot, .meter i.clip').length > 0, null, { timeout: 2500 }).then(() => true, () => false)
   ok('9d Shift+Enter de novo devolve o áudio', back)
+  ok('9h toast "Respiro desligado." ao desligar', await H.poll(page, () => document.body.innerText.includes('Respiro desligado.'), { timeout: 2000 }))
 
   // 6. Enter num botão aciona o botão.
   await page.mouse.move(640, 700)

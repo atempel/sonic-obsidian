@@ -76,6 +76,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { label: 'shortcuts.fullscreen', keys: [['F'], ['F11']], essential: 10 },
       { label: 'shortcuts.quit', keys: [['Ctrl', 'W']] },
       { label: 'shortcuts.closePanel', keys: [['Esc']] },
+      { label: 'shortcuts.cancelBeatWait', keys: [['Esc']] },
       { label: 'shortcuts.show', keys: [['?']] }
     ]
   },
@@ -163,7 +164,7 @@ export const COMMANDS: Command[] = [
   { id: 'fullscreen', label: 'shortcuts.fullscreen', keys: ['F'], icon: 'maximize' },
   { id: 'rotation', label: 'shortcuts.rotation', keys: ['R'], icon: 'repeat' },
   { id: 'hold', label: 'shortcuts.hold', keys: ['Enter'], icon: 'lock' },
-  { id: 'breath', label: 'shortcuts.breath', keys: ['Shift', 'Enter'], icon: 'volume-x' },
+  { id: 'breath', label: 'shortcuts.breath', keys: ['Shift', 'Enter'], icon: 'wind' },
   { id: 'random', label: 'shortcuts.random', keys: ['Space'], icon: 'shuffle' },
   { id: 'next', label: 'shortcuts.next', keys: ['→'], icon: 'skip-forward' },
   { id: 'previous', label: 'shortcuts.previous', keys: ['←'], icon: 'skip-back' },

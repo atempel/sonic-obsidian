@@ -313,6 +313,8 @@ function Geral({ core, run }: { core: Core; run: Run }) {
 function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
   const { core } = bridge
   const s = core.state.settings
+  const rot = s.rotation
+  const leadOn = rot.onBeat || rot.manualOnBeat
   const capture = core.state.capture
   const info = bridge.captureInfo()
   const [test, setTest] = useState<'idle' | 'running' | 'ok' | 'none'>('idle')
@@ -396,6 +398,15 @@ function Captura({ bridge, run }: { bridge: PalcoBridge; run: Run }) {
         <Row id="st-delay" label={t('settings.capture.delay')} help={t('settings.capture.delayHelp')} kw="latência latency atraso delay sincronia sync bluetooth hdmi">
           <Rng id="st-delay" value={s.visualDelayMs} min={0} max={VISUAL_DELAY_MAX_MS} step={10} text={`${fmtNum(s.visualDelayMs)} ms`} onInput={(v) => run('audio.visualDelay', { ms: v })} />
         </Row>
+        {/* Spec 048 (design fb12): "Adiantar o visual" mora aqui, junto de "Atrasar o visual". */}
+        <Row
+          id="st-lead"
+          label={t('settings.capture.lead')}
+          help={leadOn ? t('settings.capture.leadHelp') : t('settings.capture.leadHelpOff')}
+          kw="adiantar adiantamento latência latency lead atraso delay sincronia sync beat batida"
+        >
+          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${fmtNum(rot.beatLeadMs)} ms`} disabled={!leadOn} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
+        </Row>
       </Grp>
     </>
   )
@@ -468,9 +479,6 @@ function Visual({ bridge, run, shown }: { bridge: PalcoBridge; run: Run; shown: 
         </Row>
         <Row id="st-mbeat" label={t('quick.manualOnBeat')} help={t('settings.visual.manualOnBeatHelp')} kw="bpm batida beat manual próximo anterior aleatório espaço setas">
           <Sw id="st-mbeat" label={t('quick.manualOnBeat')} checked={rot.manualOnBeat} onChange={(manualOnBeat) => run('rotation.set', { manualOnBeat })} />
-        </Row>
-        <Row id="st-lead" label={t('settings.visual.lead')} help={t('settings.visual.leadHelp')} kw="latência latency atraso delay">
-          <Rng id="st-lead" value={rot.beatLeadMs} min={0} max={200} step={10} text={`${fmtNum(rot.beatLeadMs)} ms`} disabled={!rot.onBeat && !rot.manualOnBeat} onInput={(v) => run('rotation.set', { beatLeadMs: v })} />
         </Row>
         <Row id="st-bars" label={t('settings.visual.bars')} help={t('settings.visual.barsHelp')} kw="compassos bars">
           <Sel<BeatBars> id="st-bars" value={rot.bars} options={BEAT_BARS.map((b) => [b, tn('quick.bars', b)])} disabled={!rot.onBeat} onChange={(bars) => run('rotation.set', { bars })} />

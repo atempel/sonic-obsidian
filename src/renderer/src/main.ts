@@ -1031,6 +1031,16 @@ async function start(): Promise<void> {
     }
     // Atalhos de letra/espaço não valem enquanto se digita (busca, Configurações).
     const tgt = e.target as HTMLElement | null
+    // Spec 048: com uma troca manual esperando a batida, Esc só desiste dela (não fecha painel nem sai
+    // da tela cheia nesse toque). Campo de texto com foco segue com o Esc dele.
+    if (e.key === 'Escape' && pending) {
+      const typing = !!tgt && ((tgt.tagName === 'INPUT' && !['range', 'checkbox', 'radio', 'button'].includes((tgt as HTMLInputElement).type)) || tgt.tagName === 'TEXTAREA' || tgt.isContentEditable)
+      if (!typing) {
+        e.preventDefault()
+        setPending(null)
+        return
+      }
+    }
     // Nos Ajustes rápidos, Esc fecha o painel mesmo com o foco num slider ou seletor.
     if (e.key === 'Escape' && tgt?.closest('.sheet')) {
       e.preventDefault()
