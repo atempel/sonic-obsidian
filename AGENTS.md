@@ -35,6 +35,7 @@ Visualizador de áudio para Windows: Electron + Butterchurn (MilkDrop em WebGL 2
 - **Executar:** skill `executar-task` → branch, implementação, verificação no app rodando, PR com `Closes #N`.
 - **Encerrar:** skill `encerrar-sessao` → SESSIONS.md, TASKS.md, DECISIONS.md e o estado no Notion.
 - **Ciclo automático:** skill `rodada` (tarefa agendada a cada 4 h). O estado do trabalho vive nas **issues do GitHub** (labels + milestones = releases), não no TASKS.md; o usuário testa **blocos** (um milestone num build da branch `rc/vX.Y.Z`), não PRs, e a release só sai depois do ok dele no bloco — é o único passo que depende dele. O que precisa dele fica atribuído a ele. Ver DECISIONS 2026-11-13.
+- **Experimentos:** cada um vive numa branch `exp/<nome>` que **nunca é mergeada** e numa issue com label `experiment`, fora dos milestones. Rodadas não implementam nem mergeiam experimento; o que for aprovado volta à `main` por spec. Plano: Claude Docs "Sonic Obsidian — Plano de experimentos" (DECISIONS 2026-11-27).
 
 ## Design (protótipo)
 - O desenho da interface vive num artefato do Claude Design; `docs/design/v3/` é o espelho dele no repo, com a versão em `docs/design/v3/SYNC.md`. Ler `docs/design/v3/README.md` antes de qualquer trabalho de interface.

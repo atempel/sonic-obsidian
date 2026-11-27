@@ -1,5 +1,5 @@
 # Suíte de testes automatizados de performance (e de regressão)
-Status: Pending
+Status: Ingested (2026-11-27) → specs [025](../docs/specs/025-suite-testes-ci.md) e [034](../docs/specs/034-memoria-renderer.md)
 Fonte: pedido do usuário na sessão de 2026-11-09 ("não quero testar apenas no meu computador, é um caso de uso ruim")
 Resumo: Depois de terminar as tarefas abertas, criar uma suíte que meça a performance sem depender da máquina do usuário. Ela roda no CI e falha quando algo piora. Também evitaria bugs como o das Configurações deslocadas (#56), que nenhum teste pegou.
 Destino provável: spec nova (planejar com `planejar-feature`) + DECISIONS (ferramentas e limites de cada medida). Pontos para o planejamento:
