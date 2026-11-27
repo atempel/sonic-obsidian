@@ -333,13 +333,14 @@ function Strip({ bridge }: { bridge: PalcoBridge }) {
               >
                 <Icon name="eye-off" small />
               </span>
+              {/* Spec 048 (design fb12): o Respiro fica na linha do título, sem violeta. */}
+              {core.state.breath && (
+                <span class="breath-ind" role="status" title={t('strip.breathTitle')}>
+                  <Icon name="wind" small /> {t('strip.breath')}
+                </span>
+              )}
             </div>
             <div class="now-author" ref={authorEl} />
-            {core.state.breath && (
-              <div class="breath-tag" role="status" title={t('strip.breathTitle')}>
-                <Icon name="volume-x" small /> {t('strip.breath')}
-              </div>
-            )}
           </div>
           <button
             class="ibtn fav favp"

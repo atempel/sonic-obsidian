@@ -138,8 +138,8 @@ body.clean .credit { transition-duration: 400ms; }
 @media (prefers-reduced-motion: reduce) {
   .bdot:not(.on) { transition: background 400ms var(--ease-out) !important; }
 }
-/* Respiro (Shift+Enter): o visual sem o áudio. */
-.breath-tag { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: 11px; color: var(--violet); }
+/* Respiro (Shift+Enter): o visual sem o áudio. Spec 048 (design fb12): na linha do título, ícone wind, text-2. */
+.breath-ind { flex: none; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-2); white-space: nowrap; }
 
 /* ── Atualização automática (spec 029; design 1794603894-598c, v3-modelo-de-navegacao.md):
    plaquinha acima da faixa, à esquerda. Entra como um quarto bloco do M01 (40 ms depois da cauda)

@@ -51,7 +51,7 @@ const stripTexts = () => {
 }
 // Botões e rótulos cortados (critério 6): scrollWidth > clientWidth.
 const clipped = () => {
-  const sel = '.strip button, .strip .rot span, .breath-tag, .chip, .gtoast span, .settings .lbl, .settings .help, .settings button, .sheet h2, .sheet h3, .sheet label, .sheet .line > span, .sheet button, .sheet .val, .sheet select'
+  const sel = '.strip button, .strip .rot span, .breath-ind, .chip, .gtoast span, .settings .lbl, .settings .help, .settings button, .sheet h2, .sheet h3, .sheet label, .sheet .line > span, .sheet button, .sheet .val, .sheet select'
   return [...document.querySelectorAll(sel)]
     .filter(e => e.offsetParent && !e.classList.contains('vh') && !e.closest('.now-title, .now-author') && e.scrollWidth > e.clientWidth + 1)
     .map(e => `${e.className || e.tagName}: ${e.textContent.trim().slice(0, 40)}`)
@@ -339,8 +339,13 @@ const srv = H.serve(5230)
   ok('4b toast da rotação em English', (await toastText(page)) === 'Rotation off.', await toastText(page))
   await page.keyboard.press('KeyR'); await page.waitForTimeout(150)
   ok('4c "Rotation every 30 s."', (await toastText(page)) === 'Rotation every 30 s.', await toastText(page))
+  // Spec 048: os toasts novos do Respiro (o indicador fica na faixa para o 6a conferir o corte).
+  await page.keyboard.press('Shift+Enter')
+  ok('4e Respiro: "Rest: the visual runs without the audio."', await H.poll(page, () => document.querySelector('.gtoast span')?.textContent === 'Rest: the visual runs without the audio.' && !!document.querySelector('.breath-ind'), { timeout: 3000 }), await toastText(page))
   const clipEnStrip = await page.evaluate(clipped)
   ok('6a nada cortado na faixa e no toast (en)', clipEnStrip.length === 0, clipEnStrip.join(' | '))
+  await page.keyboard.press('Shift+Enter')
+  ok('4f "Rest off."', await H.poll(page, () => document.querySelector('.gtoast span')?.textContent === 'Rest off.' && !document.querySelector('.breath-ind'), { timeout: 3000 }), await toastText(page))
 
   // Ajustes rápidos em English.
   const qEn = await checkSheet(page)

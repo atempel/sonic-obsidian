@@ -86,7 +86,80 @@ async function open(b, port, rotation) {
     await page.waitForSelector('#st-mbeat', { state: 'attached', timeout: 5000 })
     ok('2d Configurações: "Trocar no beat" desligado, "Trocas manuais no beat" ligado', await page.evaluate(() => !document.getElementById('st-beat').checked && document.getElementById('st-mbeat').checked))
     ok('2e "Adiantar o visual" habilitado com qualquer um dos dois', await page.$eval('#st-lead', (e) => !e.disabled))
+    // Spec 048 (design fb12): a linha mora em Captura, logo abaixo de "Atrasar o visual".
+    const where = await page.evaluate(() => {
+      const lead = document.getElementById('st-lead'), delay = document.getElementById('st-delay')
+      const lr = lead.closest('.row'), dr = delay.closest('.row')
+      return { panel: lead.closest('[data-panel]')?.dataset.panel, next: dr.nextElementSibling === lr, visual: !!document.querySelector('[data-panel="visual"] #st-lead'),
+        value: lead.value, min: lead.min, max: lead.max, step: lead.step, help: lr.querySelector('.help')?.textContent, val: lr.textContent }
+    })
+    ok('2g "Adiantar o visual" em Captura, logo abaixo de "Atrasar o visual"; fora de Visual', where.panel === 'captura' && where.next && !where.visual, JSON.stringify(where))
+    ok('2h 0 a 200 ms em passos de 10, 70 ms, ajuda nova', where.value === '70' && where.min === '0' && where.max === '200' && where.step === '10' && where.help === 'Compensa o atraso entre o som e a imagem. Aumente se o visual parecer atrasado.' && /70 ms/.test(where.val), JSON.stringify(where))
+    for (const q of ['adiantar', 'lead', 'latency']) {
+      await page.fill('#st-search', q)
+      ok(`2i a busca acha a linha por "${q}" em Captura`, await H.poll(page, () => !!document.querySelector('[data-panel="captura"]:not([hidden]) #st-lead')?.closest('.row')?.classList.contains('hit'), { timeout: 3000 }))
+    }
+    await page.fill('#st-search', '')
+    await page.click('[data-sec="captura"]')
+    await page.$eval('#st-lead', (e) => { e.value = '120'; e.dispatchEvent(new Event('input', { bubbles: true })) })
+    ok('2j o slider no lugar novo salva beatLeadMs = 120', await H.poll(page, () => window.__saves.at(-1)?.rotation?.beatLeadMs === 120, { timeout: 3000 }))
+    ok('2k o detector usa o valor novo (linha sync do HUD: lead 120)', await H.poll(page, () => / lead 120 /.test(document.getElementById('hud')?.textContent || ''), { timeout: 4000 }))
+    // Com as duas opções de beat desligadas: desabilitada e a ajuda diz quando vale.
+    await page.click('[data-sec="visual"]')
+    await page.click('label.switch:has(#st-mbeat)')
+    await page.click('[data-sec="captura"]')
+    const off = await H.poll(page, () => { const e = document.getElementById('st-lead'); return e.disabled && /Vale com "Trocar no beat" ou "Trocas manuais no beat"/.test(e.closest('.row').querySelector('.help').textContent) }, { timeout: 3000 })
+    ok('2l sem as duas opções de beat: desabilitada, com a ajuda de quando vale', off, await page.$eval('#st-lead', (e) => `${e.disabled} ${e.closest('.row').querySelector('.help').textContent}`))
+    await page.keyboard.press('Escape')
+    // Painel `?`: a linha do Esc da espera, junto de "Fechar painel ou gaveta".
+    await H.poll(page, () => !document.querySelector('.settings'), { timeout: 3000 })
+    await page.keyboard.press('Shift+Slash')
+    const kp = await H.poll(page, () => { const t = document.body.innerText; return t.includes('Fechar painel ou gaveta') && t.includes('Cancelar a troca que espera o beat') }, { timeout: 3000 })
+    ok('2m painel ?: linha "Cancelar a troca que espera o beat"', kp)
+    await page.keyboard.press('Escape')
     ok('2f sem erros na página', errs.length === 0, errs.join(' | '))
+    await page.close()
+
+    // 3. Esc na espera do beat (spec 048): desiste da troca e não faz mais nada nesse toque.
+    ;({ page, errs, locked } = await open(b, 5258, { enabled: false, onBeat: false, manualOnBeat: true }))
+    ok('3a batida travada', locked)
+    // Tela cheia simulada (a janela do tamanho da tela) e o pedido de sair contado.
+    await page.evaluate(() => {
+      window.__fs = 0; window.so.window.toggleFullScreen = async () => { window.__fs++ }
+      Object.defineProperty(screen, 'width', { get: () => window.innerWidth }); Object.defineProperty(screen, 'height', { get: () => window.innerHeight })
+    })
+    await page.keyboard.press('Comma')
+    await H.poll(page, () => document.body.classList.contains('sheet-open'), { timeout: 3000 })
+    // → e Esc assim que o tracejado aparece; se a batida chegou antes do Esc, tenta de novo.
+    const escInWait = () => page.evaluate(() => new Promise((res) => {
+      const before = window.__changes.length; const sel = 'button[aria-label="Próximo preset"].wait'
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'ArrowRight', key: 'ArrowRight', bubbles: true }))
+      const t0 = performance.now()
+      const id = setInterval(() => {
+        if (window.__changes.length > before) { clearInterval(id); res({ raced: true }); return }
+        if (document.querySelector(sel)) {
+          clearInterval(id)
+          document.body.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }))
+          const n = window.__changes.length
+          setTimeout(() => res({ raced: false, changed: window.__changes.length > n, dashed: !!document.querySelector(sel), sheet: document.body.classList.contains('sheet-open'), fs: window.__fs }), 2 * 60000 / 124 + 300)
+          return
+        }
+        if (performance.now() - t0 > 3000) { clearInterval(id); res({ raced: false, noWait: true }) }
+      }, 2)
+    }))
+    let e1 = await escInWait()
+    for (let i = 0; i < 3 && e1.raced; i++) e1 = await escInWait()
+    ok('3b → e Esc antes da batida: o preset não troca e o tracejado some', !e1.raced && !e1.noWait && !e1.changed && !e1.dashed, JSON.stringify(e1))
+    ok('3c os Ajustes rápidos continuam abertos', e1.sheet === true, JSON.stringify(e1))
+    await page.keyboard.press('Escape')
+    ok('3d sem espera, Esc fecha os Ajustes como antes', await H.poll(page, () => !document.body.classList.contains('sheet-open'), { timeout: 3000 }))
+    await page.mouse.move(640, 400)
+    let e2 = await escInWait()
+    for (let i = 0; i < 3 && e2.raced; i++) e2 = await escInWait()
+    ok('3e na tela cheia: → e Esc na espera não saem da tela cheia nem trocam', !e2.raced && !e2.noWait && !e2.changed && !e2.dashed && e2.fs === 0, JSON.stringify(e2))
+    await page.keyboard.press('Escape')
+    ok('3f sem espera, Esc sai da tela cheia como antes', await H.poll(page, () => window.__fs === 1, { timeout: 3000 }))
+    ok('3g sem erros na página', errs.length === 0, errs.join(' | '))
     await page.close()
   } finally {
     await b.close(); srv.close()

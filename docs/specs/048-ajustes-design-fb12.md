@@ -1,6 +1,6 @@
 # 048 — Ajustes do design fb12: Respiro, "Adiantar o visual" em Captura e `Esc` na espera do beat
 
-**Fase:** 3 (correções da 024/032) · **Status:** pronta · **Issue:** [#213](https://github.com/atempel/sonic-obsidian/issues/213) · **Personas:** as mesmas da 024 · **Design:** `Palco integrado` e `Configurações`, versão `1794680346-fb12` (`docs/design/v3/docs/v3-respostas-divergencias.md` › "Rodada de 14/11/2026")
+**Fase:** 3 (correções da 024/032) · **Status:** implementada (PR da #213; critério 10 no teste do bloco v0.12.0) · **Issue:** [#213](https://github.com/atempel/sonic-obsidian/issues/213) · **Personas:** as mesmas da 024 · **Design:** `Palco integrado` e `Configurações`, versão `1794680346-fb12` (`docs/design/v3/docs/v3-respostas-divergencias.md` › "Rodada de 14/11/2026")
 
 ## Problema
 A sessão de design de 14/11 aceitou o que as specs 024 e 032 fizeram sem desenho (DIVERGENCIAS 2026-11-10, 024 revisão 2), com três correções que o app ainda não tem (stub `queue/2026-11-23-design-fb12-respiro-adiantar.md`):
