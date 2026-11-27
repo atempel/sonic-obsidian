@@ -160,8 +160,15 @@ function mainChecks() {
   ok('5g o meu preset vira o atual', (await cur()) === saved, `${await cur()}`)
   ok('5h Palco volta (faixa visível de novo)', await page.evaluate(() => !document.body.classList.contains('studio-open')))
 
+  // `.lib` existe sempre no DOM: esperar a Biblioteca abrir de fato (o `l` pode cair enquanto o Estúdio ainda fecha; spec 035).
+  async function openLib() {
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('l')
+      if (await H.poll(page, () => document.body.classList.contains('lib-open') && getComputedStyle(document.querySelector('.lib')).transform === 'none', { timeout: 5000 })) return
+    }
+  }
   // Biblioteca: rótulo "Meu preset" e filtro "Meus"
-  await page.keyboard.press('l'); await page.waitForSelector('.lib', { timeout: 15000 })
+  await openLib()
   await page.click('.lib .chips button:has-text("Meus")')
   await page.waitForTimeout(200)
   const rows = await page.$$eval('.lib .rows .row', es => es.map(e => e.innerText))
@@ -189,7 +196,7 @@ function mainChecks() {
   await page.keyboard.press('Escape')
 
   // Remover meu preset
-  await page.keyboard.press('l'); await page.waitForSelector('.lib', { timeout: 15000 })
+  await openLib()
   const chip = '.lib .chips button:has-text("Meus")'
   if ((await page.getAttribute(chip, 'aria-pressed')) !== 'true') await page.click(chip)
   await page.click('.lib .rows .row button[aria-label^="Mais ações"]')
