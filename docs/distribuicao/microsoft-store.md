@@ -80,6 +80,8 @@ A Microsoft exige que a primeira submissão seja feita no Partner Center. A auto
 6. **Properties:** a capability `runFullTrust` pede uma justificativa. Sugestão: "Desktop audio visualizer built with Electron; it needs full trust to capture the system's audio output (WASAPI loopback) and render it with WebGL."
 7. Envie para a certificação.
 
+> Respostas prontas para cada campo do envio: [microsoft-store-listagem.md](microsoft-store-listagem.md).
+
 ## 4. Publicação automática (etapa 2)
 
 O `.github/workflows/store.yml` publica o `.msix` de uma release quando ela é **publicada** (nunca em push nem em merge):
