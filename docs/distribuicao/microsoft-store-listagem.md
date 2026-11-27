@@ -54,13 +54,8 @@ Respostas prontas para a submissão no Partner Center (primeira versão: 0.11.0)
 
 Preencher **English (United States)** e **Português (Brasil)**. Os dois usam as mesmas capturas.
 
-### Screenshots (Desktop)
-
-PNG, 1366×768 ou maior: `1-palco-1600x900.png` e `2-biblioteca-1600x900.png` (gerados de `docs/media/app-palco.jpg` e `app-library.jpg`). Textos de legenda (opcional, 200 caracteres):
-- en: *The Stage: the visual fills the window; the control strip appears only when you need it.* / *The Library: search 395 community presets by name or author, with favorites and collections.*
-- pt-BR: *O Palco: o visual ocupa a janela; a faixa de controles só aparece quando você precisa.* / *A Biblioteca: busque entre 395 presets da comunidade por nome ou autor, com favoritos e coleções.*
-
-Store logos, trailers, imagens de destaque: opcionais, deixar em branco.
+### Screenshots e imagens de divulgação
+Usar as capturas e as imagens de divulgação já criadas para a Store (feitas numa sessão à parte, fora do repositório). Requisitos da Store para as capturas de desktop: PNG, 1366×768 ou maior.
 
 ### Product name
 `Sonic Obsidian` (já reservado).
